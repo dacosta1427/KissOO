@@ -63,6 +63,20 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- JUnit Vintage for running JUnit 3.x tests -->
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit 3.x for legacy tests -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -70,6 +84,27 @@
         <testSourceDirectory>tst</testSourceDirectory>
         
         <plugins>
+            <!-- Add additional test source directory -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.4.0</version>
+                <executions>
+                    <execution>
+                        <id>add-test-source</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.basedir}/junit_tests/src</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -85,7 +120,6 @@
                         <arg>-Xlint:removal</arg>
                     </compilerArgs>
                     <excludes>
-                        <exclude>org/garret/perst/aspectj/**</exclude>
                         <exclude>org/garret/perst/jassist/**</exclude>
                         <exclude>tst/OO7/**</exclude>
                     </excludes>
@@ -103,7 +137,6 @@
                         <include>**/Test*.java</include>
                     </includes>
                     <excludes>
-                        <exclude>**/aspectj/**</exclude>
                         <exclude>**/jassist/**</exclude>
                         <exclude>**/android/**</exclude>
                         <exclude>**/OO7/**</exclude>

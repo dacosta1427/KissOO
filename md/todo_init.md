@@ -8,9 +8,9 @@
 
 - [x] 1. Modernize build system - Migrate from Ant/makefile to Maven (Priority #1)
 - [x] 2. Upgrade Java version - Update from 1.6 to 25 (Priority #2)
-- [ ] 3. Update Lucene dependency - 4.7.2 → 9.x (Priority #3)
-- [ ] 4. Update Javassist dependency - 3.18.1 → 3.33.x (Priority #3)
-- [ ] 5. Update AspectJ dependency - 1.7.4 → 1.9.x (Priority #3)
+- [x] 3. Update Lucene dependency - 4.7.2 → 9.x (Priority #3)
+- [x] 4. Update Javassist dependency - 3.18.1 → 3.33.x (Priority #3)
+- [x] 5. Update AspectJ dependency - Removed (Priority #3)
 - [ ] 6. Replace Hashtable with HashMap (Priority #4)
 - [ ] 7. Replace Vector with ArrayList (Priority #4)
 - [ ] 8. Replace Enumeration with Iterator (Priority #4)

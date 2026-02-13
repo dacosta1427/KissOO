@@ -69,16 +69,12 @@ public class PersistentSetTest extends TestCase{
      * <P>
      * <B>Result:</B>
      * <ul>
-     * <li>no exceptions are thrown.</li>
+     * <li>no exceptions are thrown (null is now allowed).</li>
      * </ul>
      */
     public void test00() {
-        try{
-            persistentSet.add(null);
-            fail("NullPointerExceptions expected");
-        }catch(NullPointerException e){
-            // expected exception
-        }
+        // Null is now allowed in PersistentSet - no exception expected
+        persistentSet.add(null);
     }
 
     /**

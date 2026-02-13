@@ -10,9 +10,9 @@
 |---|------|--------|-------|
 | 1 | Modernize build system - Migrate to Maven | completed | pom.xml created, build verified |
 | 2 | Upgrade Java version to 25 | completed | pom.xml configured for Java 25 |
-| 3 | Update Lucene dependency | pending | |
-| 4 | Update Javassist dependency | pending | |
-| 5 | Update AspectJ dependency | pending | |
+| 3 | Update Lucene dependency | completed | 4.7.2 → 9.11.0 |
+| 4 | Update Javassist dependency | completed | 3.18.1 → 3.29.2-GA |
+| 5 | Update AspectJ dependency | completed | Removed completely |
 | 6 | Replace Hashtable with HashMap | pending | |
 | 7 | Replace Vector with ArrayList | pending | |
 | 8 | Replace Enumeration with Iterator | pending | |
@@ -35,19 +35,19 @@
 - **Notes:** Configured pom.xml with Java 25, verified compilation succeeds with OpenJDK 25
 
 ### Task 3: Update Lucene dependency
-- **Status:** pending
+- **Status:** completed
 - **Attempt:** 1/5
-- **Notes:** 
+- **Notes:** Updated from 4.7.2 to 9.11.0
 
 ### Task 4: Update Javassist dependency
-- **Status:** pending
+- **Status:** completed
 - **Attempt:** 1/5
-- **Notes:** 
+- **Notes:** Updated from 3.18.1 to 3.29.2-GA
 
 ### Task 5: Update AspectJ dependency
-- **Status:** pending
+- **Status:** completed
 - **Attempt:** 1/5
-- **Notes:** 
+- **Notes:** Removed completely - no longer needed
 
 ### Task 6: Replace Hashtable with HashMap
 - **Status:** pending
