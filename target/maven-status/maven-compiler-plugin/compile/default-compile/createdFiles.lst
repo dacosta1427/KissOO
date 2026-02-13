@@ -93,7 +93,6 @@ org/garret/perst/impl/BinOpNode.class
 org/garret/perst/impl/RandomAccessBlobImpl$BlobInputStream.class
 org/garret/perst/impl/ClassDescriptor$1.class
 org/garret/perst/IteratorWrapper.class
-javassist/expr/FieldAccess$ProceedForWrite.class
 org/garret/perst/impl/Ttree.class
 org/garret/perst/impl/LinkImpl$SubList.class
 org/garret/perst/fulltext/FullTextQuery.class
@@ -116,7 +115,6 @@ org/garret/perst/JSQLNoSuchFieldException.class
 org/garret/perst/impl/LRU.class
 org/garret/perst/IPersistentHash.class
 org/garret/perst/impl/TimeSeriesImpl$TimeSeriesIterator.class
-javassist/expr/ExprEditor$LoopContext.class
 org/garret/perst/IFile.class
 org/garret/perst/impl/RegexIndexImpl$RegexIterator.class
 org/garret/perst/fulltext/FullTextSearchHelper$QueryScanner.class
@@ -194,7 +192,6 @@ org/garret/perst/impl/ScalableList.class
 org/garret/perst/BitIndex.class
 org/garret/perst/IFileOutputStream.class
 org/garret/perst/impl/RndBtree$BtreePageOfString.class
-org/garret/perst/jassist/PerstTranslator$1.class
 org/garret/perst/impl/JoinIterator.class
 org/garret/perst/impl/ReplicationMasterStorageImpl.class
 org/garret/perst/SmallMap$ValueIterator.class
@@ -222,7 +219,6 @@ org/garret/perst/Link.class
 org/garret/perst/impl/ResolveNode.class
 org/garret/perst/impl/LruObjectCache.class
 org/garret/perst/impl/Bytes.class
-javassist/expr/ExprEditor$NewOp.class
 org/garret/perst/impl/AsyncReplicationMasterFile$Parcel.class
 org/garret/perst/impl/AsyncReplicationMasterFile$WriteThread.class
 org/garret/perst/impl/ParameterNode.class
@@ -243,7 +239,6 @@ org/garret/perst/impl/FullTextIndexImpl$KeywordIterator.class
 org/garret/perst/SmallMap$KeyIterator.class
 org/garret/perst/IResource.class
 org/garret/perst/impl/AltBtree$BtreePageOfBoolean.class
-javassist/expr/ExprEditor.class
 org/garret/perst/impl/AltBtreeCompoundIndex$CompoundKey.class
 org/garret/perst/fulltext/FullTextIndexable.class
 org/garret/perst/impl/BitIndexImpl$BitIndexPage.class
@@ -256,7 +251,6 @@ org/garret/perst/CompressedReadWriteFile$PageMap.class
 org/garret/perst/Resolver.class
 org/garret/perst/impl/RndBtree$BtreePageOfLong.class
 org/garret/perst/impl/OSFile.class
-javassist/expr/FieldAccess.class
 org/garret/perst/impl/ThickIndex$ExtendEntryIterator.class
 org/garret/perst/impl/PersistentMapImpl$2.class
 org/garret/perst/fulltext/FullTextIndex$Keyword.class
@@ -282,7 +276,6 @@ org/garret/perst/Aggregator$VarAggregate.class
 org/garret/perst/Aggregator$LastAggregate.class
 org/garret/perst/impl/PersistentHashImpl$StackElem.class
 org/garret/perst/Aggregator$Aggregate.class
-org/garret/perst/jassist/PerstTranslator.class
 org/garret/perst/impl/BlobImpl$BlobOutputStream.class
 org/garret/perst/Aggregator$CompoundAggregate.class
 org/garret/perst/TimeSeries$Block.class
@@ -383,7 +376,6 @@ org/garret/perst/CompressedReadWriteFile.class
 org/garret/perst/fulltext/FullTextQueryBinaryOp.class
 org/garret/perst/impl/PagePool.class
 org/garret/perst/impl/Rc4File.class
-javassist/expr/FieldAccess$ProceedForRead.class
 org/garret/perst/Decimal.class
 org/garret/perst/impl/WeakHashTable$Entry.class
 org/garret/perst/impl/PersistentMapImpl$SubMap$3.class

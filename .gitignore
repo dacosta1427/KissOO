@@ -1,2 +1,10 @@
 .opencode
 *.class
+/checkstyle.xml
+/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst
+/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst
+/target/spotbugs.xml
+/target/spotbugs-exclude.xml
+/spotbugs-exclude.xml
+/target/spotbugsXml.xml
+*aspectj*.*
