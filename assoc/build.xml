@@ -8,7 +8,7 @@ targets: makejar - compile & jar
 
 
 <project name="AssocDB" default="all" basedir=".">
-	<property name="lucene.jar" value="../lib/lucene-core.jar" />
+	<property name="lucene.jar" value="c:/lucene-2.4.1/lucene-core-2.4.1.jar" />
 	<target name="makedocs">
 		<javadoc
 			sourcepath="src"
@@ -33,7 +33,7 @@ targets: makejar - compile & jar
 	</target>
 
 	<target name="compile" depends="init">
-		<javac srcdir="src" source="17" destdir="classes" deprecation="off"  debug="on" optimize="on" includeantruntime="false"> 
+		<javac srcdir="src" source="1.5" destdir="classes" deprecation="off"  debug="on" optimize="on"> 
 			<classpath location="../lib/perst.jar" />
 			<classpath location="${lucene.jar}" />
 		</javac>
@@ -44,7 +44,7 @@ targets: makejar - compile & jar
 		<delete dir="classes/tst" />
 		<mkdir dir="classes/tst" />
 
-		<javac srcdir="tst" source="17" destdir="classes/tst" deprecation="off"  debug="on" optimize="on" includeantruntime="false"> 
+		<javac srcdir="tst" source="1.5" destdir="classes/tst" deprecation="off"  debug="on" optimize="on"> 
 			<classpath location="../lib/perst.jar" />
 			<classpath location="../lib/assocdb.jar" />
 		</javac>
