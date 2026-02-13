@@ -63,10 +63,20 @@ This appears to be a Perst-specific behavior where:
 
 ---
 
-## Compilation Notes
+## CI Options for Local Git Server
 
-- Deprecation warnings present for:
-  - `sun.misc.Unsafe` usage in `Sun14ReflectionProvider.java`
-  - `finalize()` method in `Persistent.java`
-  - `runFinalization()` in `WeakHashTable.java`, `LruObjectCache.java`
-- These will need to be addressed in future deprecated API replacement tasks
+Since the project uses a local git server on NAS (not GitHub), here are alternatives for automated CI:
+
+- **Jenkins** - Self-hosted CI server, can run on NAS or separate machine
+- **GitLab CI** - If running GitLab on NAS, supports full CI/CD pipelines
+- **Drone CI** - Lightweight self-hosted CI
+- **Simple shell script** - Create a `run-tests.sh` script and execute as post-receive hook:
+  ```bash
+  #!/bin/bash
+  mvn clean test -Dcheckstyle.skip=true -Dspotbugs.skip=true
+  ```
+
+To run tests locally:
+```bash
+mvn test -Dcheckstyle.skip=true -Dspotbugs.skip=true
+```
