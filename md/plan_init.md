@@ -11,6 +11,7 @@ Modernize Perst project to work with OpenJDK 25, improve code quality, and estab
 - Java target: 1.6/1.4 (severely outdated)
 - Build system: Ant/makefile (legacy)
 - Dependencies: Lucene 4.7.2, Javassist 3.18.1, AspectJ 1.7.4 (all 2013-2014)
+  - **Note:** A major Lucene upgrade to the latest version is required (Lucene 4.7.2 API has significant breaking changes in newer versions)
 
 ## Goals
 1. Migrate to OpenJDK 25

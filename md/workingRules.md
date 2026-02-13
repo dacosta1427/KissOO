@@ -16,6 +16,94 @@
 
 ---
 
+## Required Document Formats
+
+### Todolist Format (`md/todo_*.md`)
+
+The todolist MUST follow this structure:
+
+```markdown
+# Working Rules (must be included)
+
+---
+
+# Todolist: [Project Name]
+
+## Tasks (or ## Priority Sections)
+
+### Priority #X: [Category Name]
+- [ ] Task X.X: [Task description]
+- [x] Task X.X: [Completed task description]
+
+## Success Criteria
+- [ ] [Criteria 1]
+- [ ] [Criteria 2]
+
+## Rollback Plan
+1. [Rollback step 1]
+2. [Rollback step 2]
+```
+
+Key requirements:
+- Include Working Rules at top
+- Use checkbox format `- [ ]` for pending, `- [x]` for completed
+- Group tasks by priority/category
+- Include success criteria section
+- Include rollback plan section
+
+### Progress Doc Format (`md/progress_*.md`)
+
+The progress doc MUST follow this structure:
+
+```markdown
+# Working Rules (must be included)
+
+---
+
+# Progress: [Project Name]
+
+## Project Status
+- **Start Date:** YYYY-MM-DD
+- **Current Phase:** [Current phase name]
+- **Overall Progress:** X% complete
+
+## Task Progress
+
+### Priority #X: [Category Name]
+
+#### Task X.X: [Task name]
+- **Status:** pending | in_progress | completed | failed
+- **Priority:** High | Medium | Low
+- **Dependencies:** [Task dependencies]
+- **Owner:** [Person responsible]
+- **Success criteria:** [What "done" means]
+- **Timestamp:** YYYY-MM-DD
+- **Effort estimate:** S | M | L
+- **Notes:** [Additional details]
+
+## Risk Assessment
+- **High Risk:** [Description]
+- **Medium Risk:** [Description]
+- **Low Risk:** [Description]
+
+## Current Blockers
+- [List any blockers]
+
+## Next Steps
+1. [Next step 1]
+2. [Next step 2]
+```
+
+Key requirements:
+- Include Working Rules at top
+- Include Project Status section with percentage
+- Each task must have: Status, Priority, Dependencies, Owner, Success criteria, Timestamp, Effort estimate, Notes
+- Include Risk Assessment section
+- Include Current Blockers section
+- Include Next Steps section
+
+---
+
 ## Task States
 
 | State | Description |
