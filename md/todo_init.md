@@ -12,6 +12,8 @@
 - [x] 4. Update Javassist dependency - 3.18.1 → 3.33.x (Priority #3)
 - [x] 5. Update AspectJ dependency - Removed (Priority #3)
 - [x] 6. Replace deprecated APIs (Priority #4)
+- [x] 9. Add JUnit 5 testing framework (Priority #5)
+- [ ] 10. Add GitHub Actions CI workflow (Priority #5) - NOT APPLICABLE (local git server)
 - [ ] 6. Replace Hashtable with HashMap (Priority #4)
 - [ ] 7. Replace Vector with ArrayList (Priority #4)
 - [ ] 8. Replace Enumeration with Iterator (Priority #4)

@@ -14,8 +14,8 @@
 | 4 | Update Javassist dependency | completed | 3.18.1 → 3.29.2-GA |
 | 5 | Update AspectJ dependency | completed | Removed completely |
 | 6 | Replace deprecated APIs | completed | Removed sun.misc.Unsafe, added @Deprecated to finalize() |
-| 9 | Add JUnit 5 | pending | |
-| 10 | Add GitHub Actions CI | pending | |
+| 9 | Add JUnit 5 | completed | Already configured in pom.xml |
+| 10 | Add GitHub Actions CI | cancelled | Not applicable - local git server |
 | 11 | Run tests and verify | pending | |
 
 ---
@@ -57,14 +57,14 @@
 - **Notes:** HashMap/ArrayList/Iterator replacements are not critical for Java 25 compatibility 
 
 ### Task 9: Add JUnit 5
-- **Status:** pending
+- **Status:** completed
 - **Attempt:** 1/5
-- **Notes:** 
+- **Notes:** JUnit 5.11.3 with JUnit Vintage already configured in pom.xml
 
 ### Task 10: Add GitHub Actions CI
-- **Status:** pending
+- **Status:** cancelled
 - **Attempt:** 1/5
-- **Notes:** 
+- **Notes:** User uses local git server on NAS, not GitHub. CI not applicable.
 
 ### Task 11: Run tests and verify
 - **Status:** pending
