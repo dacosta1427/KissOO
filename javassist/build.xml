@@ -1,0 +1,55 @@
+<!-- 
+************************************************************
+targets: makejar - compile & jar
+	 compiletests - compile test
+
+************************************************************ 
+-->
+
+
+<project name="javassist" default="all" basedir=".">
+	<target name="makedocs">
+		<javadoc
+			sourcepath="src"
+			destdir="doc"
+			nodeprecated="true"
+			nodeprecatedlist="true"
+			public="true"
+			packagenames="javassist">
+		</javadoc>
+	</target>
+
+
+	<target name="init" depends="clear" >
+		<mkdir dir="classes"/>
+	</target>
+	
+
+	<target name="clear">
+		<delete dir="classes" />
+	</target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="src" source="8" destdir="classes" deprecation="off"  debug="on" optimize="on" includeantruntime="false"> 
+		</javac>
+	</target>
+
+
+	<target name="compiletests" depends="compile" >
+		<delete dir="classes/tst" />
+		<mkdir dir="classes/tst" />
+
+		<javac srcdir="tst" source="8" destdir="classes/tst" deprecation="off"  debug="on" optimize="on" includeantruntime="false"> 
+		</javac>
+	</target>
+
+
+	<target name="makejar" depends="compile">
+		<jar jarfile="../lib/javassist.jar"  basedir="classes" includes="**" />
+	</target>
+	
+
+	<target name="all" depends="makejar,makedocs">
+	</target>
+</project>
+
