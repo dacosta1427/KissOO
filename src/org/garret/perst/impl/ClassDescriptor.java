@@ -142,15 +142,7 @@ public final class ClassDescriptor extends Persistent {
 
     static ReflectionProvider getReflectionProvider() { 
         if (reflectionProvider == null) { 
-            try {
-                Class.forName("sun.misc.Unsafe");
-                String cls = "org.garret.perst.impl.sun14.Sun14ReflectionProvider";
-                reflectionProvider = (ReflectionProvider)Class.forName(cls).newInstance();
-            } 
-            catch (Throwable x) 
-            {
-                reflectionProvider = new StandardReflectionProvider();
-            }
+            reflectionProvider = new StandardReflectionProvider();
         }
         return reflectionProvider;
     } 

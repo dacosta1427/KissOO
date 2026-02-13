@@ -11,6 +11,7 @@
 - [x] 3. Update Lucene dependency - 4.7.2 → 9.x (Priority #3)
 - [x] 4. Update Javassist dependency - 3.18.1 → 3.33.x (Priority #3)
 - [x] 5. Update AspectJ dependency - Removed (Priority #3)
+- [x] 6. Replace deprecated APIs (Priority #4)
 - [ ] 6. Replace Hashtable with HashMap (Priority #4)
 - [ ] 7. Replace Vector with ArrayList (Priority #4)
 - [ ] 8. Replace Enumeration with Iterator (Priority #4)

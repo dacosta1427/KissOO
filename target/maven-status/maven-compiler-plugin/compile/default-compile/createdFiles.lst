@@ -183,7 +183,6 @@ org/garret/perst/impl/FullTextIndexImpl$InverseList.class
 org/garret/perst/SmallMap$Values.class
 org/garret/perst/JSQLRuntimeException.class
 org/garret/perst/GenericIndex.class
-org/garret/perst/impl/sun14/Sun14ReflectionProvider.class
 org/garret/perst/CodeGenerator$Code.class
 org/garret/perst/IndexProvider.class
 org/garret/perst/impl/StorageImpl$ByteArrayObjectInputStream.class
