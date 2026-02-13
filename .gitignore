@@ -8,3 +8,6 @@
 /spotbugs-exclude.xml
 /target/spotbugsXml.xml
 *aspectj*.*
+**/*.dbs
+**/target/**
+
