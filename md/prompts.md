@@ -1,3 +1,5 @@
 ### This doc should NOT be read or used in any way!
 
-According to the workingrules.md write a plan (as per the workingruls.md) for the init.md 
+Execute the plan_init.md according to the workingRules.md
+Stop and ask in case of questions
+
