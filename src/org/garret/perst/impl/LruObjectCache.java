@@ -99,6 +99,7 @@ public class LruObjectCache implements OidHashTable {
         count++;
     }
 
+    @SuppressWarnings("deprecation")
     public Object get(int oid) {
         while (true) { 
             cs:synchronized(this) { 
@@ -128,6 +129,7 @@ public class LruObjectCache implements OidHashTable {
         } 
     }
     
+    @SuppressWarnings("deprecation")
     public void flush() {
         while (true) { 
           cs:synchronized(this) { 
@@ -196,6 +198,7 @@ public class LruObjectCache implements OidHashTable {
     }
 
 
+    @SuppressWarnings("deprecation")
     public void invalidate() {
         while (true) { 
             cs:synchronized(this) { 

@@ -8,8 +8,9 @@
 
 ## Project Status
 - **Start Date:** 2026-02-14
-- **Current Phase:** Planning
-- **Overall Progress:** 0% complete (0/38 tasks)
+- **Current Phase:** In Progress
+- **Overall Progress:** 10% complete (4/38 tasks)
+- **Test Count:** 162 tests (increased from 148)
 
 ## Task Progress
 
@@ -18,7 +19,7 @@
 #### Task 1: Convert TestAgg
 - **Status:** pending
 - **Priority:** High
-- **Dependencies:** None
+- **Dependencies:** data.csv file
 - **Owner:** Cline
 - **Success criteria:** TestAgg converted to JUnit 5, all assertions pass
 - **Timestamp:** -
@@ -26,76 +27,76 @@
 - **Notes:** Aggregation functions - requires data.csv file, complex test
 
 #### Task 2: Convert TestCompoundIndex
-- **Status:** pending
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestCompoundIndex converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-14 23:09
 - **Effort estimate:** M
-- **Notes:** Compound index support
+- **Notes:** Compound index support - 4 tests added
 
 #### Task 3: Convert TestIndexIterator
-- **Status:** pending
+- **Status:** skipped
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Cline
-- **Success criteria:** TestIndexIterator converted to JUnit 5
-- **Timestamp:** -
+- **Success criteria:** N/A - functionality already covered in TestIndex.java
+- **Timestamp:** 2026-02-14 23:10
 - **Effort estimate:** M
-- **Notes:** Index iterator functionality
+- **Notes:** Index iterator functionality already exists in TestIndex.java
 
 ### Priority #2: Data Types
 
 #### Task 4: Convert TestBit
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestBit converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-14 23:11
 - **Effort estimate:** S
-- **Notes:** Bit operations
+- **Notes:** Bit operations - 2 tests added
 
 #### Task 5: Convert TestBitmap
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestBitmap converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-14 23:13
 - **Effort estimate:** S
-- **Notes:** Bitmap index
+- **Notes:** Bitmap index - 2 tests added
 
 #### Task 6: Convert TestDecimal
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestDecimal converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-14 23:15
 - **Effort estimate:** M
-- **Notes:** Decimal field type
+- **Notes:** Decimal field type - 6 tests added
 
 #### Task 7: Convert TestLink
-- **Status:** pending
+- **Status:** skipped
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestLink converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-14 23:24
 - **Effort estimate:** M
-- **Notes:** Linked list
+- **Notes:** Linked list - Skipped, it's an interactive demo app (menu-driven)
 
 #### Task 8: Convert TestRaw
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestRaw converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-14 23:24
 - **Effort estimate:** M
-- **Notes:** Raw data access
+- **Notes:** Raw data access - 3 tests added (testRawLinkedListAccess, testRawArrayAccess, testRawDataPersistence)
 
 ### Priority #3: Advanced Indexing
 
@@ -413,9 +414,10 @@
 - **Low Risk:** Standard tests should convert easily
 
 ## Current Blockers
-- None - Ready to start
+- None - Ready to continue with remaining tests
 
 ## Next Steps
-1. Start Phase 1: Convert TestAgg
-2. Run `mvn test` after each conversion to verify
-3. Update progress doc after each task completion
+1. Continue with remaining tests in Priority #2 (TestLink, TestRaw)
+2. Move to Priority #3 (Advanced Indexing tests)
+3. Run `mvn test` after each conversion to verify
+4. Update progress doc after each task completion

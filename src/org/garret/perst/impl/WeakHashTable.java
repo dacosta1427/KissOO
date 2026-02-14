@@ -86,6 +86,7 @@ public class WeakHashTable implements OidHashTable {
         } 
     }
     
+    @SuppressWarnings("deprecation")
     public void flush() {
         while (true) { 
             cs:synchronized(this) { 
@@ -118,6 +119,7 @@ public class WeakHashTable implements OidHashTable {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void invalidate() {
         while (true) { 
             cs:synchronized(this) { 

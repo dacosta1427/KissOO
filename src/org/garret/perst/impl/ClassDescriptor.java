@@ -315,8 +315,8 @@ public final class ClassDescriptor extends Persistent {
         }
         try { 
             Class c = loadClass(cls.getName() + "LoadFactory");
-            factory = (LoadFactory)c.newInstance();
-        } catch (Exception x1) { 
+            factory = (LoadFactory)c.getDeclaredConstructor().newInstance();
+        } catch (Exception x1) {
             try {             
                 loadConstructor = cls.getDeclaredConstructor(perstConstructorProfile);
                 constructorParams = new Object[]{this};

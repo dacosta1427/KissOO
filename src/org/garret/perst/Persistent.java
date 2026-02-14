@@ -13,7 +13,7 @@ public class Persistent extends PinnedPersistent
     }
 
     @Deprecated(forRemoval=true)
-    protected void finalize() { 
+    protected void finalize() {
         if ((state & DIRTY) != 0 && oid != 0) { 
             storage.storeFinalizedObject(this);
         }
