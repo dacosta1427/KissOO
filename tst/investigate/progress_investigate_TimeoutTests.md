@@ -6,48 +6,48 @@
 
 ## Project Status
 - **Start Date:** 2026-02-14
-- **Current Phase:** Investigation
-- **Overall Progress:** 0% complete
+- **Current Phase:** In Progress
+- **Overall Progress:** 10% complete
 
 ## Task Progress
 
 ### Task 1.1: Determine TestBitmap timeout
-- **Status:** pending
+- **Status:** in_progress
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Developer
 - **Success criteria:** Find appropriate timeout value
-- **Timestamp:** 
+- **Timestamp:** 2026-02-14
 - **Effort estimate:** S
 - **Notes:** Test inserts 1M records, likely needs >120s
 
 ### Task 1.2: Determine TestMaxOid timeout
-- **Status:** pending
+- **Status:** in_progress
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Developer
 - **Success criteria:** Find appropriate timeout value
-- **Timestamp:** 
+- **Timestamp:** 2026-02-14
 - **Effort estimate:** S
 - **Notes:** Test inserts 15M records, likely needs >180s
 
 ### Task 1.3: Determine TestR2 timeout
-- **Status:** pending
+- **Status:** in_progress
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Developer
 - **Success criteria:** Find appropriate timeout value
-- **Timestamp:** 
+- **Timestamp:** 2026-02-14
 - **Effort estimate:** S
 - **Notes:** Test iterates 29000+ times, likely needs >60s
 
 ### Task 1.4: Determine TestRtree timeout
-- **Status:** pending
+- **Status:** in_progress
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Developer
 - **Success criteria:** Find appropriate timeout value
-- **Timestamp:** 
+- **Timestamp:** 2026-02-14
 - **Effort estimate:** S
 - **Notes:** Test iterates 28000+ times, likely needs >60s
 
@@ -80,7 +80,7 @@
 - None
 
 ## Next Steps
-1. Run TestBitmap with 120s timeout
+1. Run TestBitmap with 120s timeout (measuring via Windows runner)
 2. Run TestMaxOid with 180s timeout
 3. Run TestR2 with 60s timeout
 4. Run TestRtree with 60s timeout

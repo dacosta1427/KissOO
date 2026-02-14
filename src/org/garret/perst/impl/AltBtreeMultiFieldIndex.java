@@ -52,6 +52,10 @@ class AltBtreeMultiFieldIndex<T> extends AltBtree<T> implements FieldIndex<T> {
     static class CompoundKey implements Comparable, IValue {
         Object[] keys;
 
+        CompoundKey() {
+            // Default constructor needed for Perst deserialization
+        }
+
         public int compareTo(Object o) { 
             CompoundKey c = (CompoundKey)o;
             int n = keys.length < c.keys.length ? keys.length : c.keys.length; 
