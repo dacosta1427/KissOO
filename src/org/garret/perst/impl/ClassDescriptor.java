@@ -309,6 +309,10 @@ public final class ClassDescriptor extends Persistent {
     }
 
     private void locateConstructor() { 
+        // Interfaces cannot be instantiated, so skip constructor lookup
+        if (cls.isInterface()) {
+            return;
+        }
         try { 
             Class c = loadClass(cls.getName() + "LoadFactory");
             factory = (LoadFactory)c.newInstance();
