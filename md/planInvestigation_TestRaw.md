@@ -102,15 +102,15 @@ class ListItem {
 | Class | Issue | Action Required |
 |-------|-------|-----------------|
 | `ListItem` | Missing no-arg constructor | Add `ListItem()` constructor |
-| `L1List` | Check for similar issue | Verify if no-arg constructor needed |
+| `L1List` | Missing no-arg constructor | Add `L1List()` constructor |
 
 ---
 
 ## Success Criteria
 
-- [ ] TestRaw runs without `NoSuchMethodException`
-- [ ] Test outputs "Database is OK"
-- [ ] No regressions in other tests
+- [x] TestRaw runs without `NoSuchMethodException`
+- [x] Test outputs "Database is OK"
+- [x] No regressions in other tests
 
 ---
 

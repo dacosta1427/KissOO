@@ -6,71 +6,79 @@
 
 ## Project Status
 - **Start Date:** 2026-02-14
-- **Current Phase:** Investigation
-- **Overall Progress:** 0% complete
+- **Current Phase:** Completed
+- **Overall Progress:** 100% complete
 
 ## Task Progress
 
 ### Task 1.1: Examine TestRaw.java source code
-- **Status:** pending
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Developer
 - **Success criteria:** Understand what TestRaw does
-- **Timestamp:** 
+- **Timestamp:** 2026-02-14
 - **Effort estimate:** S
 - **Notes:** Read source to understand test
 
 ### Task 1.2: Find ListItem class
-- **Status:** pending
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** Task 1.1
 - **Owner:** Developer
 - **Success criteria:** Locate ListItem class definition
-- **Timestamp:** 
+- **Timestamp:** 2026-02-14
 - **Effort estimate:** S
-- **Notes:** May be inner class or in same file
+- **Notes:** Found as inner class in TestRaw.java
 
-### Task 1.3: Add no-arg constructor
-- **Status:** pending
+### Task 1.3: Add no-arg constructor to ListItem
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** Task 1.2
 - **Owner:** Developer
 - **Success criteria:** ListItem has public no-arg constructor
-- **Timestamp:** 
+- **Timestamp:** 2026-02-14
 - **Effort estimate:** S
-- **Notes:** Add: public ListItem() {}
+- **Notes:** Added: public ListItem() {}
 
 ### Task 1.4: Recompile
-- **Status:** pending
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** Task 1.3
 - **Owner:** Developer
 - **Success criteria:** TestRaw.java compiles successfully
-- **Timestamp:** 
+- **Timestamp:** 2026-02-14
 - **Effort estimate:** S
-- **Notes:** Use javac to compile
+- **Notes:** Used javac to compile
 
 ### Task 1.5: Verify fix
-- **Status:** pending
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** Task 1.4
 - **Owner:** Developer
 - **Success criteria:** TestRaw passes
-- **Timestamp:** 
+- **Timestamp:** 2026-02-14
 - **Effort estimate:** S
-- **Notes:** Run test to confirm fix works
+- **Notes:** First attempt failed - discovered L1List also needs no-arg constructor
+
+### Task 2.1: Add no-arg constructor to L1List (DISCOVERED)
+- **Status:** completed
+- **Priority:** High
+- **Dependencies:** Task 1.5 failure revealed this issue
+- **Owner:** Developer
+- **Success criteria:** L1List has no-arg constructor
+- **Timestamp:** 2026-02-14
+- **Effort estimate:** S
+- **Notes:** Added: L1List() {} - Perst also needs this for L1List class
 
 ## Risk Assessment
 - **High Risk:** None
-- **Medium Risk:** May affect other tests using ListItem
-- **Low Risk:** Simple constructor addition
+- **Medium Risk:** None
+- **Low Risk:** Simple constructor additions
 
 ## Current Blockers
 - None
 
 ## Next Steps
-1. Read tst/TestRaw.java
-2. Find ListItem class definition
-3. Add no-arg constructor
-4. Recompile and test
+1. Test is fully functional
+2. Consider updating the plan document (md/planInvestigation_TestRaw.md) with the L1List finding

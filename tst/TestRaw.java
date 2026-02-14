@@ -7,6 +7,10 @@ class L1List {
     Object obj;
     Object root;
 
+    // No-arg constructor required by Perst for object instantiation
+    L1List() {
+    }
+
     L1List(Object value, Object tree, L1List list) { 
         obj = value;
         root = tree;
@@ -16,6 +20,10 @@ class L1List {
 
 class ListItem {
     int id;
+
+    // No-arg constructor required by Perst for object instantiation
+    ListItem() {
+    }
 
     ListItem(int id) { 
         this.id = id;

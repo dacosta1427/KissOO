@@ -3,6 +3,13 @@
 > **IMPORTANT:** These rules must appear at the top of every plan, todolist, and progress document.
 
 ---
+Environment:
+- Runs on Linux (*.sh scripts) and in Windows (*.cmd scripts)
+- Java: OpenJDK 25
+- Maven as a build tool, NO Gradle and NO script based compilation
+- Maven should always work with the latest library versions
+- Enable -Xlint:all -Werror (or at least during CI) to catch deprecations and preview API shifts.
+
 
 ## Core Principles
 
