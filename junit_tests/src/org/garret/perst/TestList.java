@@ -1,0 +1,151 @@
+package org.garret.perst;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+
+import java.util.Iterator;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class TestList {
+
+    static class Record extends Persistent {
+        int i;
+    }
+
+    private Storage storage;
+    private static final int nRecords = 1000;
+    private static final String TEST_DB = "testlist.dbs";
+
+    @BeforeEach
+    void setUp() throws Exception {
+        storage = StorageFactory.getInstance().createStorage();
+        storage.open(TEST_DB, 32 * 1024 * 1024);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        if (storage.isOpened()) {
+            storage.close();
+        }
+        new java.io.File(TEST_DB).delete();
+    }
+
+    @Test
+    @DisplayName("Test list insert and get")
+    void testListInsertAndGet() {
+        IPersistentList root = storage.createList();
+        storage.setRoot(root);
+
+        for (int i = 0; i < nRecords; i++) {
+            Record rec = new Record();
+            rec.i = i;
+            root.add(rec);
+        }
+
+        storage.commit();
+
+        for (int i = 0; i < nRecords; i++) {
+            Record rec = (Record) root.get(i);
+            assertEquals(i, rec.i, "Record value should match index");
+        }
+    }
+
+    @Test
+    @DisplayName("Test list iterator")
+    void testListIterator() {
+        IPersistentList root = storage.createList();
+        storage.setRoot(root);
+
+        for (int i = 0; i < nRecords; i++) {
+            Record rec = new Record();
+            rec.i = i;
+            root.add(rec);
+        }
+
+        storage.commit();
+
+        Iterator iterator = root.iterator();
+        int count = 0;
+        while (iterator.hasNext()) {
+            Record rec = (Record) iterator.next();
+            assertEquals(count, rec.i, "Iterator value should match");
+            count++;
+        }
+        assertEquals(nRecords, count, "Iterator should visit all records");
+    }
+
+    @Test
+    @DisplayName("Test list remove")
+    void testListRemove() {
+        IPersistentList root = storage.createList();
+        storage.setRoot(root);
+
+        for (int i = 0; i < nRecords; i++) {
+            Record rec = new Record();
+            rec.i = i;
+            root.add(rec);
+        }
+
+        storage.commit();
+
+        for (int i = 0; i < nRecords; i++) {
+            Record rec = (Record) root.remove(0);
+            assertEquals(i, rec.i, "Removed record should match");
+            rec.deallocate();
+        }
+
+        assertFalse(root.iterator().hasNext(), "List should be empty after removal");
+    }
+
+    @Test
+    @DisplayName("Test list insert at index")
+    void testListInsertAtIndex() {
+        IPersistentList root = storage.createList();
+        storage.setRoot(root);
+
+        root.add(new Record());
+
+        Record rec = new Record();
+        rec.i = 42;
+        root.add(0, rec);
+
+        assertEquals(42, ((Record) root.get(0)).i, "Insert at index should work");
+        assertEquals(2, root.size(), "List should have 2 elements");
+    }
+
+    @Test
+    @DisplayName("Test list size")
+    void testListSize() {
+        IPersistentList root = storage.createList();
+        storage.setRoot(root);
+
+        assertEquals(0, root.size(), "Empty list should have size 0");
+
+        for (int i = 0; i < 10; i++) {
+            root.add(new Record());
+        }
+
+        assertEquals(10, root.size(), "List should have 10 elements");
+    }
+
+    @Test
+    @DisplayName("Test list contains")
+    void testListContains() {
+        IPersistentList root = storage.createList();
+        storage.setRoot(root);
+
+        Record rec1 = new Record();
+        rec1.i = 1;
+        root.add(rec1);
+
+        Record rec2 = new Record();
+        rec2.i = 2;
+        root.add(rec2);
+
+        assertTrue(root.contains(rec1), "List should contain rec1");
+        assertTrue(root.contains(rec2), "List should contain rec2");
+    }
+}
