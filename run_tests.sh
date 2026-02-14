@@ -244,8 +244,9 @@ run_test "TestReplic2"
 cleanup
 run_test "TestServer"
 
-cleanup
-run_test "TestSOD"
+# SKIPPED - TestSOD is an interactive menu-driven test, not suitable for automated runs
+# cleanup
+# run_test "TestSOD"
 
 # ============================================================================
 # Test variants with parameters (from makefile analysis)

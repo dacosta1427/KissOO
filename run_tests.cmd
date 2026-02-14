@@ -243,7 +243,7 @@ call :cleanup
 call :run_test TestServer
 
 call :cleanup
-call :run_test TestSOD
+REM DO NOT call :run_test TestSOD
 
 REM ============================================================================
 REM Test variants with parameters (from makefile analysis)
