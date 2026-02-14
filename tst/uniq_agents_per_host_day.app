@@ -1,0 +1,10 @@
+google.com[2012-10-21]->1
+yandex.ru[2012-10-21]->7
+vkontakte.ru[2012-10-21]->1
+google.ru[2012-10-21]->3
+odnoklassniki.ru[2012-10-21]->3
+auto.ru[2012-10-21]->1
+fotostrana.ru[2012-10-21]->1
+vk.com[2012-10-21]->32
+youtube.com[2012-10-21]->4
+mail.ru[2012-10-21]->14

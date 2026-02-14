@@ -122,6 +122,7 @@
                     <excludes>
                         <exclude>org/garret/perst/jassist/**</exclude>
                         <exclude>tst/OO7/**</exclude>
+                        <exclude>tst/TestVersion.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

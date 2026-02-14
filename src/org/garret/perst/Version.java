@@ -173,7 +173,7 @@ public class Version extends PersistentResource
     /**
      * Default constuctor. Not directly accessible.
      */
-    private Version() {}
+    public Version() {}
 
 
     private String constructId() { 

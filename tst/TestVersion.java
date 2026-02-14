@@ -18,7 +18,9 @@ class BugReport extends Version {
     int            status;
     VersionHistory product;
 
-    public String getDescription() { 
+    public BugReport() {}
+
+    public String getDescription() {
         return description;
     }
     
@@ -47,7 +49,9 @@ class Release extends Version {
     String name;
     String releaseNotes;
 
-    public String getName() { 
+    public Release() {}
+
+    public String getName() {
         return name;
     }
 
@@ -65,6 +69,8 @@ class Release extends Version {
 class BugTrackingSystem extends Persistent { 
     Index<VersionHistory<BugReport>> bugReports;
     Index<VersionHistory<Release>> products;
+
+    public BugTrackingSystem() {}
 
     public BugTrackingSystem(Storage storage) {
         super(storage);

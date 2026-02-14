@@ -145,6 +145,11 @@ public class VersionHistory<V extends Version>  extends PersistentResource
      * Create new version history
      * @param root root version
      */
+    public VersionHistory() {
+        versions = null;
+        current = null;
+    }
+
     public VersionHistory(V root) { 
         versions = root.getStorage().<V>createLink(1);
         versions.add(root);
