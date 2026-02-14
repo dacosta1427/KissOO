@@ -12,44 +12,44 @@
 ## Task Progress
 
 ### Task 1.1: Determine TestBitmap timeout
-- **Status:** in_progress
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Developer
 - **Success criteria:** Find appropriate timeout value
 - **Timestamp:** 2026-02-14
 - **Effort estimate:** S
-- **Notes:** Test inserts 1M records, likely needs >120s
+- **Notes:** Test results: 1k/100=0.7s, 10k/1k=18.5s, 100k/1k=63.7s. Original 1M records needs ~600-650s
 
 ### Task 1.2: Determine TestMaxOid timeout
-- **Status:** in_progress
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Developer
 - **Success criteria:** Find appropriate timeout value
 - **Timestamp:** 2026-02-14
 - **Effort estimate:** S
-- **Notes:** Test inserts 15M records, likely needs >180s
+- **Notes:** Test results: 1k=0.7s, 100k=1.2s, 1M=7.3s, 10M=284s. Original 1B records would take ~7+ hours
 
 ### Task 1.3: Determine TestR2 timeout
-- **Status:** in_progress
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Developer
 - **Success criteria:** Find appropriate timeout value
 - **Timestamp:** 2026-02-14
 - **Effort estimate:** S
-- **Notes:** Test iterates 29000+ times, likely needs >60s
+- **Notes:** Test runs in ~6.6 seconds - well within 30s timeout
 
 ### Task 1.4: Determine TestRtree timeout
-- **Status:** in_progress
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** None
 - **Owner:** Developer
 - **Success criteria:** Find appropriate timeout value
 - **Timestamp:** 2026-02-14
 - **Effort estimate:** S
-- **Notes:** Test iterates 28000+ times, likely needs >60s
+- **Notes:** Test runs in ~5.7 seconds - well within 30s timeout
 
 ### Task 1.5: Update test scripts
 - **Status:** pending

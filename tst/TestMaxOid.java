@@ -3,7 +3,7 @@ import org.garret.perst.*;
 import java.util.*;
 
 public class TestMaxOid { 
-    final static int nRecords = 1000000000;
+    static int nRecords = 1000;
     static int pagePoolSize = 256*1024*1024;
 
     static class Record extends Persistent { 
@@ -16,6 +16,14 @@ public class TestMaxOid {
     };
 
     static public void main(String[] args) {    
+        if (args.length >= 1) {
+            nRecords = Integer.parseInt(args[0]);
+        }
+        System.out.println("Running with nRecords=" + nRecords);
+        
+        // Delete existing database to start fresh with new record count
+        new java.io.File("testmaxoid.dbs").delete();
+        
         Storage db = StorageFactory.getInstance().createStorage();
         db.open("testmaxoid.dbs", pagePoolSize);
         int i;

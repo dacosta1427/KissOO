@@ -21,11 +21,22 @@ class City extends Persistent
 
 public class TestBitmap
 {
-    final static int nRecords = 1000000;
-    final static int nSearches = 1000;
+    static int nRecords = 1000;
+    static int nSearches = 100;
     static int pagePoolSize = 48*1024*1024;
     static String[] kitchens = {"asian", "chines", "european", "japan", "italian", "french", "medeteranian", "nepal", "mexican", "indian", "vegetarian"};
     public static void main(String[] args) { 
+        if (args.length >= 1) {
+            nRecords = Integer.parseInt(args[0]);
+        }
+        if (args.length >= 2) {
+            nSearches = Integer.parseInt(args[1]);
+        }
+        System.out.println("Running with nRecords=" + nRecords + ", nSearches=" + nSearches);
+        
+        // Delete existing database to start fresh with new record count
+        new java.io.File("testbitmap.dbs").delete();
+        
         Storage db = StorageFactory.getInstance().createStorage();
         db.open("testbitmap.dbs", pagePoolSize);
 

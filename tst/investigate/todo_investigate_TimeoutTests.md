@@ -7,10 +7,10 @@
 ## Tasks
 
 ### Priority #1: Investigation
-- [ ] Task 1.1: Determine appropriate timeout for TestBitmap (>120s likely needed)
-- [ ] Task 1.2: Determine appropriate timeout for TestMaxOid (>180s likely needed)
-- [ ] Task 1.3: Determine appropriate timeout for TestR2 (>60s likely needed)
-- [ ] Task 1.4: Determine appropriate timeout for TestRtree (>60s likely needed)
+- [x] Task 1.1: Determine appropriate timeout for TestBitmap (~600s for 1M records)
+- [x] Task 1.2: Determine appropriate timeout for TestMaxOid (~7+ hours for 1B records)
+- [x] Task 1.3: Determine appropriate timeout for TestR2 (~7s, within 30s)
+- [x] Task 1.4: Determine appropriate timeout for TestRtree (~6s, within 30s)
 - [ ] Task 1.5: Update test scripts with correct timeouts
 - [ ] Task 1.6: Document as long-running tests
 
