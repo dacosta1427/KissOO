@@ -15,12 +15,20 @@ at org.garret.perst.impl.MultiFile.<init>(MultiFile.java:130)
 
 ## Root Cause Analysis
 
-### Initial Assessment
-The error `StorageError: File access error` when opening a MultiFile indicates one of:
-1. Missing required database file that the test expects to exist
-2. Permission issues on the database file
-3. Incorrect file path/location
-4. Database file is locked by another process
+### Initial Assessment (OUTDATED - See Update Below)
+The error `StorageError: File access error` when opening a MultiFile was initially thought to be a file access issue. However, further investigation reveals a **different root cause**.
+
+### Updated Root Cause - Java Version Incompatibility
+The system is running **Java 25 (OpenJDK 25)**, but the Perst library (`perst.jar`) is an older version that uses `sun.misc.Unsafe` which was removed in Java 9+.
+
+**Evidence:**
+```
+java.lang.NoSuchFieldException: unsafe
+	at java.base/java.lang.Class.getDeclaredField(Class.java:2382)
+	at org.garret.perst.impl.sun14.Sun14ReflectionProvider.<init>(Sun14ReflectionProvider.java:21)
+```
+
+This error appears in TestLeak, and likely TestAlloc has a similar issue manifesting as "File access error" due to the underlying library initialization failure.
 
 ### Test Expected Behavior
 According to the makefile, TestAlloc runs 3 times:
@@ -28,34 +36,26 @@ According to the makefile, TestAlloc runs 3 times:
 2. Second run: Verify/read from database  
 3. Third run: Cleanup
 
-The failure occurs on first run when trying to open, suggesting it expects an existing database file.
+The failure occurs because the Perst library cannot initialize properly in Java 25.
 
 ## Investigation Plan
 
-### Step 1: Examine TestAlloc Source Code
-- Read tst/TestAlloc.java to understand expected file names and parameters
-- Check what arguments it accepts (if any)
-- Identify expected database file structure
+### COMPLETED INVESTIGATION
+- [x] Examined TestAlloc.java source code - uses "@testalloc.mfd" multi-file database
+- [x] Tested with various parameters - all fail with same error
+- [x] Identified Java 25 incompatibility as root cause
 
-### Step 2: Check Existing Database Files
-- Look for testalloc.* files in tst/ directory
-- Verify if database files exist that should be removed/created
-
-### Step 3: Check File Permissions
-- Verify read/write permissions on tst/ directory
-- Check if any lock files exist
-
-### Step 4: Test with Correct Sequence
-- Run makefile test sequence to see if it works in proper order
-- Compare with how other tests handle initialization
+### Solution Options
+1. **Option 1 (Recommended):** Upgrade Perst library to version compatible with Java 9+
+2. **Option 2:** Use Java 8 instead of Java 25 (if available)
+3. **Option 3:** Exclude TestAlloc from test runs until Perst is upgraded
 
 ## Success Criteria
-- [ ] Identify why file access error occurs
-- [ ] Determine if test needs modification or just correct execution order
-- [ ] Document fix or workaround
+- [x] Identify root cause: Perst library incompatible with Java 25
+- [ ] Document solution
 
 ## Dependencies
-- None - this is an independent investigation
+- Need updated Perst library
 
 ## Effort Estimate
-S (Small) - Should be quick to diagnose once source is examined
+M (Medium) - Requires library upgrade

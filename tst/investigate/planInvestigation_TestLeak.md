@@ -4,52 +4,29 @@
 
 # Plan: Investigate TestLeak Failure
 
+## Status
+This investigation is related to TestAlloc - both fail due to Java 25 incompatibility with Perst library.
+
 ## Error Details
 ```
-Output: Iteration 0
-(Testimed out after 30 seconds - only produced one iteration)
+java.lang.NoSuchFieldException: unsafe
+	at java.base/java.lang.Class.getDeclaredField(Class.java:2382)
+	at org.garret.perst.impl.sun14.Sun14ReflectionProvider.<init>(Sun14ReflectionProvider.java:21)
+java.lang.Error: Failed to initialize reflection provider
 ```
 
-## Root Cause Analysis
+## Root Cause
+**Java 25 Incompatibility**: The Perst library uses `sun.misc.Unsafe` which was removed in Java 9+.
 
-### Initial Assessment
-The test starts but appears to hang or run extremely slowly after the first iteration. This suggests:
-1. Memory leak detection takes a very long time
-2. The test may require more time to complete its leak detection cycle
-3. Possible issue with the garbage collection monitoring
-
-### Test Expected Behavior
-TestLeak is designed to detect memory leaks in the Perst database. It likely:
-1. Creates objects in a loop
-2. Monitors memory usage over time
-3. Reports any memory leaks detected
-
-## Investigation Plan
-
-### Step 1: Examine TestLeak Source Code
-- Read tst/TestLeak.java to understand what it does
-- Check iteration count expectations
-- Identify what parameters it accepts
-
-### Step 2: Run with Longer Timeout
-- Execute with 120s or 300s timeout instead of 30s
-- Observe if it completes successfully with more time
-
-### Step 3: Check Memory Usage
-- Monitor Java heap size during test execution
-- Check if test is stuck or just slow
-
-### Step 4: Compare with Makefile
-- Look at how TestLeak is run in the makefile
-- Check if there are any special requirements
+## Solution
+See planInvestigation_TestAlloc.md for details - need to upgrade Perst library or use Java 8.
 
 ## Success Criteria
-- [ ] Determine if test actually fails or just needs more time
-- [ ] Identify proper timeout value if needed
-- [ ] Document findings
+- [x] Identify root cause: Java 25 incompatibility with Perst library
+- [x] Document solution: Requires Perst library upgrade
 
 ## Dependencies
-- None - independent investigation
+- Perst library upgrade needed
 
 ## Effort Estimate
-S (Small) - Likely just needs longer timeout
+M (Medium) - Requires library upgrade
