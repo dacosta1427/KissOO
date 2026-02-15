@@ -1,6 +1,6 @@
 # JUnit Test Conversion - Phase 2 - Todo List
 
-## Completed (33 tests)
+## Completed (34 tests)
 - [x] TestCompoundIndex
 - [x] TestBit
 - [x] TestBitmap
@@ -29,8 +29,9 @@
 - [x] TestTimeSeries
 - [x] TestPerf
 - [x] TestRandomBlob
-- [x] TestVersion (converted today)
+- [x] TestVersion
 - [x] TestServer (converted today)
+- [x] TestDbServer (converted today - full-text search!)
 
 ## Skipped (2 tests)
 - [x] TestIndexIterator (already in TestIndex.java)
@@ -39,20 +40,16 @@
 ## Pending - Core Tests (1 test)
 - [ ] TestAgg
 
-## Pending - Replication & Server (3 tests)
+## Pending - Replication & Server (2 tests)
 - [ ] TestReplic (complex - requires master/slave network setup)
 - [ ] TestReplic2 (complex - requires master/slave network setup)
-- [ ] TestDbServer (complex - requires Database server)
 
 ## Pending - Other Features (2 tests)
 - [ ] TestSSD (interactive menu-driven app)
 - [ ] TestSOD (interactive menu-driven app)
 
-## Today's Goal
-Convert at least 3 more tests from the pending list.
-
 ## Notes
-- TestServer converted with 2 test methods: testServerMultiThreaded and testServerIndexOperations
-- TestSSD and TestSOD are interactive menu-driven applications - difficult to convert to automated tests
-- TestReplic, TestReplic2 require complex network setup (master/slave replication)
-- TestDbServer requires Database server setup
+- TestServer: Multi-threaded server operations with FieldIndex locking
+- TestDbServer: Full-text search and Database API testing (3 tests added)
+- TestSSD and TestSOD are interactive menu-driven applications - difficult to convert
+- TestReplic, TestReplic2 require complex network setup

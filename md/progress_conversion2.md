@@ -9,8 +9,8 @@
 ## Project Status
 - **Start Date:** 2026-02-14
 - **Current Phase:** In Progress
-- **Overall Progress:** 71% complete (27/38 tasks)
-- **Test Count:** 252 tests (increased from 148)
+- **Overall Progress:** 76% complete (29/38 tasks)
+- **Test Count:** 255 tests (increased from 148)
 
 ## Task Progress
 
@@ -24,7 +24,7 @@
 - **Success criteria:** TestAgg converted to JUnit 5, all assertions pass
 - **Timestamp:** -
 - **Effort estimate:** M
-- **Notes:** Aggregation functions - requires data.csv file, complex test
+- **Notes:** Aggregation functions - requires data.csv file
 
 #### Task 2: Convert TestCompoundIndex
 - **Status:** completed
@@ -267,14 +267,14 @@
 - **Notes:** Replication variant - requires complex network setup
 
 #### Task 25: Convert TestDbServer
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Low
-- **Dependencies:** Database server setup
+- **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestDbServer converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 16:49
 - **Effort estimate:** L
-- **Notes:** Database server - requires server setup
+- **Notes:** Database server with full-text search - 3 tests added (multi-threaded, basic operations, case insensitive)
 
 #### Task 26: Convert TestServer
 - **Status:** completed
@@ -284,7 +284,7 @@
 - **Success criteria:** TestServer converted to JUnit 5
 - **Timestamp:** 2026-02-15 16:07
 - **Effort estimate:** L
-- **Notes:** Multi-threaded server operations - 2 tests added (testServerMultiThreaded, testServerIndexOperations)
+- **Notes:** Multi-threaded server operations - 2 tests added
 
 ### Priority #7: Other Features
 
@@ -415,7 +415,6 @@
 
 ## Current Blockers
 - TestReplic, TestReplic2 - require network setup for master/slave replication
-- TestDbServer - requires Database server setup
 - TestSSD, TestSOD - interactive menu-driven apps
 
 ## Next Steps
