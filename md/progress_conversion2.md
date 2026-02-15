@@ -17,14 +17,14 @@
 ### Priority #1: Core Tests
 
 #### Task 1: Convert TestAgg
-- **Status:** pending
+- **Status:** completed
 - **Priority:** High
 - **Dependencies:** data.csv file
 - **Owner:** Cline
 - **Success criteria:** TestAgg converted to JUnit 5, all assertions pass
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 15:49
 - **Effort estimate:** M
-- **Notes:** Aggregation functions - requires data.csv file, complex test
+- **Notes:** Aggregation functions - requires data.csv file, complex test - 11 tests added (load events, count by host, unique IPs/URLs/agents/users, frequenters, count by host/day, approx distinct count, sorted output, time range query)
 
 #### Task 2: Convert TestCompoundIndex
 - **Status:** completed
