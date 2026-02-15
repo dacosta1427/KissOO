@@ -1,6 +1,6 @@
 # JUnit Test Conversion - Phase 2 - Todo List
 
-## Completed (29 tests)
+## Completed (30 tests)
 - [x] TestCompoundIndex
 - [x] TestBit
 - [x] TestBitmap
@@ -26,7 +26,8 @@
 - [x] TestRecovery
 - [x] TestConcur
 - [x] TestLeak
-- [x] TestTimeSeries (converted today)
+- [x] TestTimeSeries
+- [x] TestPerf (converted today)
 
 ## Skipped (2 tests)
 - [x] TestIndexIterator (already in TestIndex.java)
@@ -41,12 +42,10 @@
 - [ ] TestDbServer
 - [ ] TestServer
 
-## Pending - Other Features (6 tests)
-- [ ] TestPerf
+## Pending - Other Features (4 tests)
 - [ ] TestRandomBlob
 - [ ] TestSSD
 - [ ] TestSOD
-- [ ] TestTimeSeries
 - [ ] TestVersion
 
 ## Today's Goal
