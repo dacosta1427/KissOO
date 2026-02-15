@@ -31,7 +31,7 @@ targets: makejar - compile & jar
 	</target>
 
 	<target name="compile" depends="init">
-		<javac srcdir="src" excludes="org/garret/perst/aspectj/**,org/garret/perst/jassist/**" destdir="classes" deprecation="off"  debug="on" optimize="on" includeantruntime="false"> 
+		<javac srcdir="src" excludes="org/garret/perst/aspectj/**,org/garret/perst/jassist/**" destdir="classes" deprecation="off"  debug="on" optimize="on"> 
 		</javac>
 	</target>
 
@@ -40,7 +40,7 @@ targets: makejar - compile & jar
 		<delete dir="classes/tst" />
 		<mkdir dir="classes/tst" />
 
-		<javac srcdir="tst" excludes="aspectj/**,android/**,jassist/**,OO7/**" destdir="classes/tst" deprecation="off"  debug="on" optimize="on" includeantruntime="false"> 
+		<javac srcdir="tst"  excludes="aspectj/**,android/**,jassist/**,OO7/**" destdir="classes/tst" deprecation="off"  debug="on" optimize="on"> 
 			<classpath location="lib/perst.jar" />
 		</javac>
 	</target>

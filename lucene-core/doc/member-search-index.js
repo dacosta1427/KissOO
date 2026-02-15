@@ -1,1 +1,0 @@
-memberSearchIndex = [{"p":"org.apache.lucene","c":"LucenePackage","l":"get()"}];updateSearchResults();
