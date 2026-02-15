@@ -82,11 +82,9 @@ public class WeakHashTable implements OidHashTable {
                 }
                 return null;
             }
-            System.runFinalization();
         } 
     }
     
-    @SuppressWarnings("deprecation")
     public void flush() {
         while (true) { 
             cs:synchronized(this) { 
@@ -115,11 +113,9 @@ public class WeakHashTable implements OidHashTable {
                 }
                 return;
             }
-            System.runFinalization();
         }
     }
 
-    @SuppressWarnings("deprecation")
     public void invalidate() {
         while (true) { 
             cs:synchronized(this) { 
@@ -138,7 +134,6 @@ public class WeakHashTable implements OidHashTable {
                 }
                 return;
             }
-            System.runFinalization();
         }
     }
 

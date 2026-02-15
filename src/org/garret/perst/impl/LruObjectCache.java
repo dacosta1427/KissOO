@@ -99,9 +99,8 @@ public class LruObjectCache implements OidHashTable {
         count++;
     }
 
-    @SuppressWarnings("deprecation")
     public Object get(int oid) {
-        while (true) { 
+        while (true) {
             cs:synchronized(this) { 
                 Entry tab[] = table;
                 int index = (oid & 0x7FFFFFFF) % tab.length;
@@ -125,11 +124,9 @@ public class LruObjectCache implements OidHashTable {
                 }
                 return null;
             }
-            runtime.runFinalization();
         } 
     }
     
-    @SuppressWarnings("deprecation")
     public void flush() {
         while (true) { 
           cs:synchronized(this) { 
@@ -168,7 +165,6 @@ public class LruObjectCache implements OidHashTable {
                 }
                 return;
             }
-            runtime.runFinalization();
         }
     }
 
@@ -198,7 +194,6 @@ public class LruObjectCache implements OidHashTable {
     }
 
 
-    @SuppressWarnings("deprecation")
     public void invalidate() {
         while (true) { 
             cs:synchronized(this) { 
@@ -218,7 +213,6 @@ public class LruObjectCache implements OidHashTable {
                 }
                 return;
             }
-            runtime.runFinalization();
         }
     }
 
