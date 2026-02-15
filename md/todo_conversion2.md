@@ -24,10 +24,10 @@
 - [x] 9. Convert TestRtree - Spatial indexing
 - [x] 10. Convert TestKDTree - K-D trees
 - [ ] 11. Convert TestKDTree2 - K-D tree variant
-- [ ] 12. Convert TestPatricia - Patricia tries
-- [ ] 13. Convert TestTtree - T-tree
-- [ ] 14. Convert TestThickIndex - Thick indexing
-- [ ] 15. Convert TestRndIndex - Random indexing
+- [x] 12. Convert TestPatricia - Patricia tries
+- [x] 13. Convert TestTtree - T-tree
+- [x] 14. Convert TestThickIndex - Thick indexing
+- [x] 15. Convert TestRndIndex - Random indexing
 - [x] 16. Convert TestDerivedIndex - Derived indices
 
 ### Priority #4: Query & Search
@@ -62,7 +62,7 @@
 
 ## Success Criteria
 - [x] All converted tests pass with `mvn test`
-- [x] Test count increases from 148 to 162+ tests
+- [x] Test count increases from 148 to 218+ tests
 - [ ] No regressions in existing functionality
 - [x] Database cleanup works properly
 
