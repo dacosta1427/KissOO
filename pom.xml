@@ -30,10 +30,30 @@
         <maven.surefire.plugin.version>3.5.2</maven.surefire.plugin.version>
         <maven.javadoc.plugin.version>3.11.2</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
-        <jacoco.plugin.version>0.8.12</jacoco.plugin.version>
+        <jacoco.plugin.version>0.8.14</jacoco.plugin.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
         <spotbugs.plugin.version>4.9.6.0</spotbugs.plugin.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>jacoco-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jacoco-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 
     <dependencies>
         <!-- Lucene for full-text indexing -->
@@ -189,8 +209,7 @@
                 </executions>
             </plugin>
 
-            <!-- JaCoCo Plugin for Code Coverage (disabled - doesn't support Java 25 yet) -->
-            <!--
+            <!-- JaCoCo Plugin for Code Coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -210,7 +229,6 @@
                     </execution>
                 </executions>
             </plugin>
-            -->
 
             <!-- SpotBugs Plugin (disabled for now - too many legacy issues) -->
             <!--
