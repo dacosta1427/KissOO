@@ -23,7 +23,7 @@ After a change has been made to the core Perst code all the junit tests have to 
    - A **todolist** (`md/todo_*.md`) containing all items/steps to implement the plan
    - A **progress doc** (`md/progress_*.md`) containing all tasks with their current state
 
-3. **Working rules at top** - This ensures they are never forgotten
+3. **Working rules at top of every plan(ning), progress and todolist document** - This ensures they are never forgotten
 
 ---
 
@@ -243,6 +243,7 @@ Before starting any task, define how to revert if it fails:
 ## Git Worktree Workflow
 
 When working on experimental or risky changes, use a Git worktree to keep the main codebase untouched.
+Documentation on https://git-scm.com/docs/git-worktree
 
 ### Why Use Git Worktree?
 - Allows working on a branch while keeping the main branch clean
@@ -253,10 +254,10 @@ When working on experimental or risky changes, use a Git worktree to keep the ma
 
 ```bash
 # From the main project directory, create a new worktree:
-git worktree add ../perst-fix -b fix/your-feature-name
+git worktree add ../<projectname>-fix -b fix/your-feature-name
 
 # Navigate to the worktree:
-cd ../perst-fix
+cd ../<projectname>-fix
 
 # Verify you're in the new worktree:
 git worktree list
@@ -273,7 +274,7 @@ git commit -m "Description of changes"
 mvn test
 
 # When satisfied with results, return to main directory:
-cd ../perst
+cd ../<projectname>
 ```
 
 ### Merging Back to Main Branch
@@ -286,13 +287,13 @@ git checkout main
 git merge fix/your-feature-name
 
 # Or use the worktree path directly:
-git merge ../perst-fix
+git merge ../<projectname>-fix
 
 # Run tests to verify merge:
 mvn test
 
 # Clean up the worktree when done (optional):
-git worktree remove ../perst-fix
+git worktree remove ../<projectname>-fix
 git branch -d fix/your-feature-name
 ```
 
