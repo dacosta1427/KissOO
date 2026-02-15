@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude all warnings for generated code -->
+    <Match>
+        <Package name="~.*\.generated\..*"/>
+    </Match>
+    
+    <!-- Exclude warnings for test code -->
+    <Match>
+        <Package name="~.*\.test\..*"/>
+    </Match>
+    
+    <!-- Exclude specific patterns that are common in legacy code -->
+    <Match>
+        <Bug pattern="DM_EXIT"/>
+    </Match>
+    
+    <Match>
+        <Bug pattern="DM_RUN_FINALIZERS_ON_EXIT"/>
+    </Match>
+    
+    <Match>
+        <Bug pattern="DM_GC"/>
+    </Match>
+    
+    <Match>
+        <Bug pattern="DM_MONITOR_WAIT_WITHOUT_TIMEOUT"/>
+    </Match>
+    
+    <!-- Exclude serialization warnings for classes that don't need serialization -->
+    <Match>
+        <Bug pattern="SE_BAD_FIELD"/>
+        <Class name="~.*\.Perst.*"/>
+    </Match>
+    
+    <!-- Exclude performance warnings that are acceptable in this context -->
+    <Match>
+        <Bug pattern="DM_BOXED_PRIMITIVE_FOR_PARSING"/>
+    </Match>
+    
+    <Match>
+        <Bug pattern="DM_BOXED_PRIMITIVE_FOR_COMPARE"/>
+    </Match>
+    
+    <!-- Exclude warnings for deprecated methods that are being used intentionally -->
+    <Match>
+        <Bug pattern="DE_MIGHT_IGNORE"/>
+    </Match>
+    
+    <Match>
+        <Bug pattern="DE_MIGHT_DROP"/>
+    </Match>
+</FindBugsFilter>
