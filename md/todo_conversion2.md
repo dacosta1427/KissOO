@@ -20,6 +20,7 @@
 - [x] TestJSQLContains (converted today)
 - [x] TestRollback (converted today)
 - [x] TestMaxOid (converted today)
+- [x] TestMod (converted today)
 
 ## Skipped (2 tests)
 - [x] TestIndexIterator (already in TestIndex.java)

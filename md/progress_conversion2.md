@@ -9,8 +9,8 @@
 ## Project Status
 - **Start Date:** 2026-02-14
 - **Current Phase:** In Progress
-- **Overall Progress:** 55% complete (21/38 tasks)
-- **Test Count:** 233 tests (increased from 148)
+- **Overall Progress:** 55% complete (22/38 tasks)
+- **Test Count:** 236 tests (increased from 148)
 
 ## Task Progress
 
@@ -329,14 +329,14 @@
 - **Notes:** Max OID handling - 4 tests added
 
 #### Task 31: Convert TestMod
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Low
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestMod converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 11:38
 - **Effort estimate:** S
-- **Notes:** Modification tracking
+- **Notes:** Modification tracking - 3 tests added (insertion, iterator retrieval from intIndex, iterator retrieval from strIndex)
 
 #### Task 32: Convert TestPerf
 - **Status:** pending
