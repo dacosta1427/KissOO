@@ -237,3 +237,80 @@ Before starting any task, define how to revert if it fails:
 ### Blocker Tracking
 - Note what's preventing task progress
 - Escalate if blocker persists
+
+---
+
+## Git Worktree Workflow
+
+When working on experimental or risky changes, use a Git worktree to keep the main codebase untouched.
+
+### Why Use Git Worktree?
+- Allows working on a branch while keeping the main branch clean
+- Enables parallel development on different features
+- Provides isolation for risky changes
+
+### Creating a Worktree
+
+```bash
+# From the main project directory, create a new worktree:
+git worktree add ../perst-fix -b fix/your-feature-name
+
+# Navigate to the worktree:
+cd ../perst-fix
+
+# Verify you're in the new worktree:
+git worktree list
+```
+
+### Working in the Worktree
+
+```bash
+# Make your changes, commit them:
+git add <files>
+git commit -m "Description of changes"
+
+# Run tests to verify:
+mvn test
+
+# When satisfied with results, return to main directory:
+cd ../perst
+```
+
+### Merging Back to Main Branch
+
+```bash
+# Switch to the main branch:
+git checkout main
+
+# Merge the worktree branch:
+git merge fix/your-feature-name
+
+# Or use the worktree path directly:
+git merge ../perst-fix
+
+# Run tests to verify merge:
+mvn test
+
+# Clean up the worktree when done (optional):
+git worktree remove ../perst-fix
+git branch -d fix/your-feature-name
+```
+
+### Worktree Best Practices
+1. **Always run tests before merging** - verify all tests pass in the worktree
+2. **Commit frequently** - don't wait until the end to commit
+3. **Keep worktrees short-lived** - merge back promptly after completing work
+4. **Use descriptive branch names** - e.g., `fix/deprecated-apis`, `feature/new-index`
+
+### Troubleshooting
+
+```bash
+# List all worktrees:
+git worktree list
+
+# Remove a stuck worktree:
+git worktree remove --force <path>
+
+# Prune dead worktree references:
+git worktree prune
+```
