@@ -9,8 +9,8 @@
 ## Project Status
 - **Start Date:** 2026-02-14
 - **Current Phase:** In Progress
-- **Overall Progress:** 60% complete (23/38 tasks)
-- **Test Count:** 238 tests (increased from 148)
+- **Overall Progress:** 68% complete (26/38 tasks)
+- **Test Count:** 250 tests (increased from 148)
 
 ## Task Progress
 
@@ -225,24 +225,24 @@
 - **Notes:** Transaction rollback - 2 tests added
 
 #### Task 21: Convert TestRecovery
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestRecovery converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 12:18
 - **Effort estimate:** M
-- **Notes:** Database recovery
+- **Notes:** Database recovery - 4 tests added (set/index consistency, index records, set iterator, add records)
 
 #### Task 22: Convert TestConcur
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestConcur converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 12:55
 - **Effort estimate:** L
-- **Notes:** Concurrency testing
+- **Notes:** Concurrency testing - 4 tests added (list structure, shared lock iteration, exclusive lock element move, multiple iterations)
 
 ### Priority #6: Replication & Server
 
@@ -309,14 +309,14 @@
 - **Notes:** Memory leak detection
 
 #### Task 29: Convert TestLoad
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Low
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestLoad converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 12:00
 - **Effort estimate:** L
-- **Notes:** Load testing
+- **Notes:** Load testing - 4 tests added (iteration, random access, repeated iterations, sequential access)
 
 #### Task 30: Convert TestMaxOid
 - **Status:** completed

@@ -1,6 +1,6 @@
 # JUnit Test Conversion - Phase 2 - Todo List
 
-## Completed (17 tests)
+## Completed (29 tests)
 - [x] TestCompoundIndex
 - [x] TestBit
 - [x] TestBitmap
@@ -16,12 +16,17 @@
 - [x] TestJsqlJoin
 - [x] TestRegex
 - [x] TestAlloc
-- [x] TestKDTree2 (converted today)
-- [x] TestJSQLContains (converted today)
-- [x] TestRollback (converted today)
-- [x] TestMaxOid (converted today)
-- [x] TestMod (converted today)
-- [x] TestXML (converted today)
+- [x] TestKDTree2
+- [x] TestJSQLContains
+- [x] TestRollback
+- [x] TestMaxOid
+- [x] TestMod
+- [x] TestXML
+- [x] TestLoad
+- [x] TestRecovery
+- [x] TestConcur
+- [x] TestLeak
+- [x] TestTimeSeries (converted today)
 
 ## Skipped (2 tests)
 - [x] TestIndexIterator (already in TestIndex.java)
@@ -30,27 +35,19 @@
 ## Pending - Core Tests (1 test)
 - [ ] TestAgg
 
-## Pending - Transactions (2 tests)
-- [ ] TestRecovery
-- [ ] TestConcur
-
 ## Pending - Replication & Server (4 tests)
 - [ ] TestReplic
 - [ ] TestReplic2
 - [ ] TestDbServer
 - [ ] TestServer
 
-## Pending - Other Features (8 tests)
-- [ ] TestLeak
-- [ ] TestLoad
-- [ ] TestMod
+## Pending - Other Features (6 tests)
 - [ ] TestPerf
 - [ ] TestRandomBlob
 - [ ] TestSSD
 - [ ] TestSOD
 - [ ] TestTimeSeries
 - [ ] TestVersion
-- [ ] TestXML
 
 ## Today's Goal
 Convert at least 3 more tests from the pending list.
