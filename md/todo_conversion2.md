@@ -28,12 +28,12 @@
 - [ ] 13. Convert TestTtree - T-tree
 - [ ] 14. Convert TestThickIndex - Thick indexing
 - [ ] 15. Convert TestRndIndex - Random indexing
-- [ ] 16. Convert TestDerivedIndex - Derived indices
+- [x] 16. Convert TestDerivedIndex - Derived indices
 
 ### Priority #4: Query & Search
 - [ ] 17. Convert TestJSQLContains - CONTAINS operator
-- [ ] 18. Convert TestJsqlJoin - JOIN queries
-- [ ] 19. Convert TestRegex - Regular expression search
+- [x] 18. Convert TestJsqlJoin - JOIN queries
+- [x] 19. Convert TestRegex - Regular expression search
 
 ### Priority #5: Transactions
 - [ ] 20. Convert TestRollback - Transaction rollback
@@ -47,7 +47,7 @@
 - [ ] 26. Convert TestServer - Server functionality
 
 ### Priority #7: Other Features
-- [ ] 27. Convert TestAlloc - Memory allocation
+- [x] 27. Convert TestAlloc - Memory allocation
 - [ ] 28. Convert TestLeak - Memory leak detection
 - [ ] 29. Convert TestLoad - Load testing
 - [ ] 30. Convert TestMaxOid - Max OID handling

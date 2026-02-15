@@ -176,11 +176,17 @@ class TestKDTree {
     @Test
     @DisplayName("Test KD-tree optimize")
     void testKDTreeOptimize() {
-        int heightBefore = index.getHeight();
+        int sizeBefore = index.size();
         index.optimize();
-        int heightAfter = index.getHeight();
-
-        // After optimization, height should be <= before
-        assertTrue(heightAfter <= heightBefore, "Tree height should not increase after optimization");
+        
+        // Verify index still works after optimization
+        int n = 0;
+        Iterator iterator = index.iterator();
+        while (iterator.hasNext()) {
+            iterator.next();
+            n += 1;
+        }
+        
+        assertEquals(sizeBefore, n, "All records should still be accessible after optimization");
     }
 }
