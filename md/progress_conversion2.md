@@ -9,8 +9,8 @@
 ## Project Status
 - **Start Date:** 2026-02-14
 - **Current Phase:** In Progress
-- **Overall Progress:** 47% complete (18/38 tasks)
-- **Test Count:** 227 tests (increased from 148)
+- **Overall Progress:** 55% complete (21/38 tasks)
+- **Test Count:** 233 tests (increased from 148)
 
 ## Task Progress
 
@@ -215,14 +215,14 @@
 ### Priority #5: Transactions
 
 #### Task 20: Convert TestRollback
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestRollback converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 11:21
 - **Effort estimate:** M
-- **Notes:** Transaction rollback
+- **Notes:** Transaction rollback - 2 tests added
 
 #### Task 21: Convert TestRecovery
 - **Status:** pending
@@ -319,14 +319,14 @@
 - **Notes:** Load testing
 
 #### Task 30: Convert TestMaxOid
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Low
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestMaxOid converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 11:22
 - **Effort estimate:** S
-- **Notes:** Max OID handling
+- **Notes:** Max OID handling - 4 tests added
 
 #### Task 31: Convert TestMod
 - **Status:** pending

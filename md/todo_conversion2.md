@@ -18,6 +18,8 @@
 - [x] TestAlloc
 - [x] TestKDTree2 (converted today)
 - [x] TestJSQLContains (converted today)
+- [x] TestRollback (converted today)
+- [x] TestMaxOid (converted today)
 
 ## Skipped (2 tests)
 - [x] TestIndexIterator (already in TestIndex.java)
@@ -26,14 +28,7 @@
 ## Pending - Core Tests (1 test)
 - [ ] TestAgg
 
-## Pending - Advanced Indexing (1 test)
-- [ ] TestKDTree2
-
-## Pending - Query & Search (1 test)
-- [ ] TestJSQLContains
-
-## Pending - Transactions (3 tests)
-- [ ] TestRollback
+## Pending - Transactions (2 tests)
 - [ ] TestRecovery
 - [ ] TestConcur
 
@@ -43,10 +38,9 @@
 - [ ] TestDbServer
 - [ ] TestServer
 
-## Pending - Other Features (12 tests)
+## Pending - Other Features (8 tests)
 - [ ] TestLeak
 - [ ] TestLoad
-- [ ] TestMaxOid
 - [ ] TestMod
 - [ ] TestPerf
 - [ ] TestRandomBlob
