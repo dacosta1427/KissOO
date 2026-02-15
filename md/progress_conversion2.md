@@ -9,8 +9,8 @@
 ## Project Status
 - **Start Date:** 2026-02-14
 - **Current Phase:** In Progress
-- **Overall Progress:** 37% complete (14/38 tasks)
-- **Test Count:** 218 tests (increased from 148)
+- **Overall Progress:** 47% complete (18/38 tasks)
+- **Test Count:** 227 tests (increased from 148)
 
 ## Task Progress
 
@@ -121,14 +121,14 @@
 - **Notes:** K-D tree index - 6 tests added
 
 #### Task 11: Convert TestKDTree2
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestKDTree2 converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 11:16
 - **Effort estimate:** M
-- **Notes:** K-D tree variant
+- **Notes:** K-D tree variant - 6 tests added
 
 #### Task 12: Convert TestPatricia
 - **Status:** completed
@@ -183,14 +183,14 @@
 ### Priority #4: Query & Search
 
 #### Task 17: Convert TestJSQLContains
-- **Status:** pending
+- **Status:** completed
 - **Priority:** Medium
 - **Dependencies:** None
 - **Owner:** Cline
 - **Success criteria:** TestJSQLContains converted to JUnit 5
-- **Timestamp:** -
+- **Timestamp:** 2026-02-15 11:16
 - **Effort estimate:** M
-- **Notes:** JSQL CONTAINS operator
+- **Notes:** JSQL CONTAINS operator - 3 tests added
 
 #### Task 18: Convert TestJsqlJoin
 - **Status:** completed
