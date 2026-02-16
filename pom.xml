@@ -115,9 +115,8 @@
                     <target>${java.version}</target>
                     <release>${java.version}</release>
                     <compilerArgs>
-                        <arg>-Xlint:deprecation</arg>
-                        <arg>-Xlint:unchecked</arg>
-                        <arg>-Xlint:removal</arg>
+                        <arg>-Xlint:all</arg>
+                        <arg>-Werror</arg>
                     </compilerArgs>
                     <excludes>
                         <exclude>org/garret/perst/jassist/**</exclude>

@@ -523,6 +523,7 @@ public class Database implements IndexProvider {
      * database first time (to mark fields for which indices should be created, use Indexable 
      * annotation)
      */
+    @Deprecated
     public boolean createIndex(Class table, String key, int kind) { 
         return createIndex(locateTable(table, true), table, key, kind);
     }
@@ -540,6 +541,7 @@ public class Database implements IndexProvider {
      * database first time (to mark fields for which indices should be created, use Indexable 
      * annotation)
      */
+    @Deprecated
     public boolean createIndex(Class table, String key, boolean unique) { 
         return createIndex(locateTable(table, true), table, key, unique ? INDEX_KIND_UNIQUE : INDEX_KIND_DEFAULT);
     }
@@ -559,6 +561,7 @@ public class Database implements IndexProvider {
      * database first time (to mark fields for which indices should be created, use Indexable 
      * annotaion)
      */
+    @Deprecated
     public boolean createIndex(Class table, String key, boolean unique, boolean caseInsensitive, boolean thick) { 
         int kind = INDEX_KIND_DEFAULT;
         if (unique) kind |= INDEX_KIND_UNIQUE;
@@ -583,6 +586,7 @@ public class Database implements IndexProvider {
      * database first time (to mark fields for which indices should be created, use Indexable 
      * annotaion)
      */
+    @Deprecated
     public boolean createIndex(Class table, String key, boolean unique, boolean caseInsensitive, boolean thick, boolean randomAccess) { 
         int kind = INDEX_KIND_DEFAULT;
         if (unique) kind |= INDEX_KIND_UNIQUE;

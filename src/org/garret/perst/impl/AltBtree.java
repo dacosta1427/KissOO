@@ -455,7 +455,7 @@ class AltBtree<T> extends PersistentCollection<T> implements Index<T> {
         }
 
         Object getKeyValue(int i) { 
-            return new Character(data[i]);
+            return Character.valueOf(data[i]);
         }
 
         BtreePage clonePage() { 
@@ -569,7 +569,7 @@ class AltBtree<T> extends PersistentCollection<T> implements Index<T> {
         }
 
         Object getKeyValue(int i) { 
-            return new Float(data[i]);
+            return Float.valueOf(data[i]);
         }
 
         BtreePage clonePage() { 
