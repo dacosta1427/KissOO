@@ -194,10 +194,10 @@ class BtreeMultiFieldIndex<T> extends Btree<T> implements FieldIndex<T> {
                 v = Boolean.valueOf(data[offs++] != 0);
                 break;
               case ClassDescriptor.tpByte:
-                v = new Byte(data[offs++]);
+                v = Byte.valueOf(data[offs++]);
                 break;
               case ClassDescriptor.tpShort:
-                v = new Short(Bytes.unpack2(data, offs));
+                v = Short.valueOf(Bytes.unpack2(data, offs));
                 offs += 2;
                 break;
               case ClassDescriptor.tpChar:
@@ -205,7 +205,7 @@ class BtreeMultiFieldIndex<T> extends Btree<T> implements FieldIndex<T> {
                 offs += 2;
                 break;
               case ClassDescriptor.tpInt:
-                v = new Integer(Bytes.unpack4(data, offs));
+                v = Integer.valueOf(Bytes.unpack4(data, offs));
                 offs += 4;
                 break;
               case ClassDescriptor.tpObject:
@@ -216,7 +216,7 @@ class BtreeMultiFieldIndex<T> extends Btree<T> implements FieldIndex<T> {
                   break;
               }
               case ClassDescriptor.tpLong:
-                v = new Long(Bytes.unpack8(data, offs));
+                v = Long.valueOf(Bytes.unpack8(data, offs));
                 offs += 8;
                 break;
               case ClassDescriptor.tpEnum:
@@ -235,7 +235,7 @@ class BtreeMultiFieldIndex<T> extends Btree<T> implements FieldIndex<T> {
                 offs += 4;
                 break;
               case ClassDescriptor.tpDouble:
-                v = new Double(Double.longBitsToDouble(Bytes.unpack8(data, offs)));
+                v = Double.valueOf(Double.longBitsToDouble(Bytes.unpack8(data, offs)));
                 offs += 8;
                 break;
               case ClassDescriptor.tpString:

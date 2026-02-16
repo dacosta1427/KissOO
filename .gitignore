@@ -9,8 +9,9 @@
 /target/spotbugsXml.xml
 *aspectj*.*
 **/*.dbs
-**/target/**
+target/**/*
 
 /.classpath
 /.project
 .idea/**/*
+*.lst

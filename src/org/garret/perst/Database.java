@@ -169,6 +169,7 @@ public class Database implements IndexProvider {
      * database first time (to mark fields for which indices should be created, use Indexable 
      * annotation)
      */
+    @Deprecated
     public boolean createTable(Class table) { 
         if (multithreaded) { 
             checkTransaction();

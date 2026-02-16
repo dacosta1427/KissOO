@@ -4,47 +4,44 @@
 
 ---
 
-# Todolist: Perst Deprecated API Fixes
+# Todolist: Perst Code Quality Improvement
 
 ## Tasks
 
-### Priority #1: Class.newInstance() Replacement
+### Priority #1: Fix Primitive Wrapper Constructors (94 instances)
+- [x] Task 1.1: Fix Aggregator.java - Replace new Integer/Long/Double() with valueOf()
+- [x] Task 1.2: Fix RndBtree.java - Replace new Integer/Long/Double/Byte/Short() with valueOf()
+- [x] Task 1.3: Fix QueryImpl.java - Replace new Integer/Long/Double() with valueOf()
+- [x] Task 1.4: Fix StorageImpl.java - Replace new Integer/Long() with valueOf()
+- [x] Task 1.5: Fix AltBtree.java - Replace new Integer/Long/Double/Byte/Short() with valueOf()
+- [x] Task 1.6: Fix Btree.java - Replace new Integer/Long/Double/Byte/Short() with valueOf()
+- [x] Task 1.7: Fix BtreeCompoundIndex.java - Replace new Integer/Long/Double/Byte/Short() with valueOf()
+- [x] Task 1.8: Fix BtreeMultiFieldIndex.java - Replace new Integer/Long/Double/Byte/Short() with valueOf()
+- [x] Task 1.9: Fix AltBtreeCompoundIndex.java - Replace new Integer/Byte() with valueOf()
 
-- [x] Task 1.0: Verify current state (tests pass, APIs still work in Java 25)
-- [x] Task 1.1: Fix ClassDescriptor.java line 318 - replace `c.newInstance()` with `c.getDeclaredConstructor().newInstance()`
+### Priority #2: Fix finalize() and runFinalization()
+- [x] Task 2.1: Persistent.java - Already has @Deprecated(forRemoval=true)
+- [x] Task 2.2: WeakHashTable.java - Already has @SuppressWarnings
+- [x] Task 2.3: LruObjectCache.java - Already has @SuppressWarnings
 
-### Priority #2: finalize() Replacement
+### Priority #3: Add @Deprecated Annotations
+- [ ] Task 3.1: Database.java - Add @Deprecated to 4 deprecated methods
 
-- [x] Task 2.1: Add @SuppressWarnings to Persistent.java finalize() method
+### Priority #4: Enable Strict Compilation
+- [ ] Task 4.1: Enable -Xlint:all in pom.xml
+- [ ] Task 4.2: Run tests and fix any issues
 
-### Priority #3: runFinalization() Replacement
-
-- [x] Task 3.1: Fix WeakHashTable.java - add @SuppressWarnings to get(), flush(), invalidate()
-- [x] Task 3.2: Fix LruObjectCache.java - add @SuppressWarnings to get(), flush(), invalidate()
-
-### Priority #4: Verification
-
-- [x] Task 4.1: Run mvn compile - SUCCESS
-- [x] Task 4.2: Run all JUnit tests (160 tests) - ALL PASS
-- [x] Task 4.3: Verify functionality - VERIFIED
+### Priority #5: Final Verification
+- [ ] Task 5.1: Run all 288 JUnit tests
+- [ ] Task 5.2: Verify zero deprecation warnings (or minimal)
 
 ## Success Criteria
+- [ ] All 288 tests pass
+- [ ] Zero deprecation warnings from primitive wrappers
+- [ ] All deprecated methods properly annotated
+- [ ] Clean build with -Xlint:all
 
-- [x] All 160 JUnit tests pass
-- [x] No deprecation warnings in compilation output
-- [x] Deprecated APIs still functional for backward compatibility
-- [x] Code compiles cleanly with Java 25
-
-## Summary
-
-**Completed:**
-- Fixed Class.newInstance() in ClassDescriptor.java
-- Suppressed deprecation warnings for finalize() in Persistent.java
-- Suppressed deprecation warnings for runFinalization() in WeakHashTable.java and LruObjectCache.java
-- All 160 JUnit tests pass
-
-**Approach:**
-Instead of replacing the deprecated APIs (which could break functionality), we added @SuppressWarnings annotations to suppress deprecation warnings while maintaining backward compatibility. This approach:
-- Keeps existing functionality intact
-- Avoids introducing new bugs
-- Prepares for future Java versions where these APIs will be removed
+## Rollback Plan
+1. Git revert individual files if issues arise
+2. Run `mvn test` to verify
+3. Revert pom.xml if -Xlint causes failures
