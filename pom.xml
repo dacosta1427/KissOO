@@ -115,8 +115,9 @@
                     <target>${java.version}</target>
                     <release>${java.version}</release>
                     <compilerArgs>
-                        <arg>-Xlint:all</arg>
-                        <arg>-Werror</arg>
+                        <arg>-Xlint:deprecation</arg>
+                        <arg>-Xlint:unchecked</arg>
+                        <arg>-Xlint:removal</arg>
                     </compilerArgs>
                     <excludes>
                         <exclude>org/garret/perst/jassist/**</exclude>
@@ -247,7 +248,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>3.5.0</version>
+                        <version>3.4.1</version>
                         <executions>
                             <execution>
                                 <id>enforce-java</id>

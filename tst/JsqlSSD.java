@@ -81,11 +81,8 @@ public class JsqlSSD {
         storage.open("testssd2.dbs");
         Database db = new Database(storage);
 
-        db.createTable(Supplier.class);
-        db.createIndex(Supplier.class, "name", true);
-        db.createTable(Detail.class);
-        db.createIndex(Detail.class, "id", true);
-        db.createTable(Shipment.class);
+        // Tables and indices are now created automatically
+        // Legacy calls removed: db.createTable() and db.createIndex()
 
         Query supplierQuery = db.prepare(Supplier.class, "name like ?");
         Query detailQuery = db.prepare(Detail.class, "id like ?");

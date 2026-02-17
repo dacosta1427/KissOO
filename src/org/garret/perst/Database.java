@@ -77,12 +77,12 @@ public class Database implements IndexProvider {
     {
         boolean schemaUpdated = false;
         metadata = (Metadata)storage.getRoot();
-        Iterator iterator = metadata.metaclasses.entryIterator();
-        tables = new HashMap<Class,Table>();
+        Iterator<Map.Entry<String, Table>> iterator = metadata.metaclasses.entryIterator();
+        tables = new HashMap<>();
         while (iterator.hasNext()) { 
-            Map.Entry map = (Map.Entry)iterator.next();
-            Table table = (Table)map.getValue();
-            Class cls = ClassDescriptor.loadClass(storage, (String)map.getKey());
+            Map.Entry<String, Table> map = iterator.next();
+            Table table = map.getValue();
+            Class cls = ClassDescriptor.loadClass(storage, map.getKey());
             table.setClass(cls);
             tables.put(cls, table);
             schemaUpdated |= addIndices(table, cls);
@@ -158,37 +158,6 @@ public class Database implements IndexProvider {
         }
     }
 
-    /**
-     * Create table for the specified class.
-     * This function does nothing if table for such class already exists
-     * @param table class corresponding to the table
-     * @return <code>true</code> if table is created, <code>false</code> if table 
-     * alreay exists
-     * @deprecated Since version 2.75 of Perst it is not necessary to create table and index 
-     * descriptors explicitly: them are automatically create when object is inserted in the 
-     * database first time (to mark fields for which indices should be created, use Indexable 
-     * annotation)
-     */
-    @Deprecated
-    public boolean createTable(Class table) { 
-        if (multithreaded) { 
-            checkTransaction();
-            metadata.exclusiveLock();
-        }
-        if (tables.get(table) == null) { 
-            Table t = new Table();
-            t.extent = storage.createSet();
-            t.indices = storage.createLink();
-            t.indicesMap = new HashMap();
-            t.setClass(table);
-            tables.put(table, t);
-            metadata.metaclasses.put(table.getName(), t);
-            addIndices(t, table);
-            return true;
-        }
-        return false;
-    }
-               
     private boolean addIndices(Table table, Class cls) {
         boolean schemaUpdated = false;
         for (Field f : cls.getDeclaredFields()) { 
@@ -316,9 +285,26 @@ public class Database implements IndexProvider {
                         metadata.unlock(); // try to avoid deadlock caused by concurrent insertion of objects
                         exclusiveLockSet = true;
                     }
-                    createTable(c);
+                    createTableInternal(c);
                 }
             }
+        }
+    }
+    
+    private void createTableInternal(Class table) { 
+        if (multithreaded) { 
+            checkTransaction();
+            metadata.exclusiveLock();
+        }
+        if (tables.get(table) == null) { 
+            Table t = new Table();
+            t.extent = storage.createSet();
+            t.indices = storage.createLink();
+            t.indicesMap = new HashMap();
+            t.setClass(table);
+            tables.put(table, t);
+            metadata.metaclasses.put(table.getName(), t);
+            addIndices(t, table);
         }
     }
         
@@ -483,7 +469,7 @@ public class Database implements IndexProvider {
                         FieldIndex index = (FieldIndex)iterator.next();
                         index.remove(record);
                     }
-                    if (t.fullTextIndexableFields.size() != 0) { 
+                    if (!t.fullTextIndexableFields.isEmpty()) { 
                         fullTextIndexed = true;
                     }
                     removed = true;
@@ -511,7 +497,8 @@ public class Database implements IndexProvider {
         
     /**
      * Add new index to the table. If such index already exists this method does nothing.
-     * @param table class corresponding to the table
+     * @param t table to add index to
+     * @param c class corresponding to the table
      * @param key field of the class to be indexed
      * @param kind bitmask of index kind flags
      * @exception StorageError (CLASS_NOT_FOUND) exception is thrown if there is no table corresponding to 
@@ -523,80 +510,7 @@ public class Database implements IndexProvider {
      * database first time (to mark fields for which indices should be created, use Indexable 
      * annotation)
      */
-    @Deprecated
-    public boolean createIndex(Class table, String key, int kind) { 
-        return createIndex(locateTable(table, true), table, key, kind);
-    }
-     /**
-     * Add new index to the table. If such index already exists this method does nothing.
-     * @param table class corresponding to the table
-     * @param key field of the class to be indexed
-     * @param unique if index is unique or not
-     * @exception StorageError (CLASS_NOT_FOUND) exception is thrown if there is no table corresponding to 
-     * the specified class
-     * @return <code>true</code> if index is created, <code>false</code> if index
-     * already exists
-     * @deprecated since version 2.75 of Perst it is not necessary to create table and index 
-     * descriptors explicitly: them are automatically create when object is inserted in the 
-     * database first time (to mark fields for which indices should be created, use Indexable 
-     * annotation)
-     */
-    @Deprecated
-    public boolean createIndex(Class table, String key, boolean unique) { 
-        return createIndex(locateTable(table, true), table, key, unique ? INDEX_KIND_UNIQUE : INDEX_KIND_DEFAULT);
-    }
-    /**
-     * Add new index to the table. If such index already exists this method does nothing.
-     * @param table class corresponding to the table
-     * @param key field of the class to be indexed
-     * @param unique if index is unique or not
-     * @param caseInsensitive if string index is case insensitive
-     * @param thick index should be optimized to handle large number of duplicate key values
-     * @exception StorageError (CLASS_NOT_FOUND) exception is thrown if there is no table corresponding to 
-     * the specified class
-     * @return <code>true</code> if index is created, <code>false</code> if index
-     * already exists
-     * @deprecated since version 2.75 of Perst it is not necessary to create table and index 
-     * descriptors explicitly: them are automatically cerate when objct is inserted in the 
-     * database first time (to mark fields for which indices should be created, use Indexable 
-     * annotaion)
-     */
-    @Deprecated
-    public boolean createIndex(Class table, String key, boolean unique, boolean caseInsensitive, boolean thick) { 
-        int kind = INDEX_KIND_DEFAULT;
-        if (unique) kind |= INDEX_KIND_UNIQUE;
-        if (caseInsensitive) kind |= INDEX_KIND_CASE_INSENSITIVE;
-        if (thick) kind |= INDEX_KIND_THICK;
-        return createIndex(locateTable(table, true), table, key, kind);
-    }
-    /**
-     * Add new index to the table. If such index already exists this method does nothing.
-     * @param table class corresponding to the table
-     * @param key field of the class to be indexed
-     * @param unique if index is unique or not
-     * @param caseInsensitive if string index is case insensitive
-     * @param thick index should be optimized to handle large number of duplicate key values
-     * @param randomAccess index should support fast access to elements by position
-     * @exception StorageError (CLASS_NOT_FOUND) exception is thrown if there is no table corresponding to 
-     * the specified class
-     * @return <code>true</code> if index is created, <code>false</code> if index
-     * already exists
-     * @deprecated since version 2.75 of Perst it is not necessary to create table and index 
-     * descriptors explicitly: them are automatically cerate when objct is inserted in the 
-     * database first time (to mark fields for which indices should be created, use Indexable 
-     * annotaion)
-     */
-    @Deprecated
-    public boolean createIndex(Class table, String key, boolean unique, boolean caseInsensitive, boolean thick, boolean randomAccess) { 
-        int kind = INDEX_KIND_DEFAULT;
-        if (unique) kind |= INDEX_KIND_UNIQUE;
-        if (caseInsensitive) kind |= INDEX_KIND_CASE_INSENSITIVE;
-        if (thick) kind |= INDEX_KIND_THICK;
-        if (randomAccess) kind |= INDEX_KIND_RANDOM_ACCESS;
-        return createIndex(locateTable(table, true), table, key, kind);
-    }
-
-    private boolean createIndex(Table t, Class c, String key, int kind) { 
+    private boolean createIndex(Table t, Class c, String key, int kind) {
         if (t.indicesMap.get(key) == null) { 
             boolean unique = (kind & INDEX_KIND_UNIQUE) != 0;
             boolean caseInsensitive = (kind & INDEX_KIND_CASE_INSENSITIVE) != 0;
@@ -727,7 +641,7 @@ public class Database implements IndexProvider {
                     FieldIndex index = (FieldIndex)iterator.next();
                     index.remove(record);
                 }
-                if (t.fullTextIndexableFields.size() != 0) { 
+                if (!t.fullTextIndexableFields.isEmpty()) { 
                     fullTextIndexed = true;
                 }
             }
