@@ -11,7 +11,10 @@
 package org.garret.perst;
 
 import static org.garret.perst.Storage.INFINITE_PAGE_POOL;
-import junit.framework.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 import java.io.File;
@@ -30,26 +33,16 @@ import java.io.File;
  *   }
  * </pre>
  */
-public class StorageTest extends TestCase {
+public class StorageTest {
     Storage storage;
 
-    public StorageTest(String testName) {
-        super(testName);
-    }
-
-    public static junit.framework.Test suite()
-    {
-        junit.framework.TestSuite suite =
-                new junit.framework.TestSuite(StorageTest.class);
-
-        return suite;
-    }
-
-    protected void setUp() throws java.lang.Exception {
+    @BeforeEach
+    public void setUp() throws java.lang.Exception {
         storage = StorageFactory.getInstance().createStorage();
     }
 
-    protected void tearDown() throws java.lang.Exception {
+    @AfterEach
+    public void tearDown() throws java.lang.Exception {
         if(storage.isOpened()){
             storage.close();
         }
@@ -73,6 +66,7 @@ public class StorageTest extends TestCase {
      * <li><code>isOpened()</code> returned <i>true</i>.</li>
      * </ul>
      */
+    @Test
     public void testOpen(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         assertTrue(storage.isOpened());
@@ -92,6 +86,7 @@ public class StorageTest extends TestCase {
      * <li><code>createQuery()</code> returned not-<i>null</i> object.</li>
      * </ul>
      */
+    @Test
     public void testCreateQuery(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         assertTrue(storage.isOpened());
@@ -113,6 +108,7 @@ public class StorageTest extends TestCase {
      * <li><code>createIndex()</code> returned not-<i>null</i> object.</li>
      * </ul>
      */
+    @Test
     public void testCreateIndex() {
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         assertTrue(storage.isOpened());
@@ -134,6 +130,7 @@ public class StorageTest extends TestCase {
      * <li><code>createFieldIndex()</code> returned not-<i>null</i> object.</li>
      * </ul>
      */
+    @Test
     public void testCreateFieldIndex() {
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         assertTrue(storage.isOpened());
@@ -155,6 +152,7 @@ public class StorageTest extends TestCase {
      * <li><code>createLink()</code> returned not-<i>null</i> object.</li>
      * </ul>
      */
+    @Test
     public void testCreateLink() {
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         assertTrue(storage.isOpened());
@@ -176,6 +174,7 @@ public class StorageTest extends TestCase {
      * <li><code>createBlob()</code> returned not-<i>null</i> object.</li>
      * </ul>
      */
+    @Test
     public void testCreateBlob() {
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         assertTrue(storage.isOpened());
@@ -197,6 +196,7 @@ public class StorageTest extends TestCase {
      * <li><code>createSet()</code> returned not-<i>null</i> object.</li>
      * </ul>
      */
+    @Test
     public void testCreateSet(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         assertTrue(storage.isOpened());
@@ -218,6 +218,7 @@ public class StorageTest extends TestCase {
      * <li><code>getRoot()</code> returned <i>null</i>.</li>
      * </ul>
      */
+    @Test
     public void testGetRoot(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         assertNull(storage.getRoot());
@@ -239,6 +240,7 @@ public class StorageTest extends TestCase {
      * <li><code>getRoot()</code> returned <i>root</i>.</li>
      * </ul>
      */
+    @Test
     public void testSetRoot(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         Root root = new Root( (IPersistentSet)storage.createSet() );
@@ -264,6 +266,7 @@ public class StorageTest extends TestCase {
      * <li><code>getRoot()</code> returned <i>root</i>.</li>
      * </ul>
      */
+    @Test
     public void testCommit(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         Root root = new Root( (IPersistentSet) storage.createSet() );
@@ -291,6 +294,7 @@ public class StorageTest extends TestCase {
      * <li><code>getRoot()</code> returned <i>root</i>.</li>
      * </ul>
      */
+    @Test
     public void testTransaction00(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         Root root = new Root( (IPersistentSet) storage.createSet() );
@@ -323,6 +327,7 @@ public class StorageTest extends TestCase {
      * <li><code>getRoot()</code> returned <i>root</i>.</li>
      * </ul>
      */
+    @Test
     public void testTransaction01(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         Root root = new Root( (IPersistentSet) storage.createSet() );
@@ -351,6 +356,7 @@ public class StorageTest extends TestCase {
      * <li>changes successfully rolled back.</li>
      * </ul>
      */
+    @Test
     public void testTransaction02(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         Root root = new Root( (IPersistentSet) storage.createSet() );
@@ -377,6 +383,7 @@ public class StorageTest extends TestCase {
      * <li>changes successfully rolled back.</li>
      * </ul>
      */
+    @Test
     public void testTransaction03(){
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         Root root = new Root( (IPersistentSet)storage.createSet() );
@@ -406,6 +413,7 @@ public class StorageTest extends TestCase {
      * <li>no exceptions are thrown.</li>
      * </ul>
      */
+    @Test
     public void testStorageListener00() {
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         TestStorageListener listener = new TestStorageListener();
@@ -433,6 +441,7 @@ public class StorageTest extends TestCase {
      * <li>One exception was passed to storage listener.</li>
      * </ul>
      */
+    @Test
     public void testStorageListener01() {
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         TestStorageListener listener = new TestStorageListener();
@@ -469,6 +478,7 @@ public class StorageTest extends TestCase {
      * stored and retrieved fields are identical.</li>
      * </ul>
      */
+    @Test
     public void testStoreLoad00() {
         storage.open("StorageTest.dbs");
         Root root = new Root((IPersistentSet) storage.createSet());
@@ -498,6 +508,7 @@ public class StorageTest extends TestCase {
      * stored and retrieved fields are identical.</li>
      * </ul>
      */
+    @Test
     public void testStoreLoad01() {
         storage.open("StorageTest.dbs");
         Root root = new Root((IPersistentSet) storage.createSet());
@@ -528,6 +539,7 @@ public class StorageTest extends TestCase {
      * stored and retrieved fields are identical.</li>
      * </ul>
      */
+    @Test
     public void testStoreLoad02() {
         storage.open("StorageTest.dbs");
         Root root = new Root((IPersistentSet) storage.createSet());
@@ -558,6 +570,7 @@ public class StorageTest extends TestCase {
      * stored and retrieved objects are identical.</li>
      * </ul>
      */
+    @Test
     public void testStoreLoad03() {
         storage.open("StorageTest.dbs");
         Root root = new Root(null);

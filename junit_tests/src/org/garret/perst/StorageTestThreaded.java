@@ -11,7 +11,10 @@
 package org.garret.perst;
 
 import static org.garret.perst.Storage.INFINITE_PAGE_POOL;
-import junit.framework.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * These tests verifies an implementation of the <code>Storage</code> interface. <br />
@@ -31,27 +34,21 @@ import junit.framework.*;
  *   }
  * </pre>
  */
-public class StorageTestThreaded extends TestCase {
+public class StorageTestThreaded {
 
     Storage storage;
 
-    public StorageTestThreaded(String testName) {
-        super(testName);
-    }
-    
-    public static junit.framework.Test suite()
-    {
-        junit.framework.TestSuite suite =
-                new junit.framework.TestSuite(StorageTestThreaded.class);
-        
-        return suite;
-    }
-
-    protected void setUp() throws java.lang.Exception {
+    @BeforeEach
+    public void setUp() throws java.lang.Exception {
         storage = StorageFactory.getInstance().createStorage();
+        // Reset static state for threads
+        TestThread.cnt = 0;
+        TestThread.failed = "";
+        TestThread.max_id = 0;
     }
 
-    protected void tearDown() throws java.lang.Exception {
+    @AfterEach
+    public void tearDown() throws java.lang.Exception {
         if (storage.isOpened())
             storage.close();
     }
@@ -71,6 +68,7 @@ public class StorageTestThreaded extends TestCase {
      * <li>Storage provided correct synchronisation.</li>
      * </ul>
      */
+    @Test
     public void testThreadExclusive() {
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         storage.setRoot(new Root());
@@ -104,6 +102,7 @@ public class StorageTestThreaded extends TestCase {
      * <li>Storage provided correct synchronisation.</li>
      * </ul>
      */
+    @Test
     public void testThreadSerializable() {
         storage.open(new NullFile(), INFINITE_PAGE_POOL);
         storage.setRoot(new Root());
@@ -140,7 +139,7 @@ public class StorageTestThreaded extends TestCase {
     }
 
     private static class TestThread extends Thread{
-        static Integer lock = new Integer(5);
+        static Integer lock = 5;
         static int max_id = 0;
         static int cnt = 0;
         Storage storage;

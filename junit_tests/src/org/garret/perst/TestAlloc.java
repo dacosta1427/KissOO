@@ -5,8 +5,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
@@ -36,7 +36,7 @@ class TestAlloc {
         if (storage.isOpened()) {
             storage.close();
         }
-        new java.io.File(TEST_DB).delete();
+        new File(TEST_DB).delete();
     }
 
     @Test

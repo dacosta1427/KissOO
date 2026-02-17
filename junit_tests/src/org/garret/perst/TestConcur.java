@@ -5,6 +5,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.io.File;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -31,10 +33,10 @@ class TestConcur {
         }
 
         void linkAfter(L2Elem elem) {
-            elem.next.prev = this;
             next = elem.next;
-            elem.next = this;
             prev = elem;
+            elem.next.prev = this;
+            elem.next = this;
             store();
             next.store();
             prev.store();
@@ -47,7 +49,7 @@ class TestConcur {
 
     @BeforeEach
     void setUp() throws Exception {
-        new java.io.File(TEST_DB).delete();
+        new File(TEST_DB).delete();
         storage = StorageFactory.getInstance().createStorage();
         storage.open(TEST_DB);
 
@@ -72,7 +74,7 @@ class TestConcur {
         if (storage.isOpened()) {
             storage.close();
         }
-        new java.io.File(TEST_DB).delete();
+        new File(TEST_DB).delete();
     }
 
     @Test
@@ -106,7 +108,8 @@ class TestConcur {
                 elem.load();
                 sum += elem.count;
                 n += 1;
-            } while ((elem = elem.next) != head);
+                elem = elem.next;
+            } while (elem != head);
             
             assertEquals(nElements, n, "Should iterate through all elements");
             assertEquals((long) nElements * (nElements - 1) / 2, sum, "Sum should match");
@@ -163,7 +166,8 @@ class TestConcur {
                     elem.load();
                     sum += elem.count;
                     n += 1;
-                } while ((elem = elem.next) != head);
+                    elem = elem.next;
+                } while (elem != head);
                 
                 assertEquals(nElements, n, "Iteration " + iter + ": should have all elements");
                 assertEquals((long) nElements * (nElements - 1) / 2, sum, "Iteration " + iter + ": sum should match");
