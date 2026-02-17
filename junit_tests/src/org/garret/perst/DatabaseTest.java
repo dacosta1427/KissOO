@@ -10,37 +10,30 @@
 
 package org.garret.perst;
 
-import junit.framework.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Iterator;
 
 /**
  * These tests verifies an functionality of the <code>Database</code> class.
  */
-public class DatabaseTest extends TestCase {
+public class DatabaseTest {
 
     Storage storage;
     Database database;
 
-    public DatabaseTest(String testName) {
-        super(testName);
-    }
-
-    public static junit.framework.Test suite()
-    {
-        junit.framework.TestSuite suite =
-                new junit.framework.TestSuite(DatabaseTest.class);
-
-        return suite;
-    }
-
-    protected void setUp() throws java.lang.Exception {
+    @BeforeEach
+    public void setUp() throws java.lang.Exception {
         storage = StorageFactory.getInstance().createStorage();
         storage.open(new NullFile(), Storage.INFINITE_PAGE_POOL);
         database = new Database(storage);
     }
 
-    protected void tearDown() throws java.lang.Exception {
+    @AfterEach
+    public void tearDown() throws java.lang.Exception {
         if(storage.isOpened())
             storage.close();
     }
@@ -61,6 +54,7 @@ public class DatabaseTest extends TestCase {
            second invocation returned <i>false</i>.</li>
      * </ul>
      */
+    @Test
     public void testCreateTable00() {
         // test target
         assertTrue(database.createTable(Stored.class));
@@ -82,15 +76,11 @@ public class DatabaseTest extends TestCase {
      * <li><code>NullPointerException</code> was thrown.</li>
      * </ul>
      */
+    @Test
     public void testAddRecord00() {
         assertTrue(database.createTable(Stored.class));
-        try{
-            //test target
-            database.addRecord(null);
-            fail("NullPointerExceptions expected");
-        }catch(NullPointerException e){
-            // expected exception
-        }
+        //test target
+        assertThrows(NullPointerException.class, () -> database.addRecord(null));
     }
 
     /**
@@ -110,6 +100,7 @@ public class DatabaseTest extends TestCase {
      * <li>no exceptions are thrown.</li>
      * </ul>
      */
+    @Test
     public void testAddRecord01() {
         assertTrue(database.createTable(Stored.class));
         // test target
@@ -135,6 +126,7 @@ public class DatabaseTest extends TestCase {
      * <li><code>getRecords(...)</code> returned added record.</li>
      * </ul>
      */
+    @Test
     public void testAddRecordGetRecords() {
         assertTrue(database.createTable(Stored.class));
         Stored st = new Stored("qwe");
@@ -165,6 +157,7 @@ public class DatabaseTest extends TestCase {
      * <li><code>getRecords(...)</code> returned empty set.</li>
      * </ul>
      */
+    @Test
     public void testAddRecordDeleteRecordGetRecords() {
         assertTrue(database.createTable(Stored.class));
         Stored st = new Stored("qwe");

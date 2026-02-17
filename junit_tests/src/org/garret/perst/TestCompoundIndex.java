@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.io.File;
 import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,13 +36,13 @@ class TestCompoundIndex {
         if (storage.isOpened()) {
             storage.close();
         }
-        new java.io.File(TEST_DB).delete();
+        new File(TEST_DB).delete();
     }
 
     @Test
     @DisplayName("Test compound index insert and search")
     void testCompoundIndexInsertAndSearch() {
-        FieldIndex root = storage.createFieldIndex(Record.class, new String[]{"intKey", "strKey"}, true);
+        FieldIndex<Record> root = storage.<Record>createFieldIndex(Record.class, new String[]{"intKey", "strKey"}, true);
         storage.setRoot(root);
 
         long key = 1999;
@@ -62,7 +63,7 @@ class TestCompoundIndex {
             key = (3141592621L * key + 2718281829L) % 1000000007L;
             int intKey = (int) (key >>> 32);
             String strKey = Integer.toString((int) key);
-            Record rec = (Record) root.get(new Key(new Object[]{intKey, strKey}));
+            Record rec = root.get(new Key(new Object[]{intKey, strKey}));
             assertNotNull(rec, "Record should be found for compound key");
             assertEquals(intKey, rec.intKey, "intKey should match");
             assertEquals(strKey, rec.strKey, "strKey should match");
@@ -72,7 +73,7 @@ class TestCompoundIndex {
     @Test
     @DisplayName("Test compound index iteration ascending")
     void testCompoundIndexIterationAscending() {
-        FieldIndex root = storage.createFieldIndex(Record.class, new String[]{"intKey", "strKey"}, true);
+        FieldIndex<Record> root = storage.<Record>createFieldIndex(Record.class, new String[]{"intKey", "strKey"}, true);
         storage.setRoot(root);
 
         long key = 1999;
@@ -96,7 +97,7 @@ class TestCompoundIndex {
         }
         storage.commit();
 
-        Iterator iterator = root.iterator(new Key(minKey, ""),
+        Iterator<Record> iterator = root.iterator(new Key(minKey, ""),
                 new Key(maxKey + 1, "???"),
                 FieldIndex.ASCENT_ORDER);
 
@@ -104,7 +105,7 @@ class TestCompoundIndex {
         String prevStr = "";
         int prevInt = minKey;
         while (iterator.hasNext()) {
-            Record rec = (Record) iterator.next();
+            Record rec = iterator.next();
             assertTrue(rec.intKey > prevInt || rec.intKey == prevInt && rec.strKey.compareTo(prevStr) > 0,
                     "Records should be in ascending order");
             prevStr = rec.strKey;
@@ -117,7 +118,7 @@ class TestCompoundIndex {
     @Test
     @DisplayName("Test compound index iteration descending")
     void testCompoundIndexIterationDescending() {
-        FieldIndex root = storage.createFieldIndex(Record.class, new String[]{"intKey", "strKey"}, true);
+        FieldIndex<Record> root = storage.<Record>createFieldIndex(Record.class, new String[]{"intKey", "strKey"}, true);
         storage.setRoot(root);
 
         long key = 1999;
@@ -141,7 +142,7 @@ class TestCompoundIndex {
         }
         storage.commit();
 
-        Iterator iterator = root.iterator(new Key(minKey, "", false),
+        Iterator<Record> iterator = root.iterator(new Key(minKey, "", false),
                 new Key(maxKey + 1, "???", false),
                 FieldIndex.DESCENT_ORDER);
 
@@ -149,7 +150,7 @@ class TestCompoundIndex {
         String prevStr = "";
         int prevInt = maxKey + 1;
         while (iterator.hasNext()) {
-            Record rec = (Record) iterator.next();
+            Record rec = iterator.next();
             assertTrue(rec.intKey < prevInt || rec.intKey == prevInt && rec.strKey.compareTo(prevStr) < 0,
                     "Records should be in descending order");
             prevStr = rec.strKey;
@@ -162,7 +163,7 @@ class TestCompoundIndex {
     @Test
     @DisplayName("Test compound index remove and contains")
     void testCompoundIndexRemoveAndContains() {
-        FieldIndex root = storage.createFieldIndex(Record.class, new String[]{"intKey", "strKey"}, true);
+        FieldIndex<Record> root = storage.<Record>createFieldIndex(Record.class, new String[]{"intKey", "strKey"}, true);
         storage.setRoot(root);
 
         // Insert records
@@ -186,7 +187,7 @@ class TestCompoundIndex {
             key = (3141592621L * key + 2718281829L) % 1000000007L;
             int intKey = (int) (key >>> 32);
             String strKey = Integer.toString((int) key);
-            Record rec = (Record) root.get(new Key(new Object[]{intKey, strKey}));
+            Record rec = root.get(new Key(new Object[]{intKey, strKey}));
             assertNotNull(rec, "Record should be found before removal");
             assertTrue(root.contains(rec), "Index should contain record");
             root.remove(rec);
