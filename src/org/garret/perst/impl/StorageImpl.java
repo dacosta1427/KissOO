@@ -961,6 +961,7 @@ public class StorageImpl implements Storage {
     }
 
 
+    @SuppressWarnings("unchecked")
     protected void initialize(IFile file, long pagePoolSize) {
         this.file = file;
         if (lockFile && !multiclientSupport) {
@@ -1267,12 +1268,13 @@ public class StorageImpl implements Storage {
     }
 
 
-    public synchronized Object getRoot() {
+    @SuppressWarnings("unchecked")
+    public synchronized <T> T getRoot() {
         if (!opened) {
             throw new StorageError(StorageError.STORAGE_NOT_OPENED);
         }
         int rootOid = header.root[1-currIndex].rootObject;
-        return (rootOid == 0) ? null : lookupObject(rootOid, null);
+        return (rootOid == 0) ? null : (T)lookupObject(rootOid, null);
     }
 
     public synchronized void setRoot(Object root) {
@@ -2247,7 +2249,8 @@ public class StorageImpl implements Storage {
     }
 
 
-    public synchronized HashMap getMemoryDump() {
+    @SuppressWarnings("unchecked")
+    public synchronized HashMap<Class,MemoryUsage> getMemoryDump() {
         synchronized (objectCache) {
             if (!opened) {
                 throw new StorageError(StorageError.STORAGE_NOT_OPENED);
@@ -2261,7 +2264,7 @@ public class StorageImpl implements Storage {
             greyBitmap = new int[bitmapSize];
             blackBitmap = new int[bitmapSize];
             int rootOid = header.root[currIndex].rootObject;
-            HashMap map = new HashMap();
+            HashMap<Class,MemoryUsage> map = new HashMap<Class,MemoryUsage>();
 
             if (rootOid != 0) {
                 MemoryUsage indexUsage = new MemoryUsage(Index.class);

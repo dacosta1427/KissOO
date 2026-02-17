@@ -18,7 +18,7 @@
 - [ ] Task 2.4: Fix AltBtreeMultiFieldIndex.java - Fix 7 unchecked calls and casts
 
 ### Priority #3: Moderate Warning Files
-- [ ] Task: Fix SmallMap 3.1.java - Fix 6 unchecked conversions/casts for Pair arrays
+- [ ] Task 3.1: Fix SmallMap.java - Fix 6 unchecked conversions/casts for Pair arrays
 - [ ] Task 3.2: Fix Projection.java - Fix 4 unchecked cast operations
 - [ ] Task 3.3: Fix FullTextSearchHelper.java - Fix 3 unchecked ArrayList operations
 - [ ] Task 3.4: Fix FullTextSearchResult.java - Fix 2 unchecked Comparator issues

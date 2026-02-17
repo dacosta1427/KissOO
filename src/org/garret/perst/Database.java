@@ -73,16 +73,17 @@ public class Database implements IndexProvider {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private boolean reloadSchema() 
     {
         boolean schemaUpdated = false;
         metadata = (Metadata)storage.getRoot();
-        Iterator<Map.Entry<String, Table>> iterator = metadata.metaclasses.entryIterator();
+        Iterator<Map.Entry<Object, Table>> iterator = metadata.metaclasses.entryIterator();
         tables = new HashMap<>();
         while (iterator.hasNext()) { 
-            Map.Entry<String, Table> map = iterator.next();
+            Map.Entry<Object, Table> map = iterator.next();
             Table table = map.getValue();
-            Class cls = ClassDescriptor.loadClass(storage, map.getKey());
+            Class cls = ClassDescriptor.loadClass(storage, (String)map.getKey());
             table.setClass(cls);
             tables.put(cls, table);
             schemaUpdated |= addIndices(table, cls);
@@ -300,7 +301,7 @@ public class Database implements IndexProvider {
             Table t = new Table();
             t.extent = storage.createSet();
             t.indices = storage.createLink();
-            t.indicesMap = new HashMap();
+            t.indicesMap = new HashMap<String, FieldIndex>();
             t.setClass(table);
             tables.put(table, t);
             metadata.metaclasses.put(table.getName(), t);
@@ -354,6 +355,7 @@ public class Database implements IndexProvider {
      * @exception StorageError (CLASS_NOT_FOUND) exception is thrown if there is no table corresponding to 
      * record class
      */
+    @SuppressWarnings("unchecked")
     public <T> boolean addRecord(Class table, T record) { 
         boolean added = false;
         boolean found = false;
@@ -510,6 +512,8 @@ public class Database implements IndexProvider {
      * database first time (to mark fields for which indices should be created, use Indexable 
      * annotation)
      */
+    @Deprecated
+    @SuppressWarnings("unchecked")
     private boolean createIndex(Table t, Class c, String key, int kind) {
         if (t.indicesMap.get(key) == null) { 
             boolean unique = (kind & INDEX_KIND_UNIQUE) != 0;
@@ -591,10 +595,10 @@ public class Database implements IndexProvider {
      * @param table class corresponding to the table
      * @return map of table indices
      */
-    public HashMap getIndices(Class table)
+    public HashMap<String, FieldIndex> getIndices(Class table)
     {
         Table t = locateTable(table, true, false);
-        return t == null ? new HashMap() : t.indicesMap;
+        return t == null ? new HashMap<String, FieldIndex>() : t.indicesMap;
     }
 
     /**
@@ -733,6 +737,7 @@ public class Database implements IndexProvider {
      * @return <code>true</code> if record is included in index, <code>false</code> if 
      * there is no such index or unique constraint is violated
      */
+    @SuppressWarnings("unchecked")
     public boolean includeInAllIndices(Class table, Object record) { 
         if (multithreaded) { 
             checkTransaction();
@@ -826,6 +831,7 @@ public class Database implements IndexProvider {
      * @return <code>true</code> if record is included in index, <code>false</code> if 
      * there is no such index or unique constraint is violated
      */
+    @SuppressWarnings("unchecked")
     public boolean includeInIndex(Class table, Object record, String key) { 
         Table t = locateTable(table, true);
         FieldIndex index = (FieldIndex)t.indicesMap.get(key);
@@ -912,6 +918,7 @@ public class Database implements IndexProvider {
      * @exception CompileError exception is thrown if predicate is not valid JSQL exception
      * @exception JSQLRuntimeException exception is thrown if there is runtime error during query execution
      */
+    @SuppressWarnings("unchecked")
     public <T> IterableIterator<T> select(Class table, String predicate, boolean forUpdate) { 
         Query q = prepare(table, predicate, forUpdate);
         return q.execute(getRecords(table));
@@ -977,6 +984,7 @@ public class Database implements IndexProvider {
      * the specified class
      * @return query without predicate
      */
+    @SuppressWarnings("unchecked")
     public <T> Query<T> createQuery(Class table, boolean forUpdate) { 
         Table t = locateTable(table, forUpdate, false);
         Query q = storage.createQuery();
@@ -1017,6 +1025,7 @@ public class Database implements IndexProvider {
      * the specified class
      */
 
+    @SuppressWarnings("unchecked")
     public <T> IterableIterator<T> getRecords(Class table, boolean forUpdate) { 
         Table t = locateTable(table, forUpdate, false);
         return new IteratorWrapper<T>(t == null ? new LinkedList<T>().iterator() : new ClassFilterIterator(table, t.extent.iterator()));
@@ -1121,9 +1130,10 @@ public class Database implements IndexProvider {
 
 
     static class Metadata extends PersistentResource {
-        Index metaclasses;
+        Index<Table> metaclasses;
         FullTextIndex fullTextIndex;
 
+        @SuppressWarnings("unchecked")
         Metadata(Storage storage, Index index, FullTextSearchHelper helper) { 
             super(storage);
             metaclasses = index;
@@ -1132,6 +1142,7 @@ public class Database implements IndexProvider {
                 : storage.createFullTextIndex();
         }
 
+        @SuppressWarnings("unchecked")
         Metadata(Storage storage, FullTextSearchHelper helper) { 
             super(storage);
             metaclasses = storage.createIndex(String.class, true);
@@ -1147,7 +1158,7 @@ public class Database implements IndexProvider {
         IPersistentSet extent;
         Link           indices;
 
-        transient HashMap indicesMap = new HashMap();
+        transient HashMap<String, FieldIndex> indicesMap = new HashMap<String, FieldIndex>();
         transient ArrayList<Field> fullTextIndexableFields;
         transient Class type;
         transient FieldIndex autoincrementIndex;
@@ -1197,14 +1208,15 @@ public class Database implements IndexProvider {
     boolean  searchBaseClasses;
 }
 
-class ClassFilterIterator implements Iterator
+class ClassFilterIterator<T> implements Iterator<T>
 {
     public boolean hasNext() {
         return obj != null;
     }
 
-    public Object next() {
-        Object curr = obj;
+    @SuppressWarnings("unchecked")
+    public T next() {
+        T curr = (T) obj;
         if (curr == null) { 
            throw new NoSuchElementException();
         }        
@@ -1212,7 +1224,7 @@ class ClassFilterIterator implements Iterator
         return curr;
     }
 
-    public ClassFilterIterator(Class c, Iterator i) {
+    public ClassFilterIterator(Class<T> c, Iterator<?> i) {
         cls = c;
         iterator = i;
         moveNext();
@@ -1233,8 +1245,8 @@ class ClassFilterIterator implements Iterator
         }
     }
 
-    private Iterator iterator;
-    private Class cls;
+    private Iterator<?> iterator;
+    private Class<T> cls;
     private Object obj;
 }
    

@@ -84,12 +84,24 @@
         <testSourceDirectory>tst</testSourceDirectory>
         
         <plugins>
-            <!-- Add additional test source directory -->
+            <!-- Add additional source directory -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <version>3.4.0</version>
                 <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.basedir}/continuous/src</source>
+                            </sources>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>add-test-source</id>
                         <phase>generate-test-sources</phase>
