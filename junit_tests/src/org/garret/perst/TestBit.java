@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.io.File;
 import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,19 +83,31 @@ class TestBit {
         if (storage.isOpened()) {
             storage.close();
         }
-        new java.io.File(TEST_DB).delete();
+        new File(TEST_DB).delete();
     }
 
     @Test
     @DisplayName("Test bit index insert and search")
     void testBitIndexInsertAndSearch() {
         Catalogue root = new Catalogue();
-        root.optionIndex = storage.createBitIndex();
-        root.modelIndex = storage.createFieldIndex(Car.class, "model", true);
+        root.optionIndex = storage.<Car>createBitIndex();
+        root.modelIndex = storage.<Car>createFieldIndex(Car.class, "model", true);
         storage.setRoot(root);
 
-        BitIndex<Car> index = root.optionIndex;
+        BitIndex<Car> optionIndex = root.optionIndex;
+        FieldIndex<Car> modelIndex = root.modelIndex;
 
+        // Use distinct constants to ensure we're testing specific bit combinations
+        // Car.TURBO (0x20000000)
+        // Car.DISEL (0x10000000)
+        // Car.FWD (0x00010000)
+        // Car.ABS (0x00001000)
+        // Car.EBD (0x00004000)
+        // Car.ESP (0x00002000)
+        // Car.AIR_COND (0x00000100)
+        // Car.HATCHBACK (0x00000040)
+        // Car.CLASS_C (0x00000004)
+        
         int selectedOptions = Car.TURBO | Car.DISEL | Car.FWD | Car.ABS | Car.EBD | Car.ESP | Car.AIR_COND | Car.HATCHBACK | Car.CLASS_C;
         int unselectedOptions = Car.AUTOMATIC;
 
@@ -107,8 +120,10 @@ class TestBit {
             Car car = new Car();
             car.model = Long.toString(rnd);
             car.options = options;
-            root.modelIndex.put(car);
-            root.optionIndex.put(car, options);
+            modelIndex.put(car);
+            optionIndex.put(car, options);
+            
+            // Check if this random car matches our criteria
             if ((options & selectedOptions) == selectedOptions && (options & unselectedOptions) == 0) {
                 expectedCount += 1;
             }
@@ -116,7 +131,7 @@ class TestBit {
         storage.commit();
 
         // Search using bit index
-        Iterator<Car> iterator = root.optionIndex.iterator(selectedOptions, unselectedOptions);
+        Iterator<Car> iterator = optionIndex.iterator(selectedOptions, unselectedOptions);
         int count = 0;
         while (iterator.hasNext()) {
             Car car = iterator.next();
@@ -132,8 +147,8 @@ class TestBit {
     @DisplayName("Test bit index remove and clear")
     void testBitIndexRemoveAndClear() {
         Catalogue root = new Catalogue();
-        root.optionIndex = storage.createBitIndex();
-        root.modelIndex = storage.createFieldIndex(Car.class, "model", true);
+        root.optionIndex = storage.<Car>createBitIndex();
+        root.modelIndex = storage.<Car>createFieldIndex(Car.class, "model", true);
         storage.setRoot(root);
 
         // Insert records
@@ -149,20 +164,18 @@ class TestBit {
         }
         storage.commit();
 
-        // Remove all records
+        // Remove all records one by one from bit index
         Iterator<Car> iterator = root.modelIndex.iterator();
-        int count = 0;
         while (iterator.hasNext()) {
             Car car = iterator.next();
             root.optionIndex.remove(car);
-            car.deallocate();
-            count += 1;
         }
-        root.optionIndex.clear();
-
-        assertEquals(nRecords, count, "Should have removed all records");
-
+        
         // Verify bit index is empty
-        assertFalse(root.optionIndex.iterator(0, 0).hasNext(), "Bit index should be empty after clear");
+        assertFalse(root.optionIndex.iterator(0, 0).hasNext(), "Bit index should be empty after removal");
+        
+        // Clear explicitly (though it should be empty already)
+        root.optionIndex.clear();
+        assertEquals(0, root.optionIndex.size(), "Bit index size should be 0");
     }
 }

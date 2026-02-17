@@ -10,33 +10,24 @@
 
 package org.garret.perst;
 
-import junit.framework.*;
-import org.garret.perst.*;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
  /**
  * <p>
  *   Collect all the PERST tests into one suite.
  * </p>
  */ 
-public class All extends TestCase
+@Suite
+@SelectClasses({
+    org.garret.perst.BlobTest.class,
+    org.garret.perst.DatabaseTest.class,
+    org.garret.perst.PersistentSetTest.class,
+    org.garret.perst.QueryTest.class,
+    org.garret.perst.StorageFactoryTest.class,
+    org.garret.perst.StorageTest.class,
+    org.garret.perst.StorageTestThreaded.class
+})
+public class All
 {
-    
-    public All(String testName)
-    {
-        super(testName);
-    }
-
-    public static junit.framework.Test suite()
-    {
-        junit.framework.TestSuite suite = new junit.framework.TestSuite("All");
-        suite.addTest(org.garret.perst.BlobTest.suite());
-        suite.addTest(org.garret.perst.DatabaseTest.suite());
-        suite.addTest(org.garret.perst.PersistentSetTest.suite());
-        suite.addTest(org.garret.perst.QueryTest.suite());
-        suite.addTest(org.garret.perst.StorageFactoryTest.suite());
-        suite.addTest(org.garret.perst.StorageTest.suite());
-        suite.addTest(org.garret.perst.StorageTestThreaded.suite());
-        return suite;
-    }
-    
 }

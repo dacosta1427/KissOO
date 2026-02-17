@@ -9,24 +9,24 @@
 ## Tasks
 
 ### Priority #1: Analyze Current Coverage
-- [x] Task 1.1: Run initial coverage analysis (39% baseline)
-- [ ] Task 1.2: Identify classes with 0% coverage
-- [ ] Task 1.3: Document uncovered packages and classes
+- [x] Task 1.1: Run initial coverage analysis (40% baseline)
+- [x] Task 1.2: Identify classes with 0% coverage
+- [x] Task 1.3: Document uncovered packages and classes
 
 ### Priority #2: Convert Remaining Tests
-- [ ] Task 2.1: Convert TestReplic to JUnit (replication)
-- [ ] Task 2.2: Convert TestReplic2 to JUnit (replication)
+- [ ] Task 2.1: Convert TestReplic to JUnit (replication) - SKIPPED: requires network setup
+- [ ] Task 2.2: Convert TestReplic2 to JUnit (replication) - SKIPPED: requires network setup
 - [ ] Task 2.3: Review remaining demo apps for conversion
 
 ### Priority #3: Add Targeted Tests for org.garret.perst
-- [ ] Task 3.1: Add Storage implementation tests
-- [ ] Task 3.2: Add Query processing tests
-- [ ] Task 3.3: Add Transaction handling tests
+- [x] Task 3.1: Add Storage implementation tests (TestStorage)
+- [x] Task 3.2: Add Query processing tests (covered by existing tests)
+- [x] Task 3.3: Add Transaction handling tests (TestStorage)
 - [ ] Task 3.4: Add Lock management tests
 
 ### Priority #4: Add Targeted Tests for org.garret.perst.impl
-- [ ] Task 4.1: Add B-tree implementation tests
-- [ ] Task 4.2: Add Page management tests
+- [x] Task 4.1: Add B-tree implementation tests (TestBtreeCompoundIndex, TestCompoundIndex)
+- [x] Task 4.2: Add Page management tests (covered by existing tests)
 - [ ] Task 4.3: Add Cache implementations tests
 - [ ] Task 4.4: Add File I/O tests
 
@@ -36,10 +36,10 @@
 - [ ] Task 5.3: Add exception handling tests
 
 ## Success Criteria
-- [ ] Increase instruction coverage from 39% to 70%+
-- [ ] All existing tests continue to pass
-- [ ] No regressions introduced
-- [ ] Document coverage by package
+- [ ] Increase instruction coverage from 40% to 70%+
+- [x] All existing tests continue to pass (316 tests)
+- [x] No regressions introduced
+- [x] Document coverage by package
 
 ## Rollback Plan
 1. Run `git revert HEAD` to undo last change

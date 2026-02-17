@@ -24,6 +24,7 @@
         <lucene.version>9.11.0</lucene.version>
         <javassist.version>3.29.2-GA</javassist.version>
         <junit.version>5.11.3</junit.version>
+        <junit.platform.version>1.11.3</junit.platform.version>
         
         <!-- Plugin Versions -->
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
@@ -88,6 +89,13 @@
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
             <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit Platform Suite -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <version>${junit.platform.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- JUnit 3.x for legacy tests -->
