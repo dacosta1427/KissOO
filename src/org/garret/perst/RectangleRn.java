@@ -84,6 +84,9 @@ public class RectangleRn implements IValue, Cloneable
     /**
      * Create copy of the rectangle
      */
+    /** No-arg constructor required by Perst for IValue deserialization */
+    public RectangleRn() {}
+
     public RectangleRn(RectangleRn r) {
         coords = new double[r.coords.length];
         System.arraycopy(r.coords, 0, coords, 0, coords.length);
