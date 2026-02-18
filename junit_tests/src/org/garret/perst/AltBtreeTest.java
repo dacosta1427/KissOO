@@ -99,11 +99,11 @@ class AltBtreeTest {
         }
     }
 
-    @Test @DisplayName("AltBtreeMultiFieldIndex: range query (single-field int)")
+    @Test @DisplayName("AltBtreeFieldIndex: range query (single-field int, non-array API)")
     void testMultiFieldRangeQuery() {
-        // Use single-field index so Key types are unambiguous
+        // Use createFieldIndex(Class, String, bool) to get AltBtreeFieldIndex
         FieldIndex<Record> idx = storage.createFieldIndex(
-            Record.class, new String[]{"intKey"}, false);
+            Record.class, "intKey", false);
         storage.setRoot((IPersistent)idx);
 
         for (int i = 1; i <= 10; i++) {
@@ -169,10 +169,10 @@ class AltBtreeTest {
         assertEquals(N, count);
     }
 
-    @Test @DisplayName("AltBtreeMultiFieldIndex: non-unique allows duplicate keys")
+    @Test @DisplayName("AltBtreeFieldIndex: non-unique allows duplicate keys (non-array API)")
     void testMultiFieldNonUniqueAllowsDuplicates() {
         FieldIndex<Record> idx = storage.createFieldIndex(
-            Record.class, new String[]{"intKey"}, false);
+            Record.class, "intKey", false);
         storage.setRoot((IPersistent)idx);
 
         // Same intKey, different strKey
@@ -187,10 +187,10 @@ class AltBtreeTest {
         assertEquals(3, arr.length);
     }
 
-    @Test @DisplayName("AltBtreeMultiFieldIndex: prefix string iteration")
+    @Test @DisplayName("AltBtreeFieldIndex: prefix string iteration (non-array API)")
     void testMultiFieldStringPrefix() {
         FieldIndex<Record> idx = storage.createFieldIndex(
-            Record.class, new String[]{"strKey"}, false);
+            Record.class, "strKey", false);
         storage.setRoot((IPersistent)idx);
 
         idx.put(new Record(storage, "apple",  1));

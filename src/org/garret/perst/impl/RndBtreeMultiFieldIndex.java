@@ -72,7 +72,8 @@ class RndBtreeMultiFieldIndex<T> extends RndBtree<T> implements FieldIndex<T> {
             return 0;  // allow to compare part of the compound key
         }
 
-        CompoundKey(Object[] keys) { 
+        CompoundKey() {}
+        CompoundKey(Object[] keys) {
             this.keys = keys;
         }
     }

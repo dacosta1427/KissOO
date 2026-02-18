@@ -69,7 +69,8 @@ class RndBtreeCompoundIndex<T> extends RndBtree<T> implements Index<T> {
             return 0;  // allow to compare part of the compound key
         }
 
-        CompoundKey(Object[] keys) { 
+        CompoundKey() {}
+        CompoundKey(Object[] keys) {
             this.keys = keys;
         }
     }
