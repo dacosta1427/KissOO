@@ -27,6 +27,7 @@ class FullTextSearchIterator implements Iterator<FullTextSearchResult>
             try { 
                 while (i < topDocs.scoreDocs.length) { 
                     int docId = topDocs.scoreDocs[i++].doc;
+                    @SuppressWarnings("deprecation")
                     Document doc = searcher.doc(docId);
                     IndexableField f = doc.getField("Oid");
                     if (f == null) { 

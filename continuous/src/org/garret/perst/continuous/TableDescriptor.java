@@ -227,6 +227,7 @@ class TableDescriptor extends Persistent implements Iterable<CVersionHistory>
         return fieldList.toArray(new Field[fieldList.size()]);
     }
 
+    @SuppressWarnings("unchecked")
     public void onLoad()
     {
         Storage storage = getStorage();
@@ -393,6 +394,7 @@ class TableDescriptor extends Persistent implements Iterable<CVersionHistory>
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     void registerIndices(Query q, IResource resource, VersionSelector selector)
     {
         TableDescriptor td = this;
@@ -450,6 +452,7 @@ class TableDescriptor extends Persistent implements Iterable<CVersionHistory>
         return doc;
     }
 
+    @SuppressWarnings("unchecked")
     TableDescriptor(Storage storage, Class table) 
     {
         super(storage);

@@ -17,6 +17,7 @@ public class CVersionHistory<V extends CVersion> extends Persistent implements I
      * @return current version for the current transaction or null if none 
      * (version history was create after transaction has been started)
      */
+    @SuppressWarnings("unchecked")
     public synchronized V getCurrent() 
     {
         TransactionContext ctx = CDatabase.getTransactionContext(); 
@@ -56,6 +57,7 @@ public class CVersionHistory<V extends CVersion> extends Persistent implements I
      * Get working copy for this version history
      * @return existed working copy of some version in this version history or newly create working copy of the current version
      */
+    @SuppressWarnings("unchecked")
     public synchronized V update() 
     { 
         return (V)CDatabase.getWriteTransactionContext().update(this);

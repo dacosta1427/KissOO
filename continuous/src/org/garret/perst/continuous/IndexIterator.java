@@ -126,7 +126,9 @@ class IndexIterator<T> extends IterableIterator<T>
         }
         CVersion obj = currVersion;
         currVersion = null;
-        return (T)obj;
+        @SuppressWarnings("unchecked")
+        T result = (T)obj;
+        return result;
     }
 
     public void remove() {

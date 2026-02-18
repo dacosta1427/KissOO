@@ -200,7 +200,8 @@ public class CDatabase {
             }
             transId = root.newTransactionId();
             for (CVersion v : workSet) { 
-                CVersionHistory vh = v.history;
+                @SuppressWarnings("unchecked")
+                CVersionHistory<CVersion> vh = (CVersionHistory<CVersion>) v.history;
                 TableDescriptor desc = getTable(v.getClass());
                 int flags = v.flags;
 
@@ -285,6 +286,7 @@ public class CDatabase {
      * @exception AmbiguousVersionException when some other version from the same version history was already updated by the current transaction
      * @exception TransactionNotStartedException if transaction was not started by this thread using CDatabase.beginTransaction
      */
+    @SuppressWarnings("unchecked")
     public <T extends CVersion> T update(T record) { 
         return (T)record.update();
     }
@@ -385,7 +387,7 @@ public class CDatabase {
      */         
     public <T extends CVersion> List<T> toList(Iterator<T> iterator, int limit)
     { 
-        ArrayList<T> list = new ArrayList();
+        ArrayList<T> list = new ArrayList<>();
         root.sharedLock();
         try { 
             while (--limit >= 0 && iterator.hasNext()) { 
@@ -421,7 +423,7 @@ public class CDatabase {
      */         
     public <T extends CVersion> T[] toArray(T[] arr, Iterator<T> iterator, VersionSortOrder order) 
     { 
-        ArrayList<T> list = new ArrayList();
+        ArrayList<T> list = new ArrayList<>();
         root.sharedLock();
         try { 
             while (iterator.hasNext()) { 
@@ -466,9 +468,10 @@ public class CDatabase {
      * @exception CompileError exception is thrown if predicate is not valid JSQL exception
      * @exception JSQLRuntimeException exception is thrown if there is runtime error during query execution
      */
+    @SuppressWarnings("unchecked")
     public <T extends CVersion> IterableIterator<T> select(Class table, String predicate, VersionSelector selector)
     { 
-        Query q = prepare(table, predicate);
+        Query<T> q = prepare(table, predicate);
         return q.execute(getRecords(table, selector));
     }
 
@@ -498,9 +501,10 @@ public class CDatabase {
      * @return prepared query
      * @exception CompileError exception is thrown if predicate is not valid JSQL exception
      */
+    @SuppressWarnings("unchecked")
     public <T extends CVersion> Query<T> prepare(Class table, String predicate, VersionSelector selector) 
     { 
-        Query q = storage.createQuery();
+        Query<T> q = storage.createQuery();
         q.prepare(table, predicate);            
         TableDescriptor desc = lookupTable(table);
         if (desc != null) { 

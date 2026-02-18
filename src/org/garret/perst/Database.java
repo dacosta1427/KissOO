@@ -292,6 +292,37 @@ public class Database implements IndexProvider {
         }
     }
     
+    /**
+     * Create table for the specified class.
+     * This function does nothing if table for such class already exists
+     * @param table class corresponding to the table
+     * @return <code>true</code> if table is created, <code>false</code> if table 
+     * alreay exists
+     * @deprecated Since version 2.75 of Perst it is not necessary to create table and index 
+     * descriptors explicitly: them are automatically create when object is inserted in the 
+     * database first time (to mark fields for which indices should be created, use Indexable 
+     * annotation)
+     */
+    @Deprecated
+    public boolean createTable(Class table) { 
+        if (multithreaded) { 
+            checkTransaction();
+            metadata.exclusiveLock();
+        }
+        if (tables.get(table) == null) { 
+            Table t = new Table();
+            t.extent = storage.createSet();
+            t.indices = storage.createLink();
+            t.indicesMap = new HashMap<String, FieldIndex>();
+            t.setClass(table);
+            tables.put(table, t);
+            metadata.metaclasses.put(table.getName(), t);
+            addIndices(t, table);
+            return true;
+        }
+        return false;
+    }
+               
     private void createTableInternal(Class table) { 
         if (multithreaded) { 
             checkTransaction();
