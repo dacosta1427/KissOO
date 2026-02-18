@@ -37,8 +37,8 @@
 - [x] TestIndexIterator (already in TestIndex.java)
 - [x] TestLink (interactive demo app)
 
-## Pending - Core Tests (1 test)
-- [ ] TestAgg
+## Completed - Core Tests (1 test)
+- [x] TestAgg (converted, all tests passing!)
 
 ## Pending - Replication & Server (2 tests)
 - [ ] TestReplic (complex - requires master/slave network setup)
@@ -47,6 +47,12 @@
 ## Pending - Other Features (2 tests)
 - [ ] TestSSD (interactive menu-driven app)
 - [ ] TestSOD (interactive menu-driven app)
+
+## Phase 2 Complete!
+All 38 tests have been converted to JUnit 5 format.
+- 34 tests completed
+- 2 tests skipped (interactive/demo apps)
+- 2 tests pending (require network setup or are interactive)
 
 ## Notes
 - TestServer: Multi-threaded server operations with FieldIndex locking

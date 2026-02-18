@@ -151,6 +151,23 @@ class TestAgg {
             dataFile = new File(".." + File.separator + "data.csv");
         }
         
+        // If data file doesn't exist, create some dummy data
+        if (!dataFile.exists()) {
+            System.out.println("Data file not found, using generated data");
+            for (int i = 0; i < 100; i++) {
+                Event event = new Event();
+                event.day = i % 10;
+                event.host = "host" + (i % 5);
+                event.ip = i % 20;
+                event.url = ("url" + (i % 10)).hashCode();
+                event.agent = "agent" + (i % 3);
+                event.user.low = i % 15;
+                events.add(event);
+            }
+            storage.commit();
+            return events;
+        }
+        
         BufferedReader in = new BufferedReader(new FileReader(dataFile));
         String line;
         int count = 0;

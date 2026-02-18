@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.io.File;
 import java.util.Date;
 import java.util.ArrayList;
 
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TestCodeGenerator {
 
-    static class Track {
+    static class Track extends Persistent {
         int no;
 
         @Indexable
@@ -29,7 +30,7 @@ class TestCodeGenerator {
         float duration;
     }
 
-    static class Album {
+    static class Album extends Persistent {
         @Indexable
         String name;
 
@@ -41,7 +42,7 @@ class TestCodeGenerator {
         Date release;
     }
 
-    static class RecordLabel {
+    static class RecordLabel extends Persistent {
         @Indexable
         String name;
 
@@ -82,7 +83,7 @@ class TestCodeGenerator {
         if (storage.isOpened()) {
             storage.close();
         }
-        new java.io.File(TEST_DB).delete();
+        new File(TEST_DB).delete();
     }
 
     @Test

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.io.File;
 import java.util.Date;
 import java.util.ArrayList;
 
@@ -17,21 +18,21 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TestAutoIndices {
 
-    static class Track {
+    static class Track extends Persistent {
         int no;
         Album album;
         String name;
         float duration;
     }
 
-    static class Album {
+    static class Album extends Persistent {
         String name;
         RecordLabel label;
         String genre;
         Date release;
     }
 
-    static class RecordLabel {
+    static class RecordLabel extends Persistent {
         String name;
         String email;
         String phone;
@@ -70,7 +71,7 @@ class TestAutoIndices {
         if (storage.isOpened()) {
             storage.close();
         }
-        new java.io.File(TEST_DB).delete();
+        new File(TEST_DB).delete();
     }
 
     @Test
@@ -399,6 +400,7 @@ class TestAutoIndices {
         storage.setListener(listener);
 
         // Delete with sequential query
+        // Pass iterator instead of Iterable
         for (RecordLabel label : db.<RecordLabel>select(RecordLabel.class, "name like '%Label%'", true)) {
             db.deleteRecord(label);
         }

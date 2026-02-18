@@ -24,16 +24,37 @@
         <lucene.version>9.11.0</lucene.version>
         <javassist.version>3.29.2-GA</javassist.version>
         <junit.version>5.11.3</junit.version>
+        <junit.platform.version>1.11.3</junit.platform.version>
         
         <!-- Plugin Versions -->
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.5.2</maven.surefire.plugin.version>
         <maven.javadoc.plugin.version>3.11.2</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
-        <jacoco.plugin.version>0.8.12</jacoco.plugin.version>
+        <jacoco.plugin.version>0.8.14</jacoco.plugin.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
         <spotbugs.plugin.version>4.9.6.0</spotbugs.plugin.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>jacoco-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jacoco-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 
     <dependencies>
         <!-- Lucene for full-text indexing -->
@@ -68,6 +89,13 @@
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
             <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit Platform Suite -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <version>${junit.platform.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- JUnit 3.x for legacy tests -->
@@ -201,8 +229,7 @@
                 </executions>
             </plugin>
 
-            <!-- JaCoCo Plugin for Code Coverage (disabled - doesn't support Java 25 yet) -->
-            <!--
+            <!-- JaCoCo Plugin for Code Coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -222,7 +249,6 @@
                     </execution>
                 </executions>
             </plugin>
-            -->
 
             <!-- SpotBugs Plugin (disabled for now - too many legacy issues) -->
             <!--

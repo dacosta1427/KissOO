@@ -229,20 +229,24 @@ public class TestDbServer {
             rec1.value = "value1";
             db.addRecord(rec1);
             
+            // This record would violate unique constraint if both were inserted successfully
+            // But with unique=true, caseInsensitive=true, the second insert should fail if the key matches case-insensitively
+            // However, the test implementation uses db.addRecord which returns boolean for success
+            
             Record rec2 = new Record();
             rec2.key = "testkey";
             rec2.value = "value2";
-            db.addRecord(rec2);
+            boolean added = db.addRecord(rec2);
+            assertFalse(added, "Should not add duplicate key"); // Assuming addRecord checks uniqueness
+            
             db.commitTransaction();
             
-            // Query with different case - should find both due to unique constraint
-            // Actually with unique=true and caseInsensitive=true, only one can exist
-            // Let's test that we can't insert duplicate
+            // Query with different case
             db.beginTransaction();
             Record rec3 = new Record();
             rec3.key = "TESTKEY";
             rec3.value = "value3";
-            boolean added = db.addRecord(rec3);
+            added = db.addRecord(rec3);
             assertFalse(added, "Should not allow duplicate key with different case");
             db.commitTransaction();
         } finally {
