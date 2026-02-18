@@ -115,42 +115,7 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>src</sourceDirectory>
-        <testSourceDirectory>tst</testSourceDirectory>
-        
         <plugins>
-            <!-- Add additional source directory -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.4.0</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.basedir}/continuous/src</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>add-test-source</id>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.basedir}/junit_tests/src</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
 
             <!-- Compiler Plugin -->
             <plugin>
@@ -168,8 +133,6 @@
                     </compilerArgs>
                     <excludes>
                         <exclude>org/garret/perst/jassist/**</exclude>
-                        <exclude>tst/OO7/**</exclude>
-                        <exclude>tst/TestVersion.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -187,7 +150,6 @@
                     <excludes>
                         <exclude>**/jassist/**</exclude>
                         <exclude>**/android/**</exclude>
-                        <exclude>**/OO7/**</exclude>
                     </excludes>
                     <systemProperties>
                         <property>
