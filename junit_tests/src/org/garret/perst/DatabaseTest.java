@@ -167,6 +167,102 @@ public class DatabaseTest {
         assertFalse(i.hasNext());
     }
 
+    // ===== Phase 2D extensions =====
+
+    @Test
+    public void testDropTable() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.dropTable(Stored.class));
+        // After dropping, createTable should return true again
+        assertTrue(database.createTable(Stored.class));
+    }
+
+    @Test
+    public void testGetRecordsEmpty() {
+        assertTrue(database.createTable(Stored.class));
+        Iterator<IPersistent> i = database.getRecords(Stored.class);
+        assertFalse(i.hasNext(), "Empty table iterator should be exhausted immediately");
+    }
+
+    @Test
+    public void testMultipleRecords() {
+        assertTrue(database.createTable(Stored.class));
+        Stored s1 = new Stored("first");
+        Stored s2 = new Stored("second");
+        Stored s3 = new Stored("third");
+        database.addRecord(s1);
+        database.addRecord(s2);
+        database.addRecord(s3);
+
+        int count = 0;
+        for (Iterator<IPersistent> it = database.getRecords(Stored.class); it.hasNext(); ) {
+            it.next();
+            count++;
+        }
+        assertEquals(3, count, "Should have 3 records");
+    }
+
+    @Test
+    public void testCreateIndex() {
+        assertTrue(database.createTable(Stored.class));
+        // createIndex on a field that exists
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        // Second call should return false (index already exists)
+        assertFalse(database.createIndex(Stored.class, "name", true));
+    }
+
+    @Test
+    public void testAddRecordIndexed() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("indexed");
+        database.addRecord(s);
+
+        // Record should be retrievable
+        Iterator<IPersistent> it = database.getRecords(Stored.class);
+        assertTrue(it.hasNext());
+        assertEquals(s, it.next());
+    }
+
+    @Test
+    public void testDeleteRecordWithIndex() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("toDelete");
+        database.addRecord(s);
+        database.deleteRecord(s);
+
+        Iterator<IPersistent> it = database.getRecords(Stored.class);
+        assertFalse(it.hasNext(), "Table should be empty after delete");
+    }
+
+    @Test
+    public void testAddRecordNoTableCreatesImplicitly() {
+        // Adding record without creating table first silently creates it
+        assertDoesNotThrow(() -> database.addRecord(new Stored("orphan")));
+    }
+
+    @Test
+    public void testGetRecordsNoTableReturnsEmpty() {
+        // getRecords on a non-existent table returns empty iterator (no throw)
+        assertDoesNotThrow(() -> database.getRecords(Stored.class));
+    }
+
+    @Test
+    public void testSelectRecords() {
+        assertTrue(database.createTable(Stored.class));
+        database.addRecord(new Stored("alpha"));
+        database.addRecord(new Stored("beta"));
+        database.addRecord(new Stored("gamma"));
+
+        // Select all that start with a specific name
+        Iterator<IPersistent> it = database.select(Stored.class, "name = 'alpha'");
+        assertTrue(it.hasNext());
+        Stored found = (Stored) it.next();
+        assertEquals("alpha", found.name);
+        assertFalse(it.hasNext());
+    }
+
 	/**
 	 * Internal class
 	 */
