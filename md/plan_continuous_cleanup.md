@@ -14,7 +14,9 @@ Identify and fix all compile warnings and errors in the `continuous/` directory.
 - Multiple compile errors due to Lucene API changes (Lucene 9.x vs older version)
 - Several unchecked type warnings
 
----
+## Dependencies
+- Maven build tool
+- Lucene 9.x compatibility
 
 ## Files with Issues
 
@@ -125,3 +127,13 @@ The continuous module uses old Lucene 4.x APIs that have been removed/changed in
 - [ ] All compile errors fixed
 - [ ] All compile warnings reduced or addressed
 - [ ] All tests pass
+
+## Rollback Plan
+- **Checkpoint:** Git commit before starting changes
+- **Revert command:** `git reset --hard HEAD`
+- **Verification:** Run `mvn compile` and confirm build fails as before
+- **Impact:** No impact on other modules
+
+## Supporting Documents
+- Todolist: `md/todo_continuous_cleanup.md`
+- Progress: `md/progress_continuous_cleanup.md`

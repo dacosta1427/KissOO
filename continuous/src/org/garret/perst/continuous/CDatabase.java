@@ -14,8 +14,8 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NoLockFactory;
-import org.apache.lucene.queryParser.*;
-import org.apache.lucene.search.Hits;
+import org.apache.lucene.queryparser.simple.SimpleQueryParser;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
 /**
@@ -643,7 +643,7 @@ public class CDatabase {
         ArrayList<FullTextSearchResult> result = null;
         root.sharedLock();
         try { 
-            Hits hits;
+            TopDocs hits;
             try { 
                 IndexSearcher searcher = new IndexSearcher(getIndexReader());
                 if (selector.kind == VersionSelector.Kind.TimeSlice) { 
@@ -659,15 +659,15 @@ public class CDatabase {
                     query = sb.toString();
                 }
                 //QueryParser parser = new MultiFieldQueryParser(new String[]{"Any"}, analyzer); 
-                QueryParser parser = new QueryParser("Any", analyzer);
-                hits = searcher.search(parser.parse(query));
+                SimpleQueryParser parser = new SimpleQueryParser(analyzer, "Any");
+                hits = searcher.search(parser.parse(query), limit > 0 ? limit : 1000);
             } catch (IOException x) {
                 throw new IOError(x);
             } catch (ParseException x) { 
                 throw new FullTextSearchQuerySyntaxError(x);
             } 
-            result = new ArrayList<FullTextSearchResult>(limit > 0 ? limit : (limit = hits.length()));
-            Iterator<FullTextSearchResult> iterator = new FullTextSearchIterator(hits, storage, selector);
+            result = new ArrayList<FullTextSearchResult>(limit > 0 ? limit : (limit = hits.scoreDocs.length));
+            Iterator<FullTextSearchResult> iterator = new FullTextSearchIterator(hits, searcher, storage, selector);
             while (--limit >= 0 && iterator.hasNext()) { 
                 result.add(iterator.next());
             }
