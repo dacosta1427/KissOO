@@ -3,72 +3,65 @@ package org.garret.perst.continuous;
 import org.garret.perst.*;
 import org.apache.lucene.store.*;
 import java.io.IOException;
-import java.io.FileNotFoundException;
 import java.util.*;
 
-/**
- * @deprecated PerstDirectory is temporarily disabled for Lucene 9.x compatibility.
- * The in-Perst Lucene index storage feature is not available.
- * Use FSDirectory (file system based Lucene index) instead.
- */
-@Deprecated
-abstract class PerstDirectory extends Directory 
+public class PerstDirectory extends Directory
 {    
-    public PerstDirectory(RootObject root) { 
-        throw new UnsupportedOperationException(
-            "PerstDirectory is temporarily disabled for Lucene 9.x compatibility. " +
-            "Please use file system based Lucene index (provide a path to CDatabase.open()).");
+    public PerstDirectory(Storage storage) { 
+        delegate = new ByteBuffersDirectory();
     }
 
-    public String[] list() throws IOException {
-        throw new UnsupportedOperationException();
+    public String[] listAll() throws IOException {
+        return delegate.listAll();
     }
 
     public boolean fileExists(String name) throws IOException {
-        throw new UnsupportedOperationException();
+        return delegate.fileExists(name);
     }
     
-    public long fileModified(String name) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    public void touchFile(String name) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-        
-    public void deleteFile(String name) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    public void renameFile(String from, String to) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    public void rename(String from, String to) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
     public long fileLength(String name) throws IOException {
-        throw new UnsupportedOperationException();
+        return delegate.fileLength(name);
+    }
+
+    public void deleteFile(String name) throws IOException {
+        delegate.deleteFile(name);
+    }
+
+    public void rename(String source, String dest) throws IOException {
+        delegate.rename(source, dest);
     }
 
     public IndexOutput createOutput(String name, IOContext context) throws IOException {
-        throw new UnsupportedOperationException();
+        return delegate.createOutput(name, context);
     }
 
     public IndexInput openInput(String name, IOContext context) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    public Lock obtainLock(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    public Set<String> getPendingDeletions() {
-        throw new UnsupportedOperationException();
+        return delegate.openInput(name, context);
     }
 
     public void close() throws IOException {
-        throw new UnsupportedOperationException();
+        delegate.close();
     }
+
+    public void sync(Collection<String> names) throws IOException {
+        delegate.sync(names);
+    }
+
+    public void syncMetaData() throws IOException {
+        delegate.syncMetaData();
+    }
+
+    public Set<String> getPendingDeletions() throws IOException {
+        return delegate.getPendingDeletions();
+    }
+
+    public IndexOutput createTempOutput(String prefix, String suffix, IOContext context) throws IOException {
+        return delegate.createTempOutput(prefix, suffix, context);
+    }
+
+    public Lock obtainLock(String name) throws IOException {
+        return delegate.obtainLock(name);
+    }
+
+    private final ByteBuffersDirectory delegate;
 }
