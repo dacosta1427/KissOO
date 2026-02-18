@@ -101,7 +101,7 @@ class TestBackup {
 
             Record rec1 = (Record) intIndex.get(new Key(key));
             Record rec2 = (Record) strIndex.get(new Key(strKey));
-            Record rec3 = (Record) compoundIndex.get(new Key(new Object[]{strKey, new Long(key)}));
+            Record rec3 = (Record) compoundIndex.get(new Key(new Object[]{strKey, Long.valueOf(key)}));
 
             assertNotNull(rec1, "Record should exist in intIndex");
             // Records might not be the SAME object instance if fetched from different indices depending on cache, 

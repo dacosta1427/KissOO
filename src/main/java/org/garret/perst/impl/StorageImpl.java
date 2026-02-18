@@ -996,7 +996,7 @@ public class StorageImpl implements Storage {
 
         objMap = new ObjectMap(objectCacheInitSize);
 
-        classDescMap = new HashMap();
+        classDescMap = new HashMap<Class<?>,ClassDescriptor>();
         descList = null;
 
         recursiveLoadingPolicy = new HashMap();
@@ -1177,7 +1177,7 @@ public class StorageImpl implements Storage {
     }
 
     static void checkIfFinal(ClassDescriptor desc) {
-        Class cls = desc.cls;
+        Class<?> cls = desc.cls;
         if (cls != null) {
             for (ClassDescriptor next = desc.next; next != null; next = next.next) {
                 next.load();
@@ -5393,7 +5393,7 @@ public class StorageImpl implements Storage {
 
 
     OidHashTable     objectCache;
-    HashMap          classDescMap;
+    HashMap<Class<?>,ClassDescriptor> classDescMap;
     ClassDescriptor  descList;
 }
 

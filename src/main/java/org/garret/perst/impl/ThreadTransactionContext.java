@@ -10,7 +10,7 @@ import java.util.*;
 public class ThreadTransactionContext { 
     int             nested;
     IdentityHashMap locked = new IdentityHashMap();
-    ArrayList       modified = new ArrayList();
-    ArrayList       deleted = new ArrayList();
+    ArrayList<Object> modified = new ArrayList<>();
+    ArrayList<Object> deleted = new ArrayList<>();
 }
 
