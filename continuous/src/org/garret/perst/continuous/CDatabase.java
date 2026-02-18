@@ -7,14 +7,18 @@ import org.garret.perst.impl.ClassDescriptor;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.FieldInfo;
+import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.NoLockFactory;
-import org.apache.lucene.queryparser.simple.SimpleQueryParser;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
@@ -641,11 +645,12 @@ public class CDatabase {
     public FullTextSearchResult[] fullTextSearch(String query, int limit, VersionSelector selector, VersionSortOrder order)
     {
         ArrayList<FullTextSearchResult> result = null;
+        IndexSearcher searcher;
+        TopDocs hits;
         root.sharedLock();
         try { 
-            TopDocs hits;
             try { 
-                IndexSearcher searcher = new IndexSearcher(getIndexReader());
+                searcher = new IndexSearcher(getIndexReader());
                 if (selector.kind == VersionSelector.Kind.TimeSlice) { 
                     long from = selector.from != null ? selector.from.getTime() : 0;
                     long till = selector.till != null ? selector.till.getTime() : System.currentTimeMillis();
@@ -658,8 +663,7 @@ public class CDatabase {
                     sb.append(')');
                     query = sb.toString();
                 }
-                //QueryParser parser = new MultiFieldQueryParser(new String[]{"Any"}, analyzer); 
-                SimpleQueryParser parser = new SimpleQueryParser(analyzer, "Any");
+                QueryParser parser = new QueryParser("Any", analyzer);
                 hits = searcher.search(parser.parse(query), limit > 0 ? limit : 1000);
             } catch (IOException x) {
                 throw new IOError(x);
@@ -705,7 +709,7 @@ public class CDatabase {
                     indexReader.close();
                     indexReader = null;
                 }
-                indexWriter = new IndexWriter(dir, analyzer, true);
+                indexWriter = new IndexWriter(dir, new IndexWriterConfig(analyzer));
                 for (TableDescriptor table : root.tables) {
                     for (CVersionHistory<?> vh : table) {
                         for (CVersion v : vh) { 
@@ -718,7 +722,7 @@ public class CDatabase {
                         }
                     }
                 }                                       
-                indexWriter.optimize();
+                indexWriter.forceMerge(1);
             } catch (IOException x) {
                 throw new IOError(x);
             }
@@ -736,7 +740,7 @@ public class CDatabase {
         root.exclusiveLock();
         try { 
             try { 
-                getIndexWriter().optimize();
+                getIndexWriter().forceMerge(1);
             } catch (IOException x) {
                 throw new IOError(x);
             }
@@ -801,7 +805,14 @@ public class CDatabase {
      * Get collection all of field names 
      */
     public Collection<String> getAllFullTextSearchanbleFieldNames() throws Exception {
-       return getIndexReader().getFieldNames(IndexReader.FieldOption.INDEXED);
+       Set<String> fieldNames = new HashSet<>();
+       IndexReader reader = getIndexReader();
+       for (LeafReaderContext ctx : reader.leaves()) {
+           for (FieldInfo info : ctx.reader().getFieldInfos()) {
+               fieldNames.add(info.name);
+           }
+       }
+       return fieldNames;
     }
 
     /**
@@ -828,22 +839,19 @@ public class CDatabase {
     {
         boolean create;
         if (path == null) { 
-            // Store Lucene index in Perst database
-            create = root.catalogue == null;
-            dir = new PerstDirectory(root);
-        } else { 
-            File file = new File(path);
-            create = !file.exists();
-            try { 
-                dir = FSDirectory.getDirectory(path);
-            } catch (IOException x) {
-                throw new IOError(x);
-            }
+            throw new IllegalArgumentException("Full text index path must be specified in Lucene 9.x - in-Perst storage is temporarily disabled");
         }
-        dir.setLockFactory(NoLockFactory.getNoLockFactory());
+        File file = new File(path);
+        create = !file.exists();
+        try { 
+            dir = FSDirectory.open(java.nio.file.Paths.get(path));
+        } catch (IOException x) {
+            throw new IOError(x);
+        }
         analyzer = new StandardAnalyzer();
         try { 
-            indexWriter = new IndexWriter(dir, analyzer, create);
+            indexWriter = new IndexWriter(dir, new IndexWriterConfig(analyzer).setOpenMode(
+                create ? IndexWriterConfig.OpenMode.CREATE : IndexWriterConfig.OpenMode.APPEND));
         } catch (IOException x) {
             throw new IOError(x);
         }
@@ -854,7 +862,7 @@ public class CDatabase {
         if (desc.isFullTextSearchable()) { 
             Term term = new Term("Oid", Integer.toString(v.getOid()));
             try { 
-                getIndexReader().deleteDocuments(term);
+                getIndexWriter().deleteDocuments(term);
             } catch (IOException x) { 
                 throw new IOError(x);
             }
@@ -904,7 +912,7 @@ public class CDatabase {
                 indexReader.close();
                 indexReader = null;
             }
-            indexWriter = new IndexWriter(dir, analyzer, false);
+            indexWriter = new IndexWriter(dir, new IndexWriterConfig(analyzer));
         }
         return indexWriter;
     }
@@ -916,7 +924,7 @@ public class CDatabase {
                 indexWriter.close();
                 indexWriter = null;
             }
-            indexReader = IndexReader.open(dir);
+            indexReader = DirectoryReader.open(dir);
         }
         return indexReader;
     }

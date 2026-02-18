@@ -3,16 +3,18 @@ package org.garret.perst.continuous;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.io.IOException;
-import org.apache.lucene.search.Hits;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexableField;
 import org.garret.perst.*;
 
 class FullTextSearchIterator implements Iterator<FullTextSearchResult>
 { 
-    public FullTextSearchIterator(Hits hits, Storage storage, VersionSelector selector) 
+    public FullTextSearchIterator(TopDocs topDocs, IndexSearcher searcher, Storage storage, VersionSelector selector) 
     {
-        this.hits = hits;
+        this.topDocs = topDocs;
+        this.searcher = searcher;
         this.selector = selector;
         this.storage = storage;
         TransactionContext ctx = CDatabase.getTransactionContext();
@@ -23,9 +25,10 @@ class FullTextSearchIterator implements Iterator<FullTextSearchResult>
     { 
         if (current == null) { 
             try { 
-                while (i < hits.length()) { 
-                    Document doc = hits.doc(i++);
-                    Field f = doc.getField("Oid");
+                while (i < topDocs.scoreDocs.length) { 
+                    int docId = topDocs.scoreDocs[i++].doc;
+                    Document doc = searcher.doc(docId);
+                    IndexableField f = doc.getField("Oid");
                     if (f == null) { 
                         continue;
                     }
@@ -57,7 +60,7 @@ class FullTextSearchIterator implements Iterator<FullTextSearchResult>
                         }
                         continue;
                     }
-                    current = new FullTextSearchResult(v, hits.score(i-1));
+                    current = new FullTextSearchResult(v, topDocs.scoreDocs[i-1].score);
                     break;
                 }
             } catch (IOException x) { 
@@ -81,7 +84,8 @@ class FullTextSearchIterator implements Iterator<FullTextSearchResult>
         throw new UnsupportedOperationException();
     }
 
-    private Hits hits;
+    private TopDocs topDocs;
+    private IndexSearcher searcher;
     private Storage storage;
     private VersionSelector selector;
     private long transId;

@@ -97,6 +97,11 @@ class IndexFilter<T> extends PersistentCollection<T> implements GenericIndex<T>
 
     public IterableIterator<T> prefixIterator(String prefix) 
     {
+        return prefixIterator(prefix, ASCENT_ORDER);
+    }
+
+    public IterableIterator<T> prefixIterator(String prefix, int order) 
+    {
         resource.sharedLock();
         try { 
             return new IndexIterator<T>(index.prefixIterator(prefix), resource, selector);

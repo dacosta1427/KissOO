@@ -64,6 +64,13 @@
             <version>${lucene.version}</version>
         </dependency>
         
+        <!-- Lucene QueryParser for query parsing -->
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
+        
         <!-- Javassist for bytecode manipulation -->
         <dependency>
             <groupId>org.javassist</groupId>

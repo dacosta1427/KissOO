@@ -1,4 +1,3 @@
-
 package org.garret.perst.continuous;
 
 import java.lang.reflect.*;
@@ -6,6 +5,11 @@ import java.util.*;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DateTools;
+import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.StoredField;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.document.Field.Store;
 
 import org.garret.perst.*;
 import org.garret.perst.impl.ClassDescriptor;
@@ -416,21 +420,13 @@ class TableDescriptor extends Persistent implements Iterable<CVersionHistory>
                             String text = getKeyText(e.getValue());
                             any.append(text);
                             any.append(' ');
-                            doc.add(new org.apache.lucene.document.Field
-                                    (e.getKey().toString(), 
-                                     text, 
-                                     org.apache.lucene.document.Field.Store.YES, 
-                                     org.apache.lucene.document.Field.Index.UN_TOKENIZED));
+                            doc.add(new StringField(e.getKey().toString(), text, Store.YES));
                         }
                     } else { 
                         String text = getKeyText(value);
                         any.append(text);
                         any.append(' ');
-                        doc.add(new org.apache.lucene.document.Field
-                                (desc.field.getName(), 
-                                 text, 
-                                 org.apache.lucene.document.Field.Store.YES, 
-                                 org.apache.lucene.document.Field.Index.TOKENIZED));
+                        doc.add(new TextField(desc.field.getName(), text, Store.YES));
                     }
                 }
             }    
@@ -447,25 +443,10 @@ class TableDescriptor extends Persistent implements Iterable<CVersionHistory>
         Document doc = new Document();
         StringBuilder any = new StringBuilder();
         addDocumentFields(doc, v, fullTextSearchableFields, any);
-        doc.add(new org.apache.lucene.document.Field
-                ("Oid", 
-                 Integer.toString(v.getOid()), 
-                 org.apache.lucene.document.Field.Store.YES, 
-                 org.apache.lucene.document.Field.Index.UN_TOKENIZED));
-        doc.add(new org.apache.lucene.document.Field
-                ("Class", 
-                 v.getClass().getName(),
-                 org.apache.lucene.document.Field.Store.YES, 
-                 org.apache.lucene.document.Field.Index.UN_TOKENIZED));
-        doc.add(new org.apache.lucene.document.Field
-                ("Created", 
-                 DateTools.timeToString(System.currentTimeMillis(), DateTools.Resolution.MINUTE),
-                 org.apache.lucene.document.Field.Store.YES, 
-                 org.apache.lucene.document.Field.Index.UN_TOKENIZED));
-        doc.add(new org.apache.lucene.document.Field
-                ("Any", any.toString(),
-                 org.apache.lucene.document.Field.Store.YES, 
-                 org.apache.lucene.document.Field.Index.TOKENIZED));
+        doc.add(new StoredField("Oid", v.getOid()));
+        doc.add(new StringField("Class", v.getClass().getName(), Store.YES));
+        doc.add(new StoredField("Created", DateTools.timeToString(System.currentTimeMillis(), DateTools.Resolution.MINUTE)));
+        doc.add(new TextField("Any", any.toString(), Store.YES));
         return doc;
     }
 

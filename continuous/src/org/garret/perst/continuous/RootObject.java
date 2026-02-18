@@ -6,7 +6,6 @@ import org.garret.perst.*;
 class RootObject extends PersistentResource 
 { 
     FieldIndex<TableDescriptor> tables;
-    PerstDirectory.PerstCatalogue catalogue;
     long transId;
     IPersistent userData;
 
@@ -20,12 +19,6 @@ class RootObject extends PersistentResource
         long id = ++transId;
         store();
         return id;
-    }
-
-    void setCatalogue(PerstDirectory.PerstCatalogue catalogue) 
-    { 
-        this.catalogue = catalogue;
-        store();
     }
 
     RootObject(Storage storage) 
