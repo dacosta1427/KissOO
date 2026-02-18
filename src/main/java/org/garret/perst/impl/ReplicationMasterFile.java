@@ -11,6 +11,8 @@ import org.garret.perst.*;
  */
 public class ReplicationMasterFile implements IFile, Runnable 
 { 
+    private static final PerstLogger logger = PerstLogger.getLogger(ReplicationMasterFile.class);
+
     /**
      * Constructor of replication master file
      * @param storage replication storage
@@ -111,7 +113,7 @@ public class ReplicationMasterFile implements IFile, Runnable
             try { 
                 s = listenSocket.accept();
             } catch (IOException x) {
-                x.printStackTrace();
+                logger.error("Error accepting connection", x);
             }
             synchronized (mutex) { 
                 if (!listening) { 
@@ -139,7 +141,7 @@ public class ReplicationMasterFile implements IFile, Runnable
                 is = s.getInputStream();
             }
         } catch (IOException x) { 
-            x.printStackTrace();
+            logger.error("Error getting streams", x);
             return;
         }
         synchronized (mutex) { 
@@ -262,7 +264,7 @@ public class ReplicationMasterFile implements IFile, Runnable
                 return;
             } while (false);
         } catch (IOException x) {
-            x.printStackTrace();
+            logger.error("IO error during replication", x);
         }
         synchronized (mutex) { 
             if (sockets[i] != null) { 

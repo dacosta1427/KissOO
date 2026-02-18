@@ -8,6 +8,8 @@ import org.garret.perst.*;
 
 public abstract class ReplicationSlaveStorageImpl extends StorageImpl implements ReplicationSlaveStorage, Runnable
 { 
+    private static final PerstLogger logger = PerstLogger.getLogger(ReplicationSlaveStorageImpl.class);
+
     static final int REPL_CLOSE = -1;
     static final int REPL_SYNC  = -2;
     static final int INIT_PAGE_TIMESTAMPS_LENGTH = 64*1024;
@@ -171,7 +173,7 @@ public abstract class ReplicationSlaveStorageImpl extends StorageImpl implements
                 }
             }            
         } catch (IOException x) { 
-            x.printStackTrace();
+            logger.error("IO error in slave storage", x);
             socket = null;
             in = null;
         }
@@ -192,7 +194,7 @@ public abstract class ReplicationSlaveStorageImpl extends StorageImpl implements
                     try { 
                         rc = in.read(buf, offs, buf.length - offs);
                     } catch (IOException x) { 
-                        x.printStackTrace();
+                        logger.error("IO error reading from slave", x);
                     }
                 }
                 synchronized(done) { 

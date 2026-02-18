@@ -78,6 +78,18 @@
             <version>${javassist.version}</version>
         </dependency>
 
+        <!-- SLF4J for logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.16</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.16</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -127,6 +139,8 @@
                     <target>${java.version}</target>
                     <release>${java.version}</release>
                     <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                        <arg>-Xlint:-options</arg>
                         <arg>-Xlint:deprecation</arg>
                         <arg>-Xlint:unchecked</arg>
                         <arg>-Xlint:removal</arg>

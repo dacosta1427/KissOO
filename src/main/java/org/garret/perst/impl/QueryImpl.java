@@ -6,7 +6,12 @@ import java.text.*;
 import java.util.Arrays.*;
 import org.garret.perst.*;
 
+class QueryImplLogger {
+    static final PerstLogger logger = PerstLogger.getLogger("QueryImpl");
+}
+
 class FilterIterator<T> extends IterableIterator<T> { 
+
     Iterator     iterator;
     Node         condition;
     QueryImpl<T> query;
@@ -887,7 +892,7 @@ class InvokeNode extends Node {
         try { 
             return ((Number)mth.invoke(obj, parameters)).longValue();
         } catch (Exception x) { 
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Method invocation error", x);
             throw new Error("Method invocation error");
         }
     }
@@ -898,7 +903,7 @@ class InvokeNode extends Node {
         try { 
             return ((Number)mth.invoke(obj, parameters)).doubleValue();
         } catch (Exception x) { 
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Method invocation error", x);
             throw new Error("Method invocation error");
         }
     }
@@ -909,7 +914,7 @@ class InvokeNode extends Node {
         try { 
             return ((Boolean)mth.invoke(obj, parameters)).booleanValue();
         } catch (Exception x) { 
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Method invocation error", x);
             throw new Error("Method invocation error");
         }
     }
@@ -920,7 +925,7 @@ class InvokeNode extends Node {
         try { 
             return wrapNullString(mth.invoke(obj, parameters));
         } catch (Exception x) { 
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Method invocation error", x);
             throw new Error("Method invocation error");
         }
     }
@@ -931,7 +936,7 @@ class InvokeNode extends Node {
         try { 
             return mth.invoke(obj, parameters);
         } catch (Exception x) { 
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Method invocation error", x);
             throw new Error("Method invocation error");
         }
     }    
@@ -1061,19 +1066,19 @@ class InvokeAnyNode extends Node {
                 return t.query.resolve(m.invoke(t.containsElem, parameters));
             } 
         } catch (InvocationTargetException x) {
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Invocation error", x);
             throw new IllegalAccessError();            
         } catch(IllegalAccessException x) { 
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Access error", x);
             throw new IllegalAccessError();
         }
 
         throw new JSQLNoSuchFieldException(cls, methodName);
-    }
-}        
+    }        
+}
 
 
-class ConvertAnyNode extends Node { 
+class ConvertAnyNode extends Node {
     public boolean equals(Object o) { 
         return o instanceof ConvertAnyNode && super.equals(o) && ((ConvertAnyNode)o).expr.equals(expr);
     }
@@ -1928,10 +1933,10 @@ class LoadAnyNode extends Node {
                 return t.query.resolve(m.invoke(obj));
             }
         } catch(IllegalAccessException x) { 
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Access error", x);
             throw new IllegalAccessError();
         } catch (InvocationTargetException x) {
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Invocation error", x);
             throw new IllegalAccessError();            
         }
 
@@ -2251,10 +2256,10 @@ class ContainsNode extends Node implements Comparator {
                 return ((Comparable)groupByField.get(o1)).compareTo(groupByField.get(o2));
             }
         } catch (InvocationTargetException x) {
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Invocation error", x);
             throw new IllegalAccessError();            
         } catch(IllegalAccessException x) { 
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Access error", x);
             throw new IllegalAccessError();
         }
     }
@@ -2594,10 +2599,10 @@ class OrderNode {
                 }
             }
         } catch(IllegalAccessException x) { 
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Access error", x);
             throw new IllegalAccessError();
         } catch (InvocationTargetException x) {
-            x.printStackTrace();
+            QueryImplLogger.logger.error("Invocation error", x);
             throw new IllegalAccessError();            
         }
         if (diff == 0 && next != null) { 

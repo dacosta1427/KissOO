@@ -7,6 +7,8 @@ import java.util.*;
 import java.io.*;
 
 public class StorageImpl implements Storage {
+    private static final PerstLogger logger = PerstLogger.getLogger(StorageImpl.class);
+
     /**
      * Initialial database index size - increasing it reduce number of index reallocation but increase
      * initial database size. Should be set before openning connection.
@@ -3192,7 +3194,7 @@ public class StorageImpl implements Storage {
                     try {
                         storeObject0(obj, true);
                     } catch (Throwable x) {
-                        x.printStackTrace();
+                        logger.error("Critical error storing object, halting JVM", x);
                         Runtime.getRuntime().halt(1);
                     }
                 }
