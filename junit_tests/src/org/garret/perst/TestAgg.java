@@ -494,6 +494,198 @@ class TestAgg {
         System.out.println("Sorted results count: " + result.size());
     }
 
+    // ===== Phase 2C additions: TopAggregate, CompoundAggregate, merge(), edge cases =====
+
+    @Test
+    @DisplayName("Test Aggregator.TopAggregate — top-N values")
+    void testTopAggregate() throws Exception {
+        // Aggregate.top(3) should keep the 3 highest values
+        Aggregator.TopAggregate top = new Aggregator.TopAggregate(3);
+        top.initialize(10);
+        top.accumulate(30);
+        top.accumulate(20);
+        top.accumulate(5);
+        top.accumulate(25);
+
+        Comparable[] result = (Comparable[]) top.result();
+        // result contains top 3: [30, 25, 20] in descending order
+        assertEquals(3, result.length, "TopAggregate should hold exactly N=3 elements");
+        assertEquals(30, result[0], "Highest value should be first");
+        assertEquals(25, result[1]);
+        assertEquals(20, result[2]);
+
+        // merge two TopAggregates
+        Aggregator.TopAggregate top2 = new Aggregator.TopAggregate(3);
+        top2.initialize(100);
+        top2.accumulate(200);
+        top.merge(top2);
+
+        result = (Comparable[]) top.result();
+        assertEquals(3, result.length);
+        assertEquals(200, result[0]);
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.TopAggregate — fewer than N elements")
+    void testTopAggregateFewerThanN() {
+        Aggregator.TopAggregate top = new Aggregator.TopAggregate(5);
+        top.initialize(1);
+        top.accumulate(3);
+
+        Comparable[] result = (Comparable[]) top.result();
+        assertEquals(2, result.length, "Should return only 2 elements when fewer than N");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.CompoundAggregate — combines two aggregates")
+    void testCompoundAggregate() {
+        Aggregator.CountAggregate count = new Aggregator.CountAggregate();
+        Aggregator.MaxAggregate   max   = new Aggregator.MaxAggregate();
+
+        Aggregator.CompoundAggregate compound = new Aggregator.CompoundAggregate(count, max);
+        compound.initialize(10);
+        compound.accumulate(20);
+        compound.accumulate(5);
+        compound.accumulate(30);
+
+        Object[] result = (Object[]) compound.result();
+        assertEquals(2, result.length, "CompoundAggregate should return array of 2 results");
+        assertEquals(4L,  result[0], "Count should be 4");
+        assertEquals(30,  result[1], "Max should be 30");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.CompoundAggregate — merge")
+    void testCompoundAggregateMerge() {
+        Aggregator.CountAggregate count1 = new Aggregator.CountAggregate();
+        Aggregator.CompoundAggregate c1 = new Aggregator.CompoundAggregate(count1);
+        c1.initialize(1);
+        c1.accumulate(2);
+
+        Aggregator.CountAggregate count2 = new Aggregator.CountAggregate();
+        Aggregator.CompoundAggregate c2 = new Aggregator.CompoundAggregate(count2);
+        c2.initialize(3);
+        c2.accumulate(4);
+        c2.accumulate(5);
+
+        c1.merge(c2);
+        Object[] result = (Object[]) c1.result();
+        assertEquals(5L, result[0], "Merged count should be 5 (2+3)");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.RepeatCountAggregate — counts items appearing N+ times")
+    void testRepeatCountAggregateExtended() {
+        Aggregator.RepeatCountAggregate rc = new Aggregator.RepeatCountAggregate(3);
+
+        // "apple" appears 3 times → should be counted
+        rc.initialize("apple");
+        rc.accumulate("apple");
+        rc.accumulate("apple");
+
+        // "banana" appears only 2 times → should NOT be counted
+        rc.accumulate("banana");
+        rc.accumulate("banana");
+
+        // "cherry" appears 4 times → should be counted
+        rc.accumulate("cherry");
+        rc.accumulate("cherry");
+        rc.accumulate("cherry");
+        rc.accumulate("cherry");
+
+        assertEquals(2L, rc.result(), "Should count 2 items with 3+ occurrences");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.RepeatCountAggregate — merge of two aggregates")
+    void testRepeatCountAggregateMerge() {
+        Aggregator.RepeatCountAggregate rc1 = new Aggregator.RepeatCountAggregate(2);
+        rc1.initialize("x");  // x: 1
+
+        Aggregator.RepeatCountAggregate rc2 = new Aggregator.RepeatCountAggregate(2);
+        rc2.initialize("x");  // x: 1
+        // After merge: x appears 2 times total → should be counted
+
+        rc1.merge(rc2);
+        assertEquals(1L, rc1.result(), "Merged aggregate should count 'x' which now has 2 occurrences");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.ApproxDistinctCountAggregate — edge cases")
+    void testApproxDistinctCountAggregateEdgeCases() {
+        Aggregator.ApproxDistinctCountAggregate adc = new Aggregator.ApproxDistinctCountAggregate();
+
+        // Single element
+        adc.initialize("hello");
+        long result = ((Number) adc.result()).longValue();
+        assertTrue(result >= 0, "Approx distinct count for 1 element should be >= 0");
+
+        // Reset and add many distinct elements
+        Aggregator.ApproxDistinctCountAggregate adc2 = new Aggregator.ApproxDistinctCountAggregate();
+        adc2.initialize(1);
+        for (int i = 2; i <= 1000; i++) {
+            adc2.accumulate(i);
+        }
+        long count = ((Number) adc2.result()).longValue();
+        // Approximation should be within 30% of 1000
+        assertTrue(count > 500 && count < 1500, "Approx distinct count should be roughly 1000, got: " + count);
+
+        // merge
+        Aggregator.ApproxDistinctCountAggregate adc3 = new Aggregator.ApproxDistinctCountAggregate();
+        adc3.initialize(9999);
+        adc2.merge(adc3);
+        // no exception, result still valid
+        assertTrue(((Number) adc2.result()).longValue() > 0);
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.MaxAggregate and MinAggregate merge")
+    void testMaxMinAggregateMerge() {
+        Aggregator.MaxAggregate max1 = new Aggregator.MaxAggregate();
+        max1.initialize(5);
+        max1.accumulate(10);
+
+        Aggregator.MaxAggregate max2 = new Aggregator.MaxAggregate();
+        max2.initialize(20);
+        max2.accumulate(15);
+
+        max1.merge(max2);
+        assertEquals(20, max1.result());
+
+        Aggregator.MinAggregate min1 = new Aggregator.MinAggregate();
+        min1.initialize(5);
+        min1.accumulate(10);
+
+        Aggregator.MinAggregate min2 = new Aggregator.MinAggregate();
+        min2.initialize(3);
+
+        min1.merge(min2);
+        assertEquals(3, min1.result());
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.merge() static utility — merges two result maps")
+    void testAggregatorMergeStatic() throws Exception {
+        TimeSeries<Event> events = loadEvents();
+
+        Aggregator.GroupBy<Event> groupByHost = new Aggregator.GroupBy<Event>() {
+            public Aggregator.Aggregate getAggregate() { return new Aggregator.CountAggregate(); }
+            public Object getKey(Event e)   { return e.host; }
+            public Object getValue(Event e) { return null; }
+        };
+
+        Map<Object, Aggregator.Aggregate> map1 = Aggregator.<Event>aggregate(events, groupByHost, false);
+        Map<Object, Aggregator.Aggregate> map2 = Aggregator.<Event>aggregate(events, groupByHost, false);
+
+        // Merge map2 into map1 — counts should double
+        Aggregator.merge(map1, map2);
+
+        for (Map.Entry<Object, Aggregator.Aggregate> entry : map1.entrySet()) {
+            long count = ((Number) entry.getValue().result()).longValue();
+            assertTrue(count >= 2, "After merge each count should be at least 2");
+        }
+    }
+
     @Test
     @DisplayName("Test Aggregator - Time range query")
     void testAggregatorTimeRangeQuery() throws Exception {
