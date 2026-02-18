@@ -93,6 +93,14 @@
 /home/dacosta/Projects/oodb/src/org/garret/perst/Version.java
 /home/dacosta/Projects/oodb/src/org/garret/perst/VersionHistory.java
 /home/dacosta/Projects/oodb/src/org/garret/perst/XMLImportException.java
+/home/dacosta/Projects/oodb/src/org/garret/perst/assoc/Array.java
+/home/dacosta/Projects/oodb/src/org/garret/perst/assoc/AssocDB.java
+/home/dacosta/Projects/oodb/src/org/garret/perst/assoc/Item.java
+/home/dacosta/Projects/oodb/src/org/garret/perst/assoc/OrderBy.java
+/home/dacosta/Projects/oodb/src/org/garret/perst/assoc/Pair.java
+/home/dacosta/Projects/oodb/src/org/garret/perst/assoc/Predicate.java
+/home/dacosta/Projects/oodb/src/org/garret/perst/assoc/ReadOnlyTransaction.java
+/home/dacosta/Projects/oodb/src/org/garret/perst/assoc/ReadWriteTransaction.java
 /home/dacosta/Projects/oodb/src/org/garret/perst/continuous/AmbiguousVersionException.java
 /home/dacosta/Projects/oodb/src/org/garret/perst/continuous/CDatabase.java
 /home/dacosta/Projects/oodb/src/org/garret/perst/continuous/CVersion.java
