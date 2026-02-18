@@ -72,6 +72,8 @@ import org.junit.platform.suite.api.Suite;
     org.garret.perst.TestSet.class,
     org.garret.perst.TestStorage.class,
     org.garret.perst.TestThickIndex.class,
+    org.garret.perst.TestTimeSeries.class,
+    org.garret.perst.TestTtree.class,
     org.garret.perst.TestVersion.class,
     org.garret.perst.TestWeakHashTable.class,
     org.garret.perst.TestXML.class
