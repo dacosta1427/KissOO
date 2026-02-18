@@ -14,6 +14,7 @@ Standard procedure:
 After a change has been made to the core Perst code all the junit tests have to be run prior to stating the task as done.
 
 ### NEVER comment out or remove a line because that would make the code work. If you want to do this there has to be approval.
+### NEVER remove the md dir
 
 ## Core Principles
 
