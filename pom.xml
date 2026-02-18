@@ -146,6 +146,7 @@
                         <configuration>
                             <sources>
                                 <source>${project.basedir}/junit_tests/src</source>
+                                <source>${project.basedir}/continuous/tst</source>
                             </sources>
                         </configuration>
                     </execution>

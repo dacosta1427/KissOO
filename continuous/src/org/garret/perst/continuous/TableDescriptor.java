@@ -452,6 +452,9 @@ class TableDescriptor extends Persistent implements Iterable<CVersionHistory>
         return doc;
     }
 
+    TableDescriptor() {
+    }
+
     @SuppressWarnings("unchecked")
     TableDescriptor(Storage storage, Class table) 
     {

@@ -34,6 +34,9 @@ class FullTextSearchIterator implements Iterator<FullTextSearchResult>
                         continue;
                     }
                     CVersion v = (CVersion)storage.getObjectByOID(Integer.parseInt(f.stringValue()));                
+                    if (v == null) {
+                        continue;
+                    }
                     switch (selector.kind) { 
                     case Current:
                         if (v.getVersionHistory().isCurrentForTransaction(v, transId)) { 

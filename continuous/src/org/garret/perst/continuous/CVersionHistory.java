@@ -180,8 +180,11 @@ public class CVersionHistory<V extends CVersion> extends Persistent implements I
     { 
         return v.transId <= transId && (v.id == versions.size() || versions.get(v.id).transId > transId);
     }
-        
-    CVersionHistory(Storage storage, boolean limited) 
+
+    CVersionHistory() {
+    }
+
+    CVersionHistory(Storage storage, boolean limited)
     { 
         versions = storage.<V>createLink(1);
         this.limited = limited;

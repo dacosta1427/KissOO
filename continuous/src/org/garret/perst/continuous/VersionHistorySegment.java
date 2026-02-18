@@ -31,6 +31,9 @@ class VersionHistorySegment extends Persistent
         store();
     }
 
+    VersionHistorySegment() {
+    }
+
     VersionHistorySegment(CVersion v) 
     { 
         super(v.getStorage());
