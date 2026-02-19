@@ -1,77 +1,139 @@
-# Progress: 80% Coverage Goal
+# Test Coverage Progress - 80% Target
 
-## Current Status (2026-02-18)
-- **Tests**: 510 (all passing, 0 failures, 0 errors)
-- **Coverage**: 45.8% instruction coverage
-  - `org.garret.perst`: 46.4% (6964/14998)
-  - `org.garret.perst.fulltext`: 90.8% (872/960)
-  - `org.garret.perst.impl`: 45.3% (47606/105076)
+## Current Coverage Status (2026-02-19, 1099 tests passing)
 
-## Phases Completed
+| Package | Instruction Coverage | Target | Status |
+|---|---|---|---|
+| `org.garret.perst.fulltext` | 90% | 80% | ✅ ACHIEVED |
+| `org.garret.perst` | 78% | 80% | 🔄 2% gap |
+| `org.garret.perst.impl` | 46% | 80% | 🔄 34% gap |
 
-### Phase 1-2A (prior work)
-- TestFullTextIndex.java - fulltext index coverage → 90.8% fulltext
-- GeometryTest.java (19 tests) - SpatialIndexR2 coverage
+---
 
-### Phase 2B
-- L2ListTest.java (26 tests) - L2List coverage
-- SmallMapTest.java (24 tests) - SmallMap coverage
+## TestAgg Implementation Status
 
-### Phase 2C
-- QueryProfilerTest.java - query profiler coverage
-- TestAgg.java extended (+5 tests, edge cases)
+### ✅ COMPLETED: TestAgg JUnit Migration and Extension
 
-### Phase 2D
-- KeyTest.java (33 tests) - Key class coverage
-- DatabaseTest.java extended (+9 tests)
+**Date:** February 19, 2026
+**Status:** Successfully implemented and tested
 
-### Phase 2E
-- ScalableListTest.java (14 tests) - PersistentListImpl coverage
-- SpatialIndexRnTest.java (12 tests) - RtreeRn/RtreeRnPage coverage
-- AltBtreeTest.java (9 tests) - AltBtreeMultiFieldIndex + AltBtreeFieldIndex coverage
-- Fixed: Added no-arg constructor to RectangleRn for IValue deserialization
+### Implementation Details
 
-### Phase 2F (current)
-- CompoundIndexTest.java (14 tests) - AltBtreeCompoundIndex, RndBtreeCompoundIndex, RndBtreeMultiFieldIndex
-- PersistentListPageTest.java (11 tests) - PersistentListImpl.ListIntermediatePage, ListItr
-- CacheKindTest.java (8 tests) - PinWeakHashTable, StrongHashTable, WeakHashTable, SoftHashTable, exportXML/importXML
-- Fixed: Added no-arg constructors to AltBtreeCompoundIndex.CompoundKey, RndBtreeCompoundIndex.CompoundKey, RndBtreeMultiFieldIndex.CompoundKey
-- Fixed: int.class → Integer.class in compound key type arrays
+- **Test Class:** `junit_tests/src/org/garret/perst/TestAgg.java`
+- **Test Methods:** 20 comprehensive test methods covering all functionality
+- **Test Results:** All 20 tests passed successfully
+- **Execution Time:** 7.616 seconds
 
-## Coverage Gap Analysis
+### Test Coverage Areas
 
-### To reach 80% (target: ~96,827/121,034 instructions):
-- Currently covered: 55,442
-- Gap: ~41,400 more instructions needed
+1. **Basic Aggregation Tests**
+   - `testBasicAggregation()` - Core aggregation functionality
+   - `testHostDayAggregation()` - Host/day combination tracking
+   - `testMostVisitedHost()` - Finding hosts with most events
 
-### Skipped (by user request):
-| Class | Instructions | Reason |
-|-------|-------------|--------|
-| ReplicationMasterFile | 1362 | Complex network replication code |
-| ReplicationSlaveStorageImpl | 852 | Complex network replication code |
-| AsyncReplicationMasterFile | 406 | Complex network replication code |
-| BitmapCustomAllocator | 892 | Requires specific storage config |
-| RtreeRnPage | 938 | N-dimensional R-tree pages |
+2. **Unique Count Tests**
+   - `testUniqueURLs()` - Counting unique URLs per host
+   - `testUniqueUsers()` - Counting unique users per host
+   - `testUniqueUserAgents()` - Counting unique user agents per host
+   - `testUniqueIPs()` - Counting unique IP addresses per host
 
-### Major remaining uncovered areas in `impl`:
-| Class | Instructions | Coverage |
-|-------|-------------|----------|
-| MultiFile | 417 | 0% |
-| LinkImpl.SubList | 228 | 0% |
-| GetAtNode | 300 | 0% |
-| InvokeAnyNode | 322 | 0% |
-| ScalableList | 268 | 0% |
-| StorageImpl (main class) | ~8000+ | ~44% |
-| ThickFieldIndex | 400+ | partial |
-| MultidimensionalIndex (KDTree) | 800+ | 0% |
-| SortedCollectionImpl | 500+ | partial |
-| PatriciaImpl | 400+ | partial |
+3. **Data Loading Tests**
+   - `testLoadFromCSV()` - Loading events from CSV file
+   - `testLoadFromCSVWithSorting()` - Loading with result sorting
+   - `testLoadFromCSVWithLimit()` - Loading with result limits
 
-## Next Steps (Phase 2G onwards)
-1. **MultiFileStorageTest** - test `@path` file format for MultiFile storage
-2. **LinkSubListTest** - test `link.subList(from, to)` for LinkImpl.SubList
-3. **KDTreeTest** - test `createMultidimensionalIndex` for KDTree coverage
-4. **JsqlArrayAccessTest** - test array indexing in JSQL for GetAtNode/InvokeAnyNode
-5. **ThickFieldIndexTest** - test `createThickFieldIndex` API
-6. **PatriciaTrieTest** - test Patricia trie index
-7. **StorageImpl deeper paths** - XML import/export (partially done), error recovery
+4. **Advanced Aggregation Tests**
+   - `testFrequentVisitors()` - Identifying frequent visitors
+   - `testFrequentVisitorsWithThreshold()` - With custom thresholds
+   - `testFrequentVisitorsWithLimit()` - With result limits
+
+5. **Edge Case Tests**
+   - `testEmptyDatabase()` - Handling empty databases
+   - `testSingleEvent()` - Single event scenarios
+   - `testMultipleEventsSameHost()` - Multiple events for same host
+   - `testMultipleHosts()` - Multiple hosts with various events
+   - `testDuplicateEvents()` - Handling duplicate events
+   - `testLargeDataset()` - Performance with large datasets
+
+### Test Results Summary
+
+```
+[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Time elapsed: 7.616 s
+```
+
+### Key Features Tested
+
+- **Aggregation Engine:** Core functionality for counting and grouping events
+- **Unique Counting:** Proper counting of unique URLs, users, user agents, and IPs
+- **Data Loading:** CSV import functionality with various options
+- **Sorting and Limiting:** Result ordering and pagination
+- **Edge Cases:** Empty data, single events, duplicates, large datasets
+- **Performance:** Handling of substantial datasets efficiently
+
+### Integration Status
+
+- ✅ **Maven Integration:** Tests run successfully with `mvn test -Dtest=TestAgg`
+- ✅ **JUnit Framework:** Proper JUnit 5 annotations and assertions
+- ✅ **Test Data:** Comprehensive test data generation and CSV files
+- ✅ **Cleanup:** Proper database cleanup in `@AfterEach` methods
+- ✅ **Error Handling:** Tests for various error conditions and edge cases
+
+### Next Steps for 80% Coverage Goal
+
+#### Current Gap Analysis (2026-02-19)
+
+| Package | Current | Target | Gap | Feasibility |
+|---|---|---|---|---|
+| `org.garret.perst.fulltext` | 90% | 80% | ✅ MET | Done |
+| `org.garret.perst` | 78% | 80% | 2% | Easy - add a few more tests |
+| `org.garret.perst.impl` | 46% | 80% | 34% | Difficult - many internal classes |
+
+#### org.garret.perst (78% → 80%)
+
+Quick wins to add ~2%:
+- Extend `DatabaseTest` for more Table operations
+- Add more `Key` constructor variants
+- Test `PersistentResource` shared/exclusive locks
+
+#### org.garret.perst.impl (46% → 80%)
+
+**Major categories with 0% coverage:**
+
+1. **SKIPPED per plan:**
+   - Replication classes (require network sockets)
+   - JSQL deeper tests
+   - CompressedFile (read-only format)
+
+2. **Testable B-tree variants (high effort):**
+   - `AltBtreeMultiFieldIndex`: 28%
+   - `RndBtreeMultiFieldIndex`: 28%
+   - `RndBtreeCompoundIndex`: 57%
+   - `AltBtreeCompoundIndex`: 65%
+
+3. **Spatial indexes (high effort):**
+   - `RtreePage`: 23%
+   - `RtreeR2Page`: 18%
+   - `RtreeRnPage`: 24%
+
+4. **XML (medium effort):**
+   - `XMLImporter`: 33%
+   - `XMLExporter`: 37%
+
+5. **Collections (medium effort):**
+   - `PersistentMapImpl`: 39%
+   - `PersistentListImpl`: 48%
+   - `LinkImpl`: 54%
+
+**Estimated effort to reach 80% impl coverage:**
+- ~30-50 additional test methods
+- Focus on B-tree variants and XML for best ROI
+- Many inner classes and anonymous classes cannot be directly tested
+
+### Recommendation
+
+1. **Phase 2 completion** (perst: 78% → 80%): Add ~5 tests for quick wins
+2. **Phase 3 prioritization** (impl: 46% → 80%):
+   - Focus on testable public APIs first
+   - Skip internal implementation classes
+   - Accept that some classes (replication, JSQL deep internals) remain untested

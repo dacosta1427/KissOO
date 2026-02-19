@@ -100,16 +100,18 @@ After a change has been made to the core Perst code all the junit tests have to 
 
 ## Phase 3 — `org.garret.perst.impl` (41% → 80%)
 
-### Priority #3A: JSQL query nodes
+### ~~Priority #3A: JSQL query nodes~~ — **SKIPPED**
 
-- [ ] Task 3A.1: Extend `TestJSQL.java` — add NOT, nested AND/OR, parentheses grouping tests
-- [ ] Task 3A.2: Extend `TestJSQL.java` — add arithmetic expression tests (`+`, `-`, `*`, `/`, `%` in WHERE)
-- [ ] Task 3A.3: Extend `TestJSQL.java` — add `ORDER BY` multi-field ascending/descending
-- [ ] Task 3A.4: Extend `TestJSQL.java` — add `LIKE`, `MATCHES` string predicates
-- [ ] Task 3A.5: Extend `TestJSQL.java` — add null-field handling
-- [ ] Task 3A.6: Extend `TestJSQLContains.java` — add dynamic list `CONTAINS` tests
-- [ ] Task 3A.7: Extend `TestJsqlJoin.java` — add method invocation in query (e.g., `name.startsWith("A")`)
-- [ ] Task 3A.8: Run `mvn test` → verify all tests pass
+> **Decision**: JSQL deeper tests skipped per user request. Current coverage is sufficient for now.
+
+~~- [ ] Task 3A.1: Extend `TestJSQL.java` — add NOT, nested AND/OR, parentheses grouping tests~~
+~~- [ ] Task 3A.2: Extend `TestJSQL.java` — add arithmetic expression tests (`+`, `-`, `*`, `/`, `%` in WHERE)~~
+~~- [ ] Task 3A.3: Extend `TestJSQL.java` — add `ORDER BY` multi-field ascending/descending~~
+~~- [ ] Task 3A.4: Extend `TestJSQL.java` — add `LIKE`, `MATCHES` string predicates~~
+~~- [ ] Task 3A.5: Extend `TestJSQL.java` — add null-field handling~~
+~~- [ ] Task 3A.6: Extend `TestJSQLContains.java` — add dynamic list `CONTAINS` tests~~
+~~- [ ] Task 3A.7: Extend `TestJsqlJoin.java` — add method invocation in query (e.g., `name.startsWith("A")`)~~
+~~- [ ] Task 3A.8: Run `mvn test` → verify all tests pass~~
 
 ### Priority #3B: B-tree variants
 
@@ -167,25 +169,33 @@ After a change has been made to the core Perst code all the junit tests have to 
 - [ ] Task 3H.2: Extend `TestAlloc.java` — test `BitmapAllocator` branch edges: fill segment, verify next-segment wrap
 - [ ] Task 3H.3: Run `mvn test` → verify all tests pass
 
-### Priority #3I: StorageImpl, Ttree, ThickIndex
+### Priority #3I: StorageImpl — **Do before Ttree**
 
 - [ ] Task 3I.1: Extend `StorageTest.java` — add backup/restore round-trip test
 - [ ] Task 3I.2: Extend `StorageTest.java` — add multi-operation rollback test
 - [ ] Task 3I.3: Extend `StorageTest.java` — add `gc()` triggered garbage collection test
 - [ ] Task 3I.4: Extend `StorageTest.java` — add `getStatistics()` object count verification
-- [ ] Task 3I.5: Extend `TestThickIndex.java` — add `ThickFieldIndex` duplicate-heavy insert/query/remove test
-- [ ] Task 3I.6: Extend `TestThickIndex.java` — add large duplicate set test (trigger internal growth)
-- [ ] Task 3I.7: Extend `TestTtree.java` — add insert-until-split test
-- [ ] Task 3I.8: Extend `TestTtree.java` — add range query across page boundary test
-- [ ] Task 3I.9: Extend `TestTtree.java` — add delete-causing-underflow/merge test
-- [ ] Task 3I.10: Run `mvn test` → verify all tests pass
+- [ ] Task 3I.5: Run `mvn test` → verify all tests pass
 
-### Priority #3J: CodeGeneratorImpl
+### Priority #3J: ThickIndex
 
-- [ ] Task 3J.1: Extend `TestCodeGenerator.java` — add tests for more field types (all primitives + String + Date)
-- [ ] Task 3J.2: Extend `TestCodeGenerator.java` — test generated class can be stored and retrieved
-- [ ] Task 3J.3: Extend `TestCodeGenerator.java` — test unsupported-type error case
-- [ ] Task 3J.4: Run `mvn test` → verify all tests pass
+- [ ] Task 3J.1: Extend `TestThickIndex.java` — add `ThickFieldIndex` duplicate-heavy insert/query/remove test
+- [ ] Task 3J.2: Extend `TestThickIndex.java` — add large duplicate set test (trigger internal growth)
+- [ ] Task 3J.3: Run `mvn test` → verify all tests pass
+
+### Priority #3K: Ttree, TtreePage
+
+- [ ] Task 3K.1: Extend `TestTtree.java` — add insert-until-split test
+- [ ] Task 3K.2: Extend `TestTtree.java` — add range query across page boundary test
+- [ ] Task 3K.3: Extend `TestTtree.java` — add delete-causing-underflow/merge test
+- [ ] Task 3K.4: Run `mvn test` → verify all tests pass
+
+### Priority #3L: CodeGeneratorImpl
+
+- [ ] Task 3L.1: Extend `TestCodeGenerator.java` — add tests for more field types (all primitives + String + Date)
+- [ ] Task 3L.2: Extend `TestCodeGenerator.java` — test generated class can be stored and retrieved
+- [ ] Task 3L.3: Extend `TestCodeGenerator.java` — test unsupported-type error case
+- [ ] Task 3L.4: Run `mvn test` → verify all tests pass
 
 ---
 

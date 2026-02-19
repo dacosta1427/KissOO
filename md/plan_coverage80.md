@@ -162,17 +162,19 @@ Tests needed:
 - Test index creation on existing table
 - Test `getVersion()`, `open()` / `close()` lifecycle
 
-#### Group F — File implementations (all 0%)
+#### Group F — File implementations — **PARTIALLY SKIPPED**
 
-| Class | Current |
-|---|---|
-| `CompressedReadWriteFile` | 0% |
-| `CompressedFile` | 0% |
-| `CompressedReadWriteFile.PageMap` | 0% |
-| `CompressedReadWriteFile.PageMap.PageMapIterator` | 0% |
-| `MappedFile` | 0% |
-| `IFileOutputStream` | 0% |
-| `CompressDatabase` | 0% |
+| Class | Current | Status |
+|---|---|---|
+| `CompressedReadWriteFile` | 0% | To be tested |
+| `CompressedFile` | 0% | **SKIPPED** - read-only format, requires external utility |
+| `CompressedReadWriteFile.PageMap` | 0% | To be tested |
+| `CompressedReadWriteFile.PageMap.PageMapIterator` | 0% | To be tested |
+| `MappedFile` | 0% | To be tested |
+| `IFileOutputStream` | 0% | To be tested |
+| `CompressDatabase` | 0% | To be tested |
+
+> **Decision**: `CompressedFile` is SKIPPED - it's a read-only compressed file format that requires an external utility workflow to create. Testing would need pre-compressed database files which is outside the scope of unit tests.
 
 **New file**: `FileImplementationTest.java`
 
@@ -260,7 +262,7 @@ This is the largest package with 284 classes. Many are B-tree / R-tree implement
 
 ### Class groups and actions
 
-#### Group A — JSQL Query Nodes (very low coverage)
+#### Group A — JSQL Query Nodes (very low coverage) — **SKIPPED**
 
 | Class | Current |
 |---|---|
@@ -274,16 +276,18 @@ This is the largest package with 284 classes. Many are B-tree / R-tree implement
 | `CompareNode` | 25% |
 | `GetAtNode` | 0% |
 
-**Extend `TestJSQL.java`, `TestJSQLContains.java`, `TestJsqlJoin.java`**
+> **Decision**: JSQL deeper tests skipped per user request. Current coverage is sufficient for now.
 
-Tests needed:
-- Complex compound WHERE with `NOT`, `AND`, `OR`, nested parentheses
-- Arithmetic expressions (`+`, `-`, `*`, `/`, `%`) in WHERE clause
-- `CONTAINS` with dynamic list
-- Method invocation in query (e.g., `name.startsWith("A")`)
-- `ORDER BY` multi-field, ascending and descending
-- `LIKE`, `MATCHES` string predicates
-- Null field handling
+~~**Extend `TestJSQL.java`, `TestJSQLContains.java`, `TestJsqlJoin.java`**~~
+
+~~Tests needed:~~
+~~- Complex compound WHERE with `NOT`, `AND`, `OR`, nested parentheses~~
+~~- Arithmetic expressions (`+`, `-`, `*`, `/`, `%`) in WHERE clause~~
+~~- `CONTAINS` with dynamic list~~
+~~- Method invocation in query (e.g., `name.startsWith("A")`)~~
+~~- `ORDER BY` multi-field, ascending and descending~~
+~~- `LIKE`, `MATCHES` string predicates~~
+~~- Null field handling~~
 
 #### Group B — B-tree variants (incomplete coverage)
 
@@ -427,7 +431,7 @@ Tests needed:
 - `BitmapCustomAllocator`: create with custom segment, allocate objects, verify allocations are in custom range
 - `BitmapAllocator` branch edges: allocate until full segment, verify wrap-around / next segment
 
-#### Group J — StorageImpl (51% → 80%)
+#### Group J — StorageImpl (51% → 80%) — **PRIORITY: Do before Ttree**
 
 **Extend `StorageTest.java`**
 
@@ -483,10 +487,13 @@ The following classes are excluded because they are **untestable without externa
 | `PersistentMapImpl.SubMap.new AbstractSet(){…}` | Anonymous inner class |
 | `InvokeAnyNode` | Requires reflective invocation path not triggered by normal JSQL |
 | `GetAtNode` | Internal array-access node |
+| `CompressedFile` | Read-only compressed file format - requires external utility workflow |
 
 ---
 
 ## Execution Order (by risk / value)
+
+> **Note**: JSQL deeper tests (3A) are SKIPPED per user request. StorageImpl (3I) should be done BEFORE Ttree.
 
 | Phase | Package | Focus | New Files | Extended Files |
 |---|---|---|---|---|
@@ -497,7 +504,7 @@ The following classes are excluded because they are **untestable without externa
 | 2D | `perst` | File impls | `FileImplementationTest.java` | — |
 | 2E | `perst` | Database, Key, Version | — | `DatabaseTest.java`, `TestVersion.java`, `TestPatricia.java` |
 | 2F | `perst` | Utilities, Collections | `CollectionUtilTest.java`, `MathUtilTest.java` | — |
-| 3A | `impl` | JSQL nodes | — | `TestJSQL.java`, `TestJSQLContains.java`, `TestJsqlJoin.java` |
+| ~~3A~~ | ~~`impl`~~ | ~~JSQL nodes~~ | — | ~~SKIPPED~~ |
 | 3B | `impl` | B-tree variants | — | `TestCompoundIndex.java`, `TestRndIndex.java`, `TestIndex.java`, `TestBtreeCompoundIndex.java` |
 | 3C | `impl` | R-tree, Neighbour | — | `TestRtree.java` |
 | 3D | `impl` | XML | — | `TestXML.java` |
@@ -505,8 +512,10 @@ The following classes are excluded because they are **untestable without externa
 | 3F | `impl` | Weak/Pin tables | `FileImplTest.java` | `TestWeakHashTable.java` |
 | 3G | `impl` | File impls (Rc4, Multi) | `FileImplTest.java` | — |
 | 3H | `impl` | BitmapCustomAllocator | — | `TestAlloc.java` |
-| 3I | `impl` | StorageImpl, Ttree, ThickIndex | — | `StorageTest.java`, `TestTtree.java`, `TestThickIndex.java` |
-| 3J | `impl` | CodeGeneratorImpl | — | `TestCodeGenerator.java` |
+| 3I | `impl` | **StorageImpl** (priority) | — | `StorageTest.java` |
+| 3J | `impl` | ThickIndex | — | `TestThickIndex.java` |
+| 3K | `impl` | Ttree, TtreePage | — | `TestTtree.java` |
+| 3L | `impl` | CodeGeneratorImpl | — | `TestCodeGenerator.java` |
 
 ---
 

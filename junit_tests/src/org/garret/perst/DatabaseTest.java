@@ -263,6 +263,157 @@ public class DatabaseTest {
         assertFalse(it.hasNext());
     }
 
+    // ===== Phase 2K extensions =====
+
+    @Test
+    public void testCountRecords() {
+        assertTrue(database.createTable(Stored.class));
+        assertEquals(0, database.countRecords(Stored.class));
+        database.addRecord(new Stored("one"));
+        database.addRecord(new Stored("two"));
+        assertEquals(2, database.countRecords(Stored.class));
+    }
+
+    @Test
+    public void testEnableAutoIndices() {
+        // Test that enableAutoIndices returns previous value
+        boolean prev = database.enableAutoIndices(true);
+        // Now set it to false and verify it returns true (previous value)
+        boolean prev2 = database.enableAutoIndices(false);
+        assertTrue(prev2, "Previous value should be true");
+    }
+
+    @Test
+    public void testIsMultithreaded() {
+        assertFalse(database.isMultithreaded(), "Default database should be single-threaded");
+    }
+
+    @Test
+    public void testGetStorage() {
+        assertNotNull(database.getStorage());
+        assertSame(storage, database.getStorage());
+    }
+
+    @Test
+    public void testDropIndex() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        assertTrue(database.dropIndex(Stored.class, "name"));
+        assertFalse(database.dropIndex(Stored.class, "name"));
+    }
+
+    @Test
+    public void testGetIndex() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        GenericIndex idx = database.getIndex(Stored.class, "name");
+        assertNotNull(idx);
+    }
+
+    @Test
+    public void testGetIndexNonExistent() {
+        assertTrue(database.createTable(Stored.class));
+        GenericIndex idx = database.getIndex(Stored.class, "nonexistent");
+        assertNull(idx);
+    }
+
+    @Test
+    public void testGetIndices() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        java.util.HashMap indices = database.getIndices(Stored.class);
+        assertNotNull(indices);
+        assertTrue(indices.containsKey("name"));
+    }
+
+    @Test
+    public void testExcludeIncludeIndex() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("original");
+        database.addRecord(s);
+        assertTrue(database.excludeFromIndex(s, "name"));
+        assertTrue(database.includeInIndex(s, "name"));
+    }
+
+    @Test
+    public void testExcludeFromAllIndices() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("test");
+        database.addRecord(s);
+        assertDoesNotThrow(() -> database.excludeFromAllIndices(s));
+    }
+
+    @Test
+    public void testIncludeInAllIndices() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("test");
+        database.addRecord(s);
+        database.excludeFromAllIndices(s);
+        assertTrue(database.includeInAllIndices(s));
+    }
+
+    @Test
+    public void testUpdateKey() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("oldName");
+        database.addRecord(s);
+        assertDoesNotThrow(() -> database.updateKey(s, "name", "newName"));
+        assertEquals("newName", s.name);
+    }
+
+    @Test
+    public void testPrepareQuery() {
+        assertTrue(database.createTable(Stored.class));
+        database.addRecord(new Stored("alpha"));
+        database.addRecord(new Stored("beta"));
+        Query<Stored> q = database.prepare(Stored.class, "name = 'alpha'");
+        assertNotNull(q);
+        IterableIterator<Stored> it = q.execute(database.getRecords(Stored.class));
+        assertTrue(it.hasNext());
+        assertEquals("alpha", it.next().name);
+    }
+
+    @Test
+    public void testCreateQuery() {
+        assertTrue(database.createTable(Stored.class));
+        Query<Stored> q = database.createQuery(Stored.class);
+        assertNotNull(q);
+    }
+
+    @Test
+    public void testGetFullTextIndex() {
+        assertNotNull(database.getFullTextIndex());
+    }
+
+    @Test
+    public void testCreateIndexWithKind() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", Database.INDEX_KIND_UNIQUE));
+        assertFalse(database.createIndex(Stored.class, "name", Database.INDEX_KIND_UNIQUE));
+    }
+
+    @Test
+    public void testCreateIndexCaseInsensitive() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", false, true, false));
+    }
+
+    @Test
+    public void testCreateIndexThick() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", false, false, true));
+    }
+
+    @Test
+    public void testCreateIndexRandomAccess() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", false, false, false, true));
+    }
+
 	/**
 	 * Internal class
 	 */

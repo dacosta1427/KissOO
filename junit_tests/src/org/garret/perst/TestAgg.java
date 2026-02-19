@@ -688,6 +688,171 @@ class TestAgg {
     }
 
     @Test
+    @DisplayName("Test Aggregator.AvgAggregate — computes average")
+    void testAvgAggregate() {
+        Aggregator.AvgAggregate avg = new Aggregator.AvgAggregate();
+        avg.initialize(10.0);
+        avg.accumulate(20.0);
+        avg.accumulate(30.0);
+        avg.accumulate(40.0);
+
+        double result = ((Number) avg.result()).doubleValue();
+        assertEquals(25.0, result, 0.001, "Average of (10,20,30,40) should be 25");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.AvgAggregate — merge")
+    void testAvgAggregateMerge() {
+        Aggregator.AvgAggregate avg1 = new Aggregator.AvgAggregate();
+        avg1.initialize(10.0);
+        avg1.accumulate(20.0);
+
+        Aggregator.AvgAggregate avg2 = new Aggregator.AvgAggregate();
+        avg2.initialize(30.0);
+        avg2.accumulate(40.0);
+
+        avg1.merge(avg2);
+        double result = ((Number) avg1.result()).doubleValue();
+        assertEquals(25.0, result, 0.001, "Merged average should be 25");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.IntegerSumAggregate — sums integers")
+    void testIntegerSumAggregate() {
+        Aggregator.IntegerSumAggregate sum = new Aggregator.IntegerSumAggregate();
+        sum.initialize(10);
+        sum.accumulate(20);
+        sum.accumulate(30);
+
+        long result = ((Number) sum.result()).longValue();
+        assertEquals(60L, result, "Sum of (10,20,30) should be 60");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.IntegerSumAggregate — merge")
+    void testIntegerSumAggregateMerge() {
+        Aggregator.IntegerSumAggregate sum1 = new Aggregator.IntegerSumAggregate();
+        sum1.initialize(100);
+        sum1.accumulate(50);
+
+        Aggregator.IntegerSumAggregate sum2 = new Aggregator.IntegerSumAggregate();
+        sum2.initialize(200);
+
+        sum1.merge(sum2);
+        assertEquals(350L, ((Number) sum1.result()).longValue());
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.RealSumAggregate — sums doubles")
+    void testRealSumAggregate() {
+        Aggregator.RealSumAggregate sum = new Aggregator.RealSumAggregate();
+        sum.initialize(1.5);
+        sum.accumulate(2.5);
+        sum.accumulate(3.0);
+
+        double result = ((Number) sum.result()).doubleValue();
+        assertEquals(7.0, result, 0.001, "Sum of (1.5,2.5,3.0) should be 7.0");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.RealSumAggregate — merge")
+    void testRealSumAggregateMerge() {
+        Aggregator.RealSumAggregate sum1 = new Aggregator.RealSumAggregate();
+        sum1.initialize(10.0);
+
+        Aggregator.RealSumAggregate sum2 = new Aggregator.RealSumAggregate();
+        sum2.initialize(20.0);
+        sum2.accumulate(5.0);
+
+        sum1.merge(sum2);
+        assertEquals(35.0, ((Number) sum1.result()).doubleValue(), 0.001);
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.PrdAggregate — computes product")
+    void testPrdAggregate() {
+        Aggregator.PrdAggregate prd = new Aggregator.PrdAggregate();
+        prd.initialize(2.0);
+        prd.accumulate(3.0);
+        prd.accumulate(4.0);
+
+        double result = ((Number) prd.result()).doubleValue();
+        assertEquals(24.0, result, 0.001, "Product of (2,3,4) should be 24");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.PrdAggregate — merge")
+    void testPrdAggregateMerge() {
+        Aggregator.PrdAggregate prd1 = new Aggregator.PrdAggregate();
+        prd1.initialize(2.0);
+        prd1.accumulate(3.0);
+
+        Aggregator.PrdAggregate prd2 = new Aggregator.PrdAggregate();
+        prd2.initialize(4.0);
+
+        prd1.merge(prd2);
+        assertEquals(24.0, ((Number) prd1.result()).doubleValue(), 0.001);
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.VarAggregate — computes variance")
+    void testVarAggregate() {
+        Aggregator.VarAggregate var = new Aggregator.VarAggregate();
+        // Values: 2, 4, 4, 4, 5, 5, 7, 9 → mean=5, population variance=4
+        var.initialize(2.0);
+        var.accumulate(4.0);
+        var.accumulate(4.0);
+        var.accumulate(4.0);
+        var.accumulate(5.0);
+        var.accumulate(5.0);
+        var.accumulate(7.0);
+        var.accumulate(9.0);
+
+        double result = ((Number) var.result()).doubleValue();
+        assertEquals(4.0, result, 0.001, "Variance should be 4.0");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.DevAggregate — computes standard deviation")
+    void testDevAggregate() {
+        Aggregator.DevAggregate dev = new Aggregator.DevAggregate();
+        // Values: 2, 4, 4, 4, 5, 5, 7, 9 → mean=5, variance=4, std dev=2
+        dev.initialize(2.0);
+        dev.accumulate(4.0);
+        dev.accumulate(4.0);
+        dev.accumulate(4.0);
+        dev.accumulate(5.0);
+        dev.accumulate(5.0);
+        dev.accumulate(7.0);
+        dev.accumulate(9.0);
+
+        double result = ((Number) dev.result()).doubleValue();
+        assertEquals(2.0, result, 0.001, "Standard deviation should be 2.0");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.FirstAggregate — returns first value")
+    void testFirstAggregate() {
+        Aggregator.FirstAggregate first = new Aggregator.FirstAggregate();
+        first.initialize("first");
+        first.accumulate("second");
+        first.accumulate("third");
+
+        assertEquals("first", first.result(), "FirstAggregate should return the first value");
+    }
+
+    @Test
+    @DisplayName("Test Aggregator.LastAggregate — returns last value")
+    void testLastAggregate() {
+        Aggregator.LastAggregate last = new Aggregator.LastAggregate();
+        last.initialize("first");
+        last.accumulate("second");
+        last.accumulate("third");
+
+        assertEquals("third", last.result(), "LastAggregate should return the last value");
+    }
+
+    @Test
     @DisplayName("Test Aggregator - Time range query")
     void testAggregatorTimeRangeQuery() throws Exception {
         TimeSeries<Event> events = loadEvents();
