@@ -292,37 +292,6 @@ public class Database implements IndexProvider {
         }
     }
     
-    /**
-     * Create table for the specified class.
-     * This function does nothing if table for such class already exists
-     * @param table class corresponding to the table
-     * @return <code>true</code> if table is created, <code>false</code> if table 
-     * alreay exists
-     * @deprecated Since version 2.75 of Perst it is not necessary to create table and index 
-     * descriptors explicitly: them are automatically create when object is inserted in the 
-     * database first time (to mark fields for which indices should be created, use Indexable 
-     * annotation)
-     */
-    @Deprecated
-    public boolean createTable(Class table) { 
-        if (multithreaded) { 
-            checkTransaction();
-            metadata.exclusiveLock();
-        }
-        if (tables.get(table) == null) { 
-            Table t = new Table();
-            t.extent = storage.createSet();
-            t.indices = storage.createLink();
-            t.indicesMap = new HashMap<String, FieldIndex>();
-            t.setClass(table);
-            tables.put(table, t);
-            metadata.metaclasses.put(table.getName(), t);
-            addIndices(t, table);
-            return true;
-        }
-        return false;
-    }
-               
     private void createTableInternal(Class table) { 
         if (multithreaded) { 
             checkTransaction();
@@ -527,24 +496,7 @@ public class Database implements IndexProvider {
     public static final int INDEX_KIND_THICK = 4;
     public static final int INDEX_KIND_RANDOM_ACCESS = 8;
     public static final int INDEX_KIND_CASE_INSENSITIVE = 16;
-        
-    /**
-     * Add new index to the table. If such index already exists this method does nothing.
-     * @param t table to add index to
-     * @param c class corresponding to the table
-     * @param key field of the class to be indexed
-     * @param kind bitmask of index kind flags
-     * @exception StorageError (CLASS_NOT_FOUND) exception is thrown if there is no table corresponding to 
-     * the specified class
-     * @return <code>true</code> if index is created, <code>false</code> if index
-     * already exists
-     * @deprecated since version 2.75 of Perst it is not necessary to create table and index 
-     * descriptors explicitly: them are automatically create when object is inserted in the 
-     * database first time (to mark fields for which indices should be created, use Indexable 
-     * annotation)
-     */
-    @Deprecated
-    @SuppressWarnings("unchecked")
+
     private boolean createIndex(Table t, Class c, String key, int kind) {
         if (t.indicesMap.get(key) == null) { 
             boolean unique = (kind & INDEX_KIND_UNIQUE) != 0;
@@ -565,6 +517,18 @@ public class Database implements IndexProvider {
         }
         return false;
     }
+
+    /**
+     * Add new index to the table. If such index already exists this method does nothing.
+     * @param t table to add index to
+     * @param c class corresponding to the table
+     * @param key field of the class to be indexed
+     * @param kind bitmask of index kind flags
+     * @exception StorageError (CLASS_NOT_FOUND) exception is thrown if there is no table corresponding to 
+     * the specified class
+     * @return <code>true</code> if index is created, <code>false</code> if index
+     * already exists
+     */
 
     /**
      * Drop index for the specified table and key.

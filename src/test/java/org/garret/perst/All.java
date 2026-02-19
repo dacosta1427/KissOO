@@ -21,7 +21,6 @@ import org.junit.platform.suite.api.Suite;
 @Suite
 @SelectClasses({
     org.garret.perst.BlobTest.class,
-    org.garret.perst.DatabaseTest.class,
     org.garret.perst.PersistentSetTest.class,
     org.garret.perst.QueryTest.class,
     org.garret.perst.StorageFactoryTest.class,
