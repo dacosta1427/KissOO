@@ -3,7 +3,7 @@ import  org.garret.perst.*;
 import  java.util.*;
 import  java.lang.reflect.Array;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"rawtypes", "unchecked"})
 class AltBtree<T> extends PersistentCollection<T> implements Index<T> { 
     int       height;
     int       type;

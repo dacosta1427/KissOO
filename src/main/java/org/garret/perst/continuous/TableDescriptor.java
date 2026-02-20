@@ -16,6 +16,7 @@ import org.garret.perst.impl.ClassDescriptor;
 import org.garret.perst.impl.LinkImpl;
 import org.garret.perst.impl.StorageImpl;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 class TableDescriptor extends Persistent implements Iterable<CVersionHistory>
 { 
     private static final long serialVersionUID = 1L;

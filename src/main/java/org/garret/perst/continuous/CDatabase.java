@@ -60,6 +60,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
  * immutable or cloneable (implement org.garret.perst.ICloneable interface). 
  * Using any other data type including Perst collection classes is not supported and can cause unpredictable behavior.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class CDatabase { 
     /** 
      * Open the database. This method initialize database if it not initialized yet.

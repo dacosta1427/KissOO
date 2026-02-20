@@ -3,6 +3,7 @@ package org.garret.perst.continuous;
 import java.util.*;
 import org.garret.perst.*;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 class ExtentIterator<T> extends IterableIterator<T> 
 { 
     ExtentIterator(Iterator<CVersionHistory> iterator, IResource resource, VersionSelector selector) {
