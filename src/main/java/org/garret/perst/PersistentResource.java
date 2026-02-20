@@ -5,6 +5,8 @@ package org.garret.perst;
  */
 
 public class PersistentResource extends Persistent implements IResource {
+    private static final long serialVersionUID = 1L;
+
     public synchronized void sharedLock() {
         Thread currThread = Thread.currentThread();
         try { 
