@@ -47,6 +47,7 @@ import java.util.*;
  *     }
  * </pre>
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Aggregator
 {
     /**
