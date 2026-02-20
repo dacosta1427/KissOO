@@ -18,6 +18,8 @@ import org.garret.perst.impl.StorageImpl;
 
 class TableDescriptor extends Persistent implements Iterable<CVersionHistory>
 { 
+    private static final long serialVersionUID = 1L;
+
     static class IndexDescriptor implements IValue
     {
         String  fieldName;
@@ -452,11 +454,11 @@ class TableDescriptor extends Persistent implements Iterable<CVersionHistory>
         return doc;
     }
 
-    TableDescriptor() {
+    public TableDescriptor() {
     }
 
     @SuppressWarnings("unchecked")
-    TableDescriptor(Storage storage, Class table) 
+    public TableDescriptor(Storage storage, Class table) 
     {
         super(storage);
         type = table;
