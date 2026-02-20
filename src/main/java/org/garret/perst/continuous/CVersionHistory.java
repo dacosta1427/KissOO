@@ -12,6 +12,8 @@ import org.garret.perst.*;
  */
 public class CVersionHistory<V extends CVersion> extends Persistent implements Iterable<V>
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Get current version in the version history for the current transaction.
      * @return current version for the current transaction or null if none 
@@ -181,10 +183,10 @@ public class CVersionHistory<V extends CVersion> extends Persistent implements I
         return v.transId <= transId && (v.id == versions.size() || versions.get(v.id).transId > transId);
     }
 
-    CVersionHistory() {
+    public CVersionHistory() {
     }
 
-    CVersionHistory(Storage storage, boolean limited)
+    public CVersionHistory(Storage storage, boolean limited)
     { 
         versions = storage.<V>createLink(1);
         this.limited = limited;

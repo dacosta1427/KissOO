@@ -8,6 +8,8 @@ import java.util.Date;
  */
 public class CVersion extends Persistent
 {
+    private static final long serialVersionUID = 1L;
+
     public static final int FIRST_VERSION_ID = 1;
 
     /**
@@ -94,15 +96,11 @@ public class CVersion extends Persistent
      * Constructor of root version. All other versions should be created using 
      * <code>CVersionHistory.update</code> method
      */
-    protected CVersion(Storage storage) {
+    public CVersion(Storage storage) {
         super(storage);
     }
 
-    /**
-     * Constructor of root version. All other versions should be created using 
-     * <code>CVersionHistory.update</code> method
-     */
-    protected CVersion() {
+    public CVersion() {
     }
 
     CVersion createWorkingCopy(TableDescriptor desc) 
