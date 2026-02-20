@@ -6,6 +6,7 @@ package org.garret.perst;
  * Size of internal database structures (object index, memory allocation bitmap) is associated with 
  * <code>Storage</code> class. Size of class descriptors  - with <code>java.lang.Class</code> class.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class MemoryUsage {
     /**
      * Class of persistent object or Storage for database internal data

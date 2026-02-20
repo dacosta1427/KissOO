@@ -9,6 +9,7 @@ import java.util.zip.*;
  * Then use CompressDatabase utility to compress database file.
  * To work with compressed database file you should pass instance of this class in <code>Storage.open</code> method
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class CompressedFile implements IFile 
 { 
     static final int SEGMENT_LENGTH = 128*1024;
