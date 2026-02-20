@@ -4,80 +4,76 @@
 
 ---
 
-# Plan: Perst Project Improvements
+# Plan: Perst Code Quality Improvement
 
-## Overview
-This plan addresses deprecated API usage in the Perst OODBMS codebase to ensure compatibility with Java 25+ (OpenJDK 25). The main issues are the use of deprecated and removed APIs that cause compilation warnings and will cause failures in future Java versions.
+## Objective
+Clean up deprecation warnings and improve code quality for long-term maintainability with OpenJDK 25+.
 
-## Background
-The Perst OODBMS was originally designed for Java 1.6. Since then, several APIs have been deprecated and eventually removed in Java 25:
-- `Class.newInstance()` - deprecated in Java 9, removed in Java 25
-- `Object.finalize()` - deprecated for removal since Java 9
-- `System.runFinalization()` - deprecated for removal since Java 9
+## Current State
+- Java Version: 25 ✓
+- Lucene Version: 9.11.0 ✓
+- Tests: 288 passing ✓
+- Deprecations: 25 warnings
+- Unchecked warnings: 78
+
+## Goals
+1. Fix all deprecation warnings related to primitive wrapper constructors (~94 instances)
+2. Fix finalize()/runFinalization() deprecations
+3. Add missing @Deprecated annotations in Database.java
+4. Enable strict compilation with -Xlint:all -Werror
 
 ## Current Issues Found
 
-### Issue #1: Class.newInstance() (40+ occurrences)
+### Issue #1: Primitive Wrapper Constructors (94 instances)
 **Severity:** High
-**Impact:** Compilation errors in Java 25
+**Locations:** Aggregator.java, RndBtree.java, QueryImpl.java, StorageImpl.java, AltBtree.java, Btree.java, etc.
 
-The code uses `Class.newInstance()` in 40+ locations, primarily in:
-- `src/org/garret/perst/impl/ClassDescriptor.java` (lines 164, 169, 318)
-- `src/org/garret/perst/impl/StorageImpl.java` (lines 3433, 3456, 3788, 4012, 4264)
-- Various index implementations (AltBtree, Btree, etc.)
-
-**Solution:** Replace with `Class.getDeclaredConstructor().newInstance()` which provides the same functionality with better exception handling.
+Solution: Replace `new Integer/Long/Double/Byte/Short()` with `valueOf()`
 
 ### Issue #2: finalize() method
 **Severity:** High
-**Impact:** Compilation warnings, will cause errors in future Java versions
+**Location:** Persistent.java:16
 
-Location: `src/org/garret/perst/Persistent.java:16`
+Solution: Already marked @Deprecated(forRemoval=true), needs alternative implementation
 
-```java
-@Deprecated(forRemoval=true)
-protected void finalize() {
-```
-
-**Solution:** Replace with `java.lang.ref.Cleaner` or `java.lang.ref.PhantomReference` for resource cleanup.
-
-### Issue #3: System.runFinalization() (6 occurrences)
+### Issue #3: System.runFinalization() (6 instances)
 **Severity:** Medium
-**Impact:** Compilation warnings
+**Locations:** WeakHashTable.java, LruObjectCache.java
 
-Locations:
-- `src/org/garret/perst/impl/WeakHashTable.java` (lines 85, 117, 139)
-- `src/org/garret/perst/impl/LruObjectCache.java` (lines 127, 169, 218)
+Solution: Replace with explicit resource management or Cleaner API
 
-**Solution:** Replace with explicit resource management or use `Cleaner` API.
+### Issue #4: Deprecated items without @Deprecated annotation
+**Severity:** Medium
+**Locations:** Database.java (4 methods)
 
-## Implementation Approach
+Solution: Add @Deprecated annotations
 
-1. **Create wrapper utility** for object instantiation to handle checked exceptions consistently
-2. **Replace Class.newInstance()** calls throughout the codebase
-3. **Replace finalize()** with Cleaner-based cleanup in Persistent.java
-4. **Replace runFinalization()** calls with proper cleanup mechanisms
-5. **Verify** all JUnit tests pass after changes
+---
 
-## Risk Assessment
+## Risks & Rollback Plan
 
-| Risk | Level | Mitigation |
-|------|-------|------------|
-| Breaking existing functionality | Medium | Test thoroughly with existing test suite |
-| Performance impact from new API | Low | Benchmark if needed |
-| Complex exception handling changes | Medium | Wrap in utility class |
+| Task | Risk | Rollback |
+|------|------|----------|
+| Replace primitive constructors | Runtime issues if done incorrectly | git revert |
+| Fix finalize() | Memory leak if not replaced properly | Keep old code, test thoroughly |
+| Enable -Werror | Build failures on warnings | Revert pom.xml changes |
+
+---
+
+## Dependencies
+- All tasks depend on having working tests (288 tests currently passing)
+- Run `mvn test` after each change per workingRules
+
+## Environment
+- Java: OpenJDK 25
+- Build: Maven
+- Platform: Linux/Windows
 
 ## Success Criteria
-- [ ] All 139 JUnit tests pass
-- [ ] No deprecation warnings in compilation
-- [ ] No use of removed Java APIs
-- [ ] Backward compatibility maintained for Java 25+ applications
-
-## Rollback Plan
-1. **Checkpoint:** Git commit before changes
-2. **Revert command:** `git revert HEAD` or `git reset --hard HEAD~1`
-3. **Verification:** Run `mvn test` and confirm all tests pass
-4. **Impact:** Minimal - only deprecated APIs being replaced
+- [ ] All 288 tests pass
+- [ ] Zero deprecation warnings from primitive wrappers
+- [ ] finalize() replaced with modern alternative
+- [ ] -Xlint:all -Werror enabled and passing
 
 ---
 
