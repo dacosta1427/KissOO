@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.garret.perst</groupId>
-    <artifactId>perst</artifactId>
+    <artifactId>perst-dcg</artifactId>
     <version>4.0.0</version>
     <packaging>jar</packaging>
 
@@ -35,6 +35,14 @@
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
         <spotbugs.plugin.version>4.9.6.0</spotbugs.plugin.version>
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>nassyn-releases</id>
+            <name>Nassyn Maven Repository</name>
+            <url>scp://nassyn/volume1/mavenRepo</url>
+        </repository>
+    </distributionManagement>
 
     <repositories>
         <repository>
