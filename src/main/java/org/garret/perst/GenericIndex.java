@@ -7,6 +7,7 @@ import java.util.*;
  * This is base interface for Index and FieldIndex, allowing to write generic algorithms 
  * working with both itype of indices.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface GenericIndex<T> extends IPersistent, IResource, ITable<T> { 
     /**
      * Get object by key (exact match)     
