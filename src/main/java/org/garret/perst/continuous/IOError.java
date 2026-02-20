@@ -6,7 +6,9 @@ import java.io.IOException;
  * Wrapper for IOException
  */
 public class IOError extends ContinuousException { 
-    IOError(IOException x) { 
+    private static final long serialVersionUID = 1L;
+
+    public IOError(IOException x) { 
         super(x);
     }
 }

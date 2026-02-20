@@ -5,7 +5,9 @@ package org.garret.perst.continuous;
  */
 public class CloneNotSupportedError extends ContinuousException 
 {
-    CloneNotSupportedError() { 
+    private static final long serialVersionUID = 1L;
+
+    public CloneNotSupportedError() { 
         super("Clone is not supported");
     }
 }

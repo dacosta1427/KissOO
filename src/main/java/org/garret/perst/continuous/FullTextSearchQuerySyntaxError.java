@@ -5,7 +5,9 @@ package org.garret.perst.continuous;
  */
 public class FullTextSearchQuerySyntaxError extends ContinuousException 
 {
-    FullTextSearchQuerySyntaxError(Exception x) {
+    private static final long serialVersionUID = 1L;
+
+    public FullTextSearchQuerySyntaxError(Exception x) {
         super(x);
     }
 }
