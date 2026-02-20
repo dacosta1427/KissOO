@@ -9,7 +9,10 @@ import java.lang.reflect.Field;
  * value of specified field (of IPersistent, array of IPersistent, Link or Relation type)
  * is inspected and all referenced object for projection (duplicate values are eliminated)
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Projection<From, To> extends HashSet<To> { 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructor of projection specified by class and field name of projected objects
      * @param type base class for selected objects
