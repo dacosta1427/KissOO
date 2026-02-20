@@ -5,8 +5,11 @@ import java.util.Date;
 /**
  * Base class for version of versioned object. All versions are kept in version history.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Version extends PersistentResource 
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Get version history containing this versioned object
      */
