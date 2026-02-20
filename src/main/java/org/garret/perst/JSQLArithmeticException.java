@@ -14,6 +14,8 @@ package org.garret.perst;
  * Exception thown in case of incorect operands for integer operations
  */
 public class JSQLArithmeticException extends JSQLRuntimeException { 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructor of exception
      */
