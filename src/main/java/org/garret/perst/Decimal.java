@@ -9,6 +9,8 @@ package org.garret.perst;
  */
 public class Decimal extends Number implements Comparable<Decimal>, IValue
 { 
+    private static final long serialVersionUID = 1L;
+
     private long value;
 
     private transient long maxValue;
