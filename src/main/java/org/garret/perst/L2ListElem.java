@@ -5,6 +5,8 @@ package org.garret.perst;
  */
 
 public class L2ListElem extends PersistentResource { 
+    private static final long serialVersionUID = 1L;
+
     protected L2ListElem next;
     protected L2ListElem prev;
 
