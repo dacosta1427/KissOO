@@ -5,11 +5,13 @@ package org.garret.perst.continuous;
  */
 public class ContinuousException extends RuntimeException 
 {
-    ContinuousException(Throwable cause) {
+    private static final long serialVersionUID = 1L;
+
+    public ContinuousException(Throwable cause) {
         super(cause);
     }
 
-    ContinuousException(String message) { 
+    public ContinuousException(String message) { 
         super(message);
     }
 }
