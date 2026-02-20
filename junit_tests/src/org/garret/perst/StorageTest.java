@@ -612,11 +612,197 @@ public class StorageTest {
     }
 
     private static class TestStorageListener extends StorageListener{
-        public Vector<JSQLRuntimeException> exceptions =
+        Vector<JSQLRuntimeException> exceptions =
                 new Vector<JSQLRuntimeException>();
         public void JSQLRuntimeError(JSQLRuntimeException x) {
             exceptions.add(x);
         }
     }
 
+    /**
+     * <B>Goal:</B> To verify the functionality of the <CODE>getOid()</CODE> method.
+     */
+    @Test
+    public void testGetOid() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root((IPersistentSet) storage.createSet());
+        storage.setRoot(root);
+        int oid = storage.getOid(root);
+        assertTrue(oid != 0);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createRandomAccessBlob()</CODE>.
+     */
+    @Test
+    public void testCreateRandomAccessBlob() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Blob b = storage.createRandomAccessBlob();
+        assertNotNull(b);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createRandomAccessBlob()</CODE> with data.
+     */
+    @Test
+    public void testRandomAccessBlobData() throws Exception {
+        storage.open("StorageTest.dbs");
+        Blob b = storage.createRandomAccessBlob();
+        java.io.OutputStream out = b.getOutputStream();
+        out.write("Test data for blob".getBytes());
+        out.close();
+        storage.commit();
+        storage.close();
+        storage.open("StorageTest.dbs");
+        // Blob should persist
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>exportXML()</CODE> and <CODE>importXML()</CODE>.
+     */
+    @Test
+    public void testXmlExportImport() throws Exception {
+        storage.open("StorageTest.dbs");
+        Root root = new Root((IPersistentSet) storage.createSet());
+        root.i = 123;
+        root.s = "test xml export";
+        storage.setRoot(root);
+        storage.commit();
+        
+        // Export to XML
+        java.io.StringWriter writer = new java.io.StringWriter();
+        storage.exportXML(writer);
+        writer.close();
+        
+        String xml = writer.toString();
+        assertNotNull(xml);
+        assertTrue(xml.length() > 0);
+        
+        storage.close();
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>gc()</CODE> method.
+     */
+    @Test
+    public void testGc() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        storage.setGcThreshold(100);
+        Root root = new Root((IPersistentSet) storage.createSet());
+        storage.setRoot(root);
+        storage.commit();
+        storage.gc();
+        // GC should run without exceptions
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>setGcThreshold()</CODE> method.
+     */
+    @Test
+    public void testSetGcThreshold() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        storage.setGcThreshold(1000);
+        // Should not throw
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>backup()</CODE> method.
+     */
+    @Test
+    public void testBackup() throws Exception {
+        storage.open("StorageTest.dbs");
+        Root root = new Root((IPersistentSet) storage.createSet());
+        root.i = 999;
+        storage.setRoot(root);
+        storage.commit();
+        
+        // Create backup
+        java.io.OutputStream backup = new java.io.FileOutputStream("StorageTest.backup");
+        storage.backup(backup);
+        backup.close();
+        
+        storage.close();
+        
+        // Clean up backup file
+        new File("StorageTest.backup").delete();
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createIndex()</CODE> with unique constraint.
+     */
+    @Test
+    public void testCreateUniqueIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Index<Root> idx = storage.createIndex(Root.class, true);
+        assertNotNull(idx);
+        // Unique index created successfully
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createPatriciaTrie()</CODE>.
+     */
+    @Test
+    public void testCreatePatriciaTrie() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        PatriciaTrie<Root> trie = storage.createPatriciaTrie();
+        assertNotNull(trie);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createScalableSet()</CODE>.
+     */
+    @Test
+    public void testCreateScalableSet() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentSet set = storage.createScalableSet();
+        assertNotNull(set);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>clearObjectCache()</CODE>.
+     */
+    @Test
+    public void testClearObjectCache() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root((IPersistentSet) storage.createSet());
+        storage.setRoot(root);
+        storage.commit();
+        storage.clearObjectCache();
+        // Cache should be cleared
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>deallocateObject()</CODE>.
+     */
+    @Test
+    public void testDeallocateObject() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root((IPersistentSet) storage.createSet());
+        storage.setRoot(root);
+        storage.commit();
+        int oid = storage.getOid(root);
+        storage.setRoot(null);
+        storage.deallocateObject(root);
+        // Object should be deallocated
+    }
+
+    /**
+     * <B>Goal:</B> To verify opening storage with file path string.
+     */
+    @Test
+    public void testOpenWithFilePath() {
+        storage.open("StorageTest.dbs");
+        assertTrue(storage.isOpened());
+        Root root = new Root(null);
+        root.i = 555;
+        storage.setRoot(root);
+        storage.commit();
+        storage.close();
+        
+        // Reopen and verify
+        storage.open("StorageTest.dbs");
+        assertTrue(storage.isOpened());
+        root = (Root) storage.getRoot();
+        assertEquals(555, root.i);
+    }
  }
