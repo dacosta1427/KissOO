@@ -9,6 +9,8 @@ package org.garret.perst;
  */
 public class PersistentString extends PersistentResource
 {
+    private static final long serialVersionUID = 1L;
+
     /** 
      * Consutrctor of perisstent string
      * @param str Java string
@@ -18,7 +20,7 @@ public class PersistentString extends PersistentResource
         this.str = str;
     }
     
-    private PersistentString() {}
+    public PersistentString() {}
 
     /**
      * Get Java string
