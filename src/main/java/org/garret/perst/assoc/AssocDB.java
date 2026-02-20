@@ -21,6 +21,7 @@ import java.util.*;
  * It means that only one transaction can update the database at each moment of time, but multiple transactions
  * can concurrently read it.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class AssocDB 
 {
     /**
@@ -120,15 +121,17 @@ public class AssocDB
      */
     public static class Root extends PersistentResource
     { 
+        private static final long serialVersionUID = 1L;
+
         protected Index<Item> relations;
         protected Index<Index<Item>> attributes;
         protected FullTextIndex fullTextIndex;
 
         protected transient AssocDB db;
 
-        protected Root() {}
+        public Root() {}
 
-        protected Root(AssocDB db) { 
+        public Root(AssocDB db) { 
             super(db.storage);
             this.db = db;
             attributes = db.storage.<Index<Item>>createIndex(String.class, true);
