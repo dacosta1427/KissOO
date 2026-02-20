@@ -1149,7 +1149,7 @@ public class Database implements IndexProvider {
                 : storage.createFullTextIndex();
         }
 
-        Metadata() {}
+        public Metadata() {}
     }
         
     static class Table extends Persistent { 

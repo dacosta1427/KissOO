@@ -5,7 +5,11 @@ import org.garret.perst.*;
 
 class IndexFilter<T> extends PersistentCollection<T> implements GenericIndex<T> 
 {
-    IndexFilter(TableDescriptor.IndexDescriptor desc, IResource resource, VersionSelector selector)
+    private static final long serialVersionUID = 1L;
+
+    public IndexFilter() {}
+
+    public IndexFilter(TableDescriptor.IndexDescriptor desc, IResource resource, VersionSelector selector)
     {
         this.index = desc.index;
         this.resource = resource;

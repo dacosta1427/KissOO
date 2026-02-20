@@ -8,7 +8,9 @@ package org.garret.perst.continuous;
  * - didn't change any object
  */
 public class TransactionAlreadyStartedException extends ContinuousException {
-    TransactionAlreadyStartedException() { 
+    private static final long serialVersionUID = 1L;
+
+    public TransactionAlreadyStartedException() { 
         super("Transaction already started exception");
     }
 }

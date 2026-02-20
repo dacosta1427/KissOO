@@ -5,6 +5,8 @@ package org.garret.perst.continuous;
  */
 public class NotCurrentVersionException extends ContinuousException 
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Get version which delete attempt was rejected
      */
@@ -12,7 +14,7 @@ public class NotCurrentVersionException extends ContinuousException
         return v;
     }
 
-    NotCurrentVersionException(CVersion v) { 
+    public NotCurrentVersionException(CVersion v) { 
         super("Attempt to delete non-current version");
         this.v = v;
     }

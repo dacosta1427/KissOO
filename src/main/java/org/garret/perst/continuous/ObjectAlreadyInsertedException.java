@@ -5,6 +5,8 @@ package org.garret.perst.continuous;
  */
 public class ObjectAlreadyInsertedException extends ContinuousException 
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Version which insertion attempt was rejected
      */
@@ -12,7 +14,7 @@ public class ObjectAlreadyInsertedException extends ContinuousException
         return v;
     }
  
-    ObjectAlreadyInsertedException(CVersion v) { 
+    public ObjectAlreadyInsertedException(CVersion v) { 
         super("Transaction already started exception");
         this.v = v;
     }
