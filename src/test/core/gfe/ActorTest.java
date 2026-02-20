@@ -120,12 +120,34 @@ class ActorTest {
 
     @Test
     void testToString() {
-        Actor actor = new Actor("ToString Test", "RETAIL");
+        Actor actor = Actor.builder()
+                .name("ToString Test")
+                .type("RETAIL")
+                .active(true)
+                .build();
         String str = actor.toString();
         
         assertTrue(str.contains("Actor"), "toString should contain Actor");
         assertTrue(str.contains("ToString Test"), "toString should contain name");
         assertTrue(str.contains("RETAIL"), "toString should contain type");
+    }
+
+    @Test
+    void testBuilderWithAllFields() {
+        long now = System.currentTimeMillis();
+        Actor actor = Actor.builder()
+                .uuid("test-uuid-123")
+                .name("Builder Test")
+                .type("CORPORATE")
+                .active(false)
+                .createdDate(now)
+                .build();
+        
+        assertEquals("test-uuid-123", actor.getUuid());
+        assertEquals("Builder Test", actor.getName());
+        assertEquals("CORPORATE", actor.getType());
+        assertFalse(actor.isActive());
+        assertEquals(now, actor.getCreatedDate());
     }
 
     @Test
