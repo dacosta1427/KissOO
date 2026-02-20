@@ -3,6 +3,7 @@ package org.garret.perst.fulltext;
 /**
  * Occurrence of word in the document
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Occurrence implements Comparable 
 { 
     /**

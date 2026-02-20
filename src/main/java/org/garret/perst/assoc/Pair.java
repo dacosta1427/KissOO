@@ -4,6 +4,7 @@ package org.garret.perst.assoc;
  * Name-value pair.
  * Used to get/set items attributes
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Pair 
 { 
     public final String name;

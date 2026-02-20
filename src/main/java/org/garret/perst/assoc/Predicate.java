@@ -3,6 +3,7 @@ package org.garret.perst.assoc;
 /**
  * Class used to construct search query
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Predicate 
 {
     /**

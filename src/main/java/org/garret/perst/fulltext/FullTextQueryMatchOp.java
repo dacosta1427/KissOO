@@ -3,6 +3,7 @@ package org.garret.perst.fulltext;
 /**
  * Match node of full text query
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FullTextQueryMatchOp extends FullTextQuery
 {
     /**

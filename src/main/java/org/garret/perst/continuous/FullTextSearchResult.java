@@ -4,6 +4,7 @@ import org.garret.perst.*;
 /**
  * Full text search result
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FullTextSearchResult 
 {
     /**

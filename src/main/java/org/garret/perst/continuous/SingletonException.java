@@ -3,6 +3,7 @@ package org.garret.perst.continuous;
 /**
  * Exception thrown by CDatabase.getSingleton method when result set contains more than one element
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class SingletonException extends ContinuousException 
 {
     private static final long serialVersionUID = 1L;

@@ -12,6 +12,7 @@ import java.util.Date;
  * open interval</li>
  * </ol>
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class VersionSelector 
 {
     public enum Kind {        

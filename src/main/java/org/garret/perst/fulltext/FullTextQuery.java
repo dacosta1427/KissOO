@@ -4,6 +4,7 @@ package org.garret.perst.fulltext;
  * Base class for full test search query nodes.
  * Query can be parsed by FullTextSearchHelper class or explicitly created by user.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FullTextQuery 
 {
     public static final int MATCH = 0;     

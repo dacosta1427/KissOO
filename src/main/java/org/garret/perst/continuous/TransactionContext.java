@@ -2,6 +2,7 @@ package org.garret.perst.continuous;
 
 import java.util.*;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 class TransactionContext 
 {
     long transId;

@@ -7,6 +7,7 @@ import java.util.*;
  * Content of this class is opaque for application, but it can use 
  * this context to share the single transaction between multiple threads
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ThreadTransactionContext { 
     int             nested;
     IdentityHashMap locked = new IdentityHashMap();

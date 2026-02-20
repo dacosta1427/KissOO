@@ -3,6 +3,7 @@ package org.garret.perst.continuous;
 import java.util.*;
 import org.garret.perst.*;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 class EmptyIterator<T> extends IterableIterator<T> 
 { 
     public boolean hasNext() 

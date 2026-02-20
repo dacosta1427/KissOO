@@ -5,6 +5,7 @@ import org.apache.lucene.store.*;
 import java.io.IOException;
 import java.util.*;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class PerstDirectory extends Directory
 {    
     public PerstDirectory(Storage storage) { 

@@ -16,6 +16,7 @@ import java.util.*;
  * Transaction should be explicitly started by correspondent method of AssocDB and then it has to be either committed, 
  * either aborted. In any case, it can not be used any more after commit or rollback - you should start another transaction.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ReadWriteTransaction extends ReadOnlyTransaction
 {
     /**

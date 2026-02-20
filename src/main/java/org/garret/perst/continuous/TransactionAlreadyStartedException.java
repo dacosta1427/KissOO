@@ -7,6 +7,7 @@ package org.garret.perst.continuous;
  * It is possible to call beginTransaction several times without commit or rollback only if previous transaction was read-only 
  * - didn't change any object
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class TransactionAlreadyStartedException extends ContinuousException {
     private static final long serialVersionUID = 1L;
 
