@@ -15,8 +15,11 @@ import java.util.*;
  * Attribute names are not stored inside object - just their identifiers (integers). AssocDB class is responsible to
  * map IDs to names and visa versa.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Item extends Persistent implements Comparable<Item>, Iterable<Map.Entry<String,Object>>
 {
+    private static final long serialVersionUID = 1L;
+
     protected int[] fieldIds;
     protected String[] stringFields;
     protected double[] numericFields;
@@ -377,9 +380,9 @@ public class Item extends Persistent implements Comparable<Item>, Iterable<Map.E
         db = ((AssocDB.Root)getStorage().getRoot()).db;
     }
 
-    protected Item() {}
+    public Item() {}
 
-    protected Item(AssocDB db) 
+    public Item(AssocDB db) 
     { 
         super(db.storage);
         this.db = db;
