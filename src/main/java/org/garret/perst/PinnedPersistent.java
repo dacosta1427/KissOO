@@ -14,6 +14,8 @@ import org.garret.perst.impl.StorageImpl;
  */
 public class PinnedPersistent implements IPersistent, ICloneable 
 { 
+    private static final long serialVersionUID = 1L;
+
     public synchronized void load() {
         if (oid != 0 && (state & RAW) != 0) { 
             storage.loadObject(this);

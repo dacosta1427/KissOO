@@ -5,6 +5,8 @@ package org.garret.perst;
  */
 
 public abstract class PersistentComparator<T> extends Persistent { 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Compare two members of collection
      * @param m1 first members

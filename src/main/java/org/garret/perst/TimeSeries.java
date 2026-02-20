@@ -41,6 +41,8 @@ public interface TimeSeries<T extends TimeSeries.Tick> extends IPersistent, IRes
      * but check in getTicks() method that array is null, and if so - create new array.
      */
     public static abstract class Block extends Persistent { 
+        private static final long serialVersionUID = 1L;
+
         public long timestamp;
         public int  used;
 

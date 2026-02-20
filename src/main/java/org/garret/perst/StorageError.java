@@ -4,6 +4,8 @@ package org.garret.perst;
  * Exception throw by storage implementation
  */
 public class StorageError extends RuntimeException { 
+    private static final long serialVersionUID = 1L;
+
     public static final int STORAGE_NOT_OPENED     = 1;
     public static final int STORAGE_ALREADY_OPENED = 2;
     public static final int FILE_ACCESS_ERROR      = 3;

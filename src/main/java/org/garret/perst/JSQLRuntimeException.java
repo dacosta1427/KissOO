@@ -14,7 +14,10 @@ package org.garret.perst;
  * Exception thown by JSQL at runtime which should be ignored and boolean expression caused this
  * exption should be treated as false
  */
+@SuppressWarnings("rawtypes")
 public class JSQLRuntimeException extends RuntimeException { 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructor of exception
      * @param target class of the target object in which field was not found

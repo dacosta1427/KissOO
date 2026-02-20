@@ -14,6 +14,8 @@ package org.garret.perst;
  * Exception thrown by compiler
  */
 public class CompileError extends RuntimeException { 
+    private static final long serialVersionUID = 1L;
+
     public CompileError(String msg, int  pos) { 
 	super(msg + " in position " + pos);
     }

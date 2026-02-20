@@ -9,8 +9,11 @@ import org.garret.perst.*;
  * This class provides functionality for parsing and stemming query
  * and tuning document rank calculation
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FullTextSearchHelper extends Persistent
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Weight of nearness criteria in rank formula 
      */
@@ -126,7 +129,7 @@ public class FullTextSearchHelper extends Persistent
         fillStopList();
     }
 
-    protected FullTextSearchHelper() {}
+    public FullTextSearchHelper() {}
 
     protected class QueryScanner 
     {

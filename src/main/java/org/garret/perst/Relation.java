@@ -4,6 +4,8 @@ package org.garret.perst;
  * Class representing relation between owner and members
  */
 public abstract class Relation<M, O> extends Persistent implements Link<M> {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Get relation owner
      * @return owner of the relation
@@ -30,8 +32,8 @@ public abstract class Relation<M, O> extends Persistent implements Link<M> {
         this.owner = owner;
     }
     
-    protected Relation() {}
+    public Relation() {}
 
-    private O owner;
+    private transient O owner;
 }
 

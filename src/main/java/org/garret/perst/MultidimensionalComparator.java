@@ -6,6 +6,8 @@ package org.garret.perst;
 
 public abstract class MultidimensionalComparator<T> extends Persistent 
 { 
+    private static final long serialVersionUID = 1L;
+
     public static final int LEFT_UNDEFINED = -2;
     public static final int LT = -1;
     public static final int EQ = 0;
@@ -41,10 +43,10 @@ public abstract class MultidimensionalComparator<T> extends Persistent
      */
     public abstract T cloneField(T obj, int i);
 
+    public MultidimensionalComparator() {}
+
     protected MultidimensionalComparator(Storage storage) {
         super(storage);
     }
-
-    protected MultidimensionalComparator() {}
 }
 
