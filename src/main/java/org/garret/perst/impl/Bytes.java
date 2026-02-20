@@ -3,16 +3,6 @@ package org.garret.perst.impl;
 import org.garret.perst.StorageError;
 import java.io.UnsupportedEncodingException;
 
-class ArrayPos {
-    byte[] body;
-    int    offs;
-
-    ArrayPos(byte[] body, int offs) { 
-        this.body = body;
-        this.offs = offs;
-    }
-}
-
 //
 // Class for packing/unpacking data
 //
