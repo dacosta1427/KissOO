@@ -214,6 +214,32 @@
       <systemPath>${project.basedir}/libs/mysql-connector-java-9.2.0.jar</systemPath>
     </dependency>
 
+    <!-- GFE Dependencies -->
+    <dependency>
+      <!-- Lombok for reduced boilerplate -->
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.38</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/libs/lombok.jar</systemPath>
+    </dependency>
+    <dependency>
+      <!-- Perst OODBMS -->
+      <groupId>com.mcobject</groupId>
+      <artifactId>perst</artifactId>
+      <version>4.39</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/libs/perst.jar</systemPath>
+    </dependency>
+
+    <!-- Mockito for testing -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.14.0</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
 
@@ -701,6 +727,38 @@
         </plugin>
 
     </plugins>
+
+    <!-- Profile to copy dependencies to libs directory -->
+    <profiles>
+      <profile>
+        <id>copy-dependencies</id>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-dependency-plugin</artifactId>
+              <version>3.6.1</version>
+              <executions>
+                <execution>
+                  <id>copy-dependencies</id>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>copy-dependencies</goal>
+                  </goals>
+                  <configuration>
+                    <outputDirectory>${project.basedir}/libs</outputDirectory>
+                    <includeScope>system</includeScope>
+                    <overWriteReleases>false</overWriteReleases>
+                    <overWriteSnapshots>true</overWriteSnapshots>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+    </profiles>
+
   </build>
 </project>
 
