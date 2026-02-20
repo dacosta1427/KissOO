@@ -7,6 +7,7 @@ import org.garret.perst.impl.ThreadTransactionContext;
 /**
  * Object storage
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface Storage { 
     /**
      * Constant specifying that page pool should be dynamically extended 
