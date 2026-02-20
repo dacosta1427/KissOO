@@ -4,6 +4,8 @@ import org.garret.perst.*;
 
 class VersionHistorySegment extends Persistent 
 { 
+    private static final long serialVersionUID = 1L;
+
     CVersionHistory vh;
     int from;
     int till;
@@ -31,10 +33,10 @@ class VersionHistorySegment extends Persistent
         store();
     }
 
-    VersionHistorySegment() {
+    public VersionHistorySegment() {
     }
 
-    VersionHistorySegment(CVersion v) 
+    public VersionHistorySegment(CVersion v) 
     { 
         super(v.getStorage());
         vh = v.history;
@@ -42,7 +44,7 @@ class VersionHistorySegment extends Persistent
         from = till = v.id;
     }
 
-    VersionHistorySegment(CVersionHistory vh, int from, int till) 
+    public VersionHistorySegment(CVersionHistory vh, int from, int till) 
     { 
         super(vh.getStorage());
         this.vh = vh;
