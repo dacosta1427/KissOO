@@ -299,4 +299,113 @@ class CollectionUtilTest {
 
         assertEquals(2, idx.size());
     }
+
+    // ==============================
+    // PersistentCollection tests
+    // ==============================
+
+    @Test @DisplayName("PersistentCollection: contains()")
+    void testPersistentCollectionContains() {
+        IPersistentSet<Author> set = storage.createSet();
+        Author a1 = new Author(storage, "Alice");
+        Author a2 = new Author(storage, "Bob");
+        set.add(a1);
+        
+        assertTrue(set.contains(a1));
+        assertFalse(set.contains(a2));
+    }
+
+    @Test @DisplayName("PersistentCollection: containsAll()")
+    void testPersistentCollectionContainsAll() {
+        IPersistentSet<Author> set = storage.createSet();
+        Author a1 = new Author(storage, "Alice");
+        Author a2 = new Author(storage, "Bob");
+        Author a3 = new Author(storage, "Carol");
+        set.add(a1);
+        set.add(a2);
+        
+        List<Author> subset = Arrays.asList(a1, a2);
+        List<Author> notSubset = Arrays.asList(a1, a3);
+        
+        assertTrue(set.containsAll(subset));
+        assertFalse(set.containsAll(notSubset));
+    }
+
+    @Test @DisplayName("PersistentCollection: toArray()")
+    void testPersistentCollectionToArray() {
+        IPersistentSet<Author> set = storage.createSet();
+        Author a1 = new Author(storage, "Alice");
+        Author a2 = new Author(storage, "Bob");
+        set.add(a1);
+        set.add(a2);
+        
+        Object[] arr = set.toArray();
+        assertEquals(2, arr.length);
+    }
+
+    @Test @DisplayName("PersistentCollection: toArray(T[])")
+    void testPersistentCollectionToArrayTyped() {
+        IPersistentSet<Author> set = storage.createSet();
+        Author a1 = new Author(storage, "Alice");
+        Author a2 = new Author(storage, "Bob");
+        set.add(a1);
+        set.add(a2);
+        
+        Author[] arr = set.toArray(new Author[0]);
+        assertEquals(2, arr.length);
+    }
+
+    @Test @DisplayName("PersistentCollection: isEmpty()")
+    void testPersistentCollectionIsEmpty() {
+        IPersistentSet<Author> set = storage.createSet();
+        assertTrue(set.isEmpty());
+        set.add(new Author(storage, "Alice"));
+        assertFalse(set.isEmpty());
+    }
+
+    // ==============================
+    // IterableIterator tests
+    // ==============================
+
+    @Test @DisplayName("IterableIterator: iterator() returns self")
+    void testIterableIteratorReturnsSelf() {
+        // Create a simple IterableIterator using IteratorWrapper
+        List<String> list = Arrays.asList("a", "b", "c");
+        IteratorWrapper<String> wrapper = new IteratorWrapper<>(list.iterator());
+        
+        // IteratorWrapper extends IterableIterator, so iterator() returns self
+        Iterator<String> it2 = wrapper.iterator();
+        assertSame(wrapper, it2);
+    }
+
+    @Test @DisplayName("IterableIterator: forEachRemaining()")
+    void testIterableIteratorForEachRemaining() {
+        FieldIndex<Author> idx = storage.createFieldIndex(Author.class, "name", true);
+        idx.put(new Author(storage, "Alice"));
+        idx.put(new Author(storage, "Bob"));
+        
+        Iterator<Author> it = idx.iterator();
+        List<String> names = new ArrayList<>();
+        it.forEachRemaining(a -> names.add(a.name));
+        
+        assertEquals(2, names.size());
+        assertTrue(names.contains("Alice"));
+        assertTrue(names.contains("Bob"));
+    }
+
+    // ==============================
+    // IteratorWrapper tests  
+    // ==============================
+
+    @Test @DisplayName("IteratorWrapper: basic iteration")
+    void testIteratorWrapper() {
+        List<String> list = Arrays.asList("a", "b", "c");
+        IteratorWrapper<String> wrapper = new IteratorWrapper<>(list.iterator());
+        
+        List<String> result = new ArrayList<>();
+        while (wrapper.hasNext()) {
+            result.add(wrapper.next());
+        }
+        assertEquals(Arrays.asList("a", "b", "c"), result);
+    }
 }

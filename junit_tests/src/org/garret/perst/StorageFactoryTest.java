@@ -41,4 +41,76 @@ public class StorageFactoryTest {
         assertNotSame(storage0, storage1);
     }
 
+    // ===== Additional StorageFactory tests for coverage =====
+
+    /**
+     * Verifies that getInstance() returns the same singleton instance.
+     */
+    @Test
+    public void testGetInstanceReturnsSameInstance() {
+        StorageFactory factory1 = StorageFactory.getInstance();
+        StorageFactory factory2 = StorageFactory.getInstance();
+        assertSame(factory1, factory2, "getInstance() should return same singleton");
+    }
+
+    /**
+     * Tests createReplicationMasterStorage() with minimal parameters.
+     */
+    @Test
+    public void testCreateReplicationMasterStorage() {
+        StorageFactory factory = StorageFactory.getInstance();
+        ReplicationMasterStorage storage = factory.createReplicationMasterStorage(-1, new String[0], 0);
+        assertNotNull(storage, "createReplicationMasterStorage() should return non-null storage");
+    }
+
+    /**
+     * Tests createReplicationMasterStorage() with page timestamp file.
+     */
+    @Test
+    public void testCreateReplicationMasterStorageWithTimestampFile() {
+        StorageFactory factory = StorageFactory.getInstance();
+        ReplicationMasterStorage storage = factory.createReplicationMasterStorage(-1, new String[0], 0, null);
+        assertNotNull(storage, "createReplicationMasterStorage() with timestamp file should return non-null storage");
+    }
+
+    /**
+     * Tests createReplicationSlaveStorage() with minimal parameters.
+     */
+    @Test
+    public void testCreateReplicationSlaveStorage() {
+        StorageFactory factory = StorageFactory.getInstance();
+        ReplicationSlaveStorage storage = factory.createReplicationSlaveStorage(0);
+        assertNotNull(storage, "createReplicationSlaveStorage() should return non-null storage");
+    }
+
+    /**
+     * Tests createReplicationSlaveStorage() with page timestamp file.
+     */
+    @Test
+    public void testCreateReplicationSlaveStorageWithTimestampFile() {
+        StorageFactory factory = StorageFactory.getInstance();
+        ReplicationSlaveStorage storage = factory.createReplicationSlaveStorage(0, null);
+        assertNotNull(storage, "createReplicationSlaveStorage() with timestamp file should return non-null storage");
+    }
+
+    /**
+     * Tests addReplicationSlaveStorage() with minimal parameters.
+     */
+    @Test
+    public void testAddReplicationSlaveStorage() {
+        StorageFactory factory = StorageFactory.getInstance();
+        ReplicationSlaveStorage storage = factory.addReplicationSlaveStorage("localhost", 0);
+        assertNotNull(storage, "addReplicationSlaveStorage() should return non-null storage");
+    }
+
+    /**
+     * Tests addReplicationSlaveStorage() with page timestamp file.
+     */
+    @Test
+    public void testAddReplicationSlaveStorageWithTimestampFile() {
+        StorageFactory factory = StorageFactory.getInstance();
+        ReplicationSlaveStorage storage = factory.addReplicationSlaveStorage("localhost", 0, null);
+        assertNotNull(storage, "addReplicationSlaveStorage() with timestamp file should return non-null storage");
+    }
+
 }

@@ -16,6 +16,10 @@ import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Iterator;
+import org.garret.perst.fulltext.FullTextIndex;
+import org.garret.perst.fulltext.FullTextQuery;
+import org.garret.perst.fulltext.FullTextQueryMatchOp;
+import org.garret.perst.fulltext.FullTextSearchResult;
 
 /**
  * These tests verifies an functionality of the <code>Database</code> class.
@@ -412,6 +416,174 @@ public class DatabaseTest {
     public void testCreateIndexRandomAccess() {
         assertTrue(database.createTable(Stored.class));
         assertTrue(database.createIndex(Stored.class, "name", false, false, false, true));
+    }
+
+    // ===== Additional coverage tests =====
+
+    @Test
+    public void testMultithreadedDatabase() {
+        storage.close();
+        storage = StorageFactory.getInstance().createStorage();
+        storage.open(new NullFile(), Storage.INFINITE_PAGE_POOL);
+        database = new Database(storage, true); // multithreaded = true
+        assertTrue(database.isMultithreaded());
+    }
+
+    @Test
+    public void testDatabaseConstructorWithHelper() {
+        storage.close();
+        storage = StorageFactory.getInstance().createStorage();
+        storage.open(new NullFile(), Storage.INFINITE_PAGE_POOL);
+        database = new Database(storage, false, true, null);
+        assertNotNull(database.getStorage());
+    }
+
+    @Test
+    public void testAddRecordWithClassParameter() {
+        assertTrue(database.createTable(Stored.class));
+        Stored s = new Stored("test");
+        assertTrue(database.addRecord(Stored.class, s));
+    }
+
+    @Test
+    public void testDeleteRecordWithClassParameter() {
+        assertTrue(database.createTable(Stored.class));
+        Stored s = new Stored("test");
+        database.addRecord(s);
+        assertTrue(database.deleteRecord(Stored.class, s));
+    }
+
+    @Test
+    public void testGetRecordsForUpdate() {
+        assertTrue(database.createTable(Stored.class));
+        database.addRecord(new Stored("test"));
+        Iterator<IPersistent> it = database.getRecords(Stored.class, true);
+        assertTrue(it.hasNext());
+    }
+
+    @Test
+    public void testCountRecordsForUpdate() {
+        assertTrue(database.createTable(Stored.class));
+        database.addRecord(new Stored("test"));
+        assertEquals(1, database.countRecords(Stored.class, true));
+    }
+
+    @Test
+    public void testSelectForUpdate() {
+        assertTrue(database.createTable(Stored.class));
+        database.addRecord(new Stored("alpha"));
+        IterableIterator<Stored> it = database.select(Stored.class, "name = 'alpha'", true);
+        assertTrue(it.hasNext());
+        assertEquals("alpha", it.next().name);
+    }
+
+    @Test
+    public void testPrepareForUpdate() {
+        assertTrue(database.createTable(Stored.class));
+        database.addRecord(new Stored("alpha"));
+        Query<Stored> q = database.prepare(Stored.class, "name = 'alpha'", true);
+        assertNotNull(q);
+    }
+
+    @Test
+    public void testCreateQueryForUpdate() {
+        assertTrue(database.createTable(Stored.class));
+        Query<Stored> q = database.createQuery(Stored.class, true);
+        assertNotNull(q);
+    }
+
+    @Test
+    public void testSearchPrefix() {
+        assertTrue(database.createTable(Stored.class));
+        // searchPrefix with empty index should work
+        FullTextSearchResult result = database.searchPrefix("test", 10, 1000, false);
+        // Can be null or empty result
+    }
+
+    @Test
+    public void testSearchQuery() {
+        assertTrue(database.createTable(Stored.class));
+        FullTextQuery query = new FullTextQueryMatchOp(FullTextQuery.MATCH, "test", 0);
+        FullTextSearchResult result = database.search(query, 10, 1000);
+        // Can be null or empty result
+    }
+
+    @Test
+    public void testGetKeywords() {
+        assertTrue(database.createTable(Stored.class));
+        Iterator<FullTextIndex.Keyword> it = database.getKeywords("");
+        assertNotNull(it);
+    }
+
+    @Test
+    public void testExcludeFromAllIndicesWithClass() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("test");
+        database.addRecord(s);
+        assertDoesNotThrow(() -> database.excludeFromAllIndices(Stored.class, s));
+    }
+
+    @Test
+    public void testIncludeInAllIndicesWithClass() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("test");
+        database.addRecord(s);
+        database.excludeFromAllIndices(s);
+        assertTrue(database.includeInAllIndices(Stored.class, s));
+    }
+
+    @Test
+    public void testExcludeFromIndexWithClass() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("test");
+        database.addRecord(s);
+        assertTrue(database.excludeFromIndex(Stored.class, s, "name"));
+    }
+
+    @Test
+    public void testIncludeInIndexWithClass() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("test");
+        database.addRecord(s);
+        database.excludeFromIndex(s, "name");
+        assertTrue(database.includeInIndex(Stored.class, s, "name"));
+    }
+
+    @Test
+    public void testUpdateKeyWithClass() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s = new Stored("oldName");
+        database.addRecord(s);
+        assertDoesNotThrow(() -> database.updateKey(Stored.class, s, "name", "newName"));
+        assertEquals("newName", s.name);
+    }
+
+    @Test
+    public void testAddRecordDuplicateKey() {
+        assertTrue(database.createTable(Stored.class));
+        assertTrue(database.createIndex(Stored.class, "name", true));
+        Stored s1 = new Stored("duplicate");
+        Stored s2 = new Stored("duplicate");
+        assertTrue(database.addRecord(s1));
+        assertFalse(database.addRecord(s2)); // duplicate key should return false
+    }
+
+    @Test
+    public void testAddRecordWithAutoIncrement() {
+        // Test autoRegisterTables by using Database constructor that enables it
+        storage.close();
+        storage = StorageFactory.getInstance().createStorage();
+        storage.open(new NullFile(), Storage.INFINITE_PAGE_POOL);
+        database = new Database(storage, false, true, null); // autoRegisterTables = true
+        
+        // Adding record should auto-create the table
+        Stored s = new Stored("auto");
+        assertTrue(database.addRecord(s));
     }
 
 	/**
