@@ -13,7 +13,10 @@ package org.garret.perst;
 /**
  * Exception thown when field is not found during runtime lookup
  */
+@SuppressWarnings("rawtypes")
 public class JSQLNoSuchFieldException extends JSQLRuntimeException { 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructor of exception
      * @param target class of the target object in which field was not found
