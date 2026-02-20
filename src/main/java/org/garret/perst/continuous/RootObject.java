@@ -5,6 +5,8 @@ import org.garret.perst.*;
 
 class RootObject extends PersistentResource 
 { 
+    private static final long serialVersionUID = 1L;
+
     FieldIndex<TableDescriptor> tables;
     long transId;
     IPersistent userData;
@@ -21,13 +23,13 @@ class RootObject extends PersistentResource
         return id;
     }
 
-    RootObject(Storage storage) 
+    public RootObject(Storage storage) 
     { 
         super(storage);
         transId = 0;
         tables = storage.<TableDescriptor>createFieldIndex(TableDescriptor.class, "className", true);
     }
 
-    RootObject() {}
+    public RootObject() {}
 }
     
