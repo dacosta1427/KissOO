@@ -5,6 +5,8 @@ package org.garret.perst.continuous;
  */
 public class ConflictException extends ContinuousException 
 {
+    private static final long serialVersionUID = 1L;
+
     CVersion v;
     
     /**
@@ -14,7 +16,7 @@ public class ConflictException extends ContinuousException
         return v;
     }
     
-    ConflictException(CVersion v) { 
+    public ConflictException(CVersion v) { 
         super("Version conflict detected");
         this.v = v;
     }

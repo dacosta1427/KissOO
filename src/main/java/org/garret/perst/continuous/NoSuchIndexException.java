@@ -5,7 +5,9 @@ package org.garret.perst.continuous;
  */
 public class NoSuchIndexException extends ContinuousException 
 {
-    NoSuchIndexException(String field) 
+    private static final long serialVersionUID = 1L;
+
+    public NoSuchIndexException(String field) 
     { 
         super("There is no index for field " + field);
     }

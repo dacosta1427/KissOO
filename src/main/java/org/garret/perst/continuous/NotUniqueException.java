@@ -5,6 +5,8 @@ package org.garret.perst.continuous;
  */
 public class NotUniqueException extends ContinuousException 
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Get version which field contains not unique value
      */
@@ -12,7 +14,7 @@ public class NotUniqueException extends ContinuousException
         return v;
     }
 
-    NotUniqueException(CVersion v) { 
+    public NotUniqueException(CVersion v) { 
         super("Unique constraint violated");
         this.v = v;
     }

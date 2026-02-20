@@ -5,7 +5,9 @@ package org.garret.perst.continuous;
  */
 public class SingletonException extends ContinuousException 
 {
-    SingletonException() { 
+    private static final long serialVersionUID = 1L;
+
+    public SingletonException() { 
         super("Result set contains more than one element");
     }
 }
