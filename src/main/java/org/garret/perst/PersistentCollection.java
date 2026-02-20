@@ -3,8 +3,11 @@ import  org.garret.perst.*;
 import  org.garret.perst.impl.QueryImpl;
 import  java.util.*;
 
+@SuppressWarnings("rawtypes")
 public abstract class PersistentCollection<T> extends PersistentResource implements ITable<T>
 {
+    private static final long serialVersionUID = 1L;
+
     public IterableIterator<T> select(Class cls, String predicate) { 
         Query<T> query = new QueryImpl<T>(getStorage());
         return query.select(cls, iterator(), predicate);
