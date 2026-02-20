@@ -7,7 +7,10 @@ import org.garret.perst.impl.QueryImpl;
  * Double linked list.
  */
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class L2List extends L2ListElem implements ITable { 
+    private static final long serialVersionUID = 1L;
+
     private int nElems;
     private int updateCounter;
 
