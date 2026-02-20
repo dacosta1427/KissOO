@@ -7,8 +7,11 @@ import java.util.*;
  * Pairs are stored in the array in the order of their insertion.
  * Consequently operations with this map has linear ccomplexity.
  */ 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class SmallMap<K,V> extends PersistentResource implements Map<K,V>
 {
+    private static final long serialVersionUID = 1L;
+
     private Pair<K,V>[] pairs;
 
     public SmallMap() {
