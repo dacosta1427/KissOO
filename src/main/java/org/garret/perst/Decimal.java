@@ -292,7 +292,10 @@ public class Decimal extends Number implements Comparable<Decimal>, IValue
             throw new ArithmeticException("Divide by zero");
         }
         Decimal result = new Decimal();
-        result.value = (value >> 8) / (x.value >> 8) / scale;
+        // Multiply by scale to preserve decimal precision in the result
+        // e.g., 400.00 / 4.00 = 100.00
+        // scaled: (40000 * 100) / 400 = 10000 which is 100.00
+        result.value = ((value >> 8) * scale / (x.value >> 8)) << 8 | (value & 0xFF);
         result.maxValue = maxValue;
         result.scale = scale;
         return result;
