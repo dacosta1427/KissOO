@@ -10,6 +10,8 @@ import java.util.*;
  */
 public class VersionHistory<V extends Version>  extends PersistentResource 
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Get current version in version history.
      * Current version can be explicitely set by setVersion or result of last checkOut
