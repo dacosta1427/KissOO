@@ -14,6 +14,8 @@ package org.garret.perst;
  * Exception thrown by code generator
  */
 public class CodeGeneratorException extends RuntimeException { 
+    private static final long serialVersionUID = 1L;
+
     public  CodeGeneratorException(String msg) { 
 	super(msg);
     }
