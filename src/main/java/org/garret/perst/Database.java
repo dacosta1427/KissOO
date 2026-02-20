@@ -10,6 +10,7 @@ import org.garret.perst.impl.ClassDescriptor;
  * This class emulates relational database on top of Perst storage
  * It maintain class extends, associated indices, prepare queries.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Database implements IndexProvider { 
     /** 
      * Constructor of database. This method initialize database if it not initialized yet.
@@ -1125,11 +1126,13 @@ public class Database implements IndexProvider {
 
 
     static class Metadata extends PersistentResource {
+        private static final long serialVersionUID = 1L;
+
         Index<Table> metaclasses;
         FullTextIndex fullTextIndex;
 
         @SuppressWarnings("unchecked")
-        Metadata(Storage storage, Index index, FullTextSearchHelper helper) { 
+        public Metadata(Storage storage, Index index, FullTextSearchHelper helper) { 
             super(storage);
             metaclasses = index;
             fullTextIndex = (helper != null) 
@@ -1138,7 +1141,7 @@ public class Database implements IndexProvider {
         }
 
         @SuppressWarnings("unchecked")
-        Metadata(Storage storage, FullTextSearchHelper helper) { 
+        public Metadata(Storage storage, FullTextSearchHelper helper) { 
             super(storage);
             metaclasses = storage.createIndex(String.class, true);
             fullTextIndex = (helper != null) 
@@ -1150,6 +1153,10 @@ public class Database implements IndexProvider {
     }
         
     static class Table extends Persistent { 
+        private static final long serialVersionUID = 1L;
+
+        public Table() {}
+
         IPersistentSet extent;
         Link           indices;
 
