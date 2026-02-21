@@ -164,4 +164,86 @@ class TestMap {
         assertNotNull(byId, "Should find by id");
         assertNotNull(byName, "Should find by name");
     }
+
+    @Test
+    @DisplayName("Test FieldIndex clear")
+    void testFieldIndexClear() {
+        FieldIndex<Record> index = storage.createFieldIndex(Record.class, "id", true);
+
+        for (int i = 0; i < 50; i++) {
+            Record rec = new Record();
+            rec.id = i;
+            index.put(rec);
+        }
+        storage.commit();
+
+        assertEquals(50, index.size(), "Should have 50 records");
+
+        index.clear();
+        storage.commit();
+
+        assertEquals(0, index.size(), "Should be empty after clear");
+    }
+
+    @Test
+    @DisplayName("Test FieldIndex size")
+    void testFieldIndexSize() {
+        FieldIndex<Record> index = storage.createFieldIndex(Record.class, "id", true);
+
+        assertEquals(0, index.size(), "Empty index should have size 0");
+
+        for (int i = 0; i < 25; i++) {
+            Record rec = new Record();
+            rec.id = i;
+            index.put(rec);
+        }
+        storage.commit();
+
+        assertEquals(25, index.size(), "Should have 25 records");
+    }
+
+    @Test
+    @DisplayName("Test FieldIndex update")
+    void testFieldIndexUpdate() {
+        FieldIndex<Record> index = storage.createFieldIndex(Record.class, "id", true);
+
+        Record rec = new Record();
+        rec.id = 1;
+        rec.name = "original";
+        index.put(rec);
+        storage.commit();
+
+        // Modify and update
+        rec.name = "updated";
+        rec.modify();
+        storage.commit();
+
+        Record found = index.get(new Key(1L));
+        assertEquals("updated", found.name, "Name should be updated");
+    }
+
+    @Test
+    @DisplayName("Test FieldIndex with prefix search")
+    void testFieldIndexPrefixSearch() {
+        FieldIndex<Record> index = storage.createFieldIndex(Record.class, "name", true);
+
+        String[] names = {"apple", "apricot", "banana", "berry", "cherry"};
+        for (int i = 0; i < names.length; i++) {
+            Record rec = new Record();
+            rec.id = i;
+            rec.name = names[i];
+            index.put(rec);
+        }
+        storage.commit();
+
+        // Prefix search for "ap"
+        Iterator<Record> iter = index.prefixIterator("ap");
+        int count = 0;
+        while (iter.hasNext()) {
+            Record r = iter.next();
+            assertTrue(r.name.startsWith("ap"), "Should start with 'ap'");
+            count++;
+        }
+        assertEquals(2, count, "Should find 2 records starting with 'ap'");
+    }
 }
