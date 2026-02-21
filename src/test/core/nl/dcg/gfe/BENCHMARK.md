@@ -119,6 +119,29 @@ Perst Storage is not thread-safe - requires thread-local instances for true mult
 
 ---
 
+## Benchmark 5: Complex Queries (JOIN, ORDER BY, Aggregation)
+
+### Configuration
+- Movies: 5,000, Actors: 2,000, Relationships: 15,000
+
+### Results
+
+| Operation | Perst | PostgreSQL | Speedup |
+|-----------|-------|------------|---------|
+| JOIN Query | 256 ms | 38 ms | 0.15x (PG wins) |
+| ORDER BY + LIMIT | 9 ms | 47 ms | **5.2x** |
+| GROUP BY | 15 ms | 12 ms | 0.80x (PG wins) |
+| Nested Subquery | 17 ms | 5 ms | 0.29x (PG wins) |
+| Complex WHERE | 8 ms | 4 ms | 0.50x (PG wins) |
+
+### Key Findings
+
+- **PostgreSQL wins on complex queries** - optimized query planner, indexes, joins
+- **Perst wins on ORDER BY+LIMIT** - in-memory sort is fast
+- JOINs are significantly slower in Perst (manual iteration)
+
+---
+
 ## Test Environment
 
 ```
@@ -203,6 +226,13 @@ java -cp "libs/perst.jar;postgresql-42.7.1.jar;target/classes" \
 ```bash
 java -cp "libs/perst.jar;postgresql-42.7.1.jar;target/classes" \
   nl.dcg.gfe.ComparisonBenchmark4
+```
+
+### Run Complex Query Benchmark
+
+```bash
+java -cp "libs/perst.jar;postgresql-42.7.1.jar;target/classes" \
+  nl.dcg.gfe.ComparisonBenchmark5
 ```
 
 ### Custom Parameters
