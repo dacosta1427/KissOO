@@ -4,7 +4,8 @@ import  org.garret.perst.*;
 import java.util.*;
 import java.util.ArrayList;
 
-class AltBtreeCompoundIndex<T> extends AltBtree<T> implements Index<T> { 
+@SuppressWarnings({"rawtypes", "unchecked"})
+class AltBtreeCompoundIndex<T> extends AltBtree<T> implements Index<T> {
     int[]    types;
 
     AltBtreeCompoundIndex() {}
