@@ -5,26 +5,6 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.ArrayList;
 
-class MultiFieldValue implements Comparable<MultiFieldValue> { 
-    Comparable[] values;
-    Object       obj;
-    
-    public int compareTo(MultiFieldValue f) { 
-        for (int i = 0; i < values.length; i++) {
-            int diff = values[i].compareTo(f.values[i]);
-            if (diff != 0) { 
-                return diff;
-            }
-        }
-        return 0;
-    }
-    
-    MultiFieldValue(Object obj, Comparable[] values) { 
-        this.obj = obj;
-        this.values = values;
-    }
-}
- 
 class BtreeMultiFieldIndex<T> extends Btree<T> implements FieldIndex<T> { 
     String   className;
     String[] fieldName;

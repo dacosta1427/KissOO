@@ -28,22 +28,27 @@ After a change has been made to the core Perst code all the junit tests have to 
 
 # Compilation Warning Report
 
-Generated: 2026-02-20
+Generated: 2026-02-21 (Updated)
 
 ## Summary
 
 | Warning Type | Count | Status |
 |-------------|-------|--------|
-| Auxiliary Class | 5 | Planning complete |
+| Auxiliary Class | 5 | Partially fixed (6 resolved) |
 | Raw Type | 94 | Not addressed |
 | Deprecated API | 1 | Not addressed |
 | **Total** | **100** | |
 
 ---
 
-## 1. Auxiliary Class Warnings (5)
+## 1. Auxiliary Class Warnings (5 remaining, 6 fixed)
 
-All from `CodeGeneratorImpl.java` accessing classes from `QueryImpl.java`:
+### Fixed in this session:
+- **EmptyIterator** - Fixed typo in filename from `EmptyItetator.java` to `EmptyIterator.java`
+- **FieldValue** - Extracted to separate file `FieldValue.java` from `BtreeFieldIndex.java`
+- **MultiFieldValue** - Extracted to separate file `MultiFieldValue.java` from `BtreeMultiFieldIndex.java`
+
+### Remaining (5) - From `CodeGeneratorImpl.java` accessing classes from `QueryImpl.java`:
 
 | File | Line | Class Accessed |
 |------|------|----------------|
@@ -53,7 +58,7 @@ All from `CodeGeneratorImpl.java` accessing classes from `QueryImpl.java`:
 | CodeGeneratorImpl.java | 727 | Node |
 | CodeGeneratorImpl.java | 781 | Node |
 
-**Status:** Planning documentation created in `md/plan_fixCodeGeneratorImpl.md`
+**Status:** Deferred - Requires extracting Node class hierarchy which has cascading dependencies on FilterIterator and other internal classes. This is a significant refactoring task.
 
 ---
 
