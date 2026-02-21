@@ -122,4 +122,141 @@ class TestRollback {
         // t2 should not be in the set
         assertFalse(root.contains(t2), "t2 should not be in set after rollback");
     }
+
+    @Test
+    @DisplayName("Test rollback with index operations")
+    void testRollbackIndexOperations() throws Exception {
+        Index<Record1> index = storage.createIndex(int.class, true);
+        storage.setRoot(index);
+
+        // Add initial records
+        for (int i = 0; i < 10; i++) {
+            Record1 rec = new Record1();
+            rec.count = i;
+            index.put(new Key(i), rec);
+        }
+        storage.commit();
+
+        assertEquals(10, index.size(), "Should have 10 records");
+
+        // Add more records
+        for (int i = 10; i < 20; i++) {
+            Record1 rec = new Record1();
+            rec.count = i;
+            index.put(new Key(i), rec);
+        }
+
+        // Remove some records
+        for (int i = 0; i < 5; i++) {
+            index.remove(new Key(i));
+        }
+
+        storage.rollback();
+
+        // Should be back to 10 records
+        assertEquals(10, index.size(), "Should have 10 records after rollback");
+
+        // Original records should still exist
+        for (int i = 0; i < 10; i++) {
+            Record1 rec = index.get(new Key(i));
+            assertNotNull(rec, "Record " + i + " should exist after rollback");
+        }
+    }
+
+    @Test
+    @DisplayName("Test multiple rollback cycles")
+    void testMultipleRollbackCycles() throws Exception {
+        IPersistentSet root = storage.createSet();
+        storage.setRoot(root);
+
+        // Cycle 1
+        Record1 t1 = new Record1();
+        t1.count = 1;
+        root.add(t1);
+        storage.commit();
+
+        // Cycle 2 - add and rollback
+        Record1 t2 = new Record1();
+        t2.count = 2;
+        root.add(t2);
+        storage.rollback();
+
+        assertEquals(1, root.size(), "Should have 1 record after first rollback");
+
+        // Cycle 3 - add and commit
+        Record1 t3 = new Record1();
+        t3.count = 3;
+        root.add(t3);
+        storage.commit();
+
+        assertEquals(2, root.size(), "Should have 2 records after commit");
+
+        // Cycle 4 - modify and rollback
+        t1.count = 100;
+        t1.modify();
+        storage.rollback();
+
+        assertEquals(1, t1.count, "t1 count should be rolled back");
+    }
+
+    @Test
+    @DisplayName("Test rollback with nested objects")
+    void testRollbackNestedObjects() throws Exception {
+        IPersistentSet root = storage.createSet();
+        storage.setRoot(root);
+
+        // Create nested structure
+        Record1 parent = new Record1();
+        parent.count = 10;
+        root.add(parent);
+
+        Record1 child1 = new Record1();
+        child1.count = 1;
+        root.add(child1);
+
+        Record1 child2 = new Record1();
+        child2.count = 2;
+        root.add(child2);
+
+        storage.commit();
+
+        // Modify all
+        parent.count = 100;
+        parent.modify();
+        child1.count = 10;
+        child1.modify();
+        child2.count = 20;
+        child2.modify();
+
+        storage.rollback();
+
+        // All should be rolled back
+        assertEquals(10, parent.count, "Parent should be rolled back");
+        assertEquals(1, child1.count, "Child1 should be rolled back");
+        assertEquals(2, child2.count, "Child2 should be rolled back");
+    }
+
+    @Test
+    @DisplayName("Test rollback with clear operation")
+    void testRollbackClearOperation() throws Exception {
+        IPersistentSet root = storage.createSet();
+        storage.setRoot(root);
+
+        // Add records
+        for (int i = 0; i < 10; i++) {
+            Record1 rec = new Record1();
+            rec.count = i;
+            root.add(rec);
+        }
+        storage.commit();
+
+        assertEquals(10, root.size(), "Should have 10 records");
+
+        // Clear all
+        root.clear();
+        storage.rollback();
+
+        // Should be restored
+        assertEquals(10, root.size(), "Should have 10 records after rollback");
+    }
 }
