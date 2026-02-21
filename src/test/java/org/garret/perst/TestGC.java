@@ -193,4 +193,115 @@ class TestGC {
 
         assertEquals(1, root.intIndex.size(), "Should have 1 object after removal");
     }
+
+    @Test
+    @DisplayName("Test GC explicit invocation")
+    void testGCExplicitInvocation() {
+        storage.setGcThreshold(1000000);
+        StorageRoot root = new StorageRoot();
+        root.intIndex = storage.createIndex(long.class, true);
+        storage.setRoot(root);
+
+        // Create objects
+        for (int i = 0; i < 100; i++) {
+            PObject obj = new PObject();
+            obj.intKey = i;
+            root.intIndex.put(new Key((long) i), obj);
+        }
+        storage.commit();
+
+        // Remove all objects
+        for (int i = 0; i < 100; i++) {
+            root.intIndex.remove(new Key((long) i));
+        }
+        storage.commit();
+
+        // Explicitly invoke GC
+        storage.gc();
+
+        assertEquals(0, root.intIndex.size(), "Index should be empty");
+    }
+
+    @Test
+    @DisplayName("Test GC with cyclic references")
+    void testGCWithCyclicReferences() {
+        storage.setGcThreshold(1000000);
+        StorageRoot root = new StorageRoot();
+        storage.setRoot(root);
+
+        // Create cyclic references
+        PObject obj1 = new PObject();
+        PObject obj2 = new PObject();
+        PObject obj3 = new PObject();
+
+        obj1.next = obj2;
+        obj2.next = obj3;
+        obj3.next = obj1; // Cycle
+
+        root.list = obj1;
+        storage.commit();
+
+        // Break the reference
+        root.list = null;
+        storage.commit();
+
+        // GC should handle cyclic references
+        storage.gc();
+    }
+
+    @Test
+    @DisplayName("Test GC memory dump")
+    void testGCMemoryDump() {
+        storage.setGcThreshold(1000000);
+        StorageRoot root = new StorageRoot();
+        root.intIndex = storage.createIndex(long.class, true);
+        storage.setRoot(root);
+
+        // Create objects
+        for (int i = 0; i < 50; i++) {
+            PObject obj = new PObject();
+            obj.intKey = i;
+            obj.strKey = "string" + i;
+            root.intIndex.put(new Key((long) i), obj);
+        }
+        storage.commit();
+
+        // Get memory dump
+        java.util.HashMap<Class, MemoryUsage> dump = storage.getMemoryDump();
+        assertNotNull(dump, "Memory dump should not be null");
+        assertTrue(dump.size() > 0, "Memory dump should have entries");
+    }
+
+    @Test
+    @DisplayName("Test GC with multiple indexes")
+    void testGCWithMultipleIndexes() {
+        storage.setGcThreshold(1000000);
+        StorageRoot root = new StorageRoot();
+        root.intIndex = storage.createIndex(long.class, true);
+        root.strIndex = storage.createIndex(String.class, true);
+        storage.setRoot(root);
+
+        // Create objects in both indexes
+        for (int i = 0; i < 30; i++) {
+            PObject obj = new PObject();
+            obj.intKey = i;
+            obj.strKey = "key" + i;
+            root.intIndex.put(new Key((long) i), obj);
+            root.strIndex.put(new Key(obj.strKey), obj);
+        }
+        storage.commit();
+
+        assertEquals(30, root.intIndex.size(), "intIndex should have 30 objects");
+        assertEquals(30, root.strIndex.size(), "strIndex should have 30 objects");
+
+        // Remove from one index only
+        for (int i = 0; i < 15; i++) {
+            root.intIndex.remove(new Key((long) i));
+        }
+        storage.commit();
+
+        assertEquals(15, root.intIndex.size(), "intIndex should have 15 objects");
+        // strIndex still has references to all objects
+        assertEquals(30, root.strIndex.size(), "strIndex should still have 30 objects");
+    }
 }
