@@ -4,20 +4,6 @@ import  org.garret.perst.*;
 import java.lang.reflect.*;
 import java.util.*;
 
-class FieldValue implements Comparable<FieldValue> { 
-    Comparable value;
-    Object     obj;
-    
-    public int compareTo(FieldValue f) { 
-        return value.compareTo(f.value);
-    }
-    
-    FieldValue(Object obj, Object value) { 
-        this.obj = obj;
-        this.value = (Comparable)value;
-    }
-}
-        
 class BtreeFieldIndex<T> extends Btree<T> implements FieldIndex<T> { 
     String className;
     String fieldName;

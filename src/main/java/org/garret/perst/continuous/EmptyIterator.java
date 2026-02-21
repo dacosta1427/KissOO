@@ -20,4 +20,3 @@ class EmptyIterator<T> extends IterableIterator<T>
         throw new UnsupportedOperationException();
     }
 }
-   
