@@ -805,4 +805,722 @@ public class StorageTest {
         root = (Root) storage.getRoot();
         assertEquals(555, root.i);
     }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getPerstVersion()</CODE>.
+     */
+    @Test
+    public void testGetPerstVersion() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        int version = storage.getPerstVersion();
+        assertTrue(version > 0);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createList()</CODE>.
+     */
+    @Test
+    public void testCreateList() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentList<Root> list = storage.createList();
+        assertNotNull(list);
+        assertEquals(0, list.size());
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createScalableList()</CODE>.
+     */
+    @Test
+    public void testCreateScalableList() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentList<Root> list = storage.createScalableList();
+        assertNotNull(list);
+        assertEquals(0, list.size());
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createScalableList(int)</CODE>.
+     */
+    @Test
+    public void testCreateScalableListWithSize() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentList<Root> list = storage.createScalableList(10);
+        assertNotNull(list);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createHash()</CODE>.
+     */
+    @Test
+    public void testCreateHash() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentHash<String, Root> hash = storage.createHash();
+        assertNotNull(hash);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createHash(int, int)</CODE>.
+     */
+    @Test
+    public void testCreateHashWithParams() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentHash<String, Root> hash = storage.createHash(1024, 75);
+        assertNotNull(hash);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createMap()</CODE>.
+     */
+    @Test
+    public void testCreateMap() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentMap<String, Root> map = storage.createMap(String.class);
+        assertNotNull(map);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createMap(Class, int)</CODE>.
+     */
+    @Test
+    public void testCreateMapWithSize() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentMap<String, Root> map = storage.createMap(String.class, 100);
+        assertNotNull(map);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createBag()</CODE>.
+     */
+    @Test
+    public void testCreateBag() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentSet<Root> bag = storage.createBag();
+        assertNotNull(bag);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createHashSet()</CODE>.
+     */
+    @Test
+    public void testCreateHashSet() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentSet<Root> set = storage.createHashSet();
+        assertNotNull(set);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createThickIndex()</CODE>.
+     */
+    @Test
+    public void testCreateThickIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Index<Root> idx = storage.createThickIndex(int.class);
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createBitIndex()</CODE>.
+     */
+    @Test
+    public void testCreateBitIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        BitIndex<Root> idx = storage.createBitIndex();
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createSpatialIndex()</CODE>.
+     */
+    @Test
+    public void testCreateSpatialIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        SpatialIndex<Root> idx = storage.createSpatialIndex();
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createSpatialIndexR2()</CODE>.
+     */
+    @Test
+    public void testCreateSpatialIndexR2() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        SpatialIndexR2<Root> idx = storage.createSpatialIndexR2();
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createSpatialIndexRn()</CODE>.
+     */
+    @Test
+    public void testCreateSpatialIndexRn() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        SpatialIndexRn<Root> idx = storage.createSpatialIndexRn();
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createRandomAccessIndex()</CODE>.
+     */
+    @Test
+    public void testCreateRandomAccessIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Index<Root> idx = storage.createRandomAccessIndex(int.class, false);
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createRandomAccessFieldIndex()</CODE>.
+     */
+    @Test
+    public void testCreateRandomAccessFieldIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        FieldIndex<Root> idx = storage.createRandomAccessFieldIndex(Root.class, "i", false);
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createCompoundIndex()</CODE>.
+     */
+    @Test
+    public void testCreateCompoundIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Class[] types = {int.class, String.class};
+        Index<Root> idx = storage.createIndex(types, false);
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createMultifieldIndex()</CODE>.
+     */
+    @Test
+    public void testCreateMultifieldIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        String[] fields = {"i", "s"};
+        FieldIndex<Root> idx = storage.createFieldIndex(Root.class, fields, false);
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createRelation()</CODE>.
+     */
+    @Test
+    public void testCreateRelation() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root owner = new Root(null);
+        Relation<Root, Root> rel = storage.createRelation(owner);
+        assertNotNull(rel);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createSortedCollection()</CODE>.
+     */
+    @Test
+    public void testCreateSortedCollection() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        PersistentComparator<Root> comparator = new PersistentComparator<Root>() {
+            @Override
+            public int compareMembers(Root a, Root b) {
+                return Integer.compare(a.i, b.i);
+            }
+            @Override
+            public int compareMemberWithKey(Root a, Object key) {
+                return Integer.compare(a.i, (Integer) key);
+            }
+        };
+        SortedCollection<Root> col = storage.createSortedCollection(comparator, false);
+        assertNotNull(col);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>setProperty() and getProperty()</CODE>.
+     */
+    @Test
+    public void testSetGetProperty() {
+        storage.setProperty("perst.object.cache.init.size", 2048);
+        Object value = storage.getProperty("perst.object.cache.init.size");
+        assertEquals(2048, value);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>setProperties() and getProperties()</CODE>.
+     */
+    @Test
+    public void testSetGetProperties() {
+        java.util.Properties props = new java.util.Properties();
+        props.setProperty("perst.object.cache.init.size", "2048");
+        storage.setProperties(props);
+        java.util.Properties retrieved = storage.getProperties();
+        assertNotNull(retrieved);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getUsedSize()</CODE>.
+     */
+    @Test
+    public void testGetUsedSize() {
+        storage.open("StorageTest.dbs");
+        long size = storage.getUsedSize();
+        assertTrue(size >= 0);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getDatabaseSize()</CODE>.
+     */
+    @Test
+    public void testGetDatabaseSize() {
+        storage.open("StorageTest.dbs");
+        long size = storage.getDatabaseSize();
+        assertTrue(size >= 0);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getMaxOid()</CODE>.
+     */
+    @Test
+    public void testGetMaxOid() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root(null);
+        storage.setRoot(root);
+        storage.commit();
+        int maxOid = storage.getMaxOid();
+        assertTrue(maxOid > 0);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getObjectByOID()</CODE>.
+     */
+    @Test
+    public void testGetObjectByOID() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root(null);
+        root.i = 42;
+        storage.setRoot(root);
+        storage.commit();
+        int oid = storage.getOid(root);
+        Object retrieved = storage.getObjectByOID(oid);
+        assertSame(root, retrieved);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>makePersistent()</CODE>.
+     */
+    @Test
+    public void testMakePersistent() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root(null);
+        int oid = storage.makePersistent(root);
+        assertTrue(oid != 0);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>store()</CODE>.
+     */
+    @Test
+    public void testStore() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root(null);
+        root.i = 100;
+        storage.setRoot(root);
+        root.i = 200;
+        storage.store(root);
+        storage.commit();
+        assertEquals(200, root.i);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>modify()</CODE>.
+     */
+    @Test
+    public void testModify() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root(null);
+        root.i = 100;
+        storage.setRoot(root);
+        storage.commit();
+        root.i = 200;
+        storage.modify(root);
+        storage.commit();
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>load()</CODE>.
+     */
+    @Test
+    public void testLoad() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root(null);
+        root.i = 100;
+        storage.setRoot(root);
+        storage.commit();
+        storage.load(root);
+        assertEquals(100, root.i);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>deallocate()</CODE>.
+     */
+    @Test
+    public void testDeallocate() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root(null);
+        storage.setRoot(root);
+        storage.commit();
+        storage.setRoot(null);
+        storage.deallocate(root);
+        storage.commit();
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getMemoryDump()</CODE>.
+     */
+    @Test
+    public void testGetMemoryDump() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Root root = new Root(null);
+        storage.setRoot(root);
+        storage.commit();
+        java.util.HashMap<Class, MemoryUsage> dump = storage.getMemoryDump();
+        assertNotNull(dump);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getSqlOptimizerParameters()</CODE>.
+     */
+    @Test
+    public void testGetSqlOptimizerParameters() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        SqlOptimizerParameters params = storage.getSqlOptimizerParameters();
+        assertNotNull(params);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>setClassLoader() and getClassLoader()</CODE>.
+     */
+    @Test
+    public void testSetGetClassLoader() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        ClassLoader prev = storage.setClassLoader(loader);
+        ClassLoader retrieved = storage.getClassLoader();
+        assertSame(loader, retrieved);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getDatabaseFormatVersion()</CODE>.
+     */
+    @Test
+    public void testGetDatabaseFormatVersion() {
+        storage.open("StorageTest.dbs");
+        int version = storage.getDatabaseFormatVersion();
+        assertTrue(version > 0);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createScalableSet(int)</CODE>.
+     */
+    @Test
+    public void testCreateScalableSetWithSize() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentSet<Root> set = storage.createScalableSet(100);
+        assertNotNull(set);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createLink(int)</CODE>.
+     */
+    @Test
+    public void testCreateLinkWithSize() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Link<Root> link = storage.createLink(10);
+        assertNotNull(link);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createBitmap()</CODE>.
+     */
+    @Test
+    public void testCreateBitmap() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        IPersistentSet<Root> set = storage.createSet();
+        Bitmap bitmap = storage.createBitmap(set.iterator());
+        assertNotNull(bitmap);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>merge()</CODE>.
+     */
+    @Test
+    public void testMerge() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Index<Root> idx1 = storage.createIndex(int.class, false);
+        Index<Root> idx2 = storage.createIndex(int.class, false);
+        
+        Root r1 = new Root(null);
+        r1.i = 1;
+        idx1.put(new Key(1), r1);
+        
+        Root r2 = new Root(null);
+        r2.i = 2;
+        idx2.put(new Key(2), r2);
+        
+        Iterator[] selections = {idx1.iterator(), idx2.iterator()};
+        Iterator merged = storage.merge(selections);
+        assertNotNull(merged);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>join()</CODE>.
+     */
+    @Test
+    public void testJoin() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        Index<Root> idx1 = storage.createIndex(int.class, false);
+        Index<Root> idx2 = storage.createIndex(int.class, false);
+        
+        Root r1 = new Root(null);
+        r1.i = 1;
+        idx1.put(new Key(1), r1);
+        idx2.put(new Key(1), r1);
+        
+        Iterator[] selections = {idx1.iterator(), idx2.iterator()};
+        Iterator joined = storage.join(selections);
+        assertNotNull(joined);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getListener()</CODE>.
+     */
+    @Test
+    public void testGetListener() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        TestStorageListener listener = new TestStorageListener();
+        storage.setListener(listener);
+        StorageListener retrieved = storage.getListener();
+        assertSame(listener, retrieved);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>setRecursiveLoading()</CODE>.
+     */
+    @Test
+    public void testSetRecursiveLoading() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        boolean prev = storage.setRecursiveLoading(Root.class, false);
+        storage.setRecursiveLoading(Root.class, prev);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createFullTextIndex()</CODE>.
+     */
+    @Test
+    public void testCreateFullTextIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        org.garret.perst.fulltext.FullTextIndex idx = storage.createFullTextIndex();
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>open(IFile)</CODE> with default pool size.
+     */
+    @Test
+    public void testOpenWithDefaultPoolSize() {
+        storage.open(new NullFile());
+        assertTrue(storage.isOpened());
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>open(String)</CODE> with default pool size.
+     */
+    @Test
+    public void testOpenStringWithDefaultPoolSize() {
+        storage.open("StorageTest.dbs");
+        assertTrue(storage.isOpened());
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>open(String, long, String)</CODE> with encryption.
+     */
+    @Test
+    public void testOpenEncrypted() {
+        storage.open("StorageTest.dbs", INFINITE_PAGE_POOL, "testkey");
+        assertTrue(storage.isOpened());
+        Root root = new Root(null);
+        root.i = 777;
+        storage.setRoot(root);
+        storage.commit();
+        storage.close();
+        
+        // Reopen with same key
+        storage.open("StorageTest.dbs", INFINITE_PAGE_POOL, "testkey");
+        assertTrue(storage.isOpened());
+        root = (Root) storage.getRoot();
+        assertEquals(777, root.i);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>backup(String, String)</CODE>.
+     */
+    @Test
+    public void testBackupToFile() throws Exception {
+        storage.open("StorageTest.dbs");
+        Root root = new Root(null);
+        root.i = 888;
+        storage.setRoot(root);
+        storage.commit();
+        
+        storage.backup("StorageTest.backup", null);
+        
+        storage.close();
+        
+        // Clean up backup file
+        new File("StorageTest.backup").delete();
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>importXML()</CODE>.
+     */
+    @Test
+    public void testImportXML() throws Exception {
+        storage.open("StorageTest.dbs");
+        Root root = new Root(null);
+        root.i = 999;
+        root.s = "test import";
+        storage.setRoot(root);
+        storage.commit();
+        
+        // Export to XML
+        java.io.StringWriter writer = new java.io.StringWriter();
+        storage.exportXML(writer);
+        writer.close();
+        String xml = writer.toString();
+        
+        // Clear and import
+        storage.setRoot(null);
+        storage.commit();
+        
+        java.io.StringReader reader = new java.io.StringReader(xml);
+        storage.importXML(reader);
+        
+        storage.close();
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>beginThreadTransaction() / endThreadTransaction()</CODE>.
+     */
+    @Test
+    public void testThreadTransactionExclusive() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        storage.beginThreadTransaction(Storage.EXCLUSIVE_TRANSACTION);
+        Root root = new Root(null);
+        root.i = 111;
+        storage.setRoot(root);
+        storage.endThreadTransaction();
+        assertEquals(111, ((Root)storage.getRoot()).i);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>isInsideThreadTransaction()</CODE>.
+     */
+    @Test
+    public void testIsInsideThreadTransaction() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        assertFalse(storage.isInsideThreadTransaction());
+        storage.beginThreadTransaction(Storage.EXCLUSIVE_TRANSACTION);
+        assertTrue(storage.isInsideThreadTransaction());
+        storage.endThreadTransaction();
+        assertFalse(storage.isInsideThreadTransaction());
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createBitmapAllocator()</CODE>.
+     */
+    @Test
+    public void testCreateBitmapAllocator() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        CustomAllocator allocator = storage.createBitmapAllocator(1024, 0, 1024 * 1024, Long.MAX_VALUE);
+        assertNotNull(allocator);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>getTransactionContext()</CODE>.
+     */
+    @Test
+    public void testGetTransactionContext() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        org.garret.perst.impl.ThreadTransactionContext ctx = storage.getTransactionContext();
+        assertNotNull(ctx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createMultidimensionalIndex()</CODE>.
+     */
+    @Test
+    public void testCreateMultidimensionalIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        MultidimensionalIndex<Root> idx = storage.createMultidimensionalIndex(Root.class, new String[]{"i"}, false);
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createRegexIndex()</CODE>.
+     */
+    @Test
+    public void testCreateRegexIndex() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        RegexIndex<Root> idx = storage.createRegexIndex(Root.class, "s");
+        assertNotNull(idx);
+    }
+
+    /**
+     * <B>Goal:</B> To verify the functionality of <CODE>createTimeSeries()</CODE>.
+     */
+    @Test
+    public void testCreateTimeSeries() {
+        storage.open(new NullFile(), INFINITE_PAGE_POOL);
+        TimeSeries<TestTickImpl> ts = storage.createTimeSeries(TestTickBlock.class, 1000);
+        assertNotNull(ts);
+    }
+
+    /**
+     * Tick implementation for TimeSeries test.
+     */
+    public static class TestTickImpl implements TimeSeries.Tick {
+        private long timestamp;
+        public int value;
+        
+        public TestTickImpl() {}
+        
+        public TestTickImpl(long timestamp, int value) {
+            this.timestamp = timestamp;
+            this.value = value;
+        }
+        
+        @Override
+        public long getTime() {
+            return timestamp;
+        }
+    }
+
+    /**
+     * Block class for TimeSeries test.
+     */
+    public static class TestTickBlock extends TimeSeries.Block {
+        private TestTickImpl[] ticks;
+        
+        public TestTickBlock() {
+            this.timestamp = 0;
+            this.used = 0;
+        }
+        
+        @Override
+        public TimeSeries.Tick[] getTicks() {
+            if (ticks == null) {
+                ticks = new TestTickImpl[100];
+                for (int i = 0; i < ticks.length; i++) {
+                    ticks[i] = new TestTickImpl();
+                }
+            }
+            return ticks;
+        }
+    }
  }
