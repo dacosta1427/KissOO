@@ -132,4 +132,112 @@ class TestRecovery {
             assertEquals(i, rec.id, "Record ID should match");
         }
     }
+
+    @Test
+    @DisplayName("Test recovery - remove records")
+    void testRemoveRecords() {
+        Indices root = (Indices) storage.getRoot();
+        
+        // First add some records
+        for (int i = 0; i < 10; i++) {
+            Record rec = new Record(i);
+            root.set.add(rec);
+            root.index.put(new Key(i), rec);
+        }
+        storage.commit();
+        
+        assertEquals(10, root.set.size(), "Should have 10 records");
+        
+        // Remove some records
+        for (int i = 0; i < 5; i++) {
+            Record rec = root.index.get(new Key(i));
+            root.set.remove(rec);
+            root.index.remove(new Key(i));
+        }
+        storage.commit();
+        
+        assertEquals(5, root.set.size(), "Should have 5 records after removal");
+        assertEquals(5, root.index.size(), "Index should have 5 records");
+    }
+
+    @Test
+    @DisplayName("Test recovery - persistence across sessions")
+    void testPersistenceAcrossSessions() throws Exception {
+        Indices root = (Indices) storage.getRoot();
+        
+        // Add records
+        for (int i = 0; i < 10; i++) {
+            Record rec = new Record(i);
+            root.set.add(rec);
+            root.index.put(new Key(i), rec);
+        }
+        storage.commit();
+        storage.close();
+        
+        // Reopen
+        storage = StorageFactory.getInstance().createStorage();
+        storage.open(TEST_DB, 32 * 1024 * 1024);
+        
+        root = (Indices) storage.getRoot();
+        
+        assertEquals(10, root.set.size(), "Set should persist 10 records");
+        assertEquals(10, root.index.size(), "Index should persist 10 records");
+        
+        // Verify all records
+        for (int i = 0; i < 10; i++) {
+            Record rec = root.index.get(new Key(i));
+            assertNotNull(rec, "Should find record " + i);
+            assertEquals(i, rec.id, "Record ID should match");
+        }
+    }
+
+    @Test
+    @DisplayName("Test recovery - clear all records")
+    void testClearAllRecords() {
+        Indices root = (Indices) storage.getRoot();
+        
+        // Add records
+        for (int i = 0; i < 20; i++) {
+            Record rec = new Record(i);
+            root.set.add(rec);
+            root.index.put(new Key(i), rec);
+        }
+        storage.commit();
+        
+        assertEquals(20, root.set.size(), "Should have 20 records");
+        
+        // Clear all
+        root.set.clear();
+        root.index.clear();
+        storage.commit();
+        
+        assertEquals(0, root.set.size(), "Set should be empty");
+        assertEquals(0, root.index.size(), "Index should be empty");
+    }
+
+    @Test
+    @DisplayName("Test recovery - large number of records")
+    void testLargeNumberOfRecords() {
+        Indices root = (Indices) storage.getRoot();
+        
+        int numRecords = 1000;
+        
+        // Add many records
+        for (int i = 0; i < numRecords; i++) {
+            Record rec = new Record(i);
+            root.set.add(rec);
+            root.index.put(new Key(i), rec);
+        }
+        storage.commit();
+        
+        assertEquals(numRecords, root.set.size(), "Should have all records");
+        assertEquals(numRecords, root.index.size(), "Index should have all records");
+        
+        // Verify random access
+        for (int i = 0; i < numRecords; i += 100) {
+            Record rec = root.index.get(new Key(i));
+            assertNotNull(rec, "Should find record " + i);
+            assertEquals(i, rec.id, "Record ID should match");
+        }
+    }
 }
