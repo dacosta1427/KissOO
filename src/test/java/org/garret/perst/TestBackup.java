@@ -182,4 +182,113 @@ class TestBackup {
         assertNotNull(rec, "Should be able to get record by key");
         assertEquals(5, rec.intKey, "Record key should match");
     }
+
+    @Test
+    @DisplayName("Test backup with empty database")
+    void testBackupEmptyDatabase() throws Exception {
+        // Create empty indices
+        Indices root = new Indices();
+        root.intIndex = storage.createFieldIndex(Record.class, "intKey", true);
+        storage.setRoot(root);
+        storage.commit();
+
+        // Backup
+        try (OutputStream out = new FileOutputStream(BACKUP_DB)) {
+            storage.backup(out);
+        }
+        storage.close();
+
+        // Restore
+        storage = StorageFactory.getInstance().createStorage();
+        storage.open(BACKUP_DB, 32 * 1024 * 1024);
+
+        root = (Indices) storage.getRoot();
+
+        // Verify empty but valid
+        assertNotNull(root.intIndex, "intIndex should exist");
+        assertEquals(0, root.intIndex.size(), "Index should be empty");
+    }
+
+    @Test
+    @DisplayName("Test backup with large records")
+    void testBackupLargeRecords() throws Exception {
+        Indices root = new Indices();
+        root.intIndex = storage.createFieldIndex(Record.class, "intKey", true);
+        storage.setRoot(root);
+
+        // Add records with large string keys
+        for (int i = 0; i < 50; i++) {
+            Record rec = new Record();
+            rec.intKey = i;
+            // Create a large string
+            StringBuilder sb = new StringBuilder();
+            for (int j = 0; j < 100; j++) {
+                sb.append("large").append(j);
+            }
+            rec.strKey = sb.toString();
+            rec.realKey = i * 1.0;
+            root.intIndex.put(rec);
+        }
+        storage.commit();
+
+        // Backup
+        try (OutputStream out = new FileOutputStream(BACKUP_DB)) {
+            storage.backup(out);
+        }
+        storage.close();
+
+        // Restore and verify
+        storage = StorageFactory.getInstance().createStorage();
+        storage.open(BACKUP_DB, 32 * 1024 * 1024);
+
+        root = (Indices) storage.getRoot();
+        assertEquals(50, root.intIndex.size(), "Should have 50 records");
+
+        // Verify first record
+        Record rec = (Record) root.intIndex.get(new Key(0L));
+        assertNotNull(rec, "Should find record");
+        assertTrue(rec.strKey.length() > 400, "String key should be large");
+    }
+
+    @Test
+    @DisplayName("Test backup incremental")
+    void testBackupIncremental() throws Exception {
+        Indices root = new Indices();
+        root.intIndex = storage.createFieldIndex(Record.class, "intKey", true);
+        storage.setRoot(root);
+
+        // Add initial records
+        for (int i = 0; i < 20; i++) {
+            Record rec = new Record();
+            rec.intKey = i;
+            root.intIndex.put(rec);
+        }
+        storage.commit();
+
+        // First backup
+        try (OutputStream out = new FileOutputStream(BACKUP_DB)) {
+            storage.backup(out);
+        }
+
+        // Add more records
+        for (int i = 20; i < 40; i++) {
+            Record rec = new Record();
+            rec.intKey = i;
+            root.intIndex.put(rec);
+        }
+        storage.commit();
+
+        // Second backup (overwrite)
+        try (OutputStream out = new FileOutputStream(BACKUP_DB)) {
+            storage.backup(out);
+        }
+        storage.close();
+
+        // Restore and verify all records
+        storage = StorageFactory.getInstance().createStorage();
+        storage.open(BACKUP_DB, 32 * 1024 * 1024);
+
+        root = (Indices) storage.getRoot();
+        assertEquals(40, root.intIndex.size(), "Should have all 40 records");
+    }
 }
