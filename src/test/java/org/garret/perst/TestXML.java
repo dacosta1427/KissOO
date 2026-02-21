@@ -166,4 +166,109 @@ class TestXML {
 
         db2.close();
     }
+
+    @Test
+    @DisplayName("Test XML export to string")
+    void testXmlExportToString() throws Exception {
+        Indices root = (Indices) storage.getRoot();
+        FieldIndex<Record> intIndex = root.intIndex;
+
+        // Insert a few records
+        for (int i = 0; i < 10; i++) {
+            Record rec = new Record();
+            rec.intKey = i;
+            rec.strKey = "key" + i;
+            rec.realKey = i * 1.5;
+            intIndex.put(rec);
+        }
+        storage.commit();
+
+        // Export to string
+        StringWriter writer = new StringWriter();
+        storage.exportXML(writer);
+        writer.close();
+
+        String xml = writer.toString();
+        assertNotNull(xml, "XML should not be null");
+        assertTrue(xml.length() > 0, "XML should have content");
+        assertTrue(xml.contains("<?xml"), "XML should have XML declaration");
+    }
+
+    @Test
+    @DisplayName("Test XML import from string")
+    void testXmlImportFromString() throws Exception {
+        Indices root = (Indices) storage.getRoot();
+        FieldIndex<Record> intIndex = root.intIndex;
+
+        // Insert records
+        for (int i = 0; i < 10; i++) {
+            Record rec = new Record();
+            rec.intKey = i;
+            rec.strKey = "key" + i;
+            rec.realKey = i * 1.5;
+            intIndex.put(rec);
+        }
+        storage.commit();
+
+        // Export to string
+        StringWriter writer = new StringWriter();
+        storage.exportXML(writer);
+        writer.close();
+        String xml = writer.toString();
+
+        // Verify XML was generated
+        assertNotNull(xml, "XML should not be null");
+        assertTrue(xml.length() > 0, "XML should have content");
+    }
+
+    @Test
+    @DisplayName("Test XML with nested objects")
+    void testXmlWithNestedObjects() throws Exception {
+        // Create a root with nested structure
+        Indices root = (Indices) storage.getRoot();
+        
+        // Add records with various data types
+        Record rec1 = new Record();
+        rec1.intKey = 1;
+        rec1.strKey = "first";
+        rec1.realKey = 1.1;
+        
+        Record rec2 = new Record();
+        rec2.intKey = 2;
+        rec2.strKey = "second";
+        rec2.realKey = 2.2;
+        
+        root.intIndex.put(rec1);
+        root.intIndex.put(rec2);
+        root.strIndex.put(new Key(rec1.strKey), rec1);
+        root.strIndex.put(new Key(rec2.strKey), rec2);
+        storage.commit();
+
+        // Export
+        StringWriter writer = new StringWriter();
+        storage.exportXML(writer);
+        writer.close();
+        
+        String xml = writer.toString();
+        assertTrue(xml.contains("first"), "XML should contain 'first'");
+        assertTrue(xml.contains("second"), "XML should contain 'second'");
+    }
+
+    @Test
+    @DisplayName("Test XML empty database export")
+    void testXmlEmptyExport() throws Exception {
+        Indices root = (Indices) storage.getRoot();
+        
+        // Don't add any records
+        storage.commit();
+
+        // Export empty database
+        StringWriter writer = new StringWriter();
+        storage.exportXML(writer);
+        writer.close();
+        
+        String xml = writer.toString();
+        assertNotNull(xml, "XML should not be null for empty database");
+        assertTrue(xml.length() > 0, "XML should have some content even for empty database");
+    }
 }
