@@ -153,4 +153,191 @@ class TestBlob {
         Image retrieved = root.get("nonexistent.txt");
         assertNull(retrieved, "Non-existent BLOB should return null");
     }
+
+    @Test
+    @DisplayName("Test BLOB append")
+    void testBlobAppend() throws Exception {
+        Index<Image> root = storage.<Image>createIndex(String.class, true);
+        storage.setRoot(root);
+
+        // Create BLOB with initial content
+        Image image = new Image();
+        image.body = storage.createBlob();
+        try (OutputStream out = image.body.getOutputStream(false)) {
+            out.write("Initial ".getBytes("UTF-8"));
+        }
+        
+        // Append more content
+        try (OutputStream out = image.body.getOutputStream(true)) {
+            out.write("Appended".getBytes("UTF-8"));
+        }
+        
+        root.put("append.txt", image);
+        storage.commit();
+
+        // Verify combined content
+        Image retrieved = root.get("append.txt");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (InputStream in = retrieved.body.getInputStream()) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+        }
+
+        assertEquals("Initial Appended", baos.toString("UTF-8"), "BLOB should have appended content");
+    }
+
+    @Test
+    @DisplayName("Test BLOB large data")
+    void testBlobLargeData() throws Exception {
+        Index<Image> root = storage.<Image>createIndex(String.class, true);
+        storage.setRoot(root);
+
+        // Create a large BLOB (1MB)
+        byte[] content = new byte[1024 * 1024];
+        for (int i = 0; i < content.length; i++) {
+            content[i] = (byte) (i % 256);
+        }
+
+        Image image = new Image();
+        image.body = storage.createBlob();
+        try (OutputStream out = image.body.getOutputStream(false)) {
+            out.write(content);
+        }
+
+        root.put("large.bin", image);
+        storage.commit();
+
+        // Verify content
+        Image retrieved = root.get("large.bin");
+        byte[] readContent = new byte[content.length];
+        try (InputStream in = retrieved.body.getInputStream()) {
+            int totalRead = 0;
+            while (totalRead < content.length) {
+                int bytesRead = in.read(readContent, totalRead, content.length - totalRead);
+                if (bytesRead == -1) break;
+                totalRead += bytesRead;
+            }
+        }
+
+        assertArrayEquals(content, readContent, "Large BLOB content should match");
+    }
+
+    @Test
+    @DisplayName("Test BLOB empty")
+    void testBlobEmpty() throws Exception {
+        Index<Image> root = storage.<Image>createIndex(String.class, true);
+        storage.setRoot(root);
+
+        // Create empty BLOB
+        Image image = new Image();
+        image.body = storage.createBlob();
+        // Don't write anything
+
+        root.put("empty.txt", image);
+        storage.commit();
+
+        // Verify empty BLOB
+        Image retrieved = root.get("empty.txt");
+        try (InputStream in = retrieved.body.getInputStream()) {
+            assertEquals(-1, in.read(), "Empty BLOB should return -1 on read");
+        }
+    }
+
+    @Test
+    @DisplayName("Test random access BLOB")
+    void testRandomAccessBlob() throws Exception {
+        Index<Image> root = storage.<Image>createIndex(String.class, true);
+        storage.setRoot(root);
+
+        // Create random access BLOB
+        Image image = new Image();
+        image.body = storage.createRandomAccessBlob();
+        
+        // Write some data
+        try (OutputStream out = image.body.getOutputStream(false)) {
+            out.write("0123456789".getBytes("UTF-8"));
+        }
+
+        root.put("random.bin", image);
+        storage.commit();
+
+        // Verify content
+        Image retrieved = root.get("random.bin");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (InputStream in = retrieved.body.getInputStream()) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+        }
+
+        assertEquals("0123456789", baos.toString("UTF-8"), "Random access BLOB content should match");
+    }
+
+    @Test
+    @DisplayName("Test BLOB deletion")
+    void testBlobDeletion() throws Exception {
+        Index<Image> root = storage.<Image>createIndex(String.class, true);
+        storage.setRoot(root);
+
+        // Create BLOB
+        Image image = new Image();
+        image.body = storage.createBlob();
+        try (OutputStream out = image.body.getOutputStream(false)) {
+            out.write("To be deleted".getBytes("UTF-8"));
+        }
+
+        root.put("delete.txt", image);
+        storage.commit();
+
+        // Delete
+        Image toDelete = root.remove("delete.txt");
+        assertNotNull(toDelete, "Should retrieve BLOB for deletion");
+        toDelete.deallocate();
+        storage.commit();
+
+        // Verify deleted
+        Image retrieved = root.get("delete.txt");
+        assertNull(retrieved, "Deleted BLOB should not be found");
+    }
+
+    @Test
+    @DisplayName("Test BLOB with binary data")
+    void testBlobBinaryData() throws Exception {
+        Index<Image> root = storage.<Image>createIndex(String.class, true);
+        storage.setRoot(root);
+
+        // Create BLOB with all byte values
+        byte[] allBytes = new byte[256];
+        for (int i = 0; i < 256; i++) {
+            allBytes[i] = (byte) i;
+        }
+
+        Image image = new Image();
+        image.body = storage.createBlob();
+        try (OutputStream out = image.body.getOutputStream(false)) {
+            out.write(allBytes);
+        }
+
+        root.put("binary.bin", image);
+        storage.commit();
+
+        // Verify all bytes
+        Image retrieved = root.get("binary.bin");
+        byte[] readBytes = new byte[256];
+        try (InputStream in = retrieved.body.getInputStream()) {
+            int totalRead = 0;
+            while (totalRead < 256) {
+                int bytesRead = in.read(readBytes, totalRead, 256 - totalRead);
+                if (bytesRead == -1) break;
+                totalRead += bytesRead;
+            }
+        }
+
+        assertArrayEquals(allBytes, readBytes, "Binary BLOB content should match");
+    }
 }
