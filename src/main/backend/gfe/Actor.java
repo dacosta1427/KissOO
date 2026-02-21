@@ -2,6 +2,7 @@ package gfe;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.Builder;
 import org.garret.perst.continuous.CVersion;
 
 /**
@@ -9,6 +10,7 @@ import org.garret.perst.continuous.CVersion;
  */
 @Getter
 @Setter
+@Builder
 public class Actor extends CVersion {
     
     private String uuid;
