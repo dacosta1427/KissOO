@@ -518,6 +518,7 @@ public class Tasks {
     private static LocalDependencies buildLocalDependencies() {
         final LocalDependencies dep = new LocalDependencies();
         dep.add(LIBS, "abcl.jar");
+        dep.add(LIBS, "perst.jar");
         return dep;
     }
 
