@@ -32,6 +32,8 @@ class Login {
      */
     public static UserData login(Connection db, String user, String password, JSONObject outjson, ProcessServlet servlet) {
         
+        // BLOCKED - Perst authentication route
+        System.out.println(">>>>>>>>>> BLOCKED: Perst login route hit for user: " + user);
         logger.info("[PerstAuth] Login attempt via Perst route for user: ${user}")
         
         // Check if Perst is available
