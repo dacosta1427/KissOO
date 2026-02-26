@@ -15,14 +15,30 @@ import java.util.Map;
  * 
  * This service shows how to use both PostgreSQL (via Connection) and
  * Perst (via PerstHelper) in the same service.
+ * 
+ * HTTP API Call Format:
+ * {
+ *   "_class": "services.ActorService",
+ *   "_method": "getAllActors",   // or "getActor", "createActor"
+ *   "_uuid": "session-uuid",     // from login
+ *   ...params...
+ * }
  */
 public class ActorService {
     
     /**
      * Get an actor by UUID using Perst
      * 
-     * @param injson Input: { uuid: "..." }
-     * @param outjson Output: { actor: { ... } }
+     * HTTP Request:
+     * {
+     *   "_class": "services.ActorService",
+     *   "_method": "getActor",
+     *   "_uuid": "session-uuid",
+     *   "uuid": "actor-uuid"
+     * }
+     * 
+     * @param injson Input JSON with uuid
+     * @param outjson Output JSON with actor data
      * @param db Connection (PostgreSQL)
      * @param servlet Servlet reference
      */
@@ -51,8 +67,15 @@ public class ActorService {
     /**
      * Get all actors using Perst
      * 
-     * @param injson Input: { }
-     * @param outjson Output: { actors: [ ... ] }
+     * HTTP Request:
+     * {
+     *   "_class": "services.ActorService",
+     *   "_method": "getAllActors",
+     *   "_uuid": "session-uuid"
+     * }
+     * 
+     * @param injson Input JSON
+     * @param outjson Output JSON with actors array
      * @param db Connection
      * @param servlet Servlet reference
      */
@@ -78,8 +101,17 @@ public class ActorService {
     /**
      * Create a new actor using Perst
      * 
-     * @param injson Input: { name: "...", type: "..." }
-     * @param outjson Output: { actor: { ... } }
+     * HTTP Request:
+     * {
+     *   "_class": "services.ActorService",
+     *   "_method": "createActor",
+     *   "_uuid": "session-uuid",
+     *   "name": "John",
+     *   "type": "RETAIL"   // optional, defaults to RETAIL
+     * }
+     * 
+     * @param injson Input JSON with name and optional type
+     * @param outjson Output JSON with created actor
      * @param db Connection
      * @param servlet Servlet reference
      */
