@@ -1,8 +1,7 @@
 package services;
 
 import gfe.Actor;
-import gfe.PerstConnection;
-import org.kissweb.database.Connection;
+import nl.dcg.gfe.PerstConnection;
 import org.json.JSONObject;
 
 import java.util.Collection;

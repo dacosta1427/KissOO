@@ -6,9 +6,6 @@ import org.kissweb.*;
 import org.kissweb.json.JSONException;
 import org.kissweb.json.JSONObject;
 import org.kissweb.database.Connection;
-import gfe.PerstConnection;
-import gfe.PerstConfig;
-import gfe.PerstContext;
 
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.ServletContext;
@@ -951,30 +948,12 @@ public class ProcessServlet implements Runnable {
                    ", idle: " + MainServlet.getCpds().getNumIdleConnections());
         final java.sql.Connection conn = MainServlet.getCpds().getConnection();
         conn.setAutoCommit(false);  //  all SQL operations require a commit but Kiss does a commit at the end of each service
-        
         DB = new Connection(conn);
-        
-        // If Perst is enabled, wrap with PerstConnection and initialize Perst
-        if (PerstConfig.getInstance().isPerstEnabled()) {
-            PerstContext.getInstance().initialize();
-            // Store PerstConnection for later use - accessed via getPerstConnection()
-        }
-        
         String databaseSchema = (String) MainServlet.getEnvironment("DatabaseSchema");
         if (databaseSchema != null  &&  !databaseSchema.isEmpty())
             DB.setSchema(databaseSchema);
         logger.info("New database connection obtained - pool now busy: " + 
                    MainServlet.getCpds().getNumBusyConnections());
-    }
-    
-    /**
-     * Get PerstConnection if Perst is enabled and available.
-     * Returns null if Perst is not enabled.
-     */
-    public static gfe.PerstConnection getPerstConnection() {
-        if (!PerstConfig.getInstance().isPerstEnabled())
-            return null;
-        return new gfe.PerstConnection(DB);
     }
 
     private void closeSession() {
