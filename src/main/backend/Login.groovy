@@ -29,6 +29,8 @@ class Login {
      */
     public static UserData login(Connection db, String user, String password, JSONObject outjson, ProcessServlet servlet) {
         
+        println "[PerstAuth] Login attempt via Perst route for user: ${user}"
+        
         // Check if Perst is available
         if (!PerstHelper.isAvailable()) {
             outjson.put("error", "Perst is not available")
@@ -40,6 +42,7 @@ class Login {
             PerstUser perstUser = PerstHelper.retrieveObject(PerstUser.class, "username", user)
             
             if (perstUser == null) {
+                println "[PerstAuth] Login FAILED: user not found: ${user}"
                 return null  // Invalid user
             }
             
@@ -59,12 +62,14 @@ class Login {
             }
             
             if (!passwordValid) {
+                println "[PerstAuth] Login FAILED: invalid password for user: ${user}"
                 return null
             }
             
             // Check if user is active
             if (!perstUser.isActive()) {
                 outjson.put("error", "User account is inactive")
+                println "[PerstAuth] Login FAILED: user inactive: ${user}"
                 return null
             }
             
@@ -74,6 +79,8 @@ class Login {
             // Update last login date
             perstUser.setLastLoginDate(System.currentTimeMillis())
             PerstHelper.storeModifiedObject(perstUser)
+            
+            println "[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()})"
             
             return ud
             
