@@ -155,3 +155,4 @@ manual/asciidoc/
 /src/test/core/nl/dcg/gfe/*.class
 /target/classes/nl/dcg/gfe
 /libs
+data/
