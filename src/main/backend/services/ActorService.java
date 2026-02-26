@@ -1,20 +1,20 @@
 package services;
 
 import gfe.Actor;
-import nl.dcg.gfe.PerstConnection;
-import org.json.JSONObject;
+import gfe.PerstHelper;
+import org.kissweb.json.JSONObject;
+import org.kissweb.restServer.ProcessServlet;
 
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * ActorService - Demonstrates Perst integration with kissweb
  * 
  * This service shows how to use both PostgreSQL (via Connection) and
- * Perst (via PerstConnection) in the same service.
+ * Perst (via PerstHelper) in the same service.
  */
 public class ActorService {
     
@@ -23,22 +23,23 @@ public class ActorService {
      * 
      * @param injson Input: { uuid: "..." }
      * @param outjson Output: { actor: { ... } }
-     * @param db Connection (can be PerstConnection if Perst enabled)
+     * @param db Connection (PostgreSQL)
      * @param servlet Servlet reference
      */
-    public void getActor(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        String uuid = injson.optString("uuid");
+    public void getActor(JSONObject injson, JSONObject outjson, org.kissweb.database.Connection db, ProcessServlet servlet) {
+        String uuid = injson.getString("uuid");
+        if (uuid == null || uuid.isEmpty()) {
+            outjson.put("error", "uuid is required");
+            return;
+        }
         
         // Try Perst first if available
-        if (db instanceof PerstConnection) {
-            PerstConnection perstDb = (PerstConnection) db;
-            if (perstDb.isPerstAvailable()) {
-                Actor actor = perstDb.retrieveObject(Actor.class, uuid);
-                if (actor != null) {
-                    outjson.put("actor", actor.toJSON());
-                    outjson.put("source", "perst");
-                    return;
-                }
+        if (PerstHelper.isAvailable()) {
+            Actor actor = PerstHelper.retrieveObject(Actor.class, uuid);
+            if (actor != null) {
+                outjson.put("actor", actor.toJSON());
+                outjson.put("source", "perst");
+                return;
             }
         }
         
@@ -55,22 +56,19 @@ public class ActorService {
      * @param db Connection
      * @param servlet Servlet reference
      */
-    public void getAllActors(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+    public void getAllActors(JSONObject injson, JSONObject outjson, org.kissweb.database.Connection db, ProcessServlet servlet) {
         
         // Try Perst if available
-        if (db instanceof PerstConnection) {
-            PerstConnection perstDb = (PerstConnection) db;
-            if (perstDb.isPerstAvailable()) {
-                Collection<Actor> actors = perstDb.retrieveAllObjects(Actor.class);
-                List<Map<String, Object>> actorList = new ArrayList<>();
-                for (Actor actor : actors) {
-                    actorList.add(actor.toJSON());
-                }
-                outjson.put("actors", actorList);
-                outjson.put("source", "perst");
-                outjson.put("count", actorList.size());
-                return;
+        if (PerstHelper.isAvailable()) {
+            Collection<Actor> actors = PerstHelper.retrieveAllObjects(Actor.class);
+            List<Map<String, Object>> actorList = new ArrayList<>();
+            for (Actor actor : actors) {
+                actorList.add(actor.toJSON());
             }
+            outjson.put("actors", actorList);
+            outjson.put("source", "perst");
+            outjson.put("count", actorList.size());
+            return;
         }
         
         // Fallback
@@ -85,36 +83,39 @@ public class ActorService {
      * @param db Connection
      * @param servlet Servlet reference
      */
-    public void createActor(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        String name = injson.optString("name");
-        String type = injson.optString("type", "RETAIL");
+    public void createActor(JSONObject injson, JSONObject outjson, org.kissweb.database.Connection db, ProcessServlet servlet) {
+        String name = injson.getString("name");
+        String type = injson.getString("type");
+        if (type == null || type.isEmpty())
+            type = "RETAIL";
         
-        if (db instanceof PerstConnection) {
-            PerstConnection perstDb = (PerstConnection) db;
-            if (perstDb.isPerstAvailable()) {
+        if (name == null || name.isEmpty()) {
+            outjson.put("error", "name is required");
+            return;
+        }
+        
+        if (PerstHelper.isAvailable()) {
+            // Start transaction
+            PerstHelper.startTransaction();
+            
+            try {
+                // Create actor
+                Actor actor = new Actor(name, type);
                 
-                // Start transaction
-                perstDb.startTransaction();
+                // Store in Perst
+                PerstHelper.storeNewObject(actor);
                 
-                try {
-                    // Create actor
-                    Actor actor = new Actor(name, type);
-                    
-                    // Store in Perst
-                    perstDb.storeNewObject(actor);
-                    
-                    // Commit
-                    perstDb.endTransaction();
-                    
-                    outjson.put("actor", actor.toJSON());
-                    outjson.put("status", "created");
-                    return;
-                    
-                } catch (Exception e) {
-                    perstDb.rollbackTransaction();
-                    outjson.put("error", "Failed to create actor: " + e.getMessage());
-                    return;
-                }
+                // Commit
+                PerstHelper.commitTransaction();
+                
+                outjson.put("actor", actor.toJSON());
+                outjson.put("status", "created");
+                return;
+                
+            } catch (Exception e) {
+                PerstHelper.rollbackTransaction();
+                outjson.put("error", "Failed to create actor: " + e.getMessage());
+                return;
             }
         }
         
