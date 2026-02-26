@@ -11,6 +11,7 @@ class KissInit {
      */
     static void init() {
 
+        System.out.println(">>>>>>>>>> KISSINIT IS BEING CALLED!")
         MainServlet.readIniFile "application.ini", "main"
 
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
