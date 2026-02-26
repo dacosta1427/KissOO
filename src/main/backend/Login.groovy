@@ -9,12 +9,8 @@ import gfe.PerstUser
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
-// EMERGENCY DEBUG - DELETE AFTER TESTING
-class Login {
-    static {
-        System.out.println(">>>>>>>>>> Login.groovy CLASS LOADED");
-    }
-}
+/**
+ * Custom Perst-based login authentication.
  * 
  * This replaces the default Login.groovy and uses Perst OODBMS for user storage.
  * It does NOT require PostgreSQL.
@@ -24,6 +20,11 @@ class Login {
  */
 class Login {
     private static final Logger logger = LogManager.getLogger(Login.class)
+
+    // EMERGENCY DEBUG - DELETE AFTER TESTING
+    static {
+        System.out.println(">>>>>>>>>> Login.groovy CLASS LOADED");
+    }
 
     /**
      * Validate a user's login name and password using Perst.
@@ -45,6 +46,22 @@ class Login {
             outjson.put("error", "Perst is not available")
             logger.warn("[PerstAuth] Perst is not available!")
             return null
+        }
+        
+        // Auto-create default user if none exists
+        def existingUsers = PerstHelper.retrieveAllObjects(PerstUser.class)
+        if (!existingUsers) {
+            try {
+                PerstHelper.startTransaction()
+                def defaultUser = new PerstUser("admin", "admin", 1)
+                defaultUser.setEmail("admin@localhost")
+                defaultUser.setActive(true)
+                PerstHelper.storeNewObject(defaultUser)
+                PerstHelper.commitTransaction()
+                logger.info("[PerstAuth] Auto-created default admin user")
+            } catch (Exception e) {
+                logger.error("[PerstAuth] Failed to create default user: " + e.message)
+            }
         }
         
         try {
@@ -96,6 +113,7 @@ class Login {
             
         } catch (Exception e) {
             outjson.put("error", "Login failed: " + e.message)
+            logger.error("[PerstAuth] Login exception: " + e.message)
             return null
         }
     }
