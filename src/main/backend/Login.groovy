@@ -9,8 +9,12 @@ import gfe.PerstUser
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
-/**
- * Custom Perst-based login authentication.
+// EMERGENCY DEBUG - DELETE AFTER TESTING
+class Login {
+    static {
+        System.out.println(">>>>>>>>>> Login.groovy CLASS LOADED");
+    }
+}
  * 
  * This replaces the default Login.groovy and uses Perst OODBMS for user storage.
  * It does NOT require PostgreSQL.
