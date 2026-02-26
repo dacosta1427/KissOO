@@ -13,8 +13,8 @@ class KissInit {
 
         MainServlet.readIniFile "application.ini", "main"
 
-        // Example of how to specify a method that is allowed without authentication
-    //    MainServlet.allowWithoutAuthentication("services.MyGroovyService", "addNumbers")
+        // Allow Perst-based login without authentication (required - can't log in otherwise!)
+        MainServlet.allowWithoutAuthentication("", "Login")
 
         // Set up a global logout handler that runs whenever any user logs out
         // This can be used for cleanup tasks like logging, closing resources, etc.

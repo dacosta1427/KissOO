@@ -1,0 +1,65 @@
+import gfe.PerstHelper
+import gfe.PerstUser
+
+/**
+ * Initialize Perst users.
+ * 
+ * Run this once to create the default admin user if none exists.
+ * 
+ * HTTP Request:
+ * {
+ *   "_class": "services.PerstInit",
+ *   "_method": "init",
+ *   "_uuid": "session-uuid"
+ * }
+ * 
+ * Or call directly from code:
+ *   groovy: new services.PerstInit().init(null, null, null, null)
+ */
+class PerstInit {
+
+    /**
+     * Initialize default user.
+     */
+    static void init(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        
+        if (!PerstHelper.isAvailable()) {
+            if (outjson) outjson.put("error", "Perst is not available")
+            return
+        }
+        
+        // Check if any users exist
+        def users = PerstHelper.retrieveAllObjects(PerstUser.class)
+        if (users) {
+            if (outjson) {
+                outjson.put("status", "skipped")
+                outjson.put("message", "Users already exist")
+                outjson.put("count", users.size())
+            }
+            return
+        }
+        
+        // Create default admin user
+        try {
+            PerstHelper.startTransaction()
+            
+            def admin = new PerstUser("admin", "admin", 1)
+            admin.setEmail("admin@localhost")
+            admin.setActive(true)
+            
+            PerstHelper.storeNewObject(admin)
+            PerstHelper.commitTransaction()
+            
+            if (outjson) {
+                outjson.put("status", "created")
+                outjson.put("username", "admin")
+                outjson.put("message", "Default admin user created. CHANGE PASSWORD IMMEDIATELY!")
+            }
+            println "Default admin user created. CHANGE PASSWORD IMMEDIATELY!"
+            
+        } catch (Exception e) {
+            PerstHelper.rollbackTransaction()
+            if (outjson) outjson.put("error", "Failed: " + e.message)
+        }
+    }
+}
