@@ -9,6 +9,19 @@ class KissInit {
     /**
      * Configure the system.
      */
+import org.kissweb.database.Connection
+import org.kissweb.restServer.MainServlet
+import org.kissweb.restServer.UserCache
+import org.kissweb.restServer.UserData
+import gfe.PerstHelper
+import gfe.PerstConfig
+import java.util.function.Consumer
+
+class KissInit {
+
+    /**
+     * Configure the system.
+     */
     static void init() {
 
         System.out.println(">>>>>>>>>> KISSINIT IS BEING CALLED!")
@@ -16,6 +29,13 @@ class KissInit {
 
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
         MainServlet.allowWithoutAuthentication("", "Login")
+        
+        // Initialize Perst database at startup
+        if (PerstConfig.getInstance().isPerstEnabled()) {
+            System.out.println("[KissInit] Initializing Perst database...")
+            PerstHelper.initialize()
+            System.out.println("[KissInit] Perst database initialized")
+        }
 
         // Set up a global logout handler that runs whenever any user logs out
         // This can be used for cleanup tasks like logging, closing resources, etc.
