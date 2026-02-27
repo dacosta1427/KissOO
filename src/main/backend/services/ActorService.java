@@ -1,6 +1,7 @@
 package services;
 
 import domain.Actor;
+import domain.database.ActorManager;
 import domain.database.PerstHelper;
 import org.kissweb.json.JSONObject;
 import org.kissweb.restServer.ProcessServlet;
@@ -50,13 +51,11 @@ public class ActorService {
         }
         
         // Try Perst first if available
-        if (PerstHelper.isAvailable()) {
-            Actor actor = PerstHelper.retrieveObject(Actor.class, uuid);
-            if (actor != null) {
-                outjson.put("actor", actor.toJSON());
-                outjson.put("source", "perst");
-                return;
-            }
+        Actor actor = ActorManager.getInstance().getByUuid(uuid);
+        if (actor != null) {
+            outjson.put("actor", actor.toJSON());
+            outjson.put("source", "perst");
+            return;
         }
         
         // Fallback: Not found
@@ -82,8 +81,8 @@ public class ActorService {
     public void getAllActors(JSONObject injson, JSONObject outjson, org.kissweb.database.Connection db, ProcessServlet servlet) {
         
         // Try Perst if available
-        if (PerstHelper.isAvailable()) {
-            Collection<Actor> actors = PerstHelper.retrieveAllObjects(Actor.class);
+        Collection<Actor> actors = ActorManager.getInstance().getAll();
+        if (actors != null) {
             List<Map<String, Object>> actorList = new ArrayList<>();
             for (Actor actor : actors) {
                 actorList.add(actor.toJSON());
@@ -131,11 +130,8 @@ public class ActorService {
             PerstHelper.startTransaction();
             
             try {
-                // Create actor
-                Actor actor = new Actor(name, type);
-                
-                // Store in Perst
-                PerstHelper.storeNewObject(actor);
+                // Create actor via Manager
+                Actor actor = ActorManager.getInstance().create(name, type);
                 
                 // Commit
                 PerstHelper.commitTransaction();

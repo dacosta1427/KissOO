@@ -4,7 +4,7 @@ import org.kissweb.database.Record
 import org.kissweb.restServer.ProcessServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import domain.database.PerstHelper
+import domain.database.PerstUserManager
 import domain.PerstUser
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -34,46 +34,13 @@ class Login {
         
         logger.info("[PerstAuth] Login attempt via Perst route for user: ${user}")
         
-        // Check if Perst is available
-        if (!PerstHelper.isAvailable()) {
-            outjson.put("error", "Perst is not available")
-            logger.warn("[PerstAuth] Perst is not available!")
-            return null
-        }
-        
+        // Use PerstUserManager for authentication
         try {
-            // Find user in Perst
-            PerstUser perstUser = PerstHelper.retrieveObject(PerstUser.class, "username", user)
+            // Find and authenticate user via Manager
+            PerstUser perstUser = PerstUserManager.getInstance().authenticate(user, password)
             
             if (perstUser == null) {
-                logger.warn("[PerstAuth] Login FAILED: user not found: ${user}")
-                return null  // Invalid user
-            }
-            
-            String storedPassword = perstUser.getPassword()
-            if (storedPassword == null) {
-                return null
-            }
-            
-            // Verify password
-            boolean passwordValid = false
-            if (storedPassword.length() == 64) {
-                // SHA256 hash comparison
-                passwordValid = storedPassword.equals(password.sha256())
-            } else {
-                // Plain text comparison
-                passwordValid = storedPassword.equals(password)
-            }
-            
-            if (!passwordValid) {
-                logger.warn("[PerstAuth] Login FAILED: invalid password for user: ${user}")
-                return null
-            }
-            
-            // Check if user is active
-            if (!perstUser.isActive()) {
-                outjson.put("error", "User account is inactive")
-                logger.warn("[PerstAuth] Login FAILED: user inactive: ${user}")
+                logger.warn("[PerstAuth] Login FAILED: invalid credentials for user: ${user}")
                 return null
             }
             
@@ -82,7 +49,7 @@ class Login {
             
             // Update last login date
             perstUser.setLastLoginDate(System.currentTimeMillis())
-            PerstHelper.storeModifiedObject(perstUser)
+            PerstUserManager.getInstance().update(perstUser)
             
             logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()})")
             
@@ -90,6 +57,7 @@ class Login {
             
         } catch (Exception e) {
             outjson.put("error", "Login failed: " + e.message)
+            logger.warn("[PerstAuth] Login FAILED: exception for user: ${user} - " + e.message)
             return null
         }
     }
