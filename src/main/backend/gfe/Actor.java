@@ -1,16 +1,10 @@
 package gfe;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.Builder;
 import org.garret.perst.continuous.CVersion;
 
 /**
  * Actor - Represents an entity that can own and perform actions on OOVs.
  */
-@Getter
-@Setter
-@Builder
 public class Actor extends CVersion {
     
     private String uuid;
@@ -29,6 +23,22 @@ public class Actor extends CVersion {
         this.type = type;
         this.uuid = java.util.UUID.randomUUID().toString();
     }
+    
+    // Manual getters/setters (no Lombok dependency)
+    public String getUuid() { return uuid; }
+    public void setUuid(String uuid) { this.uuid = uuid; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+    
+    public long getCreatedDate() { return createdDate; }
+    public void setCreatedDate(long createdDate) { this.createdDate = createdDate; }
     
     public java.util.Map<String, Object> toJSON() {
         java.util.Map<String, Object> json = new java.util.HashMap<>();

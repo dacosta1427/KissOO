@@ -9,7 +9,7 @@ import java.util.Properties;
  * Reads settings from application.ini
  */
 public class PerstConfig {
-    private static final String CONFIG_FILE = "application.ini";
+    private static final String CONFIG_FILE = "WEB-INF/backend/application.ini";
     private static PerstConfig instance;
     
     private boolean perstEnabled = false;
@@ -29,7 +29,10 @@ public class PerstConfig {
     
     private void loadConfig() {
         Properties props = new Properties();
-        try (FileInputStream fis = new FileInputStream(CONFIG_FILE)) {
+        String appPath = org.kissweb.restServer.MainServlet.getApplicationPath();
+        String configPath = appPath + "application.ini";
+        System.out.println("[PerstConfig] Trying to load config from: " + configPath);
+        try (FileInputStream fis = new FileInputStream(configPath)) {
             props.load(fis);
             
             this.perstEnabled = "true".equalsIgnoreCase(props.getProperty("PerstEnabled", "false"));
