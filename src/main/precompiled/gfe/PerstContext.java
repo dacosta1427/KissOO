@@ -1,38 +1,24 @@
 package gfe;
 
 import org.garret.perst.Storage;
-import org.garret.perst.continuous.CDatabase;
-import org.garret.perst.continuous.CVersion;
-import org.garret.perst.continuous.IOError;
-import org.garret.perst.StorageFactory;
-import org.garret.perst.IPersistent;
-import org.garret.perst.IterableIterator;
+import org.garret.perst.FieldIndex;
 import org.garret.perst.Key;
-import org.garret.perst.SortedCollection;
-import org.garret.perst.PersistentComparator;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.ArrayList;
 
 /**
  * PerstContext - Provides Perst database operations.
- * This is the main interface for Perst operations in GFE.
- * 
- * Usage:
- *   PerstContext.getInstance().initialize();  // Call once at startup
- *   PerstContext ctx = PerstContext.getInstance();
- *   Actor actor = ctx.retrieveObject(Actor.class, uuid);
+ * Uses FieldIndex for indexed access.
  */
 public class PerstContext {
     private static PerstContext instance;
     
     private Storage storage;
-    private CDatabase database;
     private boolean initialized = false;
+    private Root root;
     
-    private PerstContext() {
-        // Private constructor for singleton
-    }
+    private PerstContext() {}
     
     public static synchronized PerstContext getInstance() {
         if (instance == null) {
@@ -41,10 +27,6 @@ public class PerstContext {
         return instance;
     }
     
-    /**
-     * Initialize Perst database. Call this once at startup.
-     * Or it will auto-initialize on first use.
-     */
     public synchronized void initialize() {
         if (initialized || !PerstConfig.getInstance().isPerstEnabled()) {
             return;
@@ -53,37 +35,50 @@ public class PerstContext {
         try {
             System.out.println("[PerstContext] Initializing Perst database...");
             
-            storage = StorageFactory.getInstance().createStorage();
+            storage = org.garret.perst.StorageFactory.getInstance().createStorage();
             storage.setProperty("perst.serialize.transient.objects", java.lang.Boolean.FALSE);
             storage.setProperty("perst.file.noflush", Boolean.TRUE);
             
             String dbPath = PerstConfig.getInstance().getDatabasePath();
-            int poolSize = PerstConfig.getInstance().getPagePoolSize();
+            System.out.println("[PerstContext] Database path: " + dbPath);
             
+            java.io.File dbFile = new java.io.File(dbPath);
+            java.io.File dbDir = dbFile.getParentFile();
+            if (dbDir != null && !dbDir.canWrite()) {
+                String tempPath = System.getProperty("java.io.tmpdir") + "perst_" + System.currentTimeMillis() + ".dbs";
+                System.out.println("[PerstContext] Cannot write to configured path, using temp: " + tempPath);
+                dbPath = tempPath;
+                dbFile = new java.io.File(tempPath);
+            }
+            
+            java.io.File parentDir = dbFile.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+            
+            int poolSize = PerstConfig.getInstance().getPagePoolSize();
             storage.open(dbPath, poolSize);
             
-            database = CDatabase.instance;
-            database.open(storage, dbPath + "/idx");
+            // Get or create root with indexes
+            root = (Root) storage.getRoot();
+            if (root == null) {
+                root = new Root();
+                root.setCollections(storage);
+                storage.setRoot(root);
+                storage.commit();
+            }
             
             initialized = true;
             System.out.println("[PerstContext] Perst database initialized successfully.");
             
-        } catch (IOError e) {
-            System.err.println("[PerstContext] Failed to initialize Perst: " + e.getMessage());
-            initialized = false;
         } catch (Exception e) {
-            System.err.println("[PerstContext] Unexpected error: " + e.getMessage());
+            System.err.println("[PerstContext] Failed to initialize Perst: " + e.getMessage());
+            e.printStackTrace();
             initialized = false;
         }
     }
     
-    /**
-     * Close the database. Call on shutdown.
-     */
     public synchronized void close() {
-        if (database != null) {
-            database.close();
-        }
         if (storage != null) {
             storage.close();
         }
@@ -91,108 +86,78 @@ public class PerstContext {
         System.out.println("[PerstContext] Perst database closed.");
     }
     
-    /**
-     * Check if Perst is enabled and initialized
-     */
     public boolean isAvailable() {
-        // Auto-initialize on first use if enabled
         if (PerstConfig.getInstance().isPerstEnabled() && !initialized) {
             initialize();
         }
         return PerstConfig.getInstance().isPerstEnabled() && initialized;
     }
     
-    // ==================== CRUD Operations ====================
-    
-    /**
-     * Retrieve a single object by class and key field
-     */
-    public <T extends CVersion> T retrieveObject(Class<T> clazz, String field, String value) {
+    // Actor operations
+    public Actor retrieveObject(Class<Actor> clazz, String field, String value) {
         if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        return database.getSingleton(database.find(clazz, field, new Key(value)));
+        
+        if ("username".equals(field)) {
+            return root.actorIndex.get(value);
+        }
+        return null;
     }
     
-    /**
-     * Retrieve a single object by UUID
-     */
-    public <T extends CVersion> T retrieveObject(Class<T> clazz, String uuid) {
+    public Collection<Actor> retrieveAllObjects(Class<Actor> clazz) {
         if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        return database.getSingleton(database.find(clazz, "_UUID", new Key(uuid)));
-    }
-    
-    /**
-     * Retrieve all objects of a given type
-     */
-    public <T extends CVersion> Collection<T> retrieveAllObjects(Class<T> clazz) {
-        if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        IterableIterator<T> iter = database.getRecords(clazz);
-        Collection<T> result = new HashSet<>();
-        for (T obj : iter) {
-            result.add(obj);
+        ArrayList<Actor> result = new ArrayList<>();
+        for (Actor a : root.actorIndex) {
+            result.add(a);
         }
         return result;
     }
     
-    /**
-     * Store a new object
-     */
-    public void storeNewObject(CVersion obj) {
+    public void storeNewObject(Actor obj) {
         if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        database.insert(obj);
+        root.actorIndex.put(obj);
     }
     
-    /**
-     * Store a modified object
-     */
-    public void storeModifiedObject(CVersion obj) {
+    public void storeModifiedObject(Actor obj) {
         if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        database.update(obj);
+        root.actorIndex.put(obj);
     }
     
-    /**
-     * Remove an object
-     */
-    public void removeObject(CVersion obj) {
+    public void removeObject(Actor obj) {
         if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        database.delete(obj);
+        root.actorIndex.remove(obj);
     }
     
-    // ==================== Transaction Operations ====================
-    
-    /**
-     * Start a transaction
-     */
-    public void startTransaction() {
+    // PerstUser operations
+    public PerstUser retrieveUser(Class<PerstUser> clazz, String field, String value) {
         if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        database.beginTransaction();
-        storage.beginThreadTransaction(Storage.EXCLUSIVE_TRANSACTION);
+        
+        if ("username".equals(field)) {
+            return root.userIndex.get(value);
+        }
+        return null;
     }
     
-    /**
-     * End/Commit a transaction
-     */
-    public void endTransaction() throws Exception {
+    public Collection<PerstUser> retrieveAllUsers(Class<PerstUser> clazz) {
         if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        database.commitTransaction();
-        storage.endThreadTransaction();
+        ArrayList<PerstUser> result = new ArrayList<>();
+        for (PerstUser u : root.userIndex) {
+            result.add(u);
+        }
+        return result;
     }
     
-    /**
-     * Rollback a transaction
-     */
-    public void rollbackTransaction() {
+    public void storeNewUser(PerstUser obj) {
         if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        database.rollbackTransaction();
+        root.userIndex.put(obj);
     }
     
-    // ==================== Collection Operations ====================
-    
-    /**
-     * Create a sorted collection
-     */
-    public <T extends IPersistent> SortedCollection<T> createSortedCollection(
-            PersistentComparator<?> comparator, boolean unique) {
+    public void storeModifiedUser(PerstUser obj) {
         if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        return (SortedCollection<T>) storage.createSortedCollection(comparator, unique);
+        root.userIndex.put(obj);
+    }
+    
+    public void removeUser(PerstUser obj) {
+        if (!isAvailable()) throw new IllegalStateException("Perst not available");
+        root.userIndex.remove(obj);
     }
 }

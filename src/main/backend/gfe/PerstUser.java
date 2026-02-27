@@ -1,11 +1,14 @@
 package gfe;
 
-import org.garret.perst.Persistent;
+import org.garret.perst.continuous.CVersion;
 
 /**
  * PerstUser - User entity stored in Perst OODBMS.
+ * 
+ * This class represents a user for authentication purposes.
+ * It extends CVersion to leverage Perst's automatic versioning.
  */
-public class PerstUser extends Persistent {
+public class PerstUser extends CVersion {
     
     private String username;
     private String password;  // Plain text or SHA256 hash (64 chars)

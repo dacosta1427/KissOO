@@ -21,11 +21,6 @@ import org.apache.logging.log4j.Logger
 class Login {
     private static final Logger logger = LogManager.getLogger(Login.class)
 
-    // EMERGENCY DEBUG - DELETE AFTER TESTING
-    static {
-        System.out.println(">>>>>>>>>> Login.groovy CLASS LOADED");
-    }
-
     /**
      * Validate a user's login name and password using Perst.
      *
@@ -37,8 +32,6 @@ class Login {
      */
     public static UserData login(Connection db, String user, String password, JSONObject outjson, ProcessServlet servlet) {
         
-        // BLOCKED - Perst authentication route
-        System.out.println(">>>>>>>>>> BLOCKED: Perst login route hit for user: " + user);
         logger.info("[PerstAuth] Login attempt via Perst route for user: ${user}")
         
         // Check if Perst is available
@@ -46,22 +39,6 @@ class Login {
             outjson.put("error", "Perst is not available")
             logger.warn("[PerstAuth] Perst is not available!")
             return null
-        }
-        
-        // Auto-create default user if none exists
-        def existingUsers = PerstHelper.retrieveAllObjects(PerstUser.class)
-        if (!existingUsers) {
-            try {
-                PerstHelper.startTransaction()
-                def defaultUser = new PerstUser("admin", "admin", 1)
-                defaultUser.setEmail("admin@localhost")
-                defaultUser.setActive(true)
-                PerstHelper.storeNewObject(defaultUser)
-                PerstHelper.commitTransaction()
-                logger.info("[PerstAuth] Auto-created default admin user")
-            } catch (Exception e) {
-                logger.error("[PerstAuth] Failed to create default user: " + e.message)
-            }
         }
         
         try {
@@ -113,7 +90,6 @@ class Login {
             
         } catch (Exception e) {
             outjson.put("error", "Login failed: " + e.message)
-            logger.error("[PerstAuth] Login exception: " + e.message)
             return null
         }
     }

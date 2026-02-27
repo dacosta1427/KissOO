@@ -2,17 +2,6 @@ import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import java.util.function.Consumer
-
-class KissInit {
-
-    /**
-     * Configure the system.
-     */
-import org.kissweb.database.Connection
-import org.kissweb.restServer.MainServlet
-import org.kissweb.restServer.UserCache
-import org.kissweb.restServer.UserData
 import gfe.PerstHelper
 import gfe.PerstConfig
 import java.util.function.Consumer
@@ -24,7 +13,6 @@ class KissInit {
      */
     static void init() {
 
-        System.out.println(">>>>>>>>>> KISSINIT IS BEING CALLED!")
         MainServlet.readIniFile "application.ini", "main"
 
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
