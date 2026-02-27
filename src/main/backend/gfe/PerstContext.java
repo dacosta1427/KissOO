@@ -16,7 +16,7 @@ public class PerstContext {
     
     private Storage storage;
     private boolean initialized = false;
-    private Root root;
+    private PerstDBRoot root;
     
     private PerstContext() {}
     
@@ -60,9 +60,9 @@ public class PerstContext {
             storage.open(dbPath, poolSize);
             
             // Get or create root with indexes
-            root = (Root) storage.getRoot();
+            root = (PerstDBRoot) storage.getRoot();
             if (root == null) {
-                root = new Root();
+                root = new PerstDBRoot();
                 root.setCollections(storage);
                 storage.setRoot(root);
                 storage.commit();
