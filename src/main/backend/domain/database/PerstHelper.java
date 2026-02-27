@@ -1,4 +1,6 @@
-package gfe;
+package domain.database;
+
+import domain.kissweb.PerstContext;
 
 /**
  * PerstHelper - Static helper for Perst operations.

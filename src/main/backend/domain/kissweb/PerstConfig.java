@@ -1,4 +1,4 @@
-package gfe;
+package domain.kissweb;
 
 import java.io.FileInputStream;
 import java.io.IOException;

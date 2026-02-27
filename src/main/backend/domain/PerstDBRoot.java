@@ -1,4 +1,4 @@
-package gfe;
+package domain;
 
 import org.garret.perst.FieldIndex;
 import org.garret.perst.Persistent;

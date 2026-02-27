@@ -1,4 +1,4 @@
-package gfe;
+package domain.kissweb;
 
 import org.garret.perst.Storage;
 import org.garret.perst.FieldIndex;
@@ -6,6 +6,10 @@ import org.garret.perst.Key;
 
 import java.util.Collection;
 import java.util.ArrayList;
+
+import domain.PerstDBRoot;
+import domain.PerstUser;
+import domain.Actor;
 
 /**
  * PerstContext - Provides Perst database operations.
