@@ -2,8 +2,8 @@ import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import gfe.PerstHelper
-import gfe.PerstConfig
+import domain.database.PerstHelper
+import domain.kissweb.PerstConfig
 import java.util.function.Consumer
 
 class KissInit {

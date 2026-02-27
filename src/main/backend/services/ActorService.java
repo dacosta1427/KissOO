@@ -1,7 +1,7 @@
 package services;
 
-import gfe.Actor;
-import gfe.PerstHelper;
+import domain.Actor;
+import domain.database.PerstHelper;
 import org.kissweb.json.JSONObject;
 import org.kissweb.restServer.ProcessServlet;
 

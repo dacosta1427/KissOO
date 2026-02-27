@@ -4,8 +4,8 @@ import org.kissweb.database.Record
 import org.kissweb.restServer.ProcessServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import gfe.PerstHelper
-import gfe.PerstUser
+import domain.database.PerstHelper
+import domain.PerstUser
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 

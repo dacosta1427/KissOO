@@ -1,5 +1,5 @@
-import gfe.PerstHelper
-import gfe.PerstUser
+import domain.database.PerstHelper
+import domain.PerstUser
 
 /**
  * Initialize Perst users.
