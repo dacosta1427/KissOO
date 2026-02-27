@@ -26,29 +26,71 @@ The `bld` tool handles:
 ## Directory Structure
 
 ```
-src/main/
-├── backend/           # ← Domain classes go HERE
-│   └── gfe/
-│       ├── Actor.java        # Domain entity
-│       ├── PerstUser.java   # Domain entity
-│       ├── Root.java        # Perst root object
-│       └── ...
+src/main/backend/domain/
+├── Actor.java              # Domain entity
+├── PerstUser.java         # Domain entity
+├── PerstDBRoot.java       # ⚠️ MUST UPDATE when adding/removing domain classes
 │
-└── precompiled/     # Legacy - avoid using
+├── kissweb/               # Framework integration
+│   ├── PerstContext.java
+│   └── PerstConfig.java
+│
+└── database/             # Data access layer
+    └── PerstHelper.java
 ```
 
 ## Adding New Domain Classes
 
-1. Create class in `src/main/backend/gfe/`
-2. Extend `CVersion` for automatic versioning
-3. Run `./bld build`
+### Step 1: Create the domain class
 
-Example:
+Create class in `src/main/backend/domain/`:
+
 ```java
-package gfe;
+package domain;
+
+import org.garret.perst.continuous.CVersion;
 
 public class MyEntity extends CVersion {
     private String name;
+    private String description;
+    
     // getters/setters
 }
 ```
+
+### Step 2: ⚠️ UPDATE PerstDBRoot
+
+**IMPORTANT:** When adding or removing domain classes, you MUST update `PerstDBRoot.java`:
+
+```java
+// In PerstDBRoot.java:
+
+// 1. Add import
+import domain.MyEntity;
+
+// 2. Add field index
+public FieldIndex<MyEntity> myEntityIndex;
+
+// 3. Add to setCollections()
+public void setCollections(Storage db) {
+    userIndex = db.createFieldIndex(PerstUser.class, "username", true);
+    actorIndex = db.createFieldIndex(Actor.class, "username", true);
+    
+    // ADD YOUR NEW INDEX HERE
+    myEntityIndex = db.createFieldIndex(MyEntity.class, "name", true);
+}
+```
+
+**This is easily forgotten!** Check PerstDBRoot whenever you modify domain classes.
+
+### Step 3: Build
+
+```bash
+./bld build
+```
+
+## Domain Class Requirements
+
+- Must extend `CVersion` for automatic versioning
+- Must have a default constructor
+- Fields should be primitive types, Strings, or other CVersion objects

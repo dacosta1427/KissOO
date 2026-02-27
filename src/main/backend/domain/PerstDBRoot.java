@@ -7,6 +7,29 @@ import org.garret.perst.Storage;
 /**
  * PerstDBRoot - Root object holding all Perst indexes.
  * Central hub for accessing all domain entities.
+ * 
+ * IMPORTANT: When adding or removing domain classes, update this class!
+ * 
+ * ADDING A NEW DOMAIN CLASS:
+ * 1. Add the import: import domain.YourNewClass;
+ * 2. Add a FieldIndex: public FieldIndex<YourNewClass> yourNewClassIndex;
+ * 3. Add to setCollections(): yourNewClassIndex = db.createFieldIndex(YourNewClass.class, "fieldName", unique);
+ * 
+ * REMOVING A DOMAIN CLASS:
+ * 1. Remove the import
+ * 2. Remove the FieldIndex declaration
+ * 3. Remove from setCollections()
+ * 
+ * Example:
+ *   // To add MyEntity indexed by "name":
+ *   import domain.MyEntity;
+ *   
+ *   public FieldIndex<MyEntity> myEntityIndex;
+ *   
+ *   public void setCollections(Storage db) {
+ *       ...
+ *       myEntityIndex = db.createFieldIndex(MyEntity.class, "name", true);
+ *   }
  */
 public class PerstDBRoot extends Persistent {
     
@@ -19,7 +42,8 @@ public class PerstDBRoot extends Persistent {
     }
     
     /**
-     * Initialize indexes - called on first creation
+     * Initialize indexes - called on first creation.
+     * Add new domain class indexes here.
      */
     public void setCollections(Storage db) {
         userIndex = db.createFieldIndex(PerstUser.class, "username", true);
