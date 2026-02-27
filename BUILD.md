@@ -94,3 +94,48 @@ public void setCollections(Storage db) {
 - Must extend `CVersion` for automatic versioning
 - Must have a default constructor
 - Fields should be primitive types, Strings, or other CVersion objects
+
+## Database Architecture
+
+### Current Setup
+
+| Component | Database | Purpose |
+|----------|---------|---------|
+| **Login/Authentication** | Perst | User authentication and sessions |
+| **Domain Objects** | Perst | Application data (Actors, Users, etc.) |
+| **Framework Internals** | SQLite | Session management, framework state |
+
+### Perst vs SQL Databases
+
+- **Perst** - Your application data, fully versioned, no SQL
+- **SQLite** - Framework only (cannot be removed yet), minimal attack surface
+
+### Security Notes
+
+**SQL Injection Protection:**
+- kissweb uses **prepared statements** internally for all SQL queries
+- User input is NEVER concatenated directly into SQL strings
+- All queries use parameterized queries (`?` placeholders)
+- Perst has NO SQL - objects are stored directly, no queries needed
+
+**Example of safe query in kissweb:**
+```java
+// ✅ SAFE - Uses prepared statement
+PreparedStatement ps = connection.prepareStatement(
+    "SELECT * FROM users WHERE username = ?"
+);
+ps.setString(1, username);  // Parameterized - no injection possible
+```
+
+**Perst is immune to SQL injection** because:
+- No SQL queries - objects are accessed via indexes
+- No string concatenation for queries
+- All data is stored as Java objects, not SQL rows
+
+### Future: Eliminating SQLite
+
+Discussion needed with kissweb creator. SQLite is currently required for:
+- Session management
+- Framework internal state
+
+The goal is to eventually replace SQLite entirely with Perst.
