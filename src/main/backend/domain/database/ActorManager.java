@@ -1,6 +1,7 @@
 package domain.database;
 
 import domain.Actor;
+import domain.Agreement;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,14 +19,15 @@ import java.util.List;
  * - CRUD operations
  * - Validation
  * - Business logic
- * - Authorization checks
+ * - Authorization checks via Agreement
  * 
  * IMPORTANT: For authorization, services must obtain the current Actor
- * from UserData and pass it to Manager methods:
+ * from UserData and pass it to Manager methods. The Actor's Agreement
+ * determines what operations are permitted.
  * 
  *   UserData ud = servlet.getUserData();
  *   Actor actor = ActorManager.getByUserId(ud.getUserId());
- *   ActorManager.create(actor, name, type);  // checks authorization
+ *   ActorManager.create(actor, name, type);  // Agreement checked automatically
  */
 public class ActorManager extends BaseManager<Actor> {
     
@@ -34,7 +36,7 @@ public class ActorManager extends BaseManager<Actor> {
     // ========== Static Authorization-Aware Methods ==========
     
     /**
-     * Get all Actors (with authorization check)
+     * Get all Actors (with authorization check via Agreement)
      */
     public static Collection<Actor> getAll(Actor actor) {
         if (!checkPermission(actor, ACTION_READ, "Actor")) {
@@ -71,6 +73,21 @@ public class ActorManager extends BaseManager<Actor> {
             return null;
         }
         return create(params);
+    }
+    
+    /**
+     * Create a NEW Actor with an Agreement (internal use - bypasses auth)
+     * 
+     * @param agreement The Agreement for the new Actor (can be null for default USER role)
+     * @param name Actor name
+     * @param type Actor type
+     * @return the created Actor
+     */
+    public static Actor createWithAgreement(Agreement agreement, String name, String type) {
+        if (agreement == null) {
+            agreement = new Agreement("USER");
+        }
+        return create(name, type, agreement);
     }
     
     /**
@@ -150,10 +167,16 @@ public class ActorManager extends BaseManager<Actor> {
         String name = (String) params[0];
         String type = (String) params[1];
         
-        Actor actor = new Actor(name, type);
+        // Check if Agreement is provided (params[2])
+        Agreement agreement = null;
+        if (params.length > 2 && params[2] instanceof Agreement) {
+            agreement = (Agreement) params[2];
+        }
         
-        if (params.length > 2 && params[2] instanceof Integer) {
-            actor.setUserId((Integer) params[2]);
+        Actor actor = new Actor(name, type, agreement);
+        
+        if (params.length > 3 && params[3] instanceof Integer) {
+            actor.setUserId((Integer) params[3]);
         }
         
         if (!validate(actor)) {

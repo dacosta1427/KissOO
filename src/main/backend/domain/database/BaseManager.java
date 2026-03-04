@@ -1,6 +1,7 @@
 package domain.database;
 
 import domain.Actor;
+import domain.Agreement;
 import domain.PerstUser;
 import java.util.Collection;
 
@@ -12,9 +13,8 @@ import java.util.Collection;
  * - Managers encapsulate business logic
  * - Managers handle validation, authorization, and auditing
  * 
- * IMPORTANT: Authorization is enforced by checking if the calling Actor
- * has permission to perform the requested action. Services MUST obtain
- * the current Actor from UserData and pass it to Manager methods.
+ * IMPORTANT: Authorization is enforced via the Actor's Agreement.
+ * Every Actor MUST have an Agreement to perform any operation.
  * 
  * All methods are static - no singleton needed. Thread safety is handled
  * by PerstHelper which uses thread-local PerstContext.
@@ -22,7 +22,7 @@ import java.util.Collection;
  * Example:
  *   UserData ud = servlet.getUserData();
  *   Actor actor = ActorManager.getByUserId(ud.getUserId());
- *   ActorManager.create(actor, "param1", "param2");
+ *   ActorManager.create(actor, "param1", "param2");  // Agreement checked automatically
  * 
  * @param <T> The domain entity type
  */
@@ -46,7 +46,12 @@ public abstract class BaseManager<T> {
     
     /**
      * Check if an Actor has permission to perform an action.
-     * Override in subclass to implement specific authorization logic.
+     * 
+     * This checks the Actor's Agreement:
+     * 1. Actor must exist
+     * 2. Actor must have an Agreement
+     * 3. Agreement must be valid (active, within date range)
+     * 4. Agreement must grant permission for the resource/action
      * 
      * @param actor The Actor making the request (can be null for unauthenticated)
      * @param action The action being performed (ACTION_CREATE, ACTION_READ, etc.)
@@ -54,14 +59,42 @@ public abstract class BaseManager<T> {
      * @return true if authorized, false otherwise
      */
     protected static boolean checkPermission(Actor actor, String action, String resource) {
-        // Default: deny if no actor provided (unless it's a read operation)
+        // 1. Check if actor exists
         if (actor == null) {
-            return ACTION_READ.equals(action);  // Allow read for unauthenticated
+            // Deny all for unauthenticated except READ on public resources
+            return ACTION_READ.equals(action);
         }
         
-        // Default implementation: check if actor is active
-        // Subclasses should override with specific authorization rules
-        return actor.isActive();
+        // 2. MANDATORY: Actor must have an Agreement
+        Agreement agreement = actor.getAgreement();
+        if (agreement == null) {
+            return false;  // No agreement = no permissions
+        }
+        
+        // 3. Check if Agreement grants permission
+        return agreement.grants(resource, action);
+    }
+    
+    /**
+     * Check if an Actor has permission for a specific endpoint.
+     * 
+     * @param actor The Actor making the request
+     * @param action The action being performed
+     * @param resource The resource being accessed
+     * @param endpoint The specific endpoint (e.g., "services.ActorService.createActor")
+     * @return true if authorized, false otherwise
+     */
+    protected static boolean checkPermission(Actor actor, String action, String resource, String endpoint) {
+        if (actor == null) {
+            return ACTION_READ.equals(action);
+        }
+        
+        Agreement agreement = actor.getAgreement();
+        if (agreement == null) {
+            return false;
+        }
+        
+        return agreement.grants(resource, action, endpoint);
     }
     
     /**

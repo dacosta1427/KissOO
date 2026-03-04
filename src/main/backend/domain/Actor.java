@@ -4,6 +4,10 @@ import org.garret.perst.continuous.CVersion;
 
 /**
  * Actor - Represents an entity that can own and perform actions on resources.
+ * 
+ * IMPORTANT: Every Actor MUST have an Agreement. Without an Agreement,
+ * the Actor cannot perform any operations in the system.
+ * 
  * This is a generic entity - extend it for domain-specific behavior.
  */
 public class Actor extends CVersion {
@@ -14,6 +18,7 @@ public class Actor extends CVersion {
     private boolean active = true;
     private long createdDate;
     private transient PerstUser perstUser;  // Linked PerstUser for authentication
+    private Agreement agreement;  // MANDATORY - Authorization contract
     
     // Static in-memory indexes
     private static java.util.Map<Integer, Actor> userIdIndex = new java.util.HashMap<>();
@@ -23,11 +28,16 @@ public class Actor extends CVersion {
         this.createdDate = System.currentTimeMillis();
     }
     
-    public Actor(String name, String type) {
+    public Actor(String name, String type, Agreement agreement) {
         this();
         this.name = name;
         this.type = type;
         this.uuid = java.util.UUID.randomUUID().toString();
+        this.agreement = agreement;
+    }
+    
+    public Actor(String name, String type) {
+        this(name, type, new Agreement("USER"));
     }
     
     // Static finder methods
@@ -74,6 +84,17 @@ public class Actor extends CVersion {
     public PerstUser getPerstUser() { return perstUser; }
     public void setPerstUser(PerstUser perstUser) { this.perstUser = perstUser; }
     
+    /**
+     * Get the Actor's Agreement (MANDATORY).
+     * Returns null if no agreement - which means no operations are permitted.
+     */
+    public Agreement getAgreement() { return agreement; }
+    
+    /**
+     * Set the Actor's Agreement.
+     */
+    public void setAgreement(Agreement agreement) { this.agreement = agreement; }
+    
     public java.util.Map<String, Object> toJSON() {
         java.util.Map<String, Object> json = new java.util.HashMap<>();
         json.put("uuid", uuid);
@@ -81,6 +102,7 @@ public class Actor extends CVersion {
         json.put("type", type);
         json.put("active", active);
         json.put("createdDate", createdDate);
+        json.put("hasAgreement", agreement != null);
         return json;
     }
     
@@ -91,6 +113,7 @@ public class Actor extends CVersion {
                 ", name='" + name + '\'' +
                 ", type='" + type + '\'' +
                 ", active=" + active +
+                ", hasAgreement=" + (agreement != null) +
                 '}';
     }
 }
