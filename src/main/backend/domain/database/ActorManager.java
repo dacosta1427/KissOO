@@ -11,48 +11,104 @@ import java.util.List;
  * This is the "Manager at the Gate" - ALL access to Actor entities
  * must go through this class.
  * 
+ * All methods are static - no singleton needed. Thread safety is handled
+ * by PerstHelper which uses thread-local PerstContext.
+ * 
  * Responsibilities:
  * - CRUD operations
  * - Validation
  * - Business logic
  * - Authorization checks
- * - Audit logging (future)
  * 
  * IMPORTANT: For authorization, services must obtain the current Actor
  * from UserData and pass it to Manager methods:
  * 
  *   UserData ud = servlet.getUserData();
- *   Actor actor = ActorManager.getInstance().getByUserId(ud.getUserId());
- *   ActorManager.getInstance().create(actor, name, type);  // checks authorization
+ *   Actor actor = ActorManager.getByUserId(ud.getUserId());
+ *   ActorManager.create(actor, name, type);  // checks authorization
  */
 public class ActorManager extends BaseManager<Actor> {
     
-    private static ActorManager instance;
+    private ActorManager() {}  // Prevent instantiation
     
-    private ActorManager() {}
+    // ========== Static Authorization-Aware Methods ==========
     
-    public static synchronized ActorManager getInstance() {
-        if (instance == null) {
-            instance = new ActorManager();
+    /**
+     * Get all Actors (with authorization check)
+     */
+    public static Collection<Actor> getAll(Actor actor) {
+        if (!checkPermission(actor, ACTION_READ, "Actor")) {
+            return null;
         }
-        return instance;
+        return getAll();
     }
     
-    @Override
-    protected String getResourceName() {
-        return "Actor";
+    /**
+     * Get Actor by name (with authorization check)
+     */
+    public static Actor getByKey(Actor actor, String key) {
+        if (!checkPermission(actor, ACTION_READ, "Actor")) {
+            return null;
+        }
+        return getByKey(key);
     }
     
-    @Override
-    public Collection<Actor> getAll() {
+    /**
+     * Get Actor by UUID (with authorization check)
+     */
+    public static Actor getByUuid(Actor actor, String uuid) {
+        if (!checkPermission(actor, ACTION_READ, "Actor")) {
+            return null;
+        }
+        return getByUuid(uuid);
+    }
+    
+    /**
+     * Create Actor (with authorization check)
+     */
+    public static Actor create(Actor actor, Object... params) {
+        if (!checkPermission(actor, ACTION_CREATE, "Actor")) {
+            return null;
+        }
+        return create(params);
+    }
+    
+    /**
+     * Update Actor (with authorization check)
+     */
+    public static boolean update(Actor actor, Actor entity) {
+        if (!checkPermission(actor, ACTION_UPDATE, "Actor")) {
+            return false;
+        }
+        return update(entity);
+    }
+    
+    /**
+     * Delete Actor (with authorization check)
+     */
+    public static boolean delete(Actor actor, Actor entity) {
+        if (!checkPermission(actor, ACTION_DELETE, "Actor")) {
+            return false;
+        }
+        return delete(entity);
+    }
+    
+    // ========== Static Base Methods ==========
+    
+    /**
+     * Get all Actors (no authorization - use getAll(Actor) for authorized access)
+     */
+    public static Collection<Actor> getAll() {
         if (!isPerstAvailable()) {
             return new ArrayList<>();
         }
         return PerstHelper.retrieveAllObjects(Actor.class);
     }
     
-    @Override
-    public Actor getByKey(String key) {
+    /**
+     * Get Actor by name
+     */
+    public static Actor getByKey(String key) {
         if (!isPerstAvailable()) {
             return null;
         }
@@ -62,7 +118,7 @@ public class ActorManager extends BaseManager<Actor> {
     /**
      * Get Actor by UUID
      */
-    public Actor getByUuid(String uuid) {
+    public static Actor getByUuid(String uuid) {
         if (!isPerstAvailable()) {
             return null;
         }
@@ -71,19 +127,18 @@ public class ActorManager extends BaseManager<Actor> {
     
     /**
      * Get Actor by user ID (from UserData.getUserId())
-     * 
-     * @param userId The user ID from UserData
-     * @return The Actor linked to this userId, or null
      */
-    public Actor getByUserId(int userId) {
+    public static Actor getByUserId(int userId) {
         if (!isPerstAvailable()) {
             return null;
         }
         return Actor.findByUserId(userId);
     }
     
-    @Override
-    public Actor create(Object... params) {
+    /**
+     * Create a new Actor
+     */
+    public static Actor create(Object... params) {
         if (!isPerstAvailable()) {
             return null;
         }
@@ -109,8 +164,10 @@ public class ActorManager extends BaseManager<Actor> {
         return actor;
     }
     
-    @Override
-    public boolean update(Actor actor) {
+    /**
+     * Update an Actor
+     */
+    public static boolean update(Actor actor) {
         if (!isPerstAvailable() || actor == null) {
             return false;
         }
@@ -123,8 +180,10 @@ public class ActorManager extends BaseManager<Actor> {
         return true;
     }
     
-    @Override
-    public boolean delete(Actor actor) {
+    /**
+     * Delete an Actor
+     */
+    public static boolean delete(Actor actor) {
         if (!isPerstAvailable() || actor == null) {
             return false;
         }
@@ -133,8 +192,10 @@ public class ActorManager extends BaseManager<Actor> {
         return true;
     }
     
-    @Override
-    protected boolean validate(Actor actor) {
+    /**
+     * Validate an Actor
+     */
+    public static boolean validate(Actor actor) {
         if (actor == null) {
             return false;
         }
@@ -147,12 +208,14 @@ public class ActorManager extends BaseManager<Actor> {
     /**
      * Get all actors of a specific type
      */
-    public List<Actor> getByType(String type) {
+    public static List<Actor> getByType(String type) {
         List<Actor> result = new ArrayList<>();
         Collection<Actor> all = getAll();
         
+        if (all == null) return result;
+        
         for (Actor actor : all) {
-            if (actor.getType().equals(type)) {
+            if (type.equals(actor.getType())) {
                 result.add(actor);
             }
         }
@@ -162,7 +225,7 @@ public class ActorManager extends BaseManager<Actor> {
     /**
      * Check if actor exists
      */
-    public boolean exists(String name) {
+    public static boolean exists(String name) {
         return getByKey(name) != null;
     }
 }

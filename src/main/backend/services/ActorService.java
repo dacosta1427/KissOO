@@ -2,7 +2,7 @@ package services;
 
 import domain.Actor;
 import domain.database.ActorManager;
-import domain.database.PerstHelper;
+import domain.database.BaseManager;
 import org.kissweb.json.JSONObject;
 import org.kissweb.restServer.ProcessServlet;
 import org.kissweb.restServer.UserData;
@@ -28,8 +28,11 @@ import java.util.Map;
  * 
  * IMPORTANT: This service demonstrates the "early rejection" pattern:
  * 1. First authenticate via UserData
- * 2. Then authorize via Actor
+ * 2. Then authorize via Manager methods (action is auto-identified)
  * 3. Only then execute the operation
+ * 
+ * The Manager methods automatically identify the action (READ, CREATE, UPDATE, DELETE)
+ * and check permissions. Service just calls the method.
  */
 public class ActorService {
     
@@ -42,7 +45,7 @@ public class ActorService {
         if (ud == null) {
             return null;
         }
-        return ActorManager.getInstance().getByUserId((int) ud.getUserId());
+        return ActorManager.getByUserId((int) ud.getUserId());
     }
     
     /**
@@ -75,16 +78,10 @@ public class ActorService {
             return;
         }
         
-        // EARLY REJECTION: Authorize via Manager
-        Actor actor = ActorManager.getInstance().getByUuid(caller, uuid);
+        // Manager handles authorization (ACTION_READ) and lookup in one call
+        Actor actor = ActorManager.getByUuid(caller, uuid);
         if (actor == null) {
-            // Check if it was an authorization failure or not found
-            if (!ActorManager.getInstance().checkPermission(caller, ActorManager.ACTION_READ, "Actor")) {
-                outjson.put("error", "Not authorized to read Actor");
-                return;
-            }
-            outjson.put("error", "Actor not found");
-            outjson.put("uuid", uuid);
+            outjson.put("error", "Not authorized or Actor not found");
             return;
         }
         
@@ -115,8 +112,8 @@ public class ActorService {
             return;
         }
         
-        // EARLY REJECTION: Authorize via Manager
-        Collection<Actor> actors = ActorManager.getInstance().getAll(caller);
+        // Manager handles authorization (ACTION_READ) - returns null if not authorized
+        Collection<Actor> actors = ActorManager.getAll(caller);
         if (actors == null) {
             outjson.put("error", "Not authorized to list Actors");
             return;
@@ -166,9 +163,8 @@ public class ActorService {
             return;
         }
         
-        // EARLY REJECTION: Authorize via Manager BEFORE creating
-        // Note: create(caller, params) checks ACTION_CREATE permission
-        Actor actor = ActorManager.getInstance().create(caller, name, type);
+        // Manager handles authorization (ACTION_CREATE) - returns null if not authorized
+        Actor actor = ActorManager.create(caller, name, type);
         if (actor == null) {
             outjson.put("error", "Not authorized to create Actor");
             return;
@@ -206,20 +202,20 @@ public class ActorService {
             return;
         }
         
-        // Get actor first (needs READ permission)
-        Actor actor = ActorManager.getInstance().getByUuid(caller, uuid);
+        // Get actor - needs READ permission
+        Actor actor = ActorManager.getByUuid(caller, uuid);
         if (actor == null) {
-            outjson.put("error", "Actor not found");
+            outjson.put("error", "Not authorized or Actor not found");
             return;
         }
         
-        // Update the actor
+        // Update the actor locally
         if (name != null && !name.isEmpty()) {
             actor.setName(name);
         }
         
-        // EARLY REJECTION: Authorize UPDATE via Manager
-        if (!ActorManager.getInstance().update(caller, actor)) {
+        // Manager handles authorization (ACTION_UPDATE)
+        if (!ActorManager.update(caller, actor)) {
             outjson.put("error", "Not authorized to update Actor");
             return;
         }
@@ -253,15 +249,15 @@ public class ActorService {
             return;
         }
         
-        // Get actor first (needs READ permission)
-        Actor actor = ActorManager.getInstance().getByUuid(caller, uuid);
+        // Get actor - needs READ permission
+        Actor actor = ActorManager.getByUuid(caller, uuid);
         if (actor == null) {
-            outjson.put("error", "Actor not found");
+            outjson.put("error", "Not authorized or Actor not found");
             return;
         }
         
-        // EARLY REJECTION: Authorize DELETE via Manager
-        if (!ActorManager.getInstance().delete(caller, actor)) {
+        // Manager handles authorization (ACTION_DELETE)
+        if (!ActorManager.delete(caller, actor)) {
             outjson.put("error", "Not authorized to delete Actor");
             return;
         }

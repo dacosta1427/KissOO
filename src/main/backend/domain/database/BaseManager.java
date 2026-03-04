@@ -16,10 +16,13 @@ import java.util.Collection;
  * has permission to perform the requested action. Services MUST obtain
  * the current Actor from UserData and pass it to Manager methods.
  * 
+ * All methods are static - no singleton needed. Thread safety is handled
+ * by PerstHelper which uses thread-local PerstContext.
+ * 
  * Example:
  *   UserData ud = servlet.getUserData();
- *   Actor actor = ActorManager.getInstance().getByUserId(ud.getUserId());
- *   ActorManager.getInstance().create(actor, "param1", "param2");
+ *   Actor actor = ActorManager.getByUserId(ud.getUserId());
+ *   ActorManager.create(actor, "param1", "param2");
  * 
  * @param <T> The domain entity type
  */
@@ -37,7 +40,7 @@ public abstract class BaseManager<T> {
     /**
      * Check if Perst is available
      */
-    protected boolean isPerstAvailable() {
+    protected static boolean isPerstAvailable() {
         return PerstHelper.isAvailable();
     }
     
@@ -50,7 +53,7 @@ public abstract class BaseManager<T> {
      * @param resource The resource being accessed (e.g., "Actor", "PerstUser")
      * @return true if authorized, false otherwise
      */
-    protected boolean checkPermission(Actor actor, String action, String resource) {
+    protected static boolean checkPermission(Actor actor, String action, String resource) {
         // Default: deny if no actor provided (unless it's a read operation)
         if (actor == null) {
             return ACTION_READ.equals(action);  // Allow read for unauthenticated
@@ -64,87 +67,86 @@ public abstract class BaseManager<T> {
     /**
      * Get all entities of this type (requires READ permission)
      */
-    public abstract Collection<T> getAll();
+    public static <T> Collection<T> getAll() {
+        throw new UnsupportedOperationException("Override in subclass");
+    }
     
     /**
      * Get all entities of this type with Actor context for authorization
      * 
      * @param actor The Actor making the request (for authorization)
      */
-    public Collection<T> getAll(Actor actor) {
-        if (!checkPermission(actor, ACTION_READ, getResourceName())) {
-            return null;
-        }
-        return getAll();
+    public static <T> Collection<T> getAll(Actor actor) {
+        throw new UnsupportedOperationException("Override in subclass");
     }
     
     /**
      * Get entity by unique key (requires READ permission)
      */
-    public abstract T getByKey(String key);
+    public static <T> T getByKey(String key) {
+        throw new UnsupportedOperationException("Override in subclass");
+    }
     
     /**
      * Get entity by key with Actor context for authorization
      */
-    public T getByKey(Actor actor, String key) {
-        if (!checkPermission(actor, ACTION_READ, getResourceName())) {
-            return null;
-        }
-        return getByKey(key);
+    public static <T> T getByKey(Actor actor, String key) {
+        throw new UnsupportedOperationException("Override in subclass");
     }
     
     /**
      * Create a new entity (requires CREATE permission)
      */
-    public abstract T create(Object... params);
+    public static <T> T create(Object... params) {
+        throw new UnsupportedOperationException("Override in subclass");
+    }
     
     /**
      * Create with Actor context for authorization
      */
-    public T create(Actor actor, Object... params) {
-        if (!checkPermission(actor, ACTION_CREATE, getResourceName())) {
-            return null;
-        }
-        return create(params);
+    public static <T> T create(Actor actor, Object... params) {
+        throw new UnsupportedOperationException("Override in subclass");
     }
     
     /**
      * Update an existing entity (requires UPDATE permission)
      */
-    public abstract boolean update(T entity);
+    public static <T> boolean update(T entity) {
+        throw new UnsupportedOperationException("Override in subclass");
+    }
     
     /**
      * Update with Actor context for authorization
      */
-    public boolean update(Actor actor, T entity) {
-        if (!checkPermission(actor, ACTION_UPDATE, getResourceName())) {
-            return false;
-        }
-        return update(entity);
+    public static <T> boolean update(Actor actor, T entity) {
+        throw new UnsupportedOperationException("Override in subclass");
     }
     
     /**
      * Delete an entity (requires DELETE permission)
      */
-    public abstract boolean delete(T entity);
+    public static <T> boolean delete(T entity) {
+        throw new UnsupportedOperationException("Override in subclass");
+    }
     
     /**
      * Delete with Actor context for authorization
      */
-    public boolean delete(Actor actor, T entity) {
-        if (!checkPermission(actor, ACTION_DELETE, getResourceName())) {
-            return false;
-        }
-        return delete(entity);
+    public static <T> boolean delete(Actor actor, T entity) {
+        throw new UnsupportedOperationException("Override in subclass");
     }
     
     /**
      * Validate entity before save
      */
-    protected abstract boolean validate(T entity);
+    protected static <T> boolean validate(T entity) {
+        throw new UnsupportedOperationException("Override in subclass");
+    }
     
     /**
      * Get the resource name for this manager (for authorization logging)
      */
-    protected abstract String getResourceName();
+    protected static String getResourceName() {
+        throw new UnsupportedOperationException("Override in subclass");
+    }
 }

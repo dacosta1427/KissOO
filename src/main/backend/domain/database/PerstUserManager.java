@@ -1,5 +1,6 @@
 package domain.database;
 
+import domain.Actor;
 import domain.PerstUser;
 import java.util.Collection;
 import java.util.ArrayList;
@@ -10,6 +11,9 @@ import java.util.List;
  * 
  * This is the "Manager at the Gate" - ALL access to PerstUser entities
  * must go through this class.
+ * 
+ * All methods are static - no singleton needed. Thread safety is handled
+ * by PerstHelper which uses thread-local PerstContext.
  * 
  * Responsibilities:
  * - CRUD operations
@@ -22,37 +26,81 @@ import java.util.List;
  * from UserData and pass it to Manager methods:
  * 
  *   UserData ud = servlet.getUserData();
- *   Actor actor = ActorManager.getInstance().getByUserId((int) ud.getUserId());
- *   PerstUser user = PerstUserManager.getInstance().getByKey(actor, username);
+ *   Actor actor = ActorManager.getByUserId((int) ud.getUserId());
+ *   PerstUser user = PerstUserManager.getByKey(actor, username);
  */
 public class PerstUserManager extends BaseManager<PerstUser> {
     
-    private static PerstUserManager instance;
+    private PerstUserManager() {}  // Prevent instantiation
     
-    private PerstUserManager() {}
+    // ========== Static Authorization-Aware Methods ==========
     
-    public static synchronized PerstUserManager getInstance() {
-        if (instance == null) {
-            instance = new PerstUserManager();
+    /**
+     * Get all PerstUsers (with authorization check)
+     */
+    public static Collection<PerstUser> getAll(Actor actor) {
+        if (!checkPermission(actor, ACTION_READ, "PerstUser")) {
+            return null;
         }
-        return instance;
+        return getAll();
     }
     
-    @Override
-    protected String getResourceName() {
-        return "PerstUser";
+    /**
+     * Get PerstUser by key (with authorization check)
+     */
+    public static PerstUser getByKey(Actor actor, String key) {
+        if (!checkPermission(actor, ACTION_READ, "PerstUser")) {
+            return null;
+        }
+        return getByKey(key);
     }
     
-    @Override
-    public Collection<PerstUser> getAll() {
+    /**
+     * Create PerstUser (with authorization check)
+     */
+    public static PerstUser create(Actor actor, Object... params) {
+        if (!checkPermission(actor, ACTION_CREATE, "PerstUser")) {
+            return null;
+        }
+        return create(params);
+    }
+    
+    /**
+     * Update PerstUser (with authorization check)
+     */
+    public static boolean update(Actor actor, PerstUser user) {
+        if (!checkPermission(actor, ACTION_UPDATE, "PerstUser")) {
+            return false;
+        }
+        return update(user);
+    }
+    
+    /**
+     * Delete PerstUser (with authorization check)
+     */
+    public static boolean delete(Actor actor, PerstUser user) {
+        if (!checkPermission(actor, ACTION_DELETE, "PerstUser")) {
+            return false;
+        }
+        return delete(user);
+    }
+    
+    // ========== Static Base Methods ==========
+    
+    /**
+     * Get all PerstUsers (no authorization)
+     */
+    public static Collection<PerstUser> getAll() {
         if (!isPerstAvailable()) {
             return new ArrayList<>();
         }
         return PerstHelper.retrieveAllObjects(PerstUser.class);
     }
     
-    @Override
-    public PerstUser getByKey(String key) {
+    /**
+     * Get PerstUser by username
+     */
+    public static PerstUser getByKey(String key) {
         if (!isPerstAvailable()) {
             return null;
         }
@@ -64,7 +112,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
      * 
      * @return User if authenticated, null otherwise
      */
-    public PerstUser authenticate(String username, String password) {
+    public static PerstUser authenticate(String username, String password) {
         if (!isPerstAvailable() || username == null || password == null) {
             return null;
         }
@@ -82,7 +130,6 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         // Support both plain text and SHA-256 (64 chars)
         if (storedPassword.length() == 64) {
             // SHA-256 hash comparison would go here
-            // For now, simple comparison
             return storedPassword.equals(password) ? user : null;
         } else {
             // Plain text comparison
@@ -90,8 +137,10 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         }
     }
     
-    @Override
-    public PerstUser create(Object... params) {
+    /**
+     * Create a new PerstUser
+     */
+    public static PerstUser create(Object... params) {
         if (!isPerstAvailable()) {
             return null;
         }
@@ -122,8 +171,10 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         return user;
     }
     
-    @Override
-    public boolean update(PerstUser user) {
+    /**
+     * Update a PerstUser
+     */
+    public static boolean update(PerstUser user) {
         if (!isPerstAvailable() || user == null) {
             return false;
         }
@@ -136,8 +187,10 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         return true;
     }
     
-    @Override
-    public boolean delete(PerstUser user) {
+    /**
+     * Delete a PerstUser
+     */
+    public static boolean delete(PerstUser user) {
         if (!isPerstAvailable() || user == null) {
             return false;
         }
@@ -146,8 +199,10 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         return true;
     }
     
-    @Override
-    protected boolean validate(PerstUser user) {
+    /**
+     * Validate a PerstUser
+     */
+    public static boolean validate(PerstUser user) {
         if (user == null) {
             return false;
         }
@@ -163,7 +218,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
     /**
      * Update password
      */
-    public boolean changePassword(String username, String oldPassword, String newPassword) {
+    public static boolean changePassword(String username, String oldPassword, String newPassword) {
         PerstUser user = authenticate(username, oldPassword);
         if (user == null) {
             return false;
@@ -176,7 +231,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
     /**
      * Reset password (admin function)
      */
-    public boolean resetPassword(String username, String newPassword) {
+    public static boolean resetPassword(String username, String newPassword) {
         PerstUser user = getByKey(username);
         if (user == null) {
             return false;
@@ -189,7 +244,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
     /**
      * Deactivate user (soft delete)
      */
-    public boolean deactivate(String username) {
+    public static boolean deactivate(String username) {
         PerstUser user = getByKey(username);
         if (user == null) {
             return false;
@@ -202,7 +257,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
     /**
      * Activate user
      */
-    public boolean activate(String username) {
+    public static boolean activate(String username) {
         PerstUser user = getByKey(username);
         if (user == null) {
             return false;
@@ -215,16 +270,18 @@ public class PerstUserManager extends BaseManager<PerstUser> {
     /**
      * Check if user exists
      */
-    public boolean exists(String username) {
+    public static boolean exists(String username) {
         return getByKey(username) != null;
     }
     
     /**
      * Get all active users
      */
-    public List<PerstUser> getActiveUsers() {
+    public static List<PerstUser> getActiveUsers() {
         List<PerstUser> result = new ArrayList<>();
         Collection<PerstUser> all = getAll();
+        
+        if (all == null) return result;
         
         for (PerstUser user : all) {
             if (user.isActive()) {
