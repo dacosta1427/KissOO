@@ -4,6 +4,9 @@ import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
 import domain.database.PerstHelper
 import domain.kissweb.PerstConfig
+import domain.kissweb.PerstContext
+import domain.PerstUser
+import domain.Actor
 import java.util.function.Consumer
 
 class KissInit {
@@ -45,6 +48,42 @@ class KissInit {
      * Code to run once the database is open but before the app is running.
      */
     static void init2(Connection db) {
-        // If you use db, make sure you commit.
+        // Index all existing PerstUsers and Actors for fast lookup
+        if (PerstContext.getInstance().isAvailable()) {
+            indexPerstUsers()
+            indexActors()
+        }
+    }
+    
+    /**
+     * Index all PerstUsers for fast lookup
+     */
+    private static void indexPerstUsers() {
+        try {
+            def users = PerstContext.getInstance().retrieveAllUsers(PerstUser)
+            println "[KissInit] Indexing ${users.size()} PerstUsers..."
+            users.each { PerstUser user ->
+                user.index()
+            }
+            println "[KissInit] PerstUser indexing complete"
+        } catch (Exception e) {
+            println "[KissInit] Warning: Could not index PerstUsers: ${e.message}"
+        }
+    }
+    
+    /**
+     * Index all Actors for fast lookup
+     */
+    private static void indexActors() {
+        try {
+            def actors = PerstContext.getInstance().retrieveAllObjects(Actor)
+            println "[KissInit] Indexing ${actors.size()} Actors..."
+            actors.each { Actor actor ->
+                actor.index()
+            }
+            println "[KissInit] Actor indexing complete"
+        } catch (Exception e) {
+            println "[KissInit] Warning: Could not index Actors: ${e.message}"
+        }
     }
 }

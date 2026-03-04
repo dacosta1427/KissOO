@@ -3,15 +3,21 @@ package domain;
 import org.garret.perst.continuous.CVersion;
 
 /**
- * Actor - Represents an entity that can own and perform actions on OOVs.
+ * Actor - Represents an entity that can own and perform actions on resources.
+ * This is a generic entity - extend it for domain-specific behavior.
  */
 public class Actor extends CVersion {
     
     private String uuid;
     private String name;
-    private String type;  // EMPLOYEE, CORPORATE, RETAIL
+    private String type;  // Generic type field - customize for your domain
     private boolean active = true;
     private long createdDate;
+    private transient PerstUser perstUser;  // Linked PerstUser for authentication
+    
+    // Static in-memory indexes
+    private static java.util.Map<Integer, Actor> userIdIndex = new java.util.HashMap<>();
+    private static java.util.Map<String, Actor> uuidIndex = new java.util.HashMap<>();
     
     public Actor() {
         this.createdDate = System.currentTimeMillis();
@@ -24,7 +30,32 @@ public class Actor extends CVersion {
         this.uuid = java.util.UUID.randomUUID().toString();
     }
     
-    // Manual getters/setters (no Lombok dependency)
+    // Static finder methods
+    public static Actor findByUserId(int userId) {
+        return userIdIndex.get(userId);
+    }
+    
+    public static Actor findByUuid(String uuid) {
+        return uuidIndex.get(uuid);
+    }
+    
+    public void index() {
+        if (uuid != null && !uuid.isEmpty()) {
+            uuidIndex.put(uuid, this);
+        }
+        if (perstUser != null && perstUser.getUserId() > 0) {
+            userIdIndex.put(perstUser.getUserId(), this);
+        }
+    }
+    
+    public void removeIndex() {
+        uuidIndex.remove(uuid);
+        if (perstUser != null && perstUser.getUserId() > 0) {
+            userIdIndex.remove(perstUser.getUserId());
+        }
+    }
+    
+    // Manual getters/setters
     public String getUuid() { return uuid; }
     public void setUuid(String uuid) { this.uuid = uuid; }
     
@@ -39,6 +70,9 @@ public class Actor extends CVersion {
     
     public long getCreatedDate() { return createdDate; }
     public void setCreatedDate(long createdDate) { this.createdDate = createdDate; }
+    
+    public PerstUser getPerstUser() { return perstUser; }
+    public void setPerstUser(PerstUser perstUser) { this.perstUser = perstUser; }
     
     public java.util.Map<String, Object> toJSON() {
         java.util.Map<String, Object> json = new java.util.HashMap<>();
