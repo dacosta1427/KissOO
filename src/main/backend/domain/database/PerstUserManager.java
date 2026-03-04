@@ -16,7 +16,14 @@ import java.util.List;
  * - Validation
  * - Authentication
  * - Password management
- * - Authorization checks (future)
+ * - Authorization checks
+ * 
+ * IMPORTANT: For authorization, services must obtain the current Actor
+ * from UserData and pass it to Manager methods:
+ * 
+ *   UserData ud = servlet.getUserData();
+ *   Actor actor = ActorManager.getInstance().getByUserId((int) ud.getUserId());
+ *   PerstUser user = PerstUserManager.getInstance().getByKey(actor, username);
  */
 public class PerstUserManager extends BaseManager<PerstUser> {
     
@@ -29,6 +36,11 @@ public class PerstUserManager extends BaseManager<PerstUser> {
             instance = new PerstUserManager();
         }
         return instance;
+    }
+    
+    @Override
+    protected String getResourceName() {
+        return "PerstUser";
     }
     
     @Override

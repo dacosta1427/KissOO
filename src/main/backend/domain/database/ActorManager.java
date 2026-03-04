@@ -15,8 +15,15 @@ import java.util.List;
  * - CRUD operations
  * - Validation
  * - Business logic
- * - Authorization checks (future)
+ * - Authorization checks
  * - Audit logging (future)
+ * 
+ * IMPORTANT: For authorization, services must obtain the current Actor
+ * from UserData and pass it to Manager methods:
+ * 
+ *   UserData ud = servlet.getUserData();
+ *   Actor actor = ActorManager.getInstance().getByUserId(ud.getUserId());
+ *   ActorManager.getInstance().create(actor, name, type);  // checks authorization
  */
 public class ActorManager extends BaseManager<Actor> {
     
@@ -29,6 +36,11 @@ public class ActorManager extends BaseManager<Actor> {
             instance = new ActorManager();
         }
         return instance;
+    }
+    
+    @Override
+    protected String getResourceName() {
+        return "Actor";
     }
     
     @Override
@@ -57,6 +69,19 @@ public class ActorManager extends BaseManager<Actor> {
         return PerstHelper.retrieveObject(Actor.class, uuid);
     }
     
+    /**
+     * Get Actor by user ID (from UserData.getUserId())
+     * 
+     * @param userId The user ID from UserData
+     * @return The Actor linked to this userId, or null
+     */
+    public Actor getByUserId(int userId) {
+        if (!isPerstAvailable()) {
+            return null;
+        }
+        return Actor.findByUserId(userId);
+    }
+    
     @Override
     public Actor create(Object... params) {
         if (!isPerstAvailable()) {
@@ -71,6 +96,10 @@ public class ActorManager extends BaseManager<Actor> {
         String type = (String) params[1];
         
         Actor actor = new Actor(name, type);
+        
+        if (params.length > 2 && params[2] instanceof Integer) {
+            actor.setUserId((Integer) params[2]);
+        }
         
         if (!validate(actor)) {
             throw new IllegalArgumentException("Validation failed for Actor");
