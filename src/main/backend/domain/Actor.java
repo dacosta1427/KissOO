@@ -8,7 +8,7 @@ import java.util.Set;
  * Actor - Represents an entity that can own and perform actions on resources.
  * 
  * IMPORTANT: Every Actor MUST have an Agreement. Without an Agreement,
- * the Actor cannot perform any operations in the system.
+ * the Actor CANNOT exist. This is enforced at construction time.
  * 
  * This is a generic entity - extend it for domain-specific behavior.
  */
@@ -26,20 +26,19 @@ public class Actor extends CVersion {
     private static java.util.Map<Integer, Actor> userIdIndex = new java.util.HashMap<>();
     private static java.util.Map<String, Actor> uuidIndex = new java.util.HashMap<>();
     
-    public Actor() {
-        this.createdDate = System.currentTimeMillis();
-    }
-    
+    /**
+     * Create Actor with Agreement - MANDATORY
+     */
     public Actor(String name, String type, Agreement agreement) {
-        this();
+        this.createdDate = System.currentTimeMillis();
         this.name = name;
         this.type = type;
         this.uuid = java.util.UUID.randomUUID().toString();
+        
+        if (agreement == null) {
+            throw new IllegalArgumentException("Actor MUST have an Agreement");
+        }
         this.agreement = agreement;
-    }
-    
-    public Actor(String name, String type) {
-        this(name, type, new Agreement("USER"));
     }
     
     // Static finder methods

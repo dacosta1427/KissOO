@@ -2,6 +2,8 @@ package domain.database;
 
 import domain.Actor;
 import domain.Agreement;
+import domain.CRUD;
+import domain.EndpointMethod;
 import domain.PerstUser;
 import java.util.Collection;
 
@@ -29,15 +31,6 @@ import java.util.Collection;
 public abstract class BaseManager<T> {
     
     /**
-     * Action constants for authorization
-     */
-    public static final String ACTION_CREATE = "create";
-    public static final String ACTION_READ = "read";
-    public static final String ACTION_UPDATE = "update";
-    public static final String ACTION_DELETE = "delete";
-    public static final String ACTION_ADMIN = "admin";
-    
-    /**
      * Check if Perst is available
      */
     protected static boolean isPerstAvailable() {
@@ -45,48 +38,46 @@ public abstract class BaseManager<T> {
     }
     
     /**
-     * Check if an Actor has permission to perform an action.
+     * Check if an Actor has permission to perform an action (type-safe with Class)
      * 
      * This checks the Actor's Agreement:
      * 1. Actor must exist
-     * 2. Actor must have an Agreement
+     * 2. Actor MUST have an Agreement (enforced at construction)
      * 3. Agreement must be valid (active, within date range)
      * 4. Agreement must grant permission for the resource/action
      * 
      * @param actor The Actor making the request (can be null for unauthenticated)
-     * @param action The action being performed (ACTION_CREATE, ACTION_READ, etc.)
-     * @param resource The resource being accessed (e.g., "Actor", "PerstUser")
+     * @param action The action (CRUD.CREATE, CRUD.READ, etc.)
+     * @param resourceClass The resource class (e.g., Actor.class)
      * @return true if authorized, false otherwise
      */
-    protected static boolean checkPermission(Actor actor, String action, String resource) {
+    protected static boolean checkPermission(Actor actor, String action, Class<?> resourceClass) {
         // 1. Check if actor exists
         if (actor == null) {
-            // Deny all for unauthenticated except READ on public resources
-            return ACTION_READ.equals(action);
+            // Deny all for unauthenticated
+            return false;
         }
         
-        // 2. MANDATORY: Actor must have an Agreement
+        // 2. Actor MUST have an Agreement (enforced at construction, but safe check)
         Agreement agreement = actor.getAgreement();
         if (agreement == null) {
-            return false;  // No agreement = no permissions
+            return false;
         }
         
         // 3. Check if Agreement grants permission
-        return agreement.grants(resource, action);
+        return agreement.grants(resourceClass, action);
     }
     
     /**
      * Check if an Actor has permission for a specific endpoint.
      * 
      * @param actor The Actor making the request
-     * @param action The action being performed
-     * @param resource The resource being accessed
-     * @param endpoint The specific endpoint (e.g., "services.ActorService.createActor")
+     * @param endpoint The EndpointMethod being called
      * @return true if authorized, false otherwise
      */
-    protected static boolean checkPermission(Actor actor, String action, String resource, String endpoint) {
+    protected static boolean checkPermission(Actor actor, EndpointMethod endpoint) {
         if (actor == null) {
-            return ACTION_READ.equals(action);
+            return false;
         }
         
         Agreement agreement = actor.getAgreement();
@@ -94,7 +85,7 @@ public abstract class BaseManager<T> {
             return false;
         }
         
-        return agreement.grants(resource, action, endpoint);
+        return agreement.grants(endpoint, endpoint.getResourceClass(), CRUD.EXECUTE);
     }
     
     /**
@@ -177,9 +168,9 @@ public abstract class BaseManager<T> {
     }
     
     /**
-     * Get the resource name for this manager (for authorization logging)
+     * Get the resource class for this manager (for authorization)
      */
-    protected static String getResourceName() {
+    protected static <T> Class<T> getResourceClass() {
         throw new UnsupportedOperationException("Override in subclass");
     }
 }

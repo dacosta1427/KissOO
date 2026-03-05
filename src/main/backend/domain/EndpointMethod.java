@@ -3,6 +3,7 @@ package domain;
 import org.kissweb.json.JSONObject;
 import org.kissweb.database.Connection;
 import org.kissweb.restServer.ProcessServlet;
+import org.kissweb.restServer.UserData;
 
 /**
  * EndpointMethod - Abstract base for all service endpoints.
@@ -12,25 +13,34 @@ import org.kissweb.restServer.ProcessServlet;
  * - External (default): callable via REST API
  * - Internal: callable only internally, not via REST
  * 
+ * IMPORTANT: Every endpoint MUST check Agreement permission before executing.
+ * This is done automatically in execute() - just call it!
+ * 
  * Usage:
  *   public class ActorService {
- *       public static final EndpointMethod GET_ACTOR = new GetActorEndpoint();
- *       public static final EndpointMethod DO_INTERNAL = new InternalCalcEndpoint();
+ *       public static final EndpointMethod GET_ACTOR = new GetActorEndpoint(Actor.class);
+ *       public static final EndpointMethod DO_INTERNAL = new InternalCalcEndpoint(Actor.class, false);
  *   }
- * 
- * Where the endpoint class implements the actual logic.
  */
 public abstract class EndpointMethod {
     
     private final String name;
+    private final Class<?> resourceClass;  // Type-safe resource class
     private final boolean external;  // true = callable via REST
     
-    protected EndpointMethod(String name) {
-        this(name, true);  // Default: external
+    /**
+     * Create an external endpoint
+     */
+    protected EndpointMethod(String name, Class<?> resourceClass) {
+        this(name, resourceClass, true);
     }
     
-    protected EndpointMethod(String name, boolean external) {
+    /**
+     * Create an endpoint (external or internal)
+     */
+    protected EndpointMethod(String name, Class<?> resourceClass, boolean external) {
         this.name = name;
+        this.resourceClass = resourceClass;
         this.external = external;
     }
     
@@ -39,6 +49,13 @@ public abstract class EndpointMethod {
      */
     public String getName() {
         return name;
+    }
+    
+    /**
+     * Get the resource class this endpoint operates on
+     */
+    public Class<?> getResourceClass() {
+        return resourceClass;
     }
     
     /**
@@ -56,16 +73,41 @@ public abstract class EndpointMethod {
     }
     
     /**
-     * Execute the endpoint.
+     * Execute the endpoint with automatic Agreement authorization.
      * 
-     * Gate: checks if external calls are allowed.
-     * Override doExecute() for actual logic.
+     * This is the gate - it checks:
+     * 1. Is this an external call to an internal endpoint? → Deny
+     * 2. Is there a caller with an Agreement? → Check permission
+     * 3. Otherwise → Allow (for backward compatibility)
      */
     public boolean execute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
+        // 1. Check if external call to internal endpoint
         if (!isExternal()) {
             return false;  // Internal only - deny external calls
         }
+        
+        // 2. Get caller and check Agreement
+        Actor caller = getCaller(servlet);
+        if (caller != null) {
+            // Agreement MUST exist (enforced by Actor constructor)
+            if (!caller.getAgreement().grants(this, resourceClass, CRUD.EXECUTE)) {
+                return false;  // Not authorized
+            }
+        }
+        
+        // 3. Execute the actual logic
         return doExecute(in, out, db, servlet);
+    }
+    
+    /**
+     * Helper to get authenticated Actor from servlet
+     */
+    private Actor getCaller(ProcessServlet servlet) {
+        UserData ud = servlet.getUserData();
+        if (ud == null) {
+            return null;
+        }
+        return ActorManager.getByUserId((int) ud.getUserId());
     }
     
     /**
@@ -75,7 +117,8 @@ public abstract class EndpointMethod {
     
     @Override
     public String toString() {
-        return "EndpointMethod{" + name + (external ? " [external]" : " [internal]") + "}";
+        return "EndpointMethod{" + name + ", resource=" + resourceClass.getSimpleName() + 
+               (external ? " [external]" : " [internal]") + "}";
     }
     
     @Override
