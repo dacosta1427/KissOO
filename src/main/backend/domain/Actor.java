@@ -124,14 +124,6 @@ public class Actor extends CVersion {
         return agreement != null && agreement.hasGroup(groupName);
     }
     
-    /**
-     * Check if this actor can execute an endpoint
-     */
-    public boolean canExecute(EndpointMethod endpoint) {
-        if (agreement == null) return false;
-        return agreement.grants(endpoint, "Actor", "execute");
-    }
-    
     public java.util.Map<String, Object> toJSON() {
         java.util.Map<String, Object> json = new java.util.HashMap<>();
         json.put("uuid", uuid);
