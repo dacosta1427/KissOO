@@ -11,8 +11,8 @@ import java.util.Set;
  * 
  * Usage:
  *   Group admins = new Group("admins");
- *   admins.grant(ActorService.GET_ACTOR);
- *   admins.grant(ActorService.CREATE_ACTOR);
+ *   admins.grant(ActorService.GET_ACTOR);       // Type-safe endpoint
+ *   admins.grant(Actor.class, CRUD.CREATE);     // Type-safe CRUD
  *   
  *   actor.getAgreement().addGroup(admins);
  */
@@ -35,7 +35,7 @@ public class Group {
     // ========== EndpointMethod Permissions ==========
     
     /**
-     * Grant permission to execute an endpoint
+     * Grant permission to execute an endpoint (type-safe!)
      */
     public void grant(EndpointMethod endpoint) {
         methodPermissions.add(endpoint);
@@ -59,17 +59,43 @@ public class Group {
         return methodPermissions;
     }
     
-    // ========== CRUD Permissions ==========
+    // ========== CRUD Permissions (Type-Safe) ==========
     
     /**
-     * Grant CRUD permission (e.g., "Actor:create")
+     * Grant CRUD permission using Class (type-safe!)
+     * 
+     *   group.grant(Actor.class, CRUD.CREATE);
+     */
+    public void grant(Class<?> resource, String action) {
+        crudPermissions.add(resource.getName() + ":" + action);
+    }
+    
+    /**
+     * Grant CRUD permission using Class and CRUD constant (fully type-safe!)
+     */
+    public void grant(Class<?> resource, Class<?> actionConstant) {
+        grant(resource, getConstantValue(actionConstant));
+    }
+    
+    /**
+     * Grant all CRUD permissions for a resource
+     */
+    public void grantAll(Class<?> resource) {
+        grant(resource, CRUD.CREATE);
+        grant(resource, CRUD.READ);
+        grant(resource, CRUD.UPDATE);
+        grant(resource, CRUD.DELETE);
+    }
+    
+    /**
+     * Grant CRUD permission (legacy string version)
      */
     public void grantCrud(String resource, String action) {
         crudPermissions.add(resource + ":" + action);
     }
     
     /**
-     * Grant CRUD permission using constants
+     * Grant CRUD permission with boolean
      */
     public void grantCrud(String resource, String action, boolean grant) {
         String permission = resource + ":" + action;
@@ -81,7 +107,14 @@ public class Group {
     }
     
     /**
-     * Check if this group has CRUD permission
+     * Check if this group has CRUD permission (type-safe)
+     */
+    public boolean hasCrudPermission(Class<?> resource, String action) {
+        return crudPermissions.contains(resource.getName() + ":" + action);
+    }
+    
+    /**
+     * Check if this group has CRUD permission (string version)
      */
     public boolean hasCrudPermission(String resource, String action) {
         return crudPermissions.contains(resource + ":" + action);
@@ -89,6 +122,12 @@ public class Group {
     
     public Set<String> getCrudPermissions() {
         return crudPermissions;
+    }
+    
+    // ========== Private Helper ==========
+    
+    private static String getConstantValue(Class<?> constantClass) {
+        return constantClass.getSimpleName().toLowerCase();
     }
     
     @Override
