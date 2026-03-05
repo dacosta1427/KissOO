@@ -1,11 +1,13 @@
 package services;
 
 import domain.Actor;
+import domain.EndpointMethod;
 import domain.database.ActorManager;
 import domain.database.BaseManager;
 import org.kissweb.json.JSONObject;
 import org.kissweb.restServer.ProcessServlet;
 import org.kissweb.restServer.UserData;
+import org.kissweb.database.Connection;
 
 import java.util.Collection;
 import java.util.ArrayList;
@@ -33,14 +35,205 @@ import java.util.Map;
  * 
  * The Manager methods automatically identify the action (READ, CREATE, UPDATE, DELETE)
  * and check permissions. Service just calls the method.
+ * 
+ * ======================= ENDPOINTMETHOD PATTERN =======================
+ * 
+ * This service also demonstrates the EndpointMethod pattern for type-safe
+ * authorization. Each endpoint is defined as a static EndpointMethod that
+ * can be granted via Agreement.
+ * 
+ * Usage in Agreement:
+ *   Agreement agreement = new Agreement("ADMIN");
+ *   agreement.grant(ActorService.GET_ACTOR);      // Type-safe!
+ *   agreement.grant(ActorService.CREATE_ACTOR);
+ * 
+ * OR via CRUD:
+ *   agreement.grant("Actor", "read");
+ *   agreement.grant("Actor", "create");
  */
 public class ActorService {
+    
+    // ======================= ENDPOINT METHODS =======================
+    // These can be granted via Agreement for type-safe authorization
+    
+    /** Get a single actor by UUID */
+    public static final EndpointMethod GET_ACTOR = new EndpointMethod("services.ActorService.getActor") {
+        @Override
+        protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
+            // Inline implementation - authorization done by Agreement
+            Actor caller = getAuthenticatedActor(servlet);
+            if (caller == null) {
+                out.put("error", "Not authenticated");
+                return false;
+            }
+            
+            String uuid = in.getString("uuid");
+            if (uuid == null || uuid.isEmpty()) {
+                out.put("error", "uuid is required");
+                return false;
+            }
+            
+            Actor actor = ActorManager.getByUuid(caller, uuid);
+            if (actor == null) {
+                out.put("error", "Not authorized or Actor not found");
+                return false;
+            }
+            
+            out.put("actor", actor.toJSON());
+            out.put("source", "perst");
+            return true;
+        }
+    };
+    
+    /** Get all actors */
+    public static final EndpointMethod GET_ALL_ACTORS = new EndpointMethod("services.ActorService.getAllActors") {
+        @Override
+        protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
+            Actor caller = getAuthenticatedActor(servlet);
+            if (caller == null) {
+                out.put("error", "Not authenticated");
+                return false;
+            }
+            
+            Collection<Actor> actors = ActorManager.getAll(caller);
+            if (actors == null) {
+                out.put("error", "Not authorized to list Actors");
+                return false;
+            }
+            
+            List<Map<String, Object>> actorList = new ArrayList<>();
+            for (Actor actor : actors) {
+                actorList.add(actor.toJSON());
+            }
+            out.put("actors", actorList);
+            out.put("source", "perst");
+            out.put("count", actorList.size());
+            return true;
+        }
+    };
+    
+    /** Create a new actor */
+    public static final EndpointMethod CREATE_ACTOR = new EndpointMethod("services.ActorService.createActor") {
+        @Override
+        protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
+            Actor caller = getAuthenticatedActor(servlet);
+            if (caller == null) {
+                out.put("error", "Not authenticated");
+                return false;
+            }
+            
+            String name = in.getString("name");
+            String type = in.getString("type");
+            if (type == null || type.isEmpty()) type = "RETAIL";
+            
+            if (name == null || name.isEmpty()) {
+                out.put("error", "name is required");
+                return false;
+            }
+            
+            Actor actor = ActorManager.create(caller, name, type);
+            if (actor == null) {
+                out.put("error", "Not authorized to create Actor");
+                return false;
+            }
+            
+            out.put("actor", actor.toJSON());
+            out.put("status", "created");
+            return true;
+        }
+    };
+    
+    /** Update an actor */
+    public static final EndpointMethod UPDATE_ACTOR = new EndpointMethod("services.ActorService.updateActor") {
+        @Override
+        protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
+            Actor caller = getAuthenticatedActor(servlet);
+            if (caller == null) {
+                out.put("error", "Not authenticated");
+                return false;
+            }
+            
+            String uuid = in.getString("uuid");
+            String name = in.getString("name");
+            
+            if (uuid == null || uuid.isEmpty()) {
+                out.put("error", "uuid is required");
+                return false;
+            }
+            
+            Actor actor = ActorManager.getByUuid(caller, uuid);
+            if (actor == null) {
+                out.put("error", "Not authorized or Actor not found");
+                return false;
+            }
+            
+            if (name != null && !name.isEmpty()) {
+                actor.setName(name);
+            }
+            
+            if (!ActorManager.update(caller, actor)) {
+                out.put("error", "Not authorized to update Actor");
+                return false;
+            }
+            
+            out.put("actor", actor.toJSON());
+            out.put("status", "updated");
+            return true;
+        }
+    };
+    
+    /** Delete an actor */
+    public static final EndpointMethod DELETE_ACTOR = new EndpointMethod("services.ActorService.deleteActor") {
+        @Override
+        protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
+            Actor caller = getAuthenticatedActor(servlet);
+            if (caller == null) {
+                out.put("error", "Not authenticated");
+                return false;
+            }
+            
+            String uuid = in.getString("uuid");
+            if (uuid == null || uuid.isEmpty()) {
+                out.put("error", "uuid is required");
+                return false;
+            }
+            
+            Actor actor = ActorManager.getByUuid(caller, uuid);
+            if (actor == null) {
+                out.put("error", "Not authorized or Actor not found");
+                return false;
+            }
+            
+            if (!ActorManager.delete(caller, actor)) {
+                out.put("error", "Not authorized to delete Actor");
+                return false;
+            }
+            
+            out.put("status", "deleted");
+            out.put("uuid", uuid);
+            return true;
+        }
+    };
+    
+    // ======================= INTERNAL ENDPOINTS =======================
+    // These are NOT callable via REST (internal only)
+    
+    /** Internal calculation - not accessible via REST */
+    public static final EndpointMethod DO_INTERNAL_CALC = new EndpointMethod("services.ActorService.doInternalCalc", false) {
+        @Override
+        protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
+            // Internal logic only - can only be called from within the app
+            return true;
+        }
+    };
+    
+    // ======================= HELPER METHODS =======================
     
     /**
      * Helper method to get authenticated Actor from servlet.
      * Returns null if not authenticated.
      */
-    private Actor getAuthenticatedActor(ProcessServlet servlet) {
+    private static Actor getAuthenticatedActor(ProcessServlet servlet) {
         UserData ud = servlet.getUserData();
         if (ud == null) {
             return null;
@@ -48,221 +241,42 @@ public class ActorService {
         return ActorManager.getByUserId((int) ud.getUserId());
     }
     
+    // ======================= LEGACY METHODS (still work) =======================
+    // These are kept for backward compatibility but delegate to EndpointMethods
+    
     /**
      * Get an actor by UUID using Perst
-     * 
-     * HTTP Request:
-     * {
-     *   "_class": "services.ActorService",
-     *   "_method": "getActor",
-     *   "_uuid": "session-uuid",
-     *   "uuid": "actor-uuid"
-     * }
-     * 
-     * @param injson Input JSON with uuid
-     * @param outjson Output JSON with actor data
-     * @param db Connection (PostgreSQL)
-     * @param servlet Servlet reference
      */
-    public void getActor(JSONObject injson, JSONObject outjson, org.kissweb.database.Connection db, ProcessServlet servlet) {
-        // EARLY REJECTION: Authenticate first
-        Actor caller = getAuthenticatedActor(servlet);
-        if (caller == null) {
-            outjson.put("error", "Not authenticated");
-            return;
-        }
-        
-        String uuid = injson.getString("uuid");
-        if (uuid == null || uuid.isEmpty()) {
-            outjson.put("error", "uuid is required");
-            return;
-        }
-        
-        // Manager handles authorization (ACTION_READ) and lookup in one call
-        Actor actor = ActorManager.getByUuid(caller, uuid);
-        if (actor == null) {
-            outjson.put("error", "Not authorized or Actor not found");
-            return;
-        }
-        
-        outjson.put("actor", actor.toJSON());
-        outjson.put("source", "perst");
+    public void getActor(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        // Delegate to endpoint
+        GET_ACTOR.execute(injson, outjson, db, servlet);
     }
     
     /**
      * Get all actors using Perst
-     * 
-     * HTTP Request:
-     * {
-     *   "_class": "services.ActorService",
-     *   "_method": "getAllActors",
-     *   "_uuid": "session-uuid"
-     * }
-     * 
-     * @param injson Input JSON
-     * @param outjson Output JSON with actors array
-     * @param db Connection
-     * @param servlet Servlet reference
      */
-    public void getAllActors(JSONObject injson, JSONObject outjson, org.kissweb.database.Connection db, ProcessServlet servlet) {
-        // EARLY REJECTION: Authenticate first
-        Actor caller = getAuthenticatedActor(servlet);
-        if (caller == null) {
-            outjson.put("error", "Not authenticated");
-            return;
-        }
-        
-        // Manager handles authorization (ACTION_READ) - returns null if not authorized
-        Collection<Actor> actors = ActorManager.getAll(caller);
-        if (actors == null) {
-            outjson.put("error", "Not authorized to list Actors");
-            return;
-        }
-        
-        List<Map<String, Object>> actorList = new ArrayList<>();
-        for (Actor actor : actors) {
-            actorList.add(actor.toJSON());
-        }
-        outjson.put("actors", actorList);
-        outjson.put("source", "perst");
-        outjson.put("count", actorList.size());
+    public void getAllActors(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        GET_ALL_ACTORS.execute(injson, outjson, db, servlet);
     }
     
     /**
      * Create a new actor using Perst
-     * 
-     * HTTP Request:
-     * {
-     *   "_class": "services.ActorService",
-     *   "_method": "createActor",
-     *   "_uuid": "session-uuid",
-     *   "name": "John",
-     *   "type": "RETAIL"   // optional, defaults to RETAIL
-     * }
-     * 
-     * @param injson Input JSON with name and optional type
-     * @param outjson Output JSON with created actor
-     * @param db Connection
-     * @param servlet Servlet reference
      */
-    public void createActor(JSONObject injson, JSONObject outjson, org.kissweb.database.Connection db, ProcessServlet servlet) {
-        // EARLY REJECTION: Authenticate first
-        Actor caller = getAuthenticatedActor(servlet);
-        if (caller == null) {
-            outjson.put("error", "Not authenticated");
-            return;
-        }
-        
-        String name = injson.getString("name");
-        String type = injson.getString("type");
-        if (type == null || type.isEmpty())
-            type = "RETAIL";
-        
-        if (name == null || name.isEmpty()) {
-            outjson.put("error", "name is required");
-            return;
-        }
-        
-        // Manager handles authorization (ACTION_CREATE) - returns null if not authorized
-        Actor actor = ActorManager.create(caller, name, type);
-        if (actor == null) {
-            outjson.put("error", "Not authorized to create Actor");
-            return;
-        }
-        
-        outjson.put("actor", actor.toJSON());
-        outjson.put("status", "created");
+    public void createActor(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        CREATE_ACTOR.execute(injson, outjson, db, servlet);
     }
     
     /**
      * Update an actor
-     * 
-     * HTTP Request:
-     * {
-     *   "_class": "services.ActorService",
-     *   "_method": "updateActor",
-     *   "_uuid": "session-uuid",
-     *   "uuid": "actor-uuid",
-     *   "name": "new-name"
-     * }
      */
-    public void updateActor(JSONObject injson, JSONObject outjson, org.kissweb.database.Connection db, ProcessServlet servlet) {
-        // EARLY REJECTION: Authenticate first
-        Actor caller = getAuthenticatedActor(servlet);
-        if (caller == null) {
-            outjson.put("error", "Not authenticated");
-            return;
-        }
-        
-        String uuid = injson.getString("uuid");
-        String name = injson.getString("name");
-        
-        if (uuid == null || uuid.isEmpty()) {
-            outjson.put("error", "uuid is required");
-            return;
-        }
-        
-        // Get actor - needs READ permission
-        Actor actor = ActorManager.getByUuid(caller, uuid);
-        if (actor == null) {
-            outjson.put("error", "Not authorized or Actor not found");
-            return;
-        }
-        
-        // Update the actor locally
-        if (name != null && !name.isEmpty()) {
-            actor.setName(name);
-        }
-        
-        // Manager handles authorization (ACTION_UPDATE)
-        if (!ActorManager.update(caller, actor)) {
-            outjson.put("error", "Not authorized to update Actor");
-            return;
-        }
-        
-        outjson.put("actor", actor.toJSON());
-        outjson.put("status", "updated");
+    public void updateActor(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        UPDATE_ACTOR.execute(injson, outjson, db, servlet);
     }
     
     /**
      * Delete an actor
-     * 
-     * HTTP Request:
-     * {
-     *   "_class": "services.ActorService",
-     *   "_method": "deleteActor",
-     *   "_uuid": "session-uuid",
-     *   "uuid": "actor-uuid"
-     * }
      */
-    public void deleteActor(JSONObject injson, JSONObject outjson, org.kissweb.database.Connection db, ProcessServlet servlet) {
-        // EARLY REJECTION: Authenticate first
-        Actor caller = getAuthenticatedActor(servlet);
-        if (caller == null) {
-            outjson.put("error", "Not authenticated");
-            return;
-        }
-        
-        String uuid = injson.getString("uuid");
-        if (uuid == null || uuid.isEmpty()) {
-            outjson.put("error", "uuid is required");
-            return;
-        }
-        
-        // Get actor - needs READ permission
-        Actor actor = ActorManager.getByUuid(caller, uuid);
-        if (actor == null) {
-            outjson.put("error", "Not authorized or Actor not found");
-            return;
-        }
-        
-        // Manager handles authorization (ACTION_DELETE)
-        if (!ActorManager.delete(caller, actor)) {
-            outjson.put("error", "Not authorized to delete Actor");
-            return;
-        }
-        
-        outjson.put("status", "deleted");
-        outjson.put("uuid", uuid);
+    public void deleteActor(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        DELETE_ACTOR.execute(injson, outjson, db, servlet);
     }
 }

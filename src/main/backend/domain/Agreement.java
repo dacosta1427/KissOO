@@ -9,23 +9,28 @@ import java.util.Set;
  * Every Actor MUST have an Agreement - without it, the Actor cannot
  * perform any operations in the system.
  * 
- * Authorization is checked at two levels:
- * 1. Role-based: General permissions based on role
- * 2. Endpoint-based: Specific REST endpoint permissions
+ * Authorization is checked in order:
+ * 1. CRUD permissions: grant(resource, action) - simple create/read/update/delete
+ * 2. EndpointMethod permissions: grant(EndpointMethod) - specific method call
+ * 3. Group permissions: addGroup(Group) - via groups the actor belongs to
+ * 
+ * Everything is denied by default - explicit grant required.
  */
 public class Agreement {
     
     private String role;  // ADMIN, MANAGER, USER, GUEST, etc.
-    private Set<String> rolePermissions;  // e.g., "Actor:read", "Actor:write"
-    private Set<String> endpointPermissions;  // e.g., "services.ActorService.getActor"
+    private Set<String> crudPermissions;  // e.g., "Actor:create", "Actor:read"
+    private Set<EndpointMethod> methodPermissions;  // Type-safe endpoint permissions
+    private Set<Group> groups;  // Groups this actor belongs to
     private long validFrom;
     private Long validTo;  // null = infinite
     private boolean active = true;
     
     public Agreement() {
         this.validFrom = System.currentTimeMillis();
-        this.rolePermissions = new HashSet<>();
-        this.endpointPermissions = new HashSet<>();
+        this.crudPermissions = new HashSet<>();
+        this.methodPermissions = new HashSet<>();
+        this.groups = new HashSet<>();
     }
     
     public Agreement(String role) {
@@ -33,7 +38,7 @@ public class Agreement {
         this.role = role;
     }
     
-    // ========== Role-Based Permissions ==========
+    // ========== CRUD Permissions ==========
     
     public String getRole() {
         return role;
@@ -43,42 +48,95 @@ public class Agreement {
         this.role = role;
     }
     
-    public void addRolePermission(String permission) {
-        rolePermissions.add(permission);
+    /**
+     * Grant CRUD permission (e.g., "Actor:create")
+     */
+    public void grant(String resource, String action) {
+        crudPermissions.add(resource + ":" + action);
     }
     
-    public void removeRolePermission(String permission) {
-        rolePermissions.remove(permission);
+    /**
+     * Grant CRUD permission using constants
+     */
+    public void grant(String resource, String action, boolean grant) {
+        String permission = resource + ":" + action;
+        if (grant) {
+            crudPermissions.add(permission);
+        } else {
+            crudPermissions.remove(permission);
+        }
     }
     
-    public boolean hasRolePermission(String permission) {
-        return rolePermissions.contains(permission);
+    /**
+     * Revoke CRUD permission
+     */
+    public void revoke(String resource, String action) {
+        crudPermissions.remove(resource + ":" + action);
     }
     
-    public boolean hasRolePermission(String resource, String action) {
-        return rolePermissions.contains(resource + ":" + action);
+    /**
+     * Check CRUD permission
+     */
+    public boolean hasCrudPermission(String resource, String action) {
+        return crudPermissions.contains(resource + ":" + action);
     }
     
-    public Set<String> getRolePermissions() {
-        return rolePermissions;
+    public Set<String> getCrudPermissions() {
+        return crudPermissions;
     }
     
-    // ========== Endpoint-Based Permissions ==========
+    // ========== EndpointMethod Permissions ==========
     
-    public void addEndpointPermission(String endpoint) {
-        endpointPermissions.add(endpoint);
+    /**
+     * Grant permission to execute an endpoint (type-safe!)
+     */
+    public void grant(EndpointMethod endpoint) {
+        methodPermissions.add(endpoint);
     }
     
-    public void removeEndpointPermission(String endpoint) {
-        endpointPermissions.remove(endpoint);
+    /**
+     * Revoke endpoint permission
+     */
+    public void revoke(EndpointMethod endpoint) {
+        methodPermissions.remove(endpoint);
     }
     
-    public boolean hasEndpointPermission(String endpoint) {
-        return endpointPermissions.contains(endpoint);
+    /**
+     * Check if can execute this endpoint
+     */
+    public boolean canExecute(EndpointMethod endpoint) {
+        return methodPermissions.contains(endpoint);
     }
     
-    public Set<String> getEndpointPermissions() {
-        return endpointPermissions;
+    public Set<EndpointMethod> getMethodPermissions() {
+        return methodPermissions;
+    }
+    
+    // ========== Group Permissions ==========
+    
+    /**
+     * Add a group to this agreement
+     */
+    public void addGroup(Group group) {
+        groups.add(group);
+    }
+    
+    /**
+     * Remove a group
+     */
+    public void removeGroup(Group group) {
+        groups.remove(group);
+    }
+    
+    /**
+     * Check if actor belongs to a group
+     */
+    public boolean hasGroup(String groupName) {
+        return groups.stream().anyMatch(g -> g.getName().equals(groupName));
+    }
+    
+    public Set<Group> getGroups() {
+        return groups;
     }
     
     // ========== Validity ==========
@@ -115,36 +173,49 @@ public class Agreement {
         this.active = active;
     }
     
-    // ========== Utility ==========
+    // ========== Comprehensive Permission Check ==========
     
     /**
-     * Check if this agreement grants permission for an action on a resource.
-     * Uses wildcard matching: "*" means all.
+     * Check if this agreement grants permission for an action.
+     * Checks in order: CRUD → EndpointMethod → Groups
+     * Everything is denied by default.
+     * 
+     * @param endpoint The endpoint being called (can be null for CRUD-only check)
+     * @param resource The resource being accessed (e.g., "Actor")
+     * @param action The action (create, read, update, delete)
+     * @return true if authorized
      */
-    public boolean grants(String resource, String action, String endpoint) {
+    public boolean grants(EndpointMethod endpoint, String resource, String action) {
         // Must be valid
         if (!isValid()) return false;
         
-        // Check role permissions (wildcard support)
-        if (rolePermissions.contains("*") || 
-            rolePermissions.contains(resource + ":*") ||
-            rolePermissions.contains(resource + ":" + action)) {
+        // 1. Check CRUD permission
+        if (crudPermissions.contains("*") ||
+            crudPermissions.contains(resource + ":*") ||
+            crudPermissions.contains(resource + ":" + action)) {
             return true;
         }
         
-        // Check endpoint permissions
-        if (endpoint != null && endpointPermissions.contains(endpoint)) {
+        // 2. Check EndpointMethod permission
+        if (endpoint != null && methodPermissions.contains(endpoint)) {
             return true;
+        }
+        
+        // 3. Check via Groups
+        for (Group group : groups) {
+            if (group.canExecute(endpoint) || 
+                group.hasCrudPermission(resource, action)) {
+                return true;
+            }
         }
         
         return false;
     }
     
     /**
-     * Check using a fully qualified method reference.
-     * Format: "services.ActorService.createActor"
+     * Check CRUD permission only (no endpoint)
      */
     public boolean grants(String resource, String action) {
-        return grants(resource, action, null);
+        return grants(null, resource, action);
     }
 }

@@ -1,6 +1,8 @@
 package domain;
 
 import org.garret.perst.continuous.CVersion;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Actor - Represents an entity that can own and perform actions on resources.
@@ -94,6 +96,42 @@ public class Actor extends CVersion {
      * Set the Actor's Agreement.
      */
     public void setAgreement(Agreement agreement) { this.agreement = agreement; }
+    
+    // ========== Convenience Methods for Groups ==========
+    
+    /**
+     * Add a group to this actor's agreement
+     */
+    public void addToGroup(Group group) {
+        if (agreement == null) {
+            agreement = new Agreement();
+        }
+        agreement.addGroup(group);
+    }
+    
+    /**
+     * Remove a group from this actor's agreement
+     */
+    public void removeFromGroup(Group group) {
+        if (agreement != null) {
+            agreement.removeGroup(group);
+        }
+    }
+    
+    /**
+     * Check if actor belongs to a group
+     */
+    public boolean belongsToGroup(String groupName) {
+        return agreement != null && agreement.hasGroup(groupName);
+    }
+    
+    /**
+     * Check if this actor can execute an endpoint
+     */
+    public boolean canExecute(EndpointMethod endpoint) {
+        if (agreement == null) return false;
+        return agreement.grants(endpoint, "Actor", "execute");
+    }
     
     public java.util.Map<String, Object> toJSON() {
         java.util.Map<String, Object> json = new java.util.HashMap<>();
