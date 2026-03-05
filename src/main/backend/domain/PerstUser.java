@@ -3,13 +3,18 @@ package domain;
 import org.garret.perst.continuous.CVersion;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * PerstUser - User entity stored in Perst OODBMS.
  * 
  * This class represents a generic user for authentication purposes.
  * It extends CVersion to leverage Perst's automatic versioning.
- * Extend this class for domain-specific user attributes.
+ * 
+ * IMPORTANT: Email verification is required before user can login.
+ * Sign up → Verify email → Active
  */
 public class PerstUser extends CVersion {
     
@@ -23,9 +28,15 @@ public class PerstUser extends CVersion {
     private long createdDate;
     private long lastLoginDate;
     
+    // Email verification
+    private boolean emailVerified = false;
+    private String verificationToken;
+    private long verificationExpiresAt;
+    
     // Static in-memory indexes
-    private static java.util.Map<Integer, PerstUser> idIndex = new java.util.HashMap<>();
-    private static java.util.Map<String, PerstUser> usernameIndex = new java.util.HashMap<>();
+    private static Map<Integer, PerstUser> idIndex = new HashMap<>();
+    private static Map<String, PerstUser> usernameIndex = new HashMap<>();
+    private static Map<String, PerstUser> tokenIndex = new HashMap<>();  // By verification token
     
     public PerstUser() {
         this.createdDate = System.currentTimeMillis();
@@ -54,6 +65,9 @@ public class PerstUser extends CVersion {
         if (userId > 0) {
             idIndex.put(userId, this);
         }
+        if (verificationToken != null && !verificationToken.isEmpty()) {
+            tokenIndex.put(verificationToken, this);
+        }
     }
     
     public void removeIndex() {
@@ -61,6 +75,16 @@ public class PerstUser extends CVersion {
         if (userId > 0) {
             idIndex.remove(userId);
         }
+        if (verificationToken != null) {
+            tokenIndex.remove(verificationToken);
+        }
+    }
+    
+    /**
+     * Find user by verification token
+     */
+    public static PerstUser getByVerificationToken(String token) {
+        return tokenIndex.get(token);
     }
     
     // Password handling
@@ -118,6 +142,42 @@ public class PerstUser extends CVersion {
     
     public long getLastLoginDate() { return lastLoginDate; }
     public void setLastLoginDate(long lastLoginDate) { this.lastLoginDate = lastLoginDate; }
+    
+    // ========== Email Verification ==========
+    
+    public boolean isEmailVerified() { return emailVerified; }
+    public String getVerificationToken() { return verificationToken; }
+    public long getVerificationExpiresAt() { return verificationExpiresAt; }
+    
+    /**
+     * Generate a new verification token
+     */
+    public void generateVerificationToken() {
+        this.verificationToken = UUID.randomUUID().toString();
+        this.verificationExpiresAt = System.currentTimeMillis() + (24 * 60 * 60 * 1000); // 24 hours
+    }
+    
+    /**
+     * Verify email with token
+     */
+    public boolean verifyEmail(String token) {
+        if (verificationToken == null || !verificationToken.equals(token)) {
+            return false;
+        }
+        if (System.currentTimeMillis() > verificationExpiresAt) {
+            return false;
+        }
+        this.emailVerified = true;
+        this.verificationToken = null;
+        return true;
+    }
+    
+    /**
+     * Check if user can login (active AND email verified)
+     */
+    public boolean canLogin() {
+        return active && emailVerified;
+    }
     
     // Get the Actor associated with this user
     public Actor getActor() {
