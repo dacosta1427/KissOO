@@ -517,7 +517,7 @@ public class Tasks {
      */
     private static LocalDependencies buildLocalDependencies() {
         final LocalDependencies dep = new LocalDependencies();
-        // dep.add(LIBS, "abcl.jar");  // Commented out - not needed for benchmarks
+        dep.add(LIBS, "abcl.jar");
         dep.add(LIBS, "perst.jar");
         dep.add(LIBS, "lombok.jar");
         return dep;

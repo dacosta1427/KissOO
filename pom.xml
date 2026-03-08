@@ -206,12 +206,10 @@
       <systemPath>${project.basedir}/libs/commons-lang3-3.18.0.jar</systemPath>
     </dependency>
     <dependency>
-      <!-- Oracle removes mysql drivers from public downloads -->
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <version>9.2.0</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/libs/mysql-connector-java-9.2.0.jar</systemPath>
+      <!-- Use mariadb connector instead of mysql (mysql is deprecated) -->
+      <groupId>org.mariadb.jdbc</groupId>
+      <artifactId>mariadb-java-client</artifactId>
+      <version>3.1.4</version>
     </dependency>
 
     <!-- GFE Dependencies -->
@@ -241,6 +239,37 @@
     </dependency>
 
   </dependencies>
+
+  <!-- Profile to copy dependencies to libs directory -->
+  <profiles>
+    <profile>
+      <id>copy-dependencies</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>3.6.1</version>
+            <executions>
+              <execution>
+                <id>copy-dependencies</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>copy-dependencies</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.basedir}/libs</outputDirectory>
+                  <includeScope>system</includeScope>
+                  <overWriteReleases>false</overWriteReleases>
+                  <overWriteSnapshots>true</overWriteSnapshots>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 
   <build>
@@ -727,37 +756,6 @@
         </plugin>
 
     </plugins>
-
-    <!-- Profile to copy dependencies to libs directory -->
-    <profiles>
-      <profile>
-        <id>copy-dependencies</id>
-        <build>
-          <plugins>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-dependency-plugin</artifactId>
-              <version>3.6.1</version>
-              <executions>
-                <execution>
-                  <id>copy-dependencies</id>
-                  <phase>package</phase>
-                  <goals>
-                    <goal>copy-dependencies</goal>
-                  </goals>
-                  <configuration>
-                    <outputDirectory>${project.basedir}/libs</outputDirectory>
-                    <includeScope>system</includeScope>
-                    <overWriteReleases>false</overWriteReleases>
-                    <overWriteSnapshots>true</overWriteSnapshots>
-                  </configuration>
-                </execution>
-              </executions>
-            </plugin>
-          </plugins>
-        </build>
-      </profile>
-    </profiles>
 
   </build>
 </project>
