@@ -108,7 +108,7 @@
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/CloneNotSupportedError.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/ConflictException.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/ContinuousException.java
-/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/EmptyItetator.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/EmptyIterator.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/ExtentIterator.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/FullTextSearchIterator.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/FullTextSearchQuerySyntaxError.java
@@ -131,6 +131,13 @@
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/TransactionNotStartedException.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/VersionHistorySegment.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/continuous/VersionSelector.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/dbmanager/CollectionInfo.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/dbmanager/DBManager.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/dbmanager/DBManagerImpl.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/dbmanager/MemoryStats.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/dbmanager/RetrieveResult.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/dbmanager/StoreResult.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/dbmanager/VersionedObject.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/fulltext/FullTextIndex.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/fulltext/FullTextIndexable.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/fulltext/FullTextQuery.java
@@ -148,6 +155,7 @@
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/AltBtreeFieldIndex.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/AltBtreeMultiFieldIndex.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/AltPersistentSet.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/ArrayPos.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/AsyncReplicationMasterFile.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/BitIndexImpl.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/BitmapAllocator.java
@@ -166,6 +174,7 @@
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/Compressor.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/DefaultAllocator.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/DefaultPersistentComparator.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/FieldValue.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/FullTextIndexImpl.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/GenericSort.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/GenericSortArray.java
@@ -175,6 +184,7 @@
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/LinkImpl.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/LoadFactory.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/LruObjectCache.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/MultiFieldValue.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/MultiFile.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/OSFile.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/ObjectHeader.java
@@ -188,6 +198,7 @@
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/PersistentMapImpl.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/PersistentSet.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/PersistentStub.java
+/home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/PerstLogger.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/PinWeakHashTable.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/QueryImpl.java
 /home/dacosta/Projects/oodb/src/main/java/org/garret/perst/impl/RandomAccessBlobImpl.java
