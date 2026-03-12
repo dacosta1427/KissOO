@@ -7,6 +7,7 @@ This document provides a comprehensive plan for migrating the KissOO frontend fr
 ## Current Status
 
 ### ✅ Already Svelte 5 Ready
+
 - **Navigation.svelte** - Uses `$derived` correctly
 - **stores.js** - Proper store implementation
 - **utils.ts** - TypeScript utilities (no Svelte-specific code)
@@ -21,12 +22,15 @@ This document provides a comprehensive plan for migrating the KissOO frontend fr
 **5 additional files requiring migration in src/routes/:**
 
 #### 5. +page.svelte (Dashboard)
+
 **Issues Found:**
+
 - ❌ Uses `onMount` from Svelte 4 instead of `$effect`
 - ❌ Manual state management without runes
 - ❌ Legacy lifecycle patterns
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (LEGACY):
 import { onMount } from 'svelte';
@@ -37,7 +41,7 @@ let loading = false;
 let error = null;
 
 onMount(() => {
-  loadDashboardData();
+	loadDashboardData();
 });
 
 // AFTER (SVELTE 5):
@@ -48,23 +52,27 @@ let loading = $state(false);
 let error = $state(null);
 
 $effect(() => {
-  loadDashboardData();
+	loadDashboardData();
 });
 ```
 
 **Migration Steps:**
+
 1. Replace `onMount` with `$effect`
 2. Replace manual state variables with `$state`
 3. Update any reactive logic to use `$derived` if needed
 4. Test dashboard data loading and display
 
 #### 6. bookings/+page.svelte
+
 **Issues Found:**
+
 - ❌ Uses `onMount` from Svelte 4 instead of `$effect`
 - ❌ Manual state management without runes
 - ❌ Uses `dataStores` which may need Svelte 5 adaptation
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (LEGACY):
 import { onMount } from 'svelte';
@@ -76,7 +84,7 @@ let showForm = false;
 let editingBooking = null;
 
 onMount(() => {
-  loadData();
+	loadData();
 });
 
 // AFTER (SVELTE 5):
@@ -88,23 +96,27 @@ let showForm = $state(false);
 let editingBooking = $state(null);
 
 $effect(() => {
-  loadData();
+	loadData();
 });
 ```
 
 **Migration Steps:**
+
 1. Replace `onMount` with `$effect`
 2. Replace manual state variables with `$state`
 3. Review `dataStores` usage for Svelte 5 compatibility
 4. Test booking CRUD operations
 
 #### 7. houses/+page.svelte
+
 **Issues Found:**
+
 - ❌ Uses `onMount` from Svelte 4 instead of `$effect`
 - ❌ Manual state management without runes
 - ❌ Uses `dataStores` which may need Svelte 5 adaptation
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (LEGACY):
 import { onMount } from 'svelte';
@@ -115,7 +127,7 @@ let showForm = false;
 let editingHouse = null;
 
 onMount(() => {
-  loadHouses();
+	loadHouses();
 });
 
 // AFTER (SVELTE 5):
@@ -126,24 +138,28 @@ let showForm = $state(false);
 let editingHouse = $state(null);
 
 $effect(() => {
-  loadHouses();
+	loadHouses();
 });
 ```
 
 **Migration Steps:**
+
 1. Replace `onMount` with `$effect`
 2. Replace manual state variables with `$state`
 3. Review `dataStores` usage for Svelte 5 compatibility
 4. Test house CRUD operations
 
 #### 8. schedules/+page.svelte
+
 **Issues Found:**
+
 - ❌ Uses `onMount` from Svelte 4 instead of `$effect`
 - ❌ Manual state management without runes
 - ❌ Uses `dataStores` which may need Svelte 5 adaptation
 - ❌ Complex state management for scheduling
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (LEGACY):
 import { onMount } from 'svelte';
@@ -155,12 +171,12 @@ let error = null;
 let showForm = false;
 let editingSchedule = null;
 let dateRange = {
-  start: new Date().toISOString().split('T')[0],
-  end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+	start: new Date().toISOString().split('T')[0],
+	end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 };
 
 onMount(() => {
-  loadData();
+	loadData();
 });
 
 // AFTER (SVELTE 5):
@@ -172,23 +188,26 @@ let error = $state(null);
 let showForm = $state(false);
 let editingSchedule = $state(null);
 let dateRange = $state({
-  start: new Date().toISOString().split('T')[0],
-  end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+	start: new Date().toISOString().split('T')[0],
+	end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 });
 
 $effect(() => {
-  loadData();
+	loadData();
 });
 ```
 
 **Migration Steps:**
+
 1. Replace `onMount` with `$effect`
 2. Replace manual state variables with `$state`
 3. Review `dataStores` usage for Svelte 5 compatibility
 4. Test complex scheduling functionality and drag-and-drop interactions
 
 #### 9. api/kiss-remote.js
+
 **Status:** ✅ Svelte 5 Compatible
+
 - **No Svelte-specific code**: Pure JavaScript utility file
 - **No issues**: No Svelte 4/5 compatibility concerns
 - **No changes needed**: Can remain as-is
@@ -196,27 +215,30 @@ $effect(() => {
 **Note:** This file contains API service functions and doesn't need migration since it's not a Svelte component.
 
 #### 1. Form.svelte
+
 **Issues Found:**
+
 - ❌ Uses `$event` which is NOT a valid Svelte 5 rune
 - ❌ Invalid event dispatching syntax
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (INVALID):
 function handleSubmit() {
-  $event('submit', data);
+	$event('submit', data);
 }
 
 function handleCancel() {
-  $event('cancel');
+	$event('cancel');
 }
 
 function updateField(field, value) {
-  data[field.name] = value;
-  if (errors[field.name]) {
-    errors[field.name] = null;
-  }
-  $event('update', { field: field.name, value });
+	data[field.name] = value;
+	if (errors[field.name]) {
+		errors[field.name] = null;
+	}
+	$event('update', { field: field.name, value });
 }
 
 // AFTER (CORRECT):
@@ -227,35 +249,39 @@ let onCancel = $props().onCancel;
 let onUpdate = $props().onUpdate;
 
 function handleSubmit() {
-  onSubmit?.(data);
+	onSubmit?.(data);
 }
 
 function handleCancel() {
-  onCancel?.();
+	onCancel?.();
 }
 
 function updateField(field, value) {
-  data[field.name] = value;
-  if (errors[field.name]) {
-    errors[field.name] = null;
-  }
-  onUpdate?.({ field: field.name, value });
+	data[field.name] = value;
+	if (errors[field.name]) {
+		errors[field.name] = null;
+	}
+	onUpdate?.({ field: field.name, value });
 }
 ```
 
 **Migration Steps:**
+
 1. Replace all `$event()` calls with proper prop-based event handling
 2. Update parent components to pass event handlers as props
 3. Remove any import of `createEventDispatcher`
 4. Test form submission and field updates
 
 #### 2. NotificationToast.svelte
+
 **Issues Found:**
+
 - ❌ Manual store subscription with `subscribe()` and cleanup
 - ❌ Uses `$:` reactive statements
 - ❌ Manual subscription management
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (LEGACY):
 import { notifications } from '../stores/index.js';
@@ -263,13 +289,13 @@ import { notifications } from '../stores/index.js';
 let notificationList = [];
 
 // Subscribe to notifications store
-const unsubscribe = notifications.subscribe(value => {
-  notificationList = value;
+const unsubscribe = notifications.subscribe((value) => {
+	notificationList = value;
 });
 
 // Cleanup subscription
 $: if (typeof window !== 'undefined') {
-  return unsubscribe;
+	return unsubscribe;
 }
 
 // AFTER (SVELTE 5):
@@ -283,18 +309,22 @@ let notificationList = $derived($notifications);
 ```
 
 **Migration Steps:**
+
 1. Replace manual subscription with `$derived($storeName)`
 2. Remove manual cleanup code
 3. Remove `$:` reactive statements
 4. Test notification display and dismissal
 
 #### 3. ScheduleBoard.svelte
+
 **Issues Found:**
+
 - ❌ Uses `createEventDispatcher()` from Svelte 4
 - ❌ Uses `$:` reactive statements
 - ❌ Legacy event dispatching patterns
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (LEGACY):
 import { createEventDispatcher } from 'svelte';
@@ -309,7 +339,7 @@ export let error = null;
 const dispatch = createEventDispatcher();
 
 function handleScheduleClick(schedule) {
-  dispatch('scheduleClick', schedule);
+	dispatch('scheduleClick', schedule);
 }
 
 // AFTER (SVELTE 5):
@@ -325,7 +355,7 @@ export let onScheduleChange = $props().onScheduleChange;
 export let onScheduleClick = $props().onScheduleClick;
 
 function handleScheduleClick(schedule) {
-  onScheduleClick?.(schedule);
+	onScheduleClick?.(schedule);
 }
 
 // Replace $: reactive statements with $derived
@@ -334,6 +364,7 @@ let scheduleMatrix = $derived(buildScheduleMatrix(schedules, cleaners, dates));
 ```
 
 **Migration Steps:**
+
 1. Remove `createEventDispatcher` import and usage
 2. Replace with prop-based event handlers
 3. Replace `$:` reactive statements with `$derived`
@@ -341,19 +372,22 @@ let scheduleMatrix = $derived(buildScheduleMatrix(schedules, cleaners, dates));
 5. Test drag-and-drop functionality and schedule interactions
 
 #### 4. Table.svelte
+
 **Issues Found:**
+
 - ❌ Uses `$event` which is NOT a valid Svelte 5 rune
 - ❌ Invalid event dispatching syntax
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (INVALID):
 function handleAction(action, row) {
-  $event('action', { action, row });
+	$event('action', { action, row });
 }
 
 function handleRowClick(row) {
-  $event('rowClick', row);
+	$event('rowClick', row);
 }
 
 // AFTER (CORRECT):
@@ -361,15 +395,16 @@ export let onAction = $props().onAction;
 export let onRowClick = $props().onRowClick;
 
 function handleAction(action, row) {
-  onAction?.({ action, row });
+	onAction?.({ action, row });
 }
 
 function handleRowClick(row) {
-  onRowClick?.(row);
+	onRowClick?.(row);
 }
 ```
 
 **Migration Steps:**
+
 1. Replace all `$event()` calls with proper prop-based event handling
 2. Update parent components to pass event handlers as props
 3. Test table interactions and action buttons
@@ -377,6 +412,7 @@ function handleRowClick(row) {
 ## Migration Strategy
 
 ### Phase 1: Foundation Updates ✅ COMPLETED
+
 1. **Update package.json dependencies** ✅ COMPLETED
    - Ensure Svelte 5 is installed ✅ (Already using Svelte 5.51.0)
    - Update any Svelte-related packages ✅ (All packages are Svelte 5 compatible)
@@ -388,6 +424,7 @@ function handleRowClick(row) {
    - Check TypeScript configuration ✅ (Already configured for Svelte 5)
 
 ### Phase 2: Component Migration ✅ COMPLETED
+
 1. **Start with simplest components first** ✅ COMPLETED
    - Form.svelte (fewer dependencies) ✅ COMPLETED
    - Table.svelte (straightforward event handling) ✅ COMPLETED
@@ -422,6 +459,7 @@ function handleRowClick(row) {
    - Test all route interactions and data flows ✅ COMPLETED
 
 ### Phase 3: Testing & Validation ⏳ IN PROGRESS
+
 1. **Unit testing**
    - Test each component individually
    - Verify event handlers work correctly
@@ -438,30 +476,31 @@ function handleRowClick(row) {
    - Test schedule management
    - Test table interactions
 
-2. **Update event handling patterns**
+4. **Update event handling patterns**
    - Replace `$event()` with prop-based handlers
    - Update parent components to pass handlers
    - Test each component individually
 
-3. **Update reactive statements and lifecycle**
+5. **Update reactive statements and lifecycle**
    - Replace `$:` with `$derived`
    - Replace `onMount` with `$effect`
    - Replace manual state with `$state`
    - Replace manual store subscriptions
    - Remove manual cleanup code
 
-4. **Complex component migration**
+6. **Complex component migration**
    - ScheduleBoard.svelte (most complex due to drag-and-drop)
    - NotificationToast.svelte (store subscriptions)
    - bookings/+page.svelte (complex data relationships)
    - schedules/+page.svelte (complex state and drag-and-drop)
 
-5. **Routes directory migration**
+7. **Routes directory migration**
    - Migrate all route components to use Svelte 5 patterns
    - Update data store usage for Svelte 5 compatibility
    - Test all route interactions and data flows
 
 ### Phase 3: Testing & Validation
+
 1. **Unit testing**
    - Test each component individually
    - Verify event handlers work correctly
@@ -483,60 +522,66 @@ function handleRowClick(row) {
 ### Event Handling Migration
 
 **Svelte 4 Pattern:**
+
 ```javascript
 import { createEventDispatcher } from 'svelte';
 const dispatch = createEventDispatcher();
 
 function handleClick() {
-  dispatch('click', data);
+	dispatch('click', data);
 }
 ```
 
 **Svelte 5 Pattern:**
+
 ```javascript
 // In child component
 export let onClick = $props().onClick;
 
 function handleClick() {
-  onClick?.(data);
+	onClick?.(data);
 }
 
 // In parent component
-<ChildComponent onClick={(data) => handleChildClick(data)} />
+<ChildComponent onClick={(data) => handleChildClick(data)} />;
 ```
 
 ### Reactive Statements Migration
 
 **Svelte 4 Pattern:**
+
 ```javascript
 $: computedValue = someCalculation(props.value);
 $: if (condition) {
-  doSomething();
+	doSomething();
 }
 ```
 
 **Svelte 5 Pattern:**
+
 ```javascript
 let computedValue = $derived(someCalculation(props.value));
 $effect(() => {
-  if (condition) {
-    doSomething();
-  }
+	if (condition) {
+		doSomething();
+	}
 });
 ```
 
 ### Store Subscription Migration
 
 **Svelte 4 Pattern:**
+
 ```javascript
 import { myStore } from './stores.js';
 
 let value;
-const unsubscribe = myStore.subscribe(v => value = v);
+const unsubscribe = myStore.subscribe((v) => (value = v));
 onDestroy(unsubscribe);
 ```
 
 **Svelte 5 Pattern:**
+
 ```javascript
 import { myStore } from './stores.js';
 
@@ -555,6 +600,7 @@ let value = $derived($myStore);
 ## Testing Checklist
 
 ### For Each Component:
+
 - [ ] Component renders without errors
 - [ ] Event handlers work correctly
 - [ ] Reactive updates function properly
@@ -563,18 +609,21 @@ let value = $derived($myStore);
 - [ ] TypeScript compilation passes
 
 ### For Event Handling:
+
 - [ ] Parent components receive events
 - [ ] Event data is passed correctly
 - [ ] Multiple event handlers work
 - [ ] Event propagation is correct
 
 ### For Reactive Statements:
+
 - [ ] Computed values update correctly
 - [ ] Side effects trigger appropriately
 - [ ] No infinite loops
 - [ ] Performance is acceptable
 
 ### For Store Subscriptions:
+
 - [ ] Store values update in components
 - [ ] Automatic cleanup works
 - [ ] No memory leaks
@@ -618,6 +667,7 @@ If issues arise during migration:
 - **Total Estimated Time:** 14-22 hours
 
 **Migration Priority Order:**
+
 1. **High Priority (Critical Issues):**
    - Form.svelte (invalid `$event` usage)
    - Table.svelte (invalid `$event` usage)
@@ -648,10 +698,12 @@ If issues arise during migration:
 ### Total Files Analyzed: 14
 
 **Components Directory (6 files):**
+
 - ✅ **2 files Svelte 5 ready**: Navigation.svelte, stores.js, utils.ts, validation.ts
 - ❌ **4 files require migration**: Form.svelte, NotificationToast.svelte, ScheduleBoard.svelte, Table.svelte
 
 **Routes Directory (8 files):**
+
 - ✅ **2 files Svelte 5 ready**: +layout.svelte, cleaners/+page.svelte, api/kiss-remote.js
 - ❌ **5 files require migration**: +page.svelte, bookings/+page.svelte, houses/+page.svelte, schedules/+page.svelte
 
@@ -685,11 +737,13 @@ If issues arise during migration:
 5. **Document any additional findings** during implementation
 
 This migration plan ensures a systematic approach to updating all components while maintaining functionality and avoiding common pitfalls in the Svelte 4 to 5 migration.
+
 - ❌ Manual store subscription with `subscribe()` and cleanup
 - ❌ Uses `$:` reactive statements
 - ❌ Manual subscription management
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (LEGACY):
 import { notifications } from '../stores/index.js';
@@ -697,13 +751,13 @@ import { notifications } from '../stores/index.js';
 let notificationList = [];
 
 // Subscribe to notifications store
-const unsubscribe = notifications.subscribe(value => {
-  notificationList = value;
+const unsubscribe = notifications.subscribe((value) => {
+	notificationList = value;
 });
 
 // Cleanup subscription
 $: if (typeof window !== 'undefined') {
-  return unsubscribe;
+	return unsubscribe;
 }
 
 // AFTER (SVELTE 5):
@@ -717,18 +771,22 @@ let notificationList = $derived($notifications);
 ```
 
 **Migration Steps:**
+
 1. Replace manual subscription with `$derived($storeName)`
 2. Remove manual cleanup code
 3. Remove `$:` reactive statements
 4. Test notification display and dismissal
 
 #### 3. ScheduleBoard.svelte
+
 **Issues Found:**
+
 - ❌ Uses `createEventDispatcher()` from Svelte 4
 - ❌ Uses `$:` reactive statements
 - ❌ Legacy event dispatching patterns
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (LEGACY):
 import { createEventDispatcher } from 'svelte';
@@ -743,7 +801,7 @@ export let error = null;
 const dispatch = createEventDispatcher();
 
 function handleScheduleClick(schedule) {
-  dispatch('scheduleClick', schedule);
+	dispatch('scheduleClick', schedule);
 }
 
 // AFTER (SVELTE 5):
@@ -759,7 +817,7 @@ export let onScheduleChange = $props().onScheduleChange;
 export let onScheduleClick = $props().onScheduleClick;
 
 function handleScheduleClick(schedule) {
-  onScheduleClick?.(schedule);
+	onScheduleClick?.(schedule);
 }
 
 // Replace $: reactive statements with $derived
@@ -768,6 +826,7 @@ let scheduleMatrix = $derived(buildScheduleMatrix(schedules, cleaners, dates));
 ```
 
 **Migration Steps:**
+
 1. Remove `createEventDispatcher` import and usage
 2. Replace with prop-based event handlers
 3. Replace `$:` reactive statements with `$derived`
@@ -775,19 +834,22 @@ let scheduleMatrix = $derived(buildScheduleMatrix(schedules, cleaners, dates));
 5. Test drag-and-drop functionality and schedule interactions
 
 #### 4. Table.svelte
+
 **Issues Found:**
+
 - ❌ Uses `$event` which is NOT a valid Svelte 5 rune
 - ❌ Invalid event dispatching syntax
 
 **Required Changes:**
+
 ```javascript
 // BEFORE (INVALID):
 function handleAction(action, row) {
-  $event('action', { action, row });
+	$event('action', { action, row });
 }
 
 function handleRowClick(row) {
-  $event('rowClick', row);
+	$event('rowClick', row);
 }
 
 // AFTER (CORRECT):
@@ -795,18 +857,18 @@ export let onAction = $props().onAction;
 export let onRowClick = $props().onRowClick;
 
 function handleAction(action, row) {
-  onAction?.({ action, row });
+	onAction?.({ action, row });
 }
 
 function handleRowClick(row) {
-  onRowClick?.(row);
+	onRowClick?.(row);
 }
 ```
 
 **Migration Steps:**
+
 1. Replace all `$event()` calls with proper prop-based event handling
 2. Update parent components to pass event handlers as props
 3. Test table interactions and action buttons
 
 ## Migration Strategy
-

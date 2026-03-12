@@ -1,94 +1,93 @@
 <script>
-	import { housesAPI } from '../api/kiss-remote.js';
-	import { dataStores } from '../../lib/stores.svelte.js';
+	import { cleanersAPI } from '../api/kiss-remote.js';
+	import { dataStores, loadingActions, errorActions } from '../../lib/stores.svelte.js';
 	import Table from '$lib/components/Table.svelte';
 	import Form from '$lib/components/Form.svelte';
 
-	// Svelte 5: Use $state for reactive variables
-	let houses = $state([]);
+	// Svelte 5: Use runes for state management
+	let cleaners = $state([]);
 	let loading = $state(false);
 	let error = $state(null);
 	let showForm = $state(false);
-	let editingHouse = $state(null);
+	let editingCleaner = $state(null);
 
-	const houseFields = [
+	// Load data on mount
+	$effect(() => {
+		loadCleaners();
+	});
+
+	const cleanerFields = [
 		{
 			name: 'name',
-			label: 'House Name',
+			label: 'Name',
 			type: 'text',
 			required: true,
-			placeholder: 'Enter house name'
+			placeholder: 'Enter cleaner name'
+		},
+		{
+			name: 'email',
+			label: 'Email',
+			type: 'email',
+			required: true,
+			placeholder: 'Enter cleaner email'
+		},
+		{
+			name: 'phone',
+			label: 'Phone',
+			type: 'tel',
+			required: false,
+			placeholder: 'Enter cleaner phone number'
 		},
 		{
 			name: 'address',
 			label: 'Address',
 			type: 'textarea',
-			required: true,
-			placeholder: 'Enter house address',
+			required: false,
+			placeholder: 'Enter cleaner address',
 			rows: 3
 		},
 		{
-			name: 'capacity',
-			label: 'Capacity',
-			type: 'number',
-			required: true,
-			placeholder: 'Enter maximum occupancy'
-		},
-		{
-			name: 'bedrooms',
-			label: 'Bedrooms',
-			type: 'number',
-			required: true,
-			placeholder: 'Enter number of bedrooms'
-		},
-		{
-			name: 'bathrooms',
-			label: 'Bathrooms',
-			type: 'number',
-			required: true,
-			placeholder: 'Enter number of bathrooms'
-		},
-		{
-			name: 'description',
-			label: 'Description',
-			type: 'textarea',
-			required: false,
-			placeholder: 'Enter house description',
-			rows: 4
+			name: 'is_active',
+			label: 'Active',
+			type: 'checkbox',
+			required: false
 		}
 	];
 
 	const tableColumns = [
 		{ key: 'name', label: 'Name' },
-		{ key: 'address', label: 'Address' },
-		{ key: 'capacity', label: 'Capacity' },
-		{ key: 'bedrooms', label: 'Bedrooms' },
-		{ key: 'bathrooms', label: 'Bathrooms' }
+		{ key: 'email', label: 'Email' },
+		{ key: 'phone', label: 'Phone' },
+		{
+			key: 'is_active',
+			label: 'Status',
+			formatter: (value) => (value ? 'Active' : 'Inactive')
+		}
 	];
 
 	const tableActions = [
 		{
 			label: 'Edit',
 			class: 'edit',
-			title: 'Edit house',
+			title: 'Edit cleaner',
 			icon: '✏️'
 		},
 		{
 			label: 'Delete',
 			class: 'delete',
-			title: 'Delete house',
+			title: 'Delete cleaner',
 			icon: '🗑️'
 		}
 	];
 
-	async function loadHouses() {
+	async function loadCleaners() {
 		loading = true;
 		error = null;
 
 		try {
-			const result = await housesAPI.getAll();
-			houses = result.data || [];
-			dataStores.houses.set(houses);
+			const result = await cleanersAPI.getAll();
+			cleaners = result.data || [];
+			dataStores.cleaners.set(cleaners);
 		} catch (err) {
 			error = err.message;
 		} finally {
@@ -98,13 +97,13 @@
 
 	async function handleAction({ action, row }) {
 		if (action.label === 'Edit') {
-			editingHouse = row;
+			editingCleaner = row;
 			showForm = true;
 		} else if (action.label === 'Delete') {
-			if (confirm('Are you sure you want to delete this house?')) {
+			if (confirm('Are you sure you want to delete this cleaner?')) {
 				try {
-					await housesAPI.delete(row.id);
-					await loadHouses();
+					await cleanersAPI.delete(row.id);
+					await loadCleaners();
 				} catch (err) {
 					error = err.message;
 				}
@@ -114,15 +113,15 @@
 
 	async function handleFormSubmit(data) {
 		try {
-			if (editingHouse) {
-				await housesAPI.update(editingHouse.id, data);
+			if (editingCleaner) {
+				await cleanersAPI.update(editingCleaner.id, data);
 			} else {
-				await housesAPI.create(data);
+				await cleanersAPI.create(data);
 			}
 
 			showForm = false;
-			editingHouse = null;
-			await loadHouses();
+			editingCleaner = null;
+			await loadCleaners();
 		} catch (err) {
 			error = err.message;
 		}
@@ -130,29 +129,24 @@
 
 	function handleFormCancel() {
 		showForm = false;
-		editingHouse = null;
+		editingCleaner = null;
 	}
-
-	// Svelte 5: Use $effect for lifecycle management
-	$effect(() => {
-		loadHouses();
-	});
 </script>
 
-<div class="houses-page">
+<div class="cleaners-page">
 	<div class="page-header">
-		<h1>Houses</h1>
-		<button class="btn btn-primary" onclick={() => (showForm = true)}> Add House </button>
+		<h1>Cleaners</h1>
+		<button class="btn btn-primary" onclick={() => (showForm = true)}> Add Cleaner </button>
 	</div>
 
 	{#if showForm}
 		<div class="form-section">
 			<Form
-				fields={houseFields}
-				data={editingHouse || {}}
+				fields={cleanerFields}
+				data={editingCleaner || {}}
 				{loading}
-				title={editingHouse ? 'Edit House' : 'Add New House'}
-				submitLabel={editingHouse ? 'Update House' : 'Add House'}
+				title={editingCleaner ? 'Edit Cleaner' : 'Add New Cleaner'}
+				submitLabel={editingCleaner ? 'Update Cleaner' : 'Add Cleaner'}
 				onSubmit={handleFormSubmit}
 				onCancel={handleFormCancel}
 			/>
@@ -161,7 +155,7 @@
 
 	<div class="table-section">
 		<Table
-			data={houses}
+			data={cleaners}
 			columns={tableColumns}
 			actions={tableActions}
 			{loading}
@@ -172,7 +166,7 @@
 </div>
 
 <style>
-	.houses-page {
+	.cleaners-page {
 		display: flex;
 		flex-direction: column;
 		gap: 2rem;

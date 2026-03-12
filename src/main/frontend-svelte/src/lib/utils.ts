@@ -4,11 +4,14 @@
 
 /**
  * Format a date string to a more readable format
- * @param {string|Date} date - The date to format
- * @param {string} format - The format type ('short', 'medium', 'long')
- * @returns {string} - Formatted date string
+ * @param date - The date to format
+ * @param format - The format type ('short', 'medium', 'long')
+ * @returns Formatted date string
  */
-export function formatDate(date, format = 'medium') {
+export function formatDate(
+	date: string | Date,
+	format: 'short' | 'medium' | 'long' = 'medium'
+): string {
 	const d = new Date(date);
 
 	if (isNaN(d.getTime())) {
@@ -26,10 +29,10 @@ export function formatDate(date, format = 'medium') {
 
 /**
  * Format a time string
- * @param {string|Date} time - The time to format
- * @returns {string} - Formatted time string
+ * @param time - The time to format
+ * @returns Formatted time string
  */
-export function formatTime(time) {
+export function formatTime(time: string | Date): string {
 	const d = new Date(time);
 
 	if (isNaN(d.getTime())) {
@@ -44,11 +47,14 @@ export function formatTime(time) {
 
 /**
  * Format a date-time string
- * @param {string|Date} dateTime - The date-time to format
- * @param {string} format - The format type
- * @returns {string} - Formatted date-time string
+ * @param dateTime - The date-time to format
+ * @param format - The format type
+ * @returns Formatted date-time string
  */
-export function formatDateTime(dateTime, format = 'medium') {
+export function formatDateTime(
+	dateTime: string | Date,
+	format: 'short' | 'medium' | 'long' = 'medium'
+): string {
 	const d = new Date(dateTime);
 
 	if (isNaN(d.getTime())) {
@@ -85,28 +91,32 @@ export function formatDateTime(dateTime, format = 'medium') {
 
 /**
  * Generate a unique ID
- * @returns {string} - Unique ID
+ * @returns Unique ID
  */
-export function generateId() {
+export function generateId(): string {
 	return Math.random().toString(36).substr(2, 9);
 }
 
 /**
  * Debounce a function
- * @param {Function} func - The function to debounce
- * @param {number} wait - The wait time in milliseconds
- * @param {boolean} immediate - Whether to call the function immediately
- * @returns {Function} - Debounced function
+ * @param func - The function to debounce
+ * @param wait - The wait time in milliseconds
+ * @param immediate - Whether to call the function immediately
+ * @returns Debounced function
  */
-export function debounce(func, wait, immediate = false) {
-	let timeout;
-	return function executedFunction(...args) {
+export function debounce<T extends (...args: any[]) => any>(
+	func: T,
+	wait: number,
+	immediate: boolean = false
+): (...args: Parameters<T>) => void {
+	let timeout: NodeJS.Timeout | null = null;
+	return function executedFunction(...args: Parameters<T>) {
 		const later = () => {
 			timeout = null;
 			if (!immediate) func(...args);
 		};
 		const callNow = immediate && !timeout;
-		clearTimeout(timeout);
+		if (timeout) clearTimeout(timeout);
 		timeout = setTimeout(later, wait);
 		if (callNow) func(...args);
 	};
@@ -114,13 +124,16 @@ export function debounce(func, wait, immediate = false) {
 
 /**
  * Throttle a function
- * @param {Function} func - The function to throttle
- * @param {number} limit - The time limit in milliseconds
- * @returns {Function} - Throttled function
+ * @param func - The function to throttle
+ * @param limit - The time limit in milliseconds
+ * @returns Throttled function
  */
-export function throttle(func, limit) {
-	let inThrottle;
-	return function (...args) {
+export function throttle<T extends (...args: any[]) => any>(
+	func: T,
+	limit: number
+): (...args: Parameters<T>) => void {
+	let inThrottle: boolean;
+	return function (...args: Parameters<T>) {
 		if (!inThrottle) {
 			func.apply(this, args);
 			inThrottle = true;
@@ -131,23 +144,23 @@ export function throttle(func, limit) {
 
 /**
  * Deep clone an object
- * @param {Object} obj - The object to clone
- * @returns {Object} - Cloned object
+ * @param obj - The object to clone
+ * @returns Cloned object
  */
-export function deepClone(obj) {
+export function deepClone<T>(obj: T): T {
 	if (obj === null || typeof obj !== 'object') {
 		return obj;
 	}
 
 	if (obj instanceof Date) {
-		return new Date(obj.getTime());
+		return new Date(obj.getTime()) as T;
 	}
 
-	if (obj instanceof Array) {
-		return obj.map((item) => deepClone(item));
+	if (Array.isArray(obj)) {
+		return obj.map((item) => deepClone(item)) as T;
 	}
 
-	const clonedObj = {};
+	const clonedObj = {} as T;
 	for (const key in obj) {
 		if (obj.hasOwnProperty(key)) {
 			clonedObj[key] = deepClone(obj[key]);
@@ -159,11 +172,11 @@ export function deepClone(obj) {
 
 /**
  * Check if two objects are deeply equal
- * @param {Object} obj1 - First object
- * @param {Object} obj2 - Second object
- * @returns {boolean} - Whether objects are equal
+ * @param obj1 - First object
+ * @param obj2 - Second object
+ * @returns Whether objects are equal
  */
-export function deepEqual(obj1, obj2) {
+export function deepEqual(obj1: any, obj2: any): boolean {
 	if (obj1 === obj2) return true;
 
 	if (obj1 == null || obj2 == null) return false;
@@ -185,21 +198,21 @@ export function deepEqual(obj1, obj2) {
 
 /**
  * Capitalize the first letter of a string
- * @param {string} str - The string to capitalize
- * @returns {string} - Capitalized string
+ * @param str - The string to capitalize
+ * @returns Capitalized string
  */
-export function capitalize(str) {
+export function capitalize(str: string): string {
 	if (!str) return str;
 	return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 /**
  * Format currency
- * @param {number} amount - The amount to format
- * @param {string} currency - The currency code
- * @returns {string} - Formatted currency string
+ * @param amount - The amount to format
+ * @param currency - The currency code
+ * @returns Formatted currency string
  */
-export function formatCurrency(amount, currency = 'USD') {
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
 	return new Intl.NumberFormat('en-US', {
 		style: 'currency',
 		currency: currency
@@ -208,10 +221,10 @@ export function formatCurrency(amount, currency = 'USD') {
 
 /**
  * Format phone number
- * @param {string} phone - The phone number to format
- * @returns {string} - Formatted phone number
+ * @param phone - The phone number to format
+ * @returns Formatted phone number
  */
-export function formatPhone(phone) {
+export function formatPhone(phone: string): string {
 	const cleaned = ('' + phone).replace(/\D/g, '');
 	const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
 
@@ -224,31 +237,31 @@ export function formatPhone(phone) {
 
 /**
  * Generate a random color
- * @returns {string} - Random hex color
+ * @returns Random hex color
  */
-export function randomColor() {
+export function randomColor(): string {
 	return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
 /**
  * Calculate the difference between two dates in days
- * @param {Date|string} date1 - First date
- * @param {Date|string} date2 - Second date
- * @returns {number} - Difference in days
+ * @param date1 - First date
+ * @param date2 - Second date
+ * @returns Difference in days
  */
-export function dateDiffInDays(date1, date2) {
+export function dateDiffInDays(date1: Date | string, date2: Date | string): number {
 	const d1 = new Date(date1);
 	const d2 = new Date(date2);
-	const diffTime = Math.abs(d2 - d1);
+	const diffTime = Math.abs(d2.getTime() - d1.getTime());
 	return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
 /**
  * Check if a date is today
- * @param {Date|string} date - The date to check
- * @returns {boolean} - Whether the date is today
+ * @param date - The date to check
+ * @returns Whether the date is today
  */
-export function isToday(date) {
+export function isToday(date: Date | string): boolean {
 	const d = new Date(date);
 	const today = new Date();
 
@@ -261,10 +274,10 @@ export function isToday(date) {
 
 /**
  * Get the start of the day for a given date
- * @param {Date|string} date - The date
- * @returns {Date} - Start of the day
+ * @param date - The date
+ * @returns Start of the day
  */
-export function startOfDay(date) {
+export function startOfDay(date: Date | string): Date {
 	const d = new Date(date);
 	d.setHours(0, 0, 0, 0);
 	return d;
@@ -272,10 +285,10 @@ export function startOfDay(date) {
 
 /**
  * Get the end of the day for a given date
- * @param {Date|string} date - The date
- * @returns {Date} - End of the day
+ * @param date - The date
+ * @returns End of the day
  */
-export function endOfDay(date) {
+export function endOfDay(date: Date | string): Date {
 	const d = new Date(date);
 	d.setHours(23, 59, 59, 999);
 	return d;
@@ -283,11 +296,11 @@ export function endOfDay(date) {
 
 /**
  * Format bytes to human readable format
- * @param {number} bytes - The number of bytes
- * @param {number} decimals - Number of decimal places
- * @returns {string} - Formatted size string
+ * @param bytes - The number of bytes
+ * @param decimals - Number of decimal places
+ * @returns Formatted size string
  */
-export function formatBytes(bytes, decimals = 2) {
+export function formatBytes(bytes: number, decimals: number = 2): string {
 	if (bytes === 0) return '0 Bytes';
 
 	const k = 1024;
@@ -301,10 +314,10 @@ export function formatBytes(bytes, decimals = 2) {
 
 /**
  * Check if a value is empty
- * @param {any} value - The value to check
- * @returns {boolean} - Whether the value is empty
+ * @param value - The value to check
+ * @returns Whether the value is empty
  */
-export function isEmpty(value) {
+export function isEmpty(value: any): boolean {
 	if (value === null || value === undefined) return true;
 	if (typeof value === 'string') return value.trim() === '';
 	if (Array.isArray(value)) return value.length === 0;
@@ -314,29 +327,29 @@ export function isEmpty(value) {
 
 /**
  * Get file extension from filename
- * @param {string} filename - The filename
- * @returns {string} - File extension
+ * @param filename - The filename
+ * @returns File extension
  */
-export function getFileExtension(filename) {
+export function getFileExtension(filename: string): string {
 	return filename.slice(((filename.lastIndexOf('.') - 1) >>> 0) + 2);
 }
 
 /**
  * Check if a string is a valid email
- * @param {string} email - The email to validate
- * @returns {boolean} - Whether the email is valid
+ * @param email - The email to validate
+ * @returns Whether the email is valid
  */
-export function isValidEmail(email) {
+export function isValidEmail(email: string): boolean {
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	return emailRegex.test(email);
 }
 
 /**
  * Check if a string is a valid URL
- * @param {string} url - The URL to validate
- * @returns {boolean} - Whether the URL is valid
+ * @param url - The URL to validate
+ * @returns Whether the URL is valid
  */
-export function isValidUrl(url) {
+export function isValidUrl(url: string): boolean {
 	try {
 		new URL(url);
 		return true;
@@ -344,3 +357,8 @@ export function isValidUrl(url) {
 		return false;
 	}
 }
+
+// Type definitions for common utility types
+export type DateFormat = 'short' | 'medium' | 'long';
+export type DateInput = Date | string;
+export type CurrencyCode = string;
