@@ -3,6 +3,7 @@ package org.garret.perst.continuous;
 /**
  * Exception thrown when conflict is detected during transaction commit
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ConflictException extends ContinuousException 
 {
     private static final long serialVersionUID = 1L;

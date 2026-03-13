@@ -5,6 +5,7 @@ package org.garret.perst.continuous;
  * outside transaction body (transaction was not previously started by CDatabase.beginTransaction).
  * Each thread should start its own transaction, it is not possible to share the same transaction by more than one threads.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class TransactionNotStartedException extends ContinuousException {
     private static final long serialVersionUID = 1L;
 

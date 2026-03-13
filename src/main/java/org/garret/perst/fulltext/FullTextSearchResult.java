@@ -5,6 +5,7 @@ import java.util.*;
 /**
  * Full text search result
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FullTextSearchResult { 
     /**
      * Estimation of total number of documents in the index matching this query.

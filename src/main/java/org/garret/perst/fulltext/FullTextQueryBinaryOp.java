@@ -4,6 +4,7 @@ package org.garret.perst.fulltext;
 /**
  * Binary node of full text query
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FullTextQueryBinaryOp extends FullTextQuery
 {
     public FullTextQuery left;

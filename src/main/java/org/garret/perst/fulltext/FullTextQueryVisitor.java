@@ -3,6 +3,7 @@ package org.garret.perst.fulltext;
 /**
  * Base class for full text query visitor
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FullTextQueryVisitor 
 {    
     public void visit(FullTextQuery q) { 

@@ -12,6 +12,7 @@ import java.util.Iterator;
  * strict match. Returned results are ordered by rank, which includes inverse document frequency (IDF),
  * frequency of word in the document, occurrence kind and nearness of query keywords in the document text.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface FullTextIndex extends IPersistent, IResource
 {
     /**

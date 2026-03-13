@@ -3,6 +3,7 @@ package org.garret.perst.continuous;
 import org.garret.perst.*;
 
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 class RootObject extends PersistentResource 
 { 
     private static final long serialVersionUID = 1L;

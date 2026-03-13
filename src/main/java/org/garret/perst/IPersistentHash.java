@@ -5,6 +5,7 @@ import java.util.*;
 /**
  * Interface of persistent hash table
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface IPersistentHash<K,V> extends Map<K,V>, IPersistent, IResource
 {
     /**

@@ -6,6 +6,7 @@ import java.util.*;
  * Interface of selectable collection.
  * Selectable collections allows to selct its memebers using JSQL query
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface ITable<T> extends Collection<T> { 
     /**
      * Select members of the collection using search predicate

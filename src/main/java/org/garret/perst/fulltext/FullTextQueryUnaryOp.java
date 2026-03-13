@@ -3,6 +3,7 @@ package org.garret.perst.fulltext;
 /**
  * Unary node of full text query
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FullTextQueryUnaryOp extends FullTextQuery
 {
     public FullTextQuery opd;

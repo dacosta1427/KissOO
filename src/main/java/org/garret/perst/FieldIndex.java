@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
  * (each boundary can be specified or unspecified and can be inclusive or exclusive)
  * Key should be of scalar, String, java.util.Date or peristent object type.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface FieldIndex<T> extends GenericIndex<T> 
 { 
     /**

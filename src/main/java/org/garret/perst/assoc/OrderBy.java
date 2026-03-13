@@ -3,6 +3,7 @@ package org.garret.perst.assoc;
 /**
  * Class used to specify desired order of result query
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class OrderBy 
 {
     /**

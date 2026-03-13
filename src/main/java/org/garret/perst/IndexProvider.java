@@ -3,6 +3,7 @@ package org.garret.perst;
 /**
  * Interface used by Query to get index for the specified key
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface IndexProvider 
 { 
     /**

@@ -3,6 +3,7 @@ package org.garret.perst.continuous;
 /**
  * Exception thrown when application tries to update more than one version from the same version history within one transaction
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class AmbiguousVersionException extends ContinuousException 
 {
     private static final long serialVersionUID = 1L;

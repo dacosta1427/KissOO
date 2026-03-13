@@ -7,6 +7,7 @@ import java.util.*;
  * Each bit of bitmap corresponds to object OID.
  * and/or/xor method can be used to combine different bitmaps.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Bitmap implements Iterable
 {    
     class BitmapIterator implements Iterator, PersistentIterator

@@ -13,6 +13,7 @@ import java.util.Collection;
  * JSQL can use arbitrary Perst <code>GenericIndex</code> to perform fast selection if object
  * instead of sequeial search. And user provided <i>resolver</i> allows to substitute SQL joins.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface Query<T> extends Iterable<T> 
 {
     /**

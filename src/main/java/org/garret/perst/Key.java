@@ -4,6 +4,7 @@ import  org.garret.perst.impl.ClassDescriptor;
 /**
  * Class for specifying key value (needed to access obejct by key usig index)
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Key { 
     public final int     type;
 

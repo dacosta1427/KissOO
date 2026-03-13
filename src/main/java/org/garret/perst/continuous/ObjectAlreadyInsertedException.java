@@ -3,6 +3,7 @@ package org.garret.perst.continuous;
 /**
  * Exception thrown when application tries to insert in the database object which is already part of some other version history
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class ObjectAlreadyInsertedException extends ContinuousException 
 {
     private static final long serialVersionUID = 1L;

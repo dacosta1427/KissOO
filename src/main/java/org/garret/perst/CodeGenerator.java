@@ -13,6 +13,7 @@ package org.garret.perst;
 /**
  * Code generator for JSQL queries.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface CodeGenerator
 {
     /**

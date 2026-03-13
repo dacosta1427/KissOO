@@ -3,6 +3,7 @@ package org.garret.perst.continuous;
 /**
  * Exception thrown when unique constraint violation is detected during transaction commit
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class NotUniqueException extends ContinuousException 
 {
     private static final long serialVersionUID = 1L;

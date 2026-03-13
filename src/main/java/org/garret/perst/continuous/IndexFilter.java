@@ -3,6 +3,7 @@ package org.garret.perst.continuous;
 import java.util.*;
 import org.garret.perst.*;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 class IndexFilter<T> extends PersistentCollection<T> implements GenericIndex<T> 
 {
     private static final long serialVersionUID = 1L;

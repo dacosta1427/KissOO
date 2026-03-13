@@ -6,6 +6,7 @@ import java.io.Reader;
 /**
  * Interface for classes which are able to extract text and its language themselves.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface FullTextSearchable extends IPersistent
 {
     /**

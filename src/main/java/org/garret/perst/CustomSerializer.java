@@ -5,6 +5,7 @@ import java.io.*;
 /**
  * Interface of custome serializer
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface CustomSerializer { 
     /**
      * Serialize object

@@ -3,6 +3,7 @@ package org.garret.perst.assoc;
 /**
  * Helper class for manipulations with arrays
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class Array
 {
     public static int[] remove(int[] arr, int i) { 

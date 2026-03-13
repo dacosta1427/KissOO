@@ -5,6 +5,7 @@ import java.io.IOException;
 /**
  * Wrapper for IOException
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class IOError extends ContinuousException { 
     private static final long serialVersionUID = 1L;
 

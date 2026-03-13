@@ -5,6 +5,7 @@ import org.garret.perst.*;
 /**
  * Class representing full text search result hit (document + rank)
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class FullTextSearchHit implements Comparable { 
     /**
      * Get document matching full text query 

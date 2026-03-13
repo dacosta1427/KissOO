@@ -4,6 +4,7 @@ package org.garret.perst;
  * Listener of database events. Programmer should derive his own subclass and register
  * it using Storage.setListener method.
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public abstract class StorageListener {
     /**
      * This metod is called during database open when database was not

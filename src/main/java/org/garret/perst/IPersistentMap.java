@@ -5,6 +5,7 @@ import java.util.*;
 /**
  * Interface of persistent map
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public interface IPersistentMap<K extends Comparable,V> extends SortedMap<K,V>, IPersistent, IResource
 {
     /**
