@@ -17,7 +17,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="p4.36" options="-Xlint:deprecation -Xlint:unchecked -Xlint:removal" />
-      <module name="perst" options="-Xlint:deprecation -Xlint:unchecked -Xlint:removal" />
+      <module name="perst" options="-Xlint:all -Xlint:-options -Xlint:deprecation -Xlint:unchecked -Xlint:removal" />
     </option>
   </component>
 </project>

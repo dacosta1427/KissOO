@@ -14,6 +14,7 @@ Standard procedure:
 After a change has been made to the core Perst code all the junit tests have to be run prior to stating the task as done.
 
 ### NEVER comment out or remove a line because that would make the code work. If you want to do this there has to be approval.
+### NEVER remove the md dir
 
 ## Core Principles
 
@@ -61,6 +62,7 @@ Key requirements:
 - Group tasks by priority/category
 - Include success criteria section
 - Include rollback plan section
+- **IMPORTANT:** Each task in todolist MUST have a brief description explaining what it does
 
 ### Progress Doc Format (`md/progress_*.md`)
 
@@ -83,6 +85,7 @@ The progress doc MUST follow this structure:
 ### Priority #X: [Category Name]
 
 #### Task X.X: [Task name]
+- **Description:** [Brief description of what this task does and why it matters - max 2-3 sentences]
 - **Status:** pending | in_progress | completed | failed
 - **Priority:** High | Medium | Low
 - **Dependencies:** [Task dependencies]
