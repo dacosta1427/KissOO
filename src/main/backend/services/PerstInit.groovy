@@ -1,5 +1,5 @@
-import domain.database.PerstHelper
-import domain.PerstUser
+import mycompany.database.PerstHelper
+import mycompany.domain.PerstUser
 
 /**
  * Initialize Perst users.
@@ -41,7 +41,7 @@ class PerstInit {
         
         // Create default admin user
         try {
-            PerstHelper.startTransaction()
+            PerstHelper.beginTransaction()
             
             def admin = new PerstUser("admin", "admin", 1)
             admin.setEmail("admin@localhost")

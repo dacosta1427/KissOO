@@ -49,8 +49,31 @@ public class PerstConfig {
             
             this.perstEnabled = "true".equalsIgnoreCase(props.getProperty("PerstEnabled", "false"));
             this.useCDatabase = "true".equalsIgnoreCase(props.getProperty("PerstUseCDatabase", "true"));
-            this.databasePath = props.getProperty("PerstDatabasePath", "oodb");
+            String dbPath = props.getProperty("PerstDatabasePath", "oodb");
             this.pagePoolSize = Integer.parseInt(props.getProperty("PerstPagePoolSize", "536870912"));
+            
+// Convert relative path to absolute using application path
+            if (appPath != null && !new java.io.File(dbPath).isAbsolute()) {
+                // Normalize path separators and construct proper absolute path
+                String normalizedAppPath = appPath.replace('/', java.io.File.separatorChar);
+                if (!normalizedAppPath.endsWith(java.io.File.separator)) {
+                    normalizedAppPath += java.io.File.separator;
+                }
+                String combinedPath = normalizedAppPath + dbPath.replace('/', java.io.File.separatorChar);
+                // Resolve to canonical path to handle ".." and symlinks
+                try {
+                    this.databasePath = new java.io.File(combinedPath).getCanonicalPath();
+                } catch (Exception e) {
+                    this.databasePath = combinedPath;
+                }
+            } else {
+                String normalizedDbPath = dbPath.replace('/', java.io.File.separatorChar);
+                try {
+                    this.databasePath = new java.io.File(normalizedDbPath).getCanonicalPath();
+                } catch (Exception e) {
+                    this.databasePath = normalizedDbPath;
+                }
+            }
             
             System.out.println("[PerstConfig] Perst Enabled: " + perstEnabled);
             System.out.println("[PerstConfig] Use CDatabase: " + useCDatabase);
