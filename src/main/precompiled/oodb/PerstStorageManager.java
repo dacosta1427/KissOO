@@ -142,6 +142,7 @@ public class PerstStorageManager {
      * Begin a transaction.
      */
     public static void beginTransaction() {
+        if (!isAvailable()) throw new IllegalStateException("Perst not available - ensure PerstStorageManager.initialize() is called in KissInit");
         Storage storage = getStorage();
         storage.beginThreadTransaction(Storage.EXCLUSIVE_TRANSACTION);
     }
@@ -168,10 +169,10 @@ public class PerstStorageManager {
     
     /**
      * Save an object to the database.
-     * Begins transaction automatically if not already in one.
+     * Perst must be initialized first (called from KissInit).
      */
     public static void save(Object obj) {
-        if (!isAvailable()) throw new IllegalStateException("Perst not available");
+        if (!isAvailable()) throw new IllegalStateException("Perst not available - ensure initialize() is called in KissInit");
         
         try {
             CDatabaseRoot root = getRoot();
