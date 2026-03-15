@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers how to use Perst within the kissweb framework for building data-driven applications.
+This guide covers how to use Perst within the KissOO framework for building data-driven applications.
 
 ---
 
@@ -10,423 +10,234 @@ This guide covers how to use Perst within the kissweb framework for building dat
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                   kissweb Framework                      │
+│                   KissOO Framework                      │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
-│  PerstHelper ──────► PerstContext ──────► Perst        │
-│  (CRUD API)       (Management)         (Database)       │
+│  mycompany.database.PerstHelper ───┐                    │
+│  (CRUD API)                        │                    │
+│                                    ▼                    │
+│                                oodb.PerstContext ───► Perst DB
+│  mycompany.domain.Actor,          (Management)         │
+│  Agreement, Group, PerstUser ──────────────────────────┘
 │                                                         │
-│  PerstConfig ──────► Reads application.ini              │
+│  oodb.PerstConfig ──────► Reads application.ini         │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### When to Use Each
+### Directory Structure
 
-| Component | Use When |
-|-----------|----------|
-| **PerstHelper** | ✅ Recommended - Standard CRUD operations |
-| **PerstContext** | Advanced operations, transactions, custom queries |
-| **PerstConfig** | Reading configuration (automatic) |
+```
+src/main/
+├── precompiled/
+│   ├── mycompany/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
+│   ├── mycompany/database/   # Manager classes (PerstHelper, ActorManager)
+│   └── oodb/                 # Perst configuration (PerstConfig, PerstContext)
+└── backend/
+    └── services/             # REST services (ActorService, etc.)
+```
 
 ---
 
-## 2. How to Add a New Domain Entity
+## 2. Quick Start
 
-### Step 1: Create the Entity Class
+### Enable Perst
 
-Create `src/main/backend/domain/YourEntity.java`:
+Edit `backend/application.ini`:
+
+```ini
+PerstEnabled = true
+PerstDatabasePath = oodb
+```
+
+### Basic CRUD Example
 
 ```java
-package domain;
+// In your service
+import mycompany.domain.Actor;
+import mycompany.domain.Agreement;
+import mycompany.database.PerstHelper;
+
+// Create
+Agreement agreement = new Agreement("USER");
+agreement.grant(Actor.class, "read");
+agreement.grant(Actor.class, "create");
+
+Actor actor = new Actor("John", "USER", agreement);
+PerstHelper.storeNewObject(actor);
+
+// Retrieve
+Actor found = PerstHelper.retrieveObject(Actor.class, "name", "John");
+
+// Update
+found.setName("John Doe");
+PerstHelper.storeModifiedObject(found);
+
+// Delete
+PerstHelper.removeObject(found);
+```
+
+---
+
+## 3. Domain Entity Structure
+
+All domain entities are in `precompiled/mycompany/domain/`:
+
+```java
+package mycompany.domain;
 
 import org.garret.perst.continuous.CVersion;
 
-/**
- * YourEntity - Description of what this entity represents.
- * 
- * Extends CVersion for automatic versioning.
- */
 public class YourEntity extends CVersion {
-    
-    // Fields - these are persisted automatically
     private String name;
-    private String description;
-    private int value;
-    private boolean active;
-    private long createdDate;
     
-    /** Required: Default constructor for Perst */
-    public YourEntity() {
-        this.createdDate = System.currentTimeMillis();
-        this.active = true;
-    }
+    public YourEntity() { }
     
-    /** Convenience constructor */
-    public YourEntity(String name, String description) {
-        this();
+    public YourEntity(String name) {
         this.name = name;
-        this.description = description;
     }
     
-    // Getters and Setters
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    
-    public int getValue() { return value; }
-    public void setValue(int value) { this.value = value; }
-    
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
-    
-    public long getCreatedDate() { return createdDate; }
-    
-    /** Convert to JSON for API responses */
-    public java.util.Map<String, Object> toJSON() {
-        java.util.Map<String, Object> json = new java.util.HashMap<>();
-        json.put("name", name);
-        json.put("description", description);
-        json.put("value", value);
-        json.put("active", active);
-        json.put("createdDate", createdDate);
-        return json;
-    }
 }
 ```
 
-### Step 2: ⚠️ UPDATE PerstDBRoot
+### Entity Rules
+- ✅ Extend `CVersion` for versioning/audit trail
+- ✅ Extend `Persistent` for simple storage (no versioning)
+- ✅ Default constructor required
+- ✅ Fields are automatically persisted
 
-**Critical:** Add the index for your new entity.
+---
 
-Edit `src/main/backend/domain/PerstDBRoot.java`:
+## 4. CRUD Operations via PerstHelper
+
+| Operation | Method |
+|-----------|--------|
+| Create | `PerstHelper.storeNewObject(entity)` |
+| Read | `PerstHelper.retrieveObject(Class, field, value)` |
+| Update | `PerstHelper.storeModifiedObject(entity)` |
+| Delete | `PerstHelper.removeObject(entity)` |
+| Get All | `PerstHelper.retrieveAllObjects(Class)` |
+
+### Example
 
 ```java
-package domain;
+// Create
+User user = new User("alice", "alice@example.com");
+PerstHelper.storeNewObject(user);
 
-import org.garret.perst.FieldIndex;
-import org.garret.perst.Persistent;
-import org.garret.perst.Storage;
+// Read by indexed field
+User found = PerstHelper.retrieveObject(User.class, "username", "alice");
 
-public class PerstDBRoot extends Persistent {
-    
-    // EXISTING INDEXES
-    public FieldIndex<PerstUser> userIndex;
-    public FieldIndex<Actor> actorIndex;
-    
-    // ADD YOUR NEW INDEX
-    public FieldIndex<YourEntity> yourEntityIndex;
-    
-    public PerstDBRoot() {
-        super();
-    }
-    
-    public void setCollections(Storage db) {
-        // EXISTING
-        userIndex = db.createFieldIndex(PerstUser.class, "username", true);
-        actorIndex = db.createFieldIndex(Actor.class, "username", true);
-        
-        // ADD YOUR NEW INDEX
-        // Syntax: db.createFieldIndex(EntityClass.class, "fieldName", unique)
-        yourEntityIndex = db.createFieldIndex(YourEntity.class, "name", true);
-    }
-    
-    public void onLoad() {
-        // Indexes are automatically restored
-    }
-}
-```
+// Update
+found.setEmail("newemail@example.com");
+PerstHelper.storeModifiedObject(found);
 
-### Step 3: Build
-
-```bash
-cd kissweb
-./bld build
+// Delete
+PerstHelper.removeObject(found);
 ```
 
 ---
 
-## 3. CRUD Operations via PerstHelper
+## 5. Configuration
 
-Use `PerstHelper` for all standard database operations.
-
-### Create (Insert)
-
-```java
-import domain.database.PerstHelper;
-import domain.YourEntity;
-
-// Create new entity
-YourEntity entity = new YourEntity("My Name", "Description");
-entity.setValue(100);
-
-// Store in database
-PerstHelper.storeNewObject(entity);
-```
-
-### Read (Retrieve)
-
-```java
-// By indexed field (fast)
-YourEntity entity = PerstHelper.retrieveObject(YourEntity.class, "name", "My Name");
-
-// By UUID (if you have one)
-YourEntity entity = PerstHelper.retrieveObject(YourEntity.class, "uuid");
-
-// Get all entities of a type
-java.util.Collection<YourEntity> all = PerstHelper.retrieveAllObjects(YourEntity.class);
-```
-
-### Update
-
-```java
-// Modify existing entity
-YourEntity entity = PerstHelper.retrieveObject(YourEntity.class, "name", "My Name");
-entity.setValue(200);
-
-// Save changes - Perst automatically versions this
-PerstHelper.storeModifiedObject(entity);
-```
-
-### Delete
-
-```java
-YourEntity entity = PerstHelper.retrieveObject(YourEntity.class, "name", "My Name");
-PerstHelper.removeObject(entity);
-```
-
----
-
-## 4. CVersion vs Persistent
-
-### When to Use CVersion
-
-Use `extends CVersion` when you need:
-- ✅ Automatic versioning/audit trail
-- ✅ Time-travel queries (see data as of any point)
-- ✅ Change history tracking
-- ✅ Optimistic locking
-
-```java
-// USE THIS for versioning
-public class User extends CVersion {
-    private String name;
-    private String email;
-    // Every change is automatically versioned
-}
-```
-
-### When to Use Persistent
-
-Use `extends Persistent` when:
-- ✅ Simple persistence (no versioning needed)
-- ✅ High-volume data that doesn't need history
-- ✅ Performance-critical operations
-
-```java
-// For simple persistence without versioning
-public class LogEntry extends Persistent {
-    private String message;
-    private long timestamp;
-    // No version history needed
-}
-```
-
----
-
-## 5. Best Practices for Indexing
-
-### Index Selection
-
-| Field Type | Index Type | Example |
-|------------|-----------|---------|
-| Unique identifier | FieldIndex (unique=true) | `userIndex` by `username` |
-| Name/title | FieldIndex (unique=false) | `actorIndex` by `name` |
-| Date | FieldIndex | `logIndex` by `timestamp` |
-| Category | FieldIndex | `productIndex` by `category` |
-
-### Index Rules
-
-1. **Index frequently queried fields** - Fields used in `retrieveObject()` should be indexed
-2. **Keep indexes unique when appropriate** - Prevents duplicates, faster lookups
-3. **Don't over-index** - Each index uses memory
-
-```java
-// Good: Index the field you search by
-userIndex = db.createFieldIndex(PerstUser.class, "email", true);
-
-// Avoid: Indexing fields you never search
-// (wastes memory)
-```
-
----
-
-## 6. Common Patterns
-
-### Pattern 1: Find or Create
-
-```java
-public YourEntity findOrCreate(String name) {
-    YourEntity entity = PerstHelper.retrieveObject(YourEntity.class, "name", name);
-    if (entity == null) {
-        entity = new YourEntity(name, "");
-        PerstHelper.storeNewObject(entity);
-    }
-    return entity;
-}
-```
-
-### Pattern 2: Update with Version Check
-
-```java
-public boolean updateIfChanged(YourEntity entity, int expectedVersion) {
-    if (entity.getVersion() != expectedVersion) {
-        return false; // Someone else modified it
-    }
-    PerstHelper.storeModifiedObject(entity);
-    return true;
-}
-```
-
-### Pattern 3: Batch Operations
-
-```java
-public void importBatch(java.util.List<YourEntity> entities) {
-    for (YourEntity entity : entities) {
-        PerstHelper.storeNewObject(entity);
-    }
-    // Perst batches the commits internally
-}
-```
-
-### Pattern 4: Search with Version History
-
-```java
-import org.garret.perst.continuous.CVersionHistory;
-
-// Get version history
-YourEntity entity = PerstHelper.retrieveObject(YourEntity.class, "name", "My Name");
-CVersionHistory<YourEntity> history = entity.getVersionHistory();
-
-// How many versions?
-int count = history.getNumberOfVersions();
-
-// Get specific version (0 = oldest, getNumberOfVersions()-1 = newest)
-YourEntity oldVersion = history.getVersion(0);
-
-// Get current
-YourEntity current = history.getCurrent();
-```
-
----
-
-## 7. PerstHelper vs PerstContext
-
-### Use PerstHelper (Recommended for Most Cases)
-
-```java
-import domain.database.PerstHelper;
-
-// Simple CRUD operations
-PerstHelper.storeNewObject(entity);
-PerstHelper.retrieveObject(YourEntity.class, "name", "value");
-PerstHelper.storeModifiedObject(entity);
-PerstHelper.removeObject(entity);
-PerstHelper.retrieveAllObjects(YourEntity.class);
-```
-
-**Benefits:**
-- ✅ Simpler API
-- ✅ Handles null checks
-- ✅ Consistent error handling
-- ✅ Recommended for all standard operations
-
----
-
-### Use PerstContext (Advanced Cases)
-
-```java
-import domain.kissweb.PerstContext;
-
-PerstContext ctx = PerstContext.getInstance();
-
-// Custom queries
-IterableIterator<YourEntity> iter = ctx.getDatabase()
-    .find(YourEntity.class, "name", new Key("value"));
-
-// Complex transactions
-ctx.startTransaction();
-try {
-    // Multiple operations
-    ctx.commitTransaction();
-} catch (Exception e) {
-    ctx.rollbackTransaction();
-}
-```
-
-**When to use PerstContext directly:**
-- Custom query builders
-- Complex multi-object transactions
-- Direct access to CDatabase API
-- Low-level Perst operations
-
-**For 95% of use cases, use PerstHelper.**
-
----
-
-## 8. Configuration
-
-Settings in `application.ini`:
+Settings in `backend/application.ini`:
 
 ```ini
-# Enable Perst
+# Enable/disable Perst
 PerstEnabled = true
 
-# Database file location
+# Database file location (relative to working directory)
 PerstDatabasePath = oodb
 
-# Memory cache size (512MB default)
+# Memory cache size in bytes (512MB default)
 PerstPagePoolSize = 536870912
+
+# Use CDatabase for versioning (true/false)
+PerstUseCDatabase = true
 ```
 
 ---
 
-## 9. Troubleshooting
+## 6. Transaction Handling (CDatabase Only)
 
-### "Perst not available"
+When using CDatabase versioning, wrap writes in transactions:
 
 ```java
-// Check if Perst is enabled
+import oodb.PerstContext;
+
+PerstContext context = PerstContext.getInstance();
+context.beginTransaction();
+
+try {
+    User user = new User("bob", "bob@example.com");
+    PerstHelper.storeNewObject(user);
+    context.commitTransaction();
+} catch (Exception e) {
+    context.rollbackTransaction();
+}
+```
+
+---
+
+## 7. Common Patterns
+
+### Find or Create
+
+```java
+User findOrCreate(String username) {
+    User user = PerstHelper.retrieveObject(User.class, "username", username);
+    if (user == null) {
+        user = new User(username, "");
+        PerstHelper.storeNewObject(user);
+    }
+    return user;
+}
+```
+
+### Version History
+
+```java
+// Get all versions of an entity
+List<YourEntity> history = PerstHelper.getVersionHistory(
+    YourEntity.class, "name", "MyEntity"
+);
+
+// Get current version
+YourEntity current = PerstHelper.getCurrentVersion(
+    YourEntity.class, "name", "MyEntity"
+);
+```
+
+---
+
+## 8. Troubleshooting
+
+### "Perst not available"
+```java
 if (!PerstHelper.isAvailable()) {
-    // Handle gracefully
+    // Perst is disabled or not initialized
 }
 ```
 
 ### "Object not found"
-
 ```java
-YourEntity entity = PerstHelper.retrieveObject(YourEntity.class, "name", "value");
-if (entity == null) {
+User user = PerstHelper.retrieveObject(User.class, "username", "unknown");
+if (user == null) {
     // Handle not found
 }
 ```
 
-### Performance Issues
-
-- Ensure fields you're searching are indexed in PerstDBRoot
-- Use appropriate memory pool size in application.ini
-- Consider using CVersion only when needed ( Persistent is lighter)
+### Performance Tips
+- Index fields you search by (add to FieldIndex in CDatabaseRoot)
+- Use `Persistent` instead of `CVersion` when versioning isn't needed
+- Set appropriate `PerstPagePoolSize` in application.ini
 
 ---
 
-## Summary
+## 9. See Also
 
-| Task | Use |
-|------|-----|
-| Add new entity | Create class + update PerstDBRoot |
-| CRUD operations | PerstHelper |
-| Versioning | Extend CVersion |
-| Indexing | Add to PerstDBRoot.setCollections() |
-| Advanced queries | PerstContext (rarely needed) |
+- **Testing**: See [docs/TestingGuide.md](docs/TestingGuide.md)
+- **Architecture**: See [docs/PerstIntegration.md](docs/PerstIntegration.md)
+- **Authorization**: See [MANAGER_AT_THE_GATE.md](MANAGER_AT_THE_GATE.md)

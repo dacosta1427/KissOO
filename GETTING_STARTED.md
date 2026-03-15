@@ -21,7 +21,7 @@ KissOO is a fork of [Kiss](https://github.com/blakemcbride/Kiss) that adds:
 ```bash
 # Clone this fork
 git clone https://github.com/dacosta1427/KissOO.git
-cd KissOO/kissweb
+cd KissOO
 
 # Build and run
 ./bld develop   # Linux/macOS
@@ -30,12 +30,11 @@ bld develop     # Windows
 
 ### Enable Perst
 
-Edit `src/main/backend/application.ini`:
+Edit `backend/application.ini`:
 
 ```ini
 PerstEnabled = true
-PerstDatabasePath = oodb/perst.db
-PerstPagePoolSize = 536870912
+PerstDatabasePath = oodb
 ```
 
 ## Architecture
@@ -45,14 +44,14 @@ PerstPagePoolSize = 536870912
 │                    HTTP Request                            │
 │            { _class, _method, _uuid, ... }                 │
 └─────────────────────────┬───────────────────────────────────┘
-                          ↓
+                           ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                   Service Layer                            │
 │         (ActorService, UserService, etc.)                  │
 │                                                             │
 │   MUST obtain Actor from UserData and pass to Managers     │
 └─────────────────────────┬───────────────────────────────────┘
-                          ↓
+                           ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                   Manager Layer                            │
 │   ┌─────────────┐  ┌──────────────┐  ┌─────────────┐      │
@@ -65,16 +64,30 @@ PerstPagePoolSize = 536870912
 │   │     ✓ Business Logic                              │     │
 │   └──────────────────┬─────────────────────────────────┘     │
 └──────────────────────┼──────────────────────────────────────┘
-                       ↓
+                        ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                  PerstHelper (Data Access)                 │
 │         Thread-safe, per-session isolation                 │
 └──────────────────────┬──────────────────────────────────────┘
-                       ↓
+                        ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                  Perst OODBMS                               │
 │            (CVersion Objects)                               │
 └─────────────────────────────────────────────────────────────┘
+```
+
+## ⚠️ CRITICAL: Authorization is MANDATORY
+
+**Every service call MUST go through authorization. This is enforced at two levels:**
+
+1. **Endpoint level** - Via `EndpointMethod` in Agreement
+2. **Manager level** - Via `checkPermission()` in BaseManager
+
+```java
+// ✅ CORRECT: Authorization is automatic
+UserData ud = servlet.getUserData();
+Actor caller = ActorManager.getByUserId((int) ud.getUserId());
+Actor actor = ActorManager.getByUuid(caller, uuid);  // Agreement checked automatically
 ```
 
 ## The Manager at the Gate Pattern
@@ -113,15 +126,14 @@ public class MyService {
         }
         
         // 2. Get Actor for authorization
-        Actor actor = ActorManager.getInstance()
-            .getByUserId((int) ud.getUserId());
+        Actor actor = ActorManager.getByUserId((int) ud.getUserId());
         if (actor == null) {
             outjson.put("error", "No actor linked to user");
             return;
         }
         
         // 3. Use Manager with authorization
-        Collection<MyEntity> data = MyManager.getInstance().getAll(actor);
+        Collection<MyEntity> data = MyManager.getAll(actor);
         if (data == null) {
             outjson.put("error", "Not authorized");
             return;
@@ -140,20 +152,79 @@ public class MyService {
 | `ACTION_READ` | Reading/listing entities |
 | `ACTION_UPDATE` | Modifying entities |
 | `ACTION_DELETE` | Removing entities |
-| `ACTION_ADMIN` | Administrative operations |
+| `ACTION_EXECUTE` | Executing endpoints |
 
 ## Core Classes
 
-| Class | Purpose |
-|-------|---------|
-| `PerstConfig` | Reads Perst settings from application.ini |
-| `PerstContext` | Perst database operations (thread-local) |
-| `PerstHelper` | Static helper for Perst operations |
-| `BaseManager` | Abstract base with authorization |
-| `ActorManager` | Manages Actor entities |
-| `PerstUserManager` | Manages users + authentication |
-| `Actor` | Domain entity linked to users |
-| `PerstUser` | User entity for authentication |
+| Class | Package | Purpose |
+|-------|---------|---------|
+| `PerstConfig` | `oodb` | Reads Perst settings from application.ini |
+| `PerstContext` | `oodb` | Perst database operations (thread-local) |
+| `Actor` | `mycompany.domain` | Domain entity linked to users |
+| `Agreement` | `mycompany.domain` | Authorization permissions |
+| `Group` | `mycompany.domain` | Group-based permissions |
+| `PerstUser` | `mycompany.domain` | User entity for authentication |
+| `PerstHelper` | `mycompany.database` | Static helper for Perst operations |
+| `BaseManager` | `mycompany.database` | Abstract base with authorization |
+| `ActorManager` | `mycompany.database` | Manages Actor entities |
+| `PerstUserManager` | `mycompany.database` | Manages users + authentication |
+
+## Authorization Flow
+
+```
+Request → EndpointMethod.execute()
+             ↓
+        Agreement.grants(endpoint, resource, action)
+             ↓
+        Check in order:
+             1. CRUD permissions ("Actor:create")
+             2. EndpointMethod permissions (type-safe)
+             3. Group permissions (via groups)
+             ↓
+        Everything denied by default!
+             ↓
+        Execute or Deny
+```
+
+## EndpointMethod Pattern (Recommended)
+
+Each endpoint is an `EndpointMethod` that checks its own authorization:
+
+```java
+public class ActorService {
+    
+    public static final EndpointMethod GET_ACTOR = 
+        new EndpointMethod("services.ActorService.getActor", Actor.class) {
+            @Override
+            protected boolean doExecute(JSONObject in, JSONObject out, 
+                                       Connection db, ProcessServlet servlet) {
+                // 1. Authenticate
+                Actor caller = getAuthenticatedActor(servlet);
+                if (caller == null) {
+                    out.put("error", "Not authenticated");
+                    return false;
+                }
+                
+                // 2. Authorize via Agreement (automatic)
+                if (!caller.canExecute(GET_ACTOR)) {
+                    out.put("error", "Not authorized");
+                    return false;
+                }
+                
+                // 3. Execute
+                String uuid = in.getString("uuid");
+                Actor actor = ActorManager.getByUuid(caller, uuid);
+                out.put("actor", actor.toJSON());
+                return true;
+            }
+        };
+    
+    // Legacy method - delegates to EndpointMethod
+    public void getActor(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
+        GET_ACTOR.execute(in, out, db, servlet);
+    }
+}
+```
 
 ## Creating a New Domain Manager
 
@@ -233,35 +304,17 @@ public class MyManager extends BaseManager<MyEntity> {
 }
 ```
 
-### Step 2: Add Custom Authorization (Optional)
-
-```java
-@Override
-protected boolean checkPermission(Actor actor, String action, String resource) {
-    if (actor == null) {
-        return ACTION_READ.equals(action);  // Allow read for anon
-    }
-    
-    // Custom logic: only ADMIN type can delete
-    if (ACTION_DELETE.equals(action)) {
-        return "ADMIN".equals(actor.getType());
-    }
-    
-    return actor.isActive();
-}
-```
-
-### Step 3: Use in Service
+### Step 2: Use in Service
 
 ```java
 public void doSomething(JSONObject injson, JSONObject outjson,
                         Connection db, ProcessServlet servlet) {
     
     UserData ud = servlet.getUserData();
-    Actor actor = ActorManager.getInstance().getByUserId((int) ud.getUserId());
+    Actor actor = ActorManager.getByUserId((int) ud.getUserId());
     
     // Use authorization-enabled method
-    MyEntity entity = MyManager.getInstance().create(actor, "name");
+    MyEntity entity = MyManager.create(actor, "name");
     if (entity == null) {
         outjson.put("error", "Not authorized");
         return;
@@ -275,11 +328,22 @@ public void doSomething(JSONObject injson, JSONObject outjson,
 
 PerstHelper uses `PerstContext` which maintains thread-local Storage instances. Each HTTP request runs in its own thread with its own Perst session, ensuring complete isolation between concurrent requests.
 
+## Benefits
+
+| Feature | Description |
+|---------|-------------|
+| **Type-safe** | EndpointMethod grants prevent string typos |
+| **Three permission types** | CRUD, EndpointMethod, Group |
+| **Defense in depth** | Multiple authorization layers |
+| **Internal/External** | Control which methods are REST-accessible |
+| **Default deny** | Everything disallowed unless explicitly granted |
+| **Valid periods** | Time-based agreements (valid from/to) |
+
 ## Documentation
 
-- [MANAGER_AT_THE_GATE.md](MANAGER_AT_THE_GATE.md) - Pattern details
-- [PERST_USAGE.md](PERST_USAGE.md) - Perst usage guide
-- [BUILD.md](BUILD.md) - Build instructions
+- **Perst Usage**: [PERST_USAGE.md](PERST_USAGE.md)
+- **Testing**: [docs/TestingGuide.md](docs/TestingGuide.md)
+- **Architecture**: [docs/PerstIntegration.md](docs/PerstIntegration.md)
 
 ## Differences from Upstream Kiss
 

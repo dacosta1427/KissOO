@@ -2,81 +2,77 @@
 
 # KISS Web Application Full Stack Framework
 
+**This is a fork of KISS with Perst OODB integration.**
+
 The KISS Framework is a Java-based, full-stack application development framework for
 developing web-based business applications. KISS can also be used to
 build command-line utilities, and, in conjunction with
 [Electron](https://electronjs.org), desktop applications that are
 portable to Windows, macOS, and Linux.
 
-Please see the main web site for a more detailed description at
-[kissweb.org](https://kissweb.org)
-
-This project is in full release status and not a beta.  It is being used in production.  
-
-Home for the code is at:  [https://github.com/blakemcbride/Kiss](https://github.com/blakemcbride/Kiss)
-
-For build and usage instructions see the manual at `manual/man/index.html`
-Or, the user manual can be read online at [Kiss Online User Manual](https://blakemcbride.github.io/Kiss/manual/man)
-
-Public discussion and support is available at [Kiss Support](https://github.com/blakemcbride/Kiss/discussions)
-
-## Training Videos
-
-A 6-part training series on KISS is at:
-
-* [Part 1 - Introduction](https://youtu.be/FAnL7dpMld4)
-* [Part 2 - Setup & Configuration](https://youtu.be/xT-C-yQo0Ec)
-* [Part 3 - Web Services](https://youtu.be/9zRZcxMjoW0)
-* [Part 4 - Front-end](https://youtu.be/zMjrp-ft_Tc)
-* [Part 5 - Data Persistence](https://youtu.be/pS7DezhYpGo)
-* [Part 6 - Deployment](https://youtu.be/fGEzv7uuJCk)
+This fork adds [Perst](http://www.garret.ru/perst.html) OODB (Object-Oriented Database)
+integration for fast, embedded persistence.
 
 ## Quick Start
 
-Presuming you have the Java JDK (tested with Java 17, 21, 25), GIT, and an
-Internet connection, you can run the following commands to download, install,
-configure, and run Kiss, tomcat, and the required JAR files:
-
-Be sure the JAVA_HOME and JRE_HOME environment variables are set correctly!
-
 ### Linux, macOS, BSD, etc.
 
-    git clone https://github.com/blakemcbride/Kiss.git
-    cd Kiss
+    git clone https://github.com/dacosta1427/KissOO.git
+    cd KissOO
     ./bld develop
 
 ### Windows
 
-    git clone https://github.com/blakemcbride/Kiss.git
-    cd Kiss
+    git clone https://github.com/dacosta1427/KissOO.git
+    cd KissOO
     bld develop
 
-In either environment, you can then go to `http://localhost:8000`
-within your browser to use the system.  After that, both the front-end
-and the back-end code can be changed while the system is running. No need for
-additional compiles or deploys.
+Then open `http://localhost:8000` in your browser.
+
+### Enable Perst (Optional)
+
+Perst is disabled by default. To enable:
+
+1. Edit `backend/application.ini` and add:
+   ```
+   perst.enabled=true
+   ```
+2. Restart the application
+
+## Project Structure
+
+```
+src/main/
+├── precompiled/          # Code that doesn't change often
+│   ├── mycompany/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
+│   ├── mycompany/database/   # Manager classes (ActorManager, PerstHelper)
+│   └── oodb/                 # Perst configuration (PerstConfig, PerstContext)
+└── backend/
+    └── services/            # REST services (frequently changing)
+```
+
+## Testing
+
+Run all tests with:
+
+    java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissweb
+
+See [docs/TestingGuide.md](docs/TestingGuide.md) for detailed testing instructions.
 
 ## Documentation
 
-The system comes with (essentially) three manuals as follows:
+- **Testing Guide**: [docs/TestingGuide.md](docs/TestingGuide.md)
+- **Perst Integration**: [docs/PerstIntegration.md](docs/PerstIntegration.md)
+- **Manager at the Gate**: [MANAGER_AT_THE_GATE.md](MANAGER_AT_THE_GATE.md)
+- **Perst Usage**: [PERST_USAGE.md](PERST_USAGE.md)
 
+## Main Project
 
-[User Manual (HTML)](https://blakemcbride.github.io/Kiss/manual/man)
-
-[User Manual (PDF)](https://blakemcbride.us/software/kiss/Kiss.pdf)
-
-[Front-end API](https://blakemcbride.github.io/Kiss/manual/jsdoc)
-
-The back-end JavaDoc must be built by you.  This can be done by typing:
-
-    ./bld javadoc               [Linux, macOS, BSD, etc.]
-        -or-
-    bld javadoc                 [Windows]
-
-You then get:  `work/javadoc/index.html`
+For the original KISS Framework, visit:
+- Website: [kissweb.org](https://kissweb.org)
+- Upstream repo: [github.com/blakemcbride/Kiss](https://github.com/blakemcbride/Kiss)
+- Support: [Kiss Support](https://github.com/blakemcbride/Kiss/discussions)
 
 ## Support
 
-Commercial support is available from [blake@mcbridemail.com](mailto:blake@mcbridemail.com)
-
-Please help fund this project at [https://www.gofundme.com/kissweb](https://www.gofundme.com/kissweb)
+For issues with this fork, please open an issue on GitHub.
