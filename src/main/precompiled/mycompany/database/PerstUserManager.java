@@ -140,6 +140,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         
         PerstStorageManager.beginTransaction();
         try {
+            user.index();  // Add to Perst indexes
             CDatabaseRoot root = PerstStorageManager.getRoot();
             root.userIndex.put(user);
             PerstStorageManager.commitTransaction();
@@ -161,6 +162,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         }
         
         try {
+            user.index();  // Re-index
             CDatabaseRoot root = PerstStorageManager.getRoot();
             root.userIndex.put(user);
             return true;
