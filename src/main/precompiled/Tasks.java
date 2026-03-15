@@ -147,6 +147,10 @@ public class Tasks {
     private static void jar(boolean unitTest) {
         libs();
         buildJava("src/main/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
+        // Compile mycompany first (domain classes)
+        buildJava("src/main/precompiled/mycompany", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
+        // Then oodb (depends on mycompany classes)
+        buildJava("src/main/precompiled/oodb", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         if (unitTest)
             buildJava("src/test/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         rm(explodedDir + "/WEB-INF/lib/jakarta.servlet-api-4.0.1.jar");
@@ -206,6 +210,14 @@ public class Tasks {
         unJar(workDir, "libs/junit-jupiter-params-5.11.0.jar");
         unJar(workDir, "libs/junit-platform-console-1.11.0.jar");
         unJar(workDir, "libs/junit-platform-console-standalone-1.11.0.jar");
+
+        // Perst DB and dependencies
+        unJar(workDir, "libs/perst-dcg-4.0.0.jar");
+        unJar(workDir, "libs/slf4j-api-1.7.30.jar");
+        unJar(workDir, "libs/slf4j-simple-1.7.30.jar");
+        unJar(workDir, "libs/jakarta.servlet-api-6.1.0.jar");
+        unJar(workDir, "libs/log4j-api-2.25.3.jar");
+        unJar(workDir, "libs/log4j-core-2.25.3.jar");
 
         unJar(workDir, "libs/" + groovyJar);
         rm(workDir + "/META-INF/MANIFEST.MF");
@@ -518,8 +530,10 @@ public class Tasks {
     private static LocalDependencies buildLocalDependencies() {
         final LocalDependencies dep = new LocalDependencies();
         dep.add(LIBS, "abcl.jar");
-        dep.add(LIBS, "perst.jar");
+        dep.add(LIBS, "perst-dcg-4.0.0.jar");
         dep.add(LIBS, "lombok.jar");
+        dep.add(LIBS, "slf4j-api-1.7.30.jar");
+        dep.add(LIBS, "slf4j-simple-1.7.30.jar");
         return dep;
     }
 
