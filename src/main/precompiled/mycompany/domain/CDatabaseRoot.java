@@ -13,7 +13,7 @@ import org.garret.perst.Storage;
  * IMPORTANT: When adding or removing domain classes, update this class!
  * 
  * ADDING A NEW DOMAIN CLASS:
- * 1. Add the import: import domain.YourNewClass;
+ * 1. Add the import: import mycompany.domain.YourNewClass;
  * 2. Add a FieldIndex: public FieldIndex<YourNewClass> yourNewClassIndex;
  * 3. Add to setCollections(): yourNewClassIndex = db.createFieldIndex(YourNewClass.class, "fieldName", unique);
  * 
@@ -24,7 +24,7 @@ import org.garret.perst.Storage;
  * 
  * Example:
  *   // To add MyEntity indexed by "name":
- *   import domain.MyEntity;
+ *   import mycompany.domain.MyEntity;
  *   
  *   public FieldIndex<MyEntity> myEntityIndex;
  *   
@@ -40,6 +40,7 @@ public class CDatabaseRoot extends Persistent {
     public FieldIndex<Actor> actorIndex;
     public FieldIndex<Agreement> agreementIndex;
     public FieldIndex<Group> groupIndex;
+    public FieldIndex<EndpointMethod> endpointIndex;
     
     public CDatabaseRoot() {
         super();
@@ -54,6 +55,7 @@ public class CDatabaseRoot extends Persistent {
         actorIndex = db.createFieldIndex(Actor.class, "name", false);
         agreementIndex = db.createFieldIndex(Agreement.class, "role", false);
         groupIndex = db.createFieldIndex(Group.class, "name", true);
+        endpointIndex = db.createFieldIndex(EndpointMethod.class, "name", true);
     }
     
     /**

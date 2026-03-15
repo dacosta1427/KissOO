@@ -1,9 +1,10 @@
-package domain;
+package mycompany.domain;
 
 import org.kissweb.json.JSONObject;
 import org.kissweb.database.Connection;
 import org.kissweb.restServer.ProcessServlet;
 import org.kissweb.restServer.UserData;
+import mycompany.database.ActorManager;
 
 /**
  * EndpointMethod - Abstract base for all service endpoints.

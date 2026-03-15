@@ -12,8 +12,10 @@ import java.util.Set;
  * 
  * IMPORTANT: Extends CVersion for automatic versioning support.
  * 
- * Authorization is checked via CRUD permissions:
- * - grant(Class, action) for type-safe CRUD permissions
+ * Authorization is checked in order:
+ * 1. CRUD permissions: grant(Class, action) - simple create/read/update/delete
+ * 2. EndpointMethod permissions: grant(EndpointMethod) - specific method call
+ * 3. Group permissions: addGroup(Group) - via groups the actor belongs to
  * 
  * Everything is denied by default - explicit grant required.
  * 
@@ -22,6 +24,9 @@ import java.util.Set;
  *   agreement.grant(Actor.class, CRUD.CREATE);
  *   agreement.grant(Actor.class, CRUD.READ);
  *   
+ *   // Type-safe endpoint
+ *   agreement.grant(ActorService.GET_ACTOR);
+ *   
  *   // Via group
  *   agreement.addGroup(admins);
  */
@@ -29,7 +34,7 @@ public class Agreement extends CVersion {
     
     private String role;
     private Set<String> crudPermissions;
-    private Set<String> methodPermissions;  // Stored as strings for flexibility
+    private Set<EndpointMethod> methodPermissions;
     private Set<Group> groups;
     private long validFrom;
     private Long validTo;
@@ -132,30 +137,30 @@ public class Agreement extends CVersion {
     
     public Set<String> getCrudPermissions() { return crudPermissions; }
     
-    // ========== EndpointMethod Permissions (as Strings) ==========
+    // ========== EndpointMethod Permissions ==========
     
     /**
-     * Grant permission to execute a method (stored as string)
+     * Grant permission to execute an endpoint (type-safe!)
      */
-    public void grantMethod(String methodName) {
-        methodPermissions.add(methodName);
+    public void grant(EndpointMethod endpoint) {
+        methodPermissions.add(endpoint);
     }
     
     /**
-     * Revoke method permission
+     * Revoke endpoint permission
      */
-    public void revokeMethod(String methodName) {
-        methodPermissions.remove(methodName);
+    public void revoke(EndpointMethod endpoint) {
+        methodPermissions.remove(endpoint);
     }
     
     /**
-     * Check if can execute this method
+     * Check if can execute this endpoint
      */
-    public boolean canExecuteMethod(String methodName) {
-        return methodPermissions.contains(methodName);
+    public boolean canExecute(EndpointMethod endpoint) {
+        return methodPermissions.contains(endpoint);
     }
     
-    public Set<String> getMethodPermissions() { return methodPermissions; }
+    public Set<EndpointMethod> getMethodPermissions() { return methodPermissions; }
     
     // ========== Group Permissions ==========
     
@@ -205,10 +210,10 @@ public class Agreement extends CVersion {
     
     /**
      * Check if this agreement grants permission for an action.
-     * Checks in order: CRUD → Method → Groups
+     * Checks in order: CRUD → EndpointMethod → Groups
      * Everything is denied by default.
      */
-    public boolean grants(Class<?> resource, String action) {
+    public boolean grants(EndpointMethod endpoint, Class<?> resource, String action) {
         if (!isValid()) return false;
         
         // 1. Check CRUD permission
@@ -218,9 +223,15 @@ public class Agreement extends CVersion {
             return true;
         }
         
-        // 2. Check via Groups
+        // 2. Check EndpointMethod permission
+        if (endpoint != null && methodPermissions.contains(endpoint)) {
+            return true;
+        }
+        
+        // 3. Check via Groups
         for (Group group : groups) {
-            if (group.hasCrudPermission(resource.getName(), action)) {
+            if (group.canExecute(endpoint) || 
+                group.hasCrudPermission(resource.getName(), action)) {
                 return true;
             }
         }
@@ -229,22 +240,10 @@ public class Agreement extends CVersion {
     }
     
     /**
-     * Check method permission
+     * Check CRUD permission only (no endpoint)
      */
-    public boolean grantsMethod(String methodName) {
-        if (!isValid()) return false;
-        
-        if (methodPermissions.contains("*") || methodPermissions.contains(methodName)) {
-            return true;
-        }
-        
-        for (Group group : groups) {
-            if (group.canExecuteMethod(methodName)) {
-                return true;
-            }
-        }
-        
-        return false;
+    public boolean grants(Class<?> resource, String action) {
+        return grants(null, resource, action);
     }
     
     // ========== Private Helper ==========

@@ -7,7 +7,7 @@ import java.util.Set;
 /**
  * Group - A collection of Actors that share permissions.
  * 
- * Actors can belong to Groups, and Groups have permissions.
+ * Actors can belong to Groups, and Groups have EndpointMethod permissions.
  * This is similar to UNIX group permissions.
  * 
  * IMPORTANT: Extends CVersion for automatic versioning support.
@@ -15,15 +15,15 @@ import java.util.Set;
  * Usage:
  *   Group admins = new Group();
  *   admins.setName("admins");
+ *   admins.grant(ActorService.GET_ACTOR);       // Type-safe endpoint
  *   admins.grant(Actor.class, CRUD.CREATE);     // Type-safe CRUD
- *   admins.grantMethod("services.ActorService.getActor");  // Method permission
  *   
  *   actor.getAgreement().addGroup(admins);
  */
 public class Group extends CVersion {
     
     private String name;
-    private Set<String> methodPermissions;
+    private Set<EndpointMethod> methodPermissions;
     private Set<String> crudPermissions;
     
     public Group() {
@@ -39,30 +39,30 @@ public class Group extends CVersion {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     
-    // ========== EndpointMethod Permissions (as Strings) ==========
+    // ========== EndpointMethod Permissions ==========
     
     /**
-     * Grant permission to execute a method (stored as string)
+     * Grant permission to execute an endpoint (type-safe!)
      */
-    public void grantMethod(String methodName) {
-        methodPermissions.add(methodName);
+    public void grant(EndpointMethod endpoint) {
+        methodPermissions.add(endpoint);
     }
     
     /**
-     * Revoke method permission
+     * Revoke endpoint permission
      */
-    public void revokeMethod(String methodName) {
-        methodPermissions.remove(methodName);
+    public void revoke(EndpointMethod endpoint) {
+        methodPermissions.remove(endpoint);
     }
     
     /**
-     * Check if this group can execute a method
+     * Check if this group can execute an endpoint
      */
-    public boolean canExecuteMethod(String methodName) {
-        return methodPermissions.contains(methodName);
+    public boolean canExecute(EndpointMethod endpoint) {
+        return methodPermissions.contains(endpoint);
     }
     
-    public Set<String> getMethodPermissions() { return methodPermissions; }
+    public Set<EndpointMethod> getMethodPermissions() { return methodPermissions; }
     
     // ========== CRUD Permissions (Type-Safe) ==========
     

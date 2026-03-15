@@ -1,7 +1,8 @@
-package domain.database;
+package mycompany.database;
 
-import domain.Actor;
-import domain.Agreement;
+import mycompany.domain.Actor;
+import mycompany.domain.Agreement;
+import mycompany.domain.CRUD;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;

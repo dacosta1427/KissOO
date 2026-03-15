@@ -1,7 +1,7 @@
-package domain.database;
+package mycompany.database;
 
-import domain.Actor;
-import domain.PerstUser;
+import mycompany.domain.Actor;
+import mycompany.domain.PerstUser;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;

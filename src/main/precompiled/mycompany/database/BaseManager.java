@@ -1,10 +1,10 @@
-package domain.database;
+package mycompany.database;
 
-import domain.Actor;
-import domain.Agreement;
-import domain.CRUD;
-import domain.EndpointMethod;
-import domain.PerstUser;
+import mycompany.domain.Actor;
+import mycompany.domain.Agreement;
+import mycompany.domain.CRUD;
+import mycompany.domain.EndpointMethod;
+import mycompany.domain.PerstUser;
 import java.util.Collection;
 
 /**
@@ -29,6 +29,13 @@ import java.util.Collection;
  * @param <T> The domain entity type
  */
 public abstract class BaseManager<T> {
+    
+    // Action constants for authorization
+    protected static final String ACTION_CREATE = "create";
+    protected static final String ACTION_READ = "read";
+    protected static final String ACTION_UPDATE = "update";
+    protected static final String ACTION_DELETE = "delete";
+    protected static final String ACTION_EXECUTE = "execute";
     
     /**
      * Check if Perst is available

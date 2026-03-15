@@ -1,9 +1,9 @@
 package services;
 
-import domain.Actor;
-import domain.EndpointMethod;
-import domain.database.ActorManager;
-import domain.database.BaseManager;
+import mycompany.domain.Actor;
+import mycompany.domain.EndpointMethod;
+import mycompany.database.ActorManager;
+import mycompany.database.BaseManager;
 import org.kissweb.json.JSONObject;
 import org.kissweb.restServer.ProcessServlet;
 import org.kissweb.restServer.UserData;
@@ -57,7 +57,7 @@ public class ActorService {
     // These can be granted via Agreement for type-safe authorization
     
     /** Get a single actor by UUID */
-    public static final EndpointMethod GET_ACTOR = new EndpointMethod("services.ActorService.getActor") {
+    public static final EndpointMethod GET_ACTOR = new EndpointMethod("services.ActorService.getActor", Actor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             // Inline implementation - authorization done by Agreement
@@ -86,7 +86,7 @@ public class ActorService {
     };
     
     /** Get all actors */
-    public static final EndpointMethod GET_ALL_ACTORS = new EndpointMethod("services.ActorService.getAllActors") {
+    public static final EndpointMethod GET_ALL_ACTORS = new EndpointMethod("services.ActorService.getAllActors", Actor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             Actor caller = getAuthenticatedActor(servlet);
@@ -113,7 +113,7 @@ public class ActorService {
     };
     
     /** Create a new actor */
-    public static final EndpointMethod CREATE_ACTOR = new EndpointMethod("services.ActorService.createActor") {
+    public static final EndpointMethod CREATE_ACTOR = new EndpointMethod("services.ActorService.createActor", Actor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             Actor caller = getAuthenticatedActor(servlet);
@@ -144,7 +144,7 @@ public class ActorService {
     };
     
     /** Update an actor */
-    public static final EndpointMethod UPDATE_ACTOR = new EndpointMethod("services.ActorService.updateActor") {
+    public static final EndpointMethod UPDATE_ACTOR = new EndpointMethod("services.ActorService.updateActor", Actor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             Actor caller = getAuthenticatedActor(servlet);
@@ -183,7 +183,7 @@ public class ActorService {
     };
     
     /** Delete an actor */
-    public static final EndpointMethod DELETE_ACTOR = new EndpointMethod("services.ActorService.deleteActor") {
+    public static final EndpointMethod DELETE_ACTOR = new EndpointMethod("services.ActorService.deleteActor", Actor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             Actor caller = getAuthenticatedActor(servlet);
@@ -219,7 +219,7 @@ public class ActorService {
     // These are NOT callable via REST (internal only)
     
     /** Internal calculation - not accessible via REST */
-    public static final EndpointMethod DO_INTERNAL_CALC = new EndpointMethod("services.ActorService.doInternalCalc", false) {
+    public static final EndpointMethod DO_INTERNAL_CALC = new EndpointMethod("services.ActorService.doInternalCalc", Actor.class, false) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             // Internal logic only - can only be called from within the app
