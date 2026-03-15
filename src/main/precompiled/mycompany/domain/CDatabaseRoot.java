@@ -41,6 +41,7 @@ public class CDatabaseRoot extends Persistent {
     public FieldIndex<Agreement> agreementIndex;
     public FieldIndex<Group> groupIndex;
     public FieldIndex<EndpointMethod> endpointIndex;
+    public FieldIndex<Phone> phoneIndex;
     
     public CDatabaseRoot() {
         super();
@@ -56,6 +57,7 @@ public class CDatabaseRoot extends Persistent {
         agreementIndex = db.createFieldIndex(Agreement.class, "role", false);
         groupIndex = db.createFieldIndex(Group.class, "name", true);
         endpointIndex = db.createFieldIndex(EndpointMethod.class, "name", true);
+        phoneIndex = db.createFieldIndex(Phone.class, "phoneNumber", false);
     }
     
     /**
