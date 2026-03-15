@@ -135,24 +135,25 @@ public class ActorManager extends BaseManager<Actor> {
             throw new IllegalArgumentException("Actor already exists: " + name);
         }
         
-        Actor actor = new Actor(name, type);
+        // Create default agreement for new Actor
+        Agreement agreement = new Agreement(name + "_agreement");
+        
+        Actor actor = new Actor(name, type, agreement);
         
         if (params.length > 2 && params[2] != null) {
             actor.setUserId((Integer) params[2]);
-        }
-        
-        if (params.length > 3) {
-            actor.setEmail((String) params[3]);
         }
         
         if (!validate(actor)) {
             throw new IllegalArgumentException("Validation failed for Actor");
         }
         
+        // Also store agreement
         PerstStorageManager.beginTransaction();
         try {
             CDatabaseRoot root = PerstStorageManager.getRoot();
             root.actorIndex.put(actor);
+            root.agreementIndex.put(agreement);
             PerstStorageManager.commitTransaction();
         } catch (Exception e) {
             PerstStorageManager.rollbackTransaction();
