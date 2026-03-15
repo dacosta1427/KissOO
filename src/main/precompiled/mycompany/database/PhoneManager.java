@@ -40,6 +40,19 @@ public class PhoneManager {
         return null;
     }
     
+    public static Phone getByOid(long oid) {
+        if (!PerstStorageManager.isAvailable()) {
+            return null;
+        }
+        CDatabaseRoot root = PerstStorageManager.getRoot();
+        for (Phone p : root.phoneIndex) {
+            if (p.getOid() == oid) {
+                return p;
+            }
+        }
+        return null;
+    }
+    
     public static Phone create(String firstName, String lastName, String phoneNumber) {
         if (!PerstStorageManager.isAvailable()) {
             return null;

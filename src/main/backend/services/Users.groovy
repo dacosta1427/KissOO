@@ -18,22 +18,24 @@ class Users {
      * Get all user records from Perst.
      */
     void getRecords(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        if (!PerstUserManager.getAll()) {
-            outjson.put("error", "Perst not available")
-            return
+        try {
+            Collection<PerstUser> users = PerstUserManager.getAll()
+            JSONArray rows = new JSONArray()
+            
+            for (PerstUser user : users) {
+                JSONObject row = new JSONObject()
+                row.put("id", user.getOid())
+                row.put("userName", user.getUsername())
+                row.put("userPassword", user.getPasswordHash())
+                row.put("userActive", user.isActive() ? "Y" : "N")
+                rows.put(row)
+            }
+            
+            outjson.put("rows", rows)
+        } catch (Exception e) {
+            outjson.put("error", e.message)
         }
-        
-        Collection<PerstUser> users = PerstUserManager.getAll()
-        JSONArray rows = new JSONArray()
-        
-        for (PerstUser user : users) {
-            JSONObject row = new JSONObject()
-            row.put("id", user.getUserId())
-            row.put("userName", user.getUsername())
-            row.put("userPassword", user.getPasswordHash())
-            row.put("userActive", user.isActive() ? "Y" : "N")
-            rows.put(row)
-        }
+    }
         
         outjson.put("rows", rows)
     }
@@ -51,7 +53,7 @@ class Users {
             PerstUserManager.update(user)
             
             outjson.put("success", true)
-            outjson.put("id", user.getUserId())
+            outjson.put("id", user.getOid())
         } catch (Exception e) {
             outjson.put("error", e.message)
         }
@@ -62,16 +64,8 @@ class Users {
      */
     void updateRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            int userId = injson.getInt("id")
-            Collection<PerstUser> users = PerstUserManager.getAll()
-            
-            PerstUser userToUpdate = null
-            for (PerstUser user : users) {
-                if (user.getUserId() == userId) {
-                    userToUpdate = user
-                    break
-                }
-            }
+            long oid = injson.getLong("id")
+            PerstUser userToUpdate = PerstUserManager.getByOid(oid)
             
             if (userToUpdate == null) {
                 outjson.put("error", "User not found")
@@ -95,16 +89,8 @@ class Users {
      */
     void deleteRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            int userId = injson.getInt("id")
-            Collection<PerstUser> users = PerstUserManager.getAll()
-            
-            PerstUser userToDelete = null
-            for (PerstUser user : users) {
-                if (user.getUserId() == userId) {
-                    userToDelete = user
-                    break
-                }
-            }
+            long oid = injson.getLong("id")
+            PerstUser userToDelete = PerstUserManager.getByOid(oid)
             
             if (userToDelete == null) {
                 outjson.put("error", "User not found")

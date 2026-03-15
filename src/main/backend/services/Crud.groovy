@@ -13,25 +13,23 @@ import mycompany.domain.Phone
 class Crud {
 
     void getRecords(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        if (!PhoneManager.getAll()) {
-            outjson.put("error", "Perst not available")
-            return
+        try {
+            Collection<Phone> phones = PhoneManager.getAll()
+            JSONArray rows = new JSONArray()
+            
+            for (Phone phone : phones) {
+                JSONObject row = new JSONObject()
+                row.put("id", phone.getOid())
+                row.put("firstName", phone.getFirstName())
+                row.put("lastName", phone.getLastName())
+                row.put("phoneNumber", phone.getPhoneNumber())
+                rows.put(row)
+            }
+            
+            outjson.put("rows", rows)
+        } catch (Exception e) {
+            outjson.put("error", e.message)
         }
-        
-        Collection<Phone> phones = PhoneManager.getAll()
-        JSONArray rows = new JSONArray()
-        
-        int id = 0
-        for (Phone phone : phones) {
-            JSONObject row = new JSONObject()
-            row.put("id", id++)
-            row.put("firstName", phone.getFirstName())
-            row.put("lastName", phone.getLastName())
-            row.put("phoneNumber", phone.getPhoneNumber())
-            rows.put(row)
-        }
-        
-        outjson.put("rows", rows)
     }
 
     void addRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
@@ -42,6 +40,7 @@ class Crud {
                 injson.getString("phoneNumber")
             )
             outjson.put("success", true)
+            outjson.put("id", phone.getOid())
         } catch (Exception e) {
             outjson.put("error", e.message)
         }
@@ -49,18 +48,8 @@ class Crud {
 
     void updateRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            int id = injson.getInt("id")
-            Collection<Phone> phones = PhoneManager.getAll()
-            
-            Phone phoneToUpdate = null
-            int currentId = 0
-            for (Phone phone : phones) {
-                if (currentId == id) {
-                    phoneToUpdate = phone
-                    break
-                }
-                currentId++
-            }
+            long oid = injson.getLong("id")
+            Phone phoneToUpdate = PhoneManager.getByOid(oid)
             
             if (phoneToUpdate == null) {
                 outjson.put("error", "Record not found")
@@ -80,18 +69,8 @@ class Crud {
 
     void deleteRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            int id = injson.getInt("id")
-            Collection<Phone> phones = PhoneManager.getAll()
-            
-            Phone phoneToDelete = null
-            int currentId = 0
-            for (Phone phone : phones) {
-                if (currentId == id) {
-                    phoneToDelete = phone
-                    break
-                }
-                currentId++
-            }
+            long oid = injson.getLong("id")
+            Phone phoneToDelete = PhoneManager.getByOid(oid)
             
             if (phoneToDelete == null) {
                 outjson.put("error", "Record not found")

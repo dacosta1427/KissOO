@@ -86,6 +86,19 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         return root.userIndex.get(key);
     }
     
+    public static PerstUser getByOid(long oid) {
+        if (!PerstStorageManager.isAvailable()) {
+            return null;
+        }
+        CDatabaseRoot root = PerstStorageManager.getRoot();
+        for (PerstUser u : root.userIndex) {
+            if (u.getOid() == oid) {
+                return u;
+            }
+        }
+        return null;
+    }
+    
     public static PerstUser authenticate(String username, String password) {
         if (!PerstStorageManager.isAvailable() || username == null || password == null) {
             return null;
