@@ -42,6 +42,7 @@ public class CDatabaseRoot extends Persistent {
     public FieldIndex<Group> groupIndex;
     public FieldIndex<EndpointMethod> endpointIndex;
     public FieldIndex<Phone> phoneIndex;
+    public FieldIndex<BenchmarkData> benchmarkIndex;
     
     public CDatabaseRoot() {
         super();
@@ -58,6 +59,7 @@ public class CDatabaseRoot extends Persistent {
         groupIndex = db.createFieldIndex(Group.class, "name", true);
         endpointIndex = db.createFieldIndex(EndpointMethod.class, "name", true);
         phoneIndex = db.createFieldIndex(Phone.class, "phoneNumber", false);
+        benchmarkIndex = db.createFieldIndex(BenchmarkData.class, "name", false);
     }
     
     /**
