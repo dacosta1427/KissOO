@@ -3,61 +3,119 @@ package services
 import org.kissweb.json.JSONArray
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
-import org.kissweb.database.Record
 import org.kissweb.restServer.ProcessServlet
+import mycompany.database.PerstUserManager
+import mycompany.domain.PerstUser
 
 /**
- * Users service for CRUD operations on the users table.
+ * Users service for CRUD operations on PerstUser.
+ * 
+ * Uses Perst OODBMS instead of SQL database.
  */
 class Users {
 
     /**
-     * Get all user records.
+     * Get all user records from Perst.
      */
     void getRecords(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        if (db == null) {
-            outjson.put("nodb", true)
+        if (!PerstUserManager.getAll()) {
+            outjson.put("error", "Perst not available")
             return
         }
-        List<Record> recs = db.fetchAll("select * from users order by user_name")
+        
+        Collection<PerstUser> users = PerstUserManager.getAll()
         JSONArray rows = new JSONArray()
-        for (Record rec : recs) {
+        
+        for (PerstUser user : users) {
             JSONObject row = new JSONObject()
-            row.put("id", rec.getInt("user_id"))
-            row.put("userName", rec.getString("user_name"))
-            row.put("userPassword", rec.getString("user_password"))
-            row.put("userActive", rec.getString("user_active"))
+            row.put("id", user.getUserId())
+            row.put("userName", user.getUsername())
+            row.put("userPassword", user.getPasswordHash())
+            row.put("userActive", user.isActive() ? "Y" : "N")
             rows.put(row)
         }
+        
         outjson.put("rows", rows)
     }
 
     /**
-     * Add a new user record.
+     * Add a new user record to Perst.
      */
     void addRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        Record rec = db.newRecord("users")
-        rec.set("user_name", injson.getString("userName"))
-        rec.set("user_password", injson.getString("userPassword"))
-        rec.set("user_active", injson.getString("userActive"))
-        rec.addRecord()
+        try {
+            String userName = injson.getString("userName")
+            String password = injson.getString("userPassword")
+            
+            PerstUser user = PerstUserManager.create(userName, password, 0)
+            user.setActive(injson.getString("userActive") == "Y")
+            PerstUserManager.update(user)
+            
+            outjson.put("success", true)
+            outjson.put("id", user.getUserId())
+        } catch (Exception e) {
+            outjson.put("error", e.message)
+        }
     }
 
     /**
-     * Update an existing user record.
+     * Update an existing user record in Perst.
      */
     void updateRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        Record rec = db.fetchOne("select * from users where user_id=?", injson.getInt("id"))
-        rec.set("user_name", injson.getString("userName"))
-        rec.set("user_password", injson.getString("userPassword"))
-        rec.set("user_active", injson.getString("userActive"))
-        rec.update()
+        try {
+            int userId = injson.getInt("id")
+            Collection<PerstUser> users = PerstUserManager.getAll()
+            
+            PerstUser userToUpdate = null
+            for (PerstUser user : users) {
+                if (user.getUserId() == userId) {
+                    userToUpdate = user
+                    break
+                }
+            }
+            
+            if (userToUpdate == null) {
+                outjson.put("error", "User not found")
+                return
+            }
+            
+            userToUpdate.setUsername(injson.getString("userName"))
+            userToUpdate.setPassword(injson.getString("userPassword"))
+            userToUpdate.setActive(injson.getString("userActive") == "Y")
+            
+            PerstUserManager.update(userToUpdate)
+            
+            outjson.put("success", true)
+        } catch (Exception e) {
+            outjson.put("error", e.message)
+        }
     }
 
     /**
-     * Delete a user record.
+     * Delete a user record from Perst.
      */
     void deleteRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        db.execute("delete from users where user_id=?", injson.getInt("id"))
+        try {
+            int userId = injson.getInt("id")
+            Collection<PerstUser> users = PerstUserManager.getAll()
+            
+            PerstUser userToDelete = null
+            for (PerstUser user : users) {
+                if (user.getUserId() == userId) {
+                    userToDelete = user
+                    break
+                }
+            }
+            
+            if (userToDelete == null) {
+                outjson.put("error", "User not found")
+                return
+            }
+            
+            PerstUserManager.delete(userToDelete)
+            
+            outjson.put("success", true)
+        } catch (Exception e) {
+            outjson.put("error", e.message)
+        }
     }
 }
