@@ -14,9 +14,6 @@ import mycompany.domain.PerstUser
  */
 class Users {
 
-    /**
-     * Get all user records from Perst.
-     */
     void getRecords(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             Collection<PerstUser> users = PerstUserManager.getAll()
@@ -36,13 +33,7 @@ class Users {
             outjson.put("error", e.message)
         }
     }
-        
-        outjson.put("rows", rows)
-    }
 
-    /**
-     * Add a new user record to Perst.
-     */
     void addRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             String userName = injson.getString("userName")
@@ -59,9 +50,6 @@ class Users {
         }
     }
 
-    /**
-     * Update an existing user record in Perst.
-     */
     void updateRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             long oid = injson.getLong("id")
@@ -84,9 +72,6 @@ class Users {
         }
     }
 
-    /**
-     * Delete a user record from Perst.
-     */
     void deleteRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             long oid = injson.getLong("id")
