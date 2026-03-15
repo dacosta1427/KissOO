@@ -164,6 +164,82 @@ public class PerstStorageManager {
         storage.endThreadTransaction();
     }
     
+    // ========== Generic CRUD Operations ==========
+    
+    /**
+     * Save an object to the database.
+     * Begins transaction automatically if not already in one.
+     */
+    public static void save(Object obj) {
+        if (!isAvailable()) throw new IllegalStateException("Perst not available");
+        
+        try {
+            CDatabaseRoot root = getRoot();
+            
+            // Determine index based on object type
+            if (obj instanceof mycompany.domain.PerstUser) {
+                ((mycompany.domain.PerstUser) obj).index();
+                root.userIndex.put((mycompany.domain.PerstUser) obj);
+            } else if (obj instanceof mycompany.domain.Actor) {
+                root.actorIndex.put((mycompany.domain.Actor) obj);
+            } else if (obj instanceof mycompany.domain.Phone) {
+                root.phoneIndex.put((mycompany.domain.Phone) obj);
+            } else if (obj instanceof mycompany.domain.BenchmarkData) {
+                root.benchmarkIndex.put((mycompany.domain.BenchmarkData) obj);
+            } else if (obj instanceof mycompany.domain.Agreement) {
+                root.agreementIndex.put((mycompany.domain.Agreement) obj);
+            } else if (obj instanceof mycompany.domain.Group) {
+                root.groupIndex.put((mycompany.domain.Group) obj);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to save object: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Save an object within a transaction.
+     * Caller must handle transaction.
+     */
+    public static void saveInTransaction(Object obj) {
+        if (!isAvailable()) throw new IllegalStateException("Perst not available");
+        save(obj);
+    }
+    
+    /**
+     * Delete an object from the database.
+     */
+    public static void delete(Object obj) {
+        if (!isAvailable()) throw new IllegalStateException("Perst not available");
+        
+        try {
+            CDatabaseRoot root = getRoot();
+            
+            if (obj instanceof mycompany.domain.PerstUser) {
+                root.userIndex.remove((mycompany.domain.PerstUser) obj);
+            } else if (obj instanceof mycompany.domain.Actor) {
+                root.actorIndex.remove((mycompany.domain.Actor) obj);
+            } else if (obj instanceof mycompany.domain.Phone) {
+                root.phoneIndex.remove((mycompany.domain.Phone) obj);
+            } else if (obj instanceof mycompany.domain.BenchmarkData) {
+                root.benchmarkIndex.remove((mycompany.domain.BenchmarkData) obj);
+            } else if (obj instanceof mycompany.domain.Agreement) {
+                root.agreementIndex.remove((mycompany.domain.Agreement) obj);
+            } else if (obj instanceof mycompany.domain.Group) {
+                root.groupIndex.remove((mycompany.domain.Group) obj);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete object: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Delete an object within a transaction.
+     */
+    public static void deleteInTransaction(Object obj) {
+        if (!isAvailable()) throw new IllegalStateException("Perst not available");
+        delete(obj);
+    }
+    
     /**
      * Close the Perst Storage.
      * Should be called during application shutdown.

@@ -14,14 +14,11 @@ import java.util.List;
  * This is the "Manager at the Gate" - ALL access to PerstUser entities
  * must go through this class.
  * 
- * Communicates directly with PerstStorageManager (no intermediate layers).
- * 
  * Responsibilities:
- * - CRUD operations
+ * - Business logic
  * - Validation
  * - Authentication
  * - Password management
- * - Authorization checks
  */
 public class PerstUserManager extends BaseManager<PerstUser> {
     
@@ -64,7 +61,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         return delete(user);
     }
     
-    // ========== Base CRUD Methods (no authorization) ==========
+    // ========== Base CRUD Methods ==========
     
     public static Collection<PerstUser> getAll() {
         if (!PerstStorageManager.isAvailable()) {
@@ -140,9 +137,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         
         PerstStorageManager.beginTransaction();
         try {
-            user.index();  // Add to Perst indexes
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.userIndex.put(user);
+            PerstStorageManager.saveInTransaction(user);
             PerstStorageManager.commitTransaction();
         } catch (Exception e) {
             PerstStorageManager.rollbackTransaction();
@@ -162,9 +157,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         }
         
         try {
-            user.index();  // Re-index
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.userIndex.put(user);
+            PerstStorageManager.save(user);
             return true;
         } catch (Exception e) {
             return false;
@@ -178,8 +171,7 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         
         PerstStorageManager.beginTransaction();
         try {
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.userIndex.remove(user);
+            PerstStorageManager.deleteInTransaction(user);
             PerstStorageManager.commitTransaction();
             return true;
         } catch (Exception e) {

@@ -3,29 +3,15 @@ package mycompany.database;
 import mycompany.domain.Actor;
 import mycompany.domain.Agreement;
 import mycompany.domain.CDatabaseRoot;
-import mycompany.domain.CRUD;
 import oodb.PerstStorageManager;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * ActorManager - Manages Actor domain objects.
- * 
- * This is the "Manager at the Gate" - ALL access to Actor entities
- * must go through this class.
- * 
- * Communicates directly with PerstStorageManager (no intermediate layers).
- * 
- * Responsibilities:
- * - CRUD operations
- * - Validation
- * - Business logic
- * - Authorization checks via Agreement
  */
 public class ActorManager extends BaseManager<Actor> {
     
-    private ActorManager() {}  // Prevent instantiation
+    private ActorManager() {}
     
     // ========== Authorization-Aware Methods ==========
     
@@ -129,16 +115,14 @@ public class ActorManager extends BaseManager<Actor> {
         }
         
         String name = (String) params[0];
-        String type = (String) params[1];
         
         if (getByName(name) != null) {
             throw new IllegalArgumentException("Actor already exists: " + name);
         }
         
-        // Create default agreement for new Actor
         Agreement agreement = new Agreement(name + "_agreement");
         
-        Actor actor = new Actor(name, type, agreement);
+        Actor actor = new Actor(name, (String) params[1], agreement);
         
         if (params.length > 2 && params[2] != null) {
             actor.setUserId((Integer) params[2]);
@@ -148,12 +132,10 @@ public class ActorManager extends BaseManager<Actor> {
             throw new IllegalArgumentException("Validation failed for Actor");
         }
         
-        // Also store agreement
         PerstStorageManager.beginTransaction();
         try {
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.actorIndex.put(actor);
-            root.agreementIndex.put(agreement);
+            PerstStorageManager.saveInTransaction(agreement);
+            PerstStorageManager.saveInTransaction(actor);
             PerstStorageManager.commitTransaction();
         } catch (Exception e) {
             PerstStorageManager.rollbackTransaction();
@@ -173,8 +155,7 @@ public class ActorManager extends BaseManager<Actor> {
         }
         
         try {
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.actorIndex.put(actor);
+            PerstStorageManager.save(actor);
             return true;
         } catch (Exception e) {
             return false;
@@ -188,8 +169,7 @@ public class ActorManager extends BaseManager<Actor> {
         
         PerstStorageManager.beginTransaction();
         try {
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.actorIndex.remove(actor);
+            PerstStorageManager.deleteInTransaction(actor);
             PerstStorageManager.commitTransaction();
             return true;
         } catch (Exception e) {

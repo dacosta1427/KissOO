@@ -27,7 +27,7 @@ public class BenchmarkDataManager {
                 all.add(bd);
             }
             for (BenchmarkData bd : all) {
-                root.benchmarkIndex.remove(bd);
+                PerstStorageManager.deleteInTransaction(bd);
             }
             PerstStorageManager.commitTransaction();
         } catch (Exception e) {
@@ -42,8 +42,7 @@ public class BenchmarkDataManager {
         
         PerstStorageManager.beginTransaction();
         try {
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.benchmarkIndex.put(data);
+            PerstStorageManager.saveInTransaction(data);
             PerstStorageManager.commitTransaction();
             return 1;
         } catch (Exception e) {
@@ -60,7 +59,6 @@ public class BenchmarkDataManager {
         
         PerstStorageManager.beginTransaction();
         try {
-            CDatabaseRoot root = PerstStorageManager.getRoot();
             for (int i = 0; i < count; i++) {
                 BenchmarkData data = new BenchmarkData(
                     "Item_" + i,
@@ -69,7 +67,7 @@ public class BenchmarkDataManager {
                     rand.nextInt(5) + 1,
                     rand.nextDouble() * 1000
                 );
-                root.benchmarkIndex.put(data);
+                PerstStorageManager.saveInTransaction(data);
             }
             PerstStorageManager.commitTransaction();
             return count;

@@ -7,9 +7,6 @@ import java.util.*;
 
 /**
  * PhoneManager - Manages Phone domain objects.
- * 
- * This is the "Manager at the Gate" - ALL access to Phone entities
- * must go through this class.
  */
 public class PhoneManager {
     
@@ -62,8 +59,7 @@ public class PhoneManager {
         
         PerstStorageManager.beginTransaction();
         try {
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.phoneIndex.put(phone);
+            PerstStorageManager.saveInTransaction(phone);
             PerstStorageManager.commitTransaction();
         } catch (Exception e) {
             PerstStorageManager.rollbackTransaction();
@@ -79,8 +75,7 @@ public class PhoneManager {
         }
         
         try {
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.phoneIndex.put(phone);
+            PerstStorageManager.save(phone);
             return true;
         } catch (Exception e) {
             return false;
@@ -94,28 +89,12 @@ public class PhoneManager {
         
         PerstStorageManager.beginTransaction();
         try {
-            CDatabaseRoot root = PerstStorageManager.getRoot();
-            root.phoneIndex.remove(phone);
+            PerstStorageManager.deleteInTransaction(phone);
             PerstStorageManager.commitTransaction();
             return true;
         } catch (Exception e) {
             PerstStorageManager.rollbackTransaction();
             return false;
         }
-    }
-    
-    public static Phone getById(long id) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        int index = 0;
-        for (Phone p : root.phoneIndex) {
-            if (index == id) {
-                return p;
-            }
-            index++;
-        }
-        return null;
     }
 }
