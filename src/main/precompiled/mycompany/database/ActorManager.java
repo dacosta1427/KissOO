@@ -2,7 +2,9 @@ package mycompany.database;
 
 import mycompany.domain.Actor;
 import mycompany.domain.Agreement;
+import mycompany.domain.CDatabaseRoot;
 import mycompany.domain.CRUD;
+import oodb.PerstStorageManager;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,151 +15,112 @@ import java.util.List;
  * This is the "Manager at the Gate" - ALL access to Actor entities
  * must go through this class.
  * 
- * All methods are static - no singleton needed. Thread safety is handled
- * by PerstHelper which uses thread-local PerstContext.
+ * Communicates directly with PerstStorageManager (no intermediate layers).
  * 
  * Responsibilities:
  * - CRUD operations
  * - Validation
  * - Business logic
  * - Authorization checks via Agreement
- * 
- * IMPORTANT: For authorization, services must obtain the current Actor
- * from UserData and pass it to Manager methods. The Actor's Agreement
- * determines what operations are permitted.
- * 
- *   UserData ud = servlet.getUserData();
- *   Actor actor = ActorManager.getByUserId(ud.getUserId());
- *   ActorManager.create(actor, name, type);  // Agreement checked automatically
  */
 public class ActorManager extends BaseManager<Actor> {
     
     private ActorManager() {}  // Prevent instantiation
     
-    // ========== Static Authorization-Aware Methods ==========
+    // ========== Authorization-Aware Methods ==========
     
-    /**
-     * Get all Actors (with authorization check via Agreement)
-     */
     public static Collection<Actor> getAll(Actor actor) {
-        if (!checkPermission(actor, ACTION_READ, "Actor")) {
+        if (!checkPermission(actor, ACTION_READ, Actor.class)) {
             return null;
         }
         return getAll();
     }
     
-    /**
-     * Get Actor by name (with authorization check)
-     */
-    public static Actor getByKey(Actor actor, String key) {
-        if (!checkPermission(actor, ACTION_READ, "Actor")) {
+    public static Actor getByName(Actor actor, String name) {
+        if (!checkPermission(actor, ACTION_READ, Actor.class)) {
             return null;
         }
-        return getByKey(key);
+        return getByName(name);
     }
     
-    /**
-     * Get Actor by UUID (with authorization check)
-     */
     public static Actor getByUuid(Actor actor, String uuid) {
-        if (!checkPermission(actor, ACTION_READ, "Actor")) {
+        if (!checkPermission(actor, ACTION_READ, Actor.class)) {
             return null;
         }
         return getByUuid(uuid);
     }
     
-    /**
-     * Create Actor (with authorization check)
-     */
     public static Actor create(Actor actor, Object... params) {
-        if (!checkPermission(actor, ACTION_CREATE, "Actor")) {
+        if (!checkPermission(actor, ACTION_CREATE, Actor.class)) {
             return null;
         }
         return create(params);
     }
     
-    /**
-     * Create a NEW Actor with an Agreement (internal use - bypasses auth)
-     * 
-     * @param agreement The Agreement for the new Actor (can be null for default USER role)
-     * @param name Actor name
-     * @param type Actor type
-     * @return the created Actor
-     */
-    public static Actor createWithAgreement(Agreement agreement, String name, String type) {
-        if (agreement == null) {
-            agreement = new Agreement("USER");
-        }
-        return create(name, type, agreement);
-    }
-    
-    /**
-     * Update Actor (with authorization check)
-     */
-    public static boolean update(Actor actor, Actor entity) {
-        if (!checkPermission(actor, ACTION_UPDATE, "Actor")) {
+    public static boolean update(Actor actor, Actor obj) {
+        if (!checkPermission(actor, ACTION_UPDATE, Actor.class)) {
             return false;
         }
-        return update(entity);
+        return update(obj);
     }
     
-    /**
-     * Delete Actor (with authorization check)
-     */
-    public static boolean delete(Actor actor, Actor entity) {
-        if (!checkPermission(actor, ACTION_DELETE, "Actor")) {
+    public static boolean delete(Actor actor, Actor obj) {
+        if (!checkPermission(actor, ACTION_DELETE, Actor.class)) {
             return false;
         }
-        return delete(entity);
+        return delete(obj);
     }
     
-    // ========== Static Base Methods ==========
+    // ========== Base CRUD Methods ==========
     
-    /**
-     * Get all Actors (no authorization - use getAll(Actor) for authorized access)
-     */
     public static Collection<Actor> getAll() {
-        if (!isPerstAvailable()) {
+        if (!PerstStorageManager.isAvailable()) {
             return new ArrayList<>();
         }
-        return PerstHelper.retrieveAllObjects(Actor.class);
+        CDatabaseRoot root = PerstStorageManager.getRoot();
+        List<Actor> result = new ArrayList<>();
+        for (Actor a : root.actorIndex) {
+            result.add(a);
+        }
+        return result;
     }
     
-    /**
-     * Get Actor by name
-     */
-    public static Actor getByKey(String key) {
-        if (!isPerstAvailable()) {
+    public static Actor getByName(String name) {
+        if (!PerstStorageManager.isAvailable()) {
             return null;
         }
-        return PerstHelper.retrieveObject(Actor.class, "name", key);
+        CDatabaseRoot root = PerstStorageManager.getRoot();
+        return root.actorIndex.get(name);
     }
     
-    /**
-     * Get Actor by UUID
-     */
     public static Actor getByUuid(String uuid) {
-        if (!isPerstAvailable()) {
+        if (!PerstStorageManager.isAvailable()) {
             return null;
         }
-        return PerstHelper.retrieveObject(Actor.class, uuid);
+        CDatabaseRoot root = PerstStorageManager.getRoot();
+        for (Actor a : root.actorIndex) {
+            if (a.getUuid() != null && a.getUuid().equals(uuid)) {
+                return a;
+            }
+        }
+        return null;
     }
     
-    /**
-     * Get Actor by user ID (from UserData.getUserId())
-     */
     public static Actor getByUserId(int userId) {
-        if (!isPerstAvailable()) {
+        if (!PerstStorageManager.isAvailable()) {
             return null;
         }
-        return Actor.findByUserId(userId);
+        CDatabaseRoot root = PerstStorageManager.getRoot();
+        for (Actor a : root.actorIndex) {
+            if (a.getUserId() == userId) {
+                return a;
+            }
+        }
+        return null;
     }
     
-    /**
-     * Create a new Actor
-     */
     public static Actor create(Object... params) {
-        if (!isPerstAvailable()) {
+        if (!PerstStorageManager.isAvailable()) {
             return null;
         }
         
@@ -168,31 +131,39 @@ public class ActorManager extends BaseManager<Actor> {
         String name = (String) params[0];
         String type = (String) params[1];
         
-        // Check if Agreement is provided (params[2])
-        Agreement agreement = null;
-        if (params.length > 2 && params[2] instanceof Agreement) {
-            agreement = (Agreement) params[2];
+        if (getByName(name) != null) {
+            throw new IllegalArgumentException("Actor already exists: " + name);
         }
         
-        Actor actor = new Actor(name, type, agreement);
+        Actor actor = new Actor(name, type);
         
-        if (params.length > 3 && params[3] instanceof Integer) {
-            actor.setUserId((Integer) params[3]);
+        if (params.length > 2 && params[2] != null) {
+            actor.setUserId((Integer) params[2]);
+        }
+        
+        if (params.length > 3) {
+            actor.setEmail((String) params[3]);
         }
         
         if (!validate(actor)) {
             throw new IllegalArgumentException("Validation failed for Actor");
         }
         
-        PerstHelper.storeNewObject(actor);
+        PerstStorageManager.beginTransaction();
+        try {
+            CDatabaseRoot root = PerstStorageManager.getRoot();
+            root.actorIndex.put(actor);
+            PerstStorageManager.commitTransaction();
+        } catch (Exception e) {
+            PerstStorageManager.rollbackTransaction();
+            throw new RuntimeException("Failed to create actor: " + e.getMessage(), e);
+        }
+        
         return actor;
     }
     
-    /**
-     * Update an Actor
-     */
     public static boolean update(Actor actor) {
-        if (!isPerstAvailable() || actor == null) {
+        if (!PerstStorageManager.isAvailable() || actor == null) {
             return false;
         }
         
@@ -200,56 +171,40 @@ public class ActorManager extends BaseManager<Actor> {
             return false;
         }
         
-        PerstHelper.storeModifiedObject(actor);
-        return true;
+        try {
+            CDatabaseRoot root = PerstStorageManager.getRoot();
+            root.actorIndex.put(actor);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
     
-    /**
-     * Delete an Actor
-     */
     public static boolean delete(Actor actor) {
-        if (!isPerstAvailable() || actor == null) {
+        if (!PerstStorageManager.isAvailable() || actor == null) {
             return false;
         }
         
-        PerstHelper.removeObject(actor);
-        return true;
+        PerstStorageManager.beginTransaction();
+        try {
+            CDatabaseRoot root = PerstStorageManager.getRoot();
+            root.actorIndex.remove(actor);
+            PerstStorageManager.commitTransaction();
+            return true;
+        } catch (Exception e) {
+            PerstStorageManager.rollbackTransaction();
+            return false;
+        }
     }
     
-    /**
-     * Validate an Actor
-     */
     public static boolean validate(Actor actor) {
-        if (actor == null) {
-            return false;
-        }
-        if (actor.getName() == null || actor.getName().isEmpty()) {
-            return false;
-        }
+        if (actor == null) return false;
+        if (actor.getName() == null || actor.getName().isEmpty()) return false;
+        if (actor.getType() == null || actor.getType().isEmpty()) return false;
         return true;
     }
     
-    /**
-     * Get all actors of a specific type
-     */
-    public static List<Actor> getByType(String type) {
-        List<Actor> result = new ArrayList<>();
-        Collection<Actor> all = getAll();
-        
-        if (all == null) return result;
-        
-        for (Actor actor : all) {
-            if (type.equals(actor.getType())) {
-                result.add(actor);
-            }
-        }
-        return result;
-    }
-    
-    /**
-     * Check if actor exists
-     */
     public static boolean exists(String name) {
-        return getByKey(name) != null;
+        return getByName(name) != null;
     }
 }
