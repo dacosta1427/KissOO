@@ -845,4 +845,209 @@ None currently documented.
 
 ---
 
-*Last Updated: 2026-02-04*
+## Perst OODBMS Integration
+
+### Overview
+Kiss can be extended to use Perst (an Object-Oriented Database) as an alternative to SQL databases. This section documents the integration pattern discovered during development.
+
+### Architecture
+
+```
+src/main/precompiled/
+├── mycompany/
+│   ├── domain/           # Perst persistent classes
+│   │   ├── Actor.java
+│   │   ├── PerstUser.java
+│   │   ├── Phone.java
+│   │   └── ...
+│   │
+│   └── database/        # Managers (business logic)
+│       ├── ActorManager.java
+│       ├── PerstUserManager.java
+│       ├── BaseManager.java
+│       └── ...
+│
+└── oodb/                # Perst infrastructure
+    ├── PerstConfig.java
+    ├── PerstContext.java
+    └── PerstStorageManager.java
+```
+
+### Key Principles
+
+1. **Managers in precompiled** - All Manager classes go in `src/main/precompiled/mycompany/database/`
+2. **Services in backend** - REST services go in `src/main/backend/services/`
+3. **Static methods** - Managers use static methods, not singletons
+4. **Storage delegation** - Managers delegate storage to `PerstStorageManager`
+
+### Configuration (application.ini)
+
+```ini
+[main]
+# No SQL database configured - Perst is used instead
+# DatabaseType = 
+# DatabaseName = 
+
+# Enable authentication even without SQL DB
+RequireAuthentication = true
+
+# Perst OODBMS Settings
+PerstEnabled = true
+PerstUseCDatabase = false
+PerstDatabasePath = ../../../data/oodb
+PerstPagePoolSize = 536870912
+```
+
+### PerstStorageManager API
+
+```java
+// Initialize at startup (in KissInit.groovy)
+PerstStorageManager.initialize();
+
+// Query methods
+Collection<Object> getAll(Class<?> clazz);
+Object getByUuid(String uuid);
+
+// CRUD operations
+void save(Object obj);
+void delete(Object obj);
+
+// Transactions
+void beginTransaction();
+void commitTransaction();
+void rollbackTransaction();
+
+// Check availability
+boolean isAvailable();
+```
+
+### Manager Pattern
+
+```java
+package mycompany.database;
+
+import mycompany.domain.MyEntity;
+import oodb.PerstStorageManager;
+import java.util.*;
+
+public class MyEntityManager extends BaseManager<MyEntity> {
+    
+    // Authorization-aware methods check permissions first
+    public static Collection<MyEntity> getAll(MyEntity actor) {
+        if (!checkPermission(actor, ACTION_READ, MyEntity.class)) {
+            return null;
+        }
+        return getAll();
+    }
+    
+    // CRUD delegates to PerstStorageManager
+    public static Collection<MyEntity> getAll() {
+        Collection<MyEntity> result = new ArrayList<>();
+        for (Object obj : PerstStorageManager.getAll(MyEntity.class)) {
+            result.add((MyEntity) obj);
+        }
+        return result;
+    }
+    
+    public static boolean create(MyEntity entity) {
+        if (!validate(entity)) return false;
+        PerstStorageManager.save(entity);
+        return true;
+    }
+    
+    // Business logic validation
+    public static boolean validate(MyEntity entity) {
+        if (entity == null) return false;
+        // validation logic
+        return true;
+    }
+}
+```
+
+### Authentication with Perst
+
+When `RequireAuthentication = true` and no SQL database is configured, the framework calls `Login.groovy` with a **null Connection parameter**. Your Login.groovy must handle this:
+
+```groovy
+public static UserData login(Connection db, String user, String password, JSONObject outjson, ProcessServlet servlet) {
+    // db will be null when Perst-only mode is active
+    // Use PerstUserManager for authentication instead
+    PerstUser perstUser = PerstUserManager.authenticate(user, password);
+    if (perstUser == null) {
+        return null;  // Invalid credentials
+    }
+    // Create and return UserData
+    return new UserData(perstUser.getUuid(), perstUser.getUserId(), perstUser.getPassword());
+}
+```
+
+### Perst Domain Classes
+
+Domain classes must extend Perst's `Persistent` class:
+
+```java
+package mycompany.domain;
+
+import org.garret.perst.Persistent;
+
+public class Actor extends Persistent {
+    private String uuid;
+    private String name;
+    private String type;
+    private Integer userId;
+    
+    public Actor() {}  // Required no-arg constructor
+    
+    public Actor(String name, String type, Agreement agreement) {
+        this.uuid = UUID.randomUUID().toString();
+        this.name = name;
+        this.type = type;
+    }
+    
+    // Getters and setters
+    public String getUuid() { return uuid; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    // ... etc
+}
+```
+
+### Best Practices for Non-SQL Integration
+
+1. **Initialize in KissInit.groovy** - Perst must be initialized during application startup in the `init()` method
+2. **Use PerstStorageManager** - Don't access Perst directly; use the manager class for consistency
+3. **Keep Managers in precompiled** - Business logic goes in `src/main/precompiled/mycompany/database/`
+4. **Handle null DB parameter** - Login.groovy must work when Connection is null
+5. **Use transactions** - Wrap multiple operations in transactions for data consistency
+
+---
+
+## Best Practices for Future Development
+
+### Before Making Changes
+
+1. **Check the manual** - `manual/developing.tex` often has relevant documentation
+2. **Check existing code patterns** - Look at similar files for conventions
+3. **Understand the architecture** - Know where code should go (precompiled vs backend vs frontend)
+
+### When Fixing Issues
+
+1. **Verify the root cause** - Don't guess; trace the actual error
+2. **Test incrementally** - Build after each significant change
+3. **Check for side effects** - Changes may affect other parts of the system
+
+### Code Organization
+
+1. **Business logic in Managers** - Keep CRUD and business logic in `src/main/precompiled/mycompany/database/`
+2. **Services in backend** - REST endpoints go in `src/main/backend/services/`
+3. **Domain in precompiled** - Persistent classes go in `src/main/precompiled/mycompany/domain/`
+
+### Testing
+
+1. **Run builds frequently** - Use `./bld -v build` to catch compilation errors
+2. **Test in Tomcat** - Some tests require full runtime environment
+3. **Check logs** - Server logs in `tomcat/logs/catalina.out` often reveal issues
+
+---
+
+*Last Updated: 2026-03-16*
