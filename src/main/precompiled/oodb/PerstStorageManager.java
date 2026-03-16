@@ -258,4 +258,35 @@ public class PerstStorageManager {
             System.out.println("[PerstStorageManager] Perst Storage closed");
         }
     }
+    
+    // ========== Storage Query Methods ==========
+    
+    /**
+     * Get all objects of a given class.
+     * 
+     * @param clazz the class type to retrieve
+     * @return collection of objects
+     */
+    public static java.util.Collection<java.lang.Object> getAll(Class<?> clazz) {
+        if (!isAvailable()) throw new IllegalStateException("Perst not available");
+        
+        CDatabaseRoot root = getRoot();
+        java.util.Collection<java.lang.Object> result = new java.util.ArrayList<>();
+        
+        if (clazz == mycompany.domain.PerstUser.class) {
+            for (mycompany.domain.PerstUser u : root.userIndex) result.add(u);
+        } else if (clazz == mycompany.domain.Actor.class) {
+            for (mycompany.domain.Actor a : root.actorIndex) result.add(a);
+        } else if (clazz == mycompany.domain.Phone.class) {
+            for (mycompany.domain.Phone p : root.phoneIndex) result.add(p);
+        } else if (clazz == mycompany.domain.BenchmarkData.class) {
+            for (mycompany.domain.BenchmarkData b : root.benchmarkIndex) result.add(b);
+        } else if (clazz == mycompany.domain.Agreement.class) {
+            for (mycompany.domain.Agreement a : root.agreementIndex) result.add(a);
+        } else if (clazz == mycompany.domain.Group.class) {
+            for (mycompany.domain.Group g : root.groupIndex) result.add(g);
+        }
+        
+        return result;
+    }
 }

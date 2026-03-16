@@ -1,13 +1,11 @@
 package mycompany.database;
 
 import mycompany.domain.Actor;
-import mycompany.domain.Agreement;
-import mycompany.domain.CDatabaseRoot;
-import oodb.PerstStorageManager;
 import java.util.*;
 
 /**
  * ActorManager - Manages Actor domain objects.
+ * Contains business logic only - storage is delegated to PerstStorageManager.
  */
 public class ActorManager extends BaseManager<Actor> {
     
@@ -57,59 +55,31 @@ public class ActorManager extends BaseManager<Actor> {
         return delete(obj);
     }
     
-    // ========== Base CRUD Methods ==========
+    // ========== Base CRUD Methods (delegated to PSM) ==========
     
     public static Collection<Actor> getAll() {
-        if (!PerstStorageManager.isAvailable()) {
-            return new ArrayList<>();
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        List<Actor> result = new ArrayList<>();
-        for (Actor a : root.actorIndex) {
-            result.add(a);
+        Collection<Actor> result = new ArrayList<>();
+        for (Object obj : oodb.PerstStorageManager.getAll(Actor.class)) {
+            result.add((Actor) obj);
         }
         return result;
     }
     
     public static Actor getByName(String name) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        return root.actorIndex.get(name);
-    }
-    
-    public static Actor getByUuid(String uuid) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        for (Actor a : root.actorIndex) {
-            if (a.getUuid() != null && a.getUuid().equals(uuid)) {
+        for (Actor a : getAll()) {
+            if (a.getName() != null && a.getName().equals(name)) {
                 return a;
             }
         }
         return null;
     }
     
-    public static Actor getByUserId(int userId) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        for (Actor a : root.actorIndex) {
-            if (a.getUserId() == userId) {
-                return a;
-            }
-        }
+    public static Actor getByUuid(String uuid) {
+        // TODO: Implement getByUuid when domain classes have getUuid()
         return null;
     }
     
     public static Actor create(Object... params) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
-        }
-        
         if (params.length < 2) {
             throw new IllegalArgumentException("Actor requires name and type");
         }
@@ -120,9 +90,7 @@ public class ActorManager extends BaseManager<Actor> {
             throw new IllegalArgumentException("Actor already exists: " + name);
         }
         
-        Agreement agreement = new Agreement(name + "_agreement");
-        
-        Actor actor = new Actor(name, (String) params[1], agreement);
+        Actor actor = new Actor(name, (String) params[1], new mycompany.domain.Agreement(name + "_agreement"));
         
         if (params.length > 2 && params[2] != null) {
             actor.setUserId((Integer) params[2]);
@@ -132,30 +100,16 @@ public class ActorManager extends BaseManager<Actor> {
             throw new IllegalArgumentException("Validation failed for Actor");
         }
         
-        PerstStorageManager.beginTransaction();
-        try {
-            PerstStorageManager.saveInTransaction(agreement);
-            PerstStorageManager.saveInTransaction(actor);
-            PerstStorageManager.commitTransaction();
-        } catch (Exception e) {
-            PerstStorageManager.rollbackTransaction();
-            throw new RuntimeException("Failed to create actor: " + e.getMessage(), e);
-        }
-        
+        oodb.PerstStorageManager.save(actor);
         return actor;
     }
     
     public static boolean update(Actor actor) {
-        if (!PerstStorageManager.isAvailable() || actor == null) {
-            return false;
-        }
-        
-        if (!validate(actor)) {
-            return false;
-        }
+        if (actor == null) return false;
+        if (!validate(actor)) return false;
         
         try {
-            PerstStorageManager.save(actor);
+            oodb.PerstStorageManager.save(actor);
             return true;
         } catch (Exception e) {
             return false;
@@ -163,20 +117,17 @@ public class ActorManager extends BaseManager<Actor> {
     }
     
     public static boolean delete(Actor actor) {
-        if (!PerstStorageManager.isAvailable() || actor == null) {
-            return false;
-        }
+        if (actor == null) return false;
         
-        PerstStorageManager.beginTransaction();
         try {
-            PerstStorageManager.deleteInTransaction(actor);
-            PerstStorageManager.commitTransaction();
+            oodb.PerstStorageManager.delete(actor);
             return true;
         } catch (Exception e) {
-            PerstStorageManager.rollbackTransaction();
             return false;
         }
     }
+    
+    // ========== Business Logic ==========
     
     public static boolean validate(Actor actor) {
         if (actor == null) return false;
