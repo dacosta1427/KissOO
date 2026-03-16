@@ -1,0 +1,83 @@
+<div>
+
+    <style>
+        .benchmark-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        .benchmark-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px;
+            background: #f5f5f5;
+        }
+        
+        .result-label {
+            font-weight: bold;
+        }
+        
+        .result-value {
+            font-family: monospace;
+        }
+        
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        
+        .success {
+            color: green;
+        }
+    </style>
+
+    <h2>Perst Benchmark</h2>
+    
+    <div class="benchmark-section">
+        <h3>Setup</h3>
+        <push-button id="btn-setup">Clear All Data</push-button>
+    </div>
+
+    <div class="benchmark-section">
+        <h3>Insert Operations</h3>
+        <push-button id="btn-bulk-insert">Bulk Insert (100)</push-button>
+        <push-button id="btn-bulk-insert-1k" style="margin-left: 10px;">Bulk Insert (1,000)</push-button>
+    </div>
+
+    <div class="benchmark-section">
+        <h3>Query Operations</h3>
+        <push-button id="btn-select-all">Select All</push-button>
+        <push-button id="btn-count" style="margin-left: 10px;">Count Records</push-button>
+    </div>
+
+    <div class="benchmark-section">
+        <h3>Update Operations</h3>
+        <push-button id="btn-bulk-update">Bulk Update</push-button>
+    </div>
+
+    <div class="benchmark-section">
+        <h3>Delete Operations</h3>
+        <push-button id="btn-bulk-delete">Bulk Delete</push-button>
+    </div>
+
+    <div class="benchmark-section">
+        <h3>Aggregation Operations</h3>
+        <push-button id="btn-agg-sum">Sum</push-button>
+        <push-button id="btn-agg-avg" style="margin-left: 10px;">Average</push-button>
+        <push-button id="btn-agg-group" style="margin-left: 10px;">Group By</push-button>
+    </div>
+
+    <div id="results" style="margin-top: 20px;">
+        <h3>Results</h3>
+        <div id="result-content"></div>
+    </div>
+
+</div>

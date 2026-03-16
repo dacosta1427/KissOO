@@ -27,6 +27,11 @@
         Utils.loadPage('screens/Users/Users', screenArea);
     });
 
+    $$('benchmark').onclick(function () {
+        Utils.cleanup();  //  clean up any context information
+        Utils.loadPage('screens/Benchmark/Benchmark', screenArea);
+    });
+
     $$('file-upload').onclick(function () {
         Utils.cleanup();  //  clean up any context information
         Utils.loadPage('screens/FileUploadScreen/FileUploadScreen', screenArea);
