@@ -79,10 +79,37 @@ Actor found = PerstHelper.retrieveObject(Actor.class, "name", "John");
 ```java
 // Default values
 perstEnabled = false        // Disabled by default
-useCDatabase = true        // Use versioning-enabled database
-databasePath = "oodb"      // Database file location
-pagePoolSize = 512MB       // Memory cache size
+useCDatabase = true         // Use CDatabase for versioning + Lucene
+databasePath = "oodb"       // Database file location
+pagePoolSize = 512MB        // Memory cache size
 ```
+
+### CDatabase (Versioning + Lucene)
+
+Perst CDatabase provides:
+- **Object versioning** - Automatic tracking of object changes
+- **Lucene full-text search** - Integrated text indexing
+
+#### Important: Lucene Index Path
+
+The Lucene index must be **adjacent** to the Perst database file, NOT a subdirectory:
+
+```
+data/oodb        <- Perst database FILE
+data/oodb.idx    <- Lucene index DIRECTORY (auto-created by FSDirectory)
+```
+
+**Why this matters:** Perst creates `oodb` as a file, not a directory. The original bug tried to create the Lucene index at `data/oodb/idx` (subdirectory inside the file path), which fails. The fix places it at `data/oodb.idx` (adjacent).
+
+#### Enabling CDatabase
+
+In `backend/application.ini`:
+```ini
+PerstUseCDatabase = true
+PerstDatabasePath = ../../../data/oodb
+```
+
+The database and index are stored outside the source tree at `data/oodb` and `data/oodb.idx`.
 
 ## Architecture
 

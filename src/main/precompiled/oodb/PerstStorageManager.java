@@ -67,6 +67,16 @@ public class PerstStorageManager {
             }
             org.kissweb.restServer.MainServlet.putEnvironment(ROOT_KEY, root);
             
+            // Initialize CDatabase if enabled (for versioning + Lucene)
+            if (PerstConfig.getInstance().isUseCDatabase()) {
+                CDatabase database = new CDatabase();
+                String dbPath = PerstConfig.getInstance().getDatabasePath();
+                String indexPath = dbPath + ".idx";  // Adjacent to Perst file
+                database.open(storage, indexPath);
+                org.kissweb.restServer.MainServlet.putEnvironment(DATABASE_KEY, database);
+                System.out.println("[PerstStorageManager] CDatabase initialized with Lucene index at: " + indexPath);
+            }
+            
             initialized = true;
             System.out.println("[PerstStorageManager] Perst Storage initialized and stored in MainServlet environment");
             
@@ -87,10 +97,11 @@ public class PerstStorageManager {
         String dbPath = PerstConfig.getInstance().getDatabasePath();
         int poolSize = PerstConfig.getInstance().getPagePoolSize();
         
-        // Ensure directory exists
+        // Ensure parent directory exists (not the db file itself)
         java.io.File dbFile = new java.io.File(dbPath);
-        if (!dbFile.exists()) {
-            dbFile.mkdirs();
+        java.io.File parentDir = dbFile.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
         }
         
         storage.open(dbPath, poolSize);
