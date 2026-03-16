@@ -913,6 +913,7 @@ public class ProcessServlet implements Runnable {
         UserData ud = null;
         if (MainServlet.requiresAuthentication()) {
             try {
+                // DB may be null when using Perst-only auth - GroovyClass now handles null params
                 ud = (UserData) GroovyClass.invoke(true, "Login", "login", null, DB, user, password, outjson, this);
             } catch (InvocationTargetException e) {
                 logger.error("Login error", e.getTargetException());
@@ -932,6 +933,7 @@ public class ProcessServlet implements Runnable {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime timeout = ud.getLastAccessDate().plusSeconds(120);  // cache user data for 120 seconds
         if (MainServlet.requiresAuthentication() && now.isAfter(timeout)) {
+            // DB may be null when using Perst-only auth - GroovyClass now handles null params
             Boolean good = (Boolean) GroovyClass.invoke(true, "Login", "checkLogin", null, DB, ud, this);
             if (!good) {
                 UserCache.removeUser(ud.getUuid());
@@ -942,7 +944,7 @@ public class ProcessServlet implements Runnable {
     }
 
     private void newDatabaseConnection() throws SQLException {
-        if (!MainServlet.hasDatabase())
+        if (!MainServlet.hasSqlDatabase())
             return;
         logger.info("Pool status - busy: " + MainServlet.getCpds().getNumBusyConnections() + 
                    ", idle: " + MainServlet.getCpds().getNumIdleConnections());

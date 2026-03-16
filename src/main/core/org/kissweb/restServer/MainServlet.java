@@ -222,9 +222,20 @@ public class MainServlet extends HttpServlet {
         } else
             logger.error("* * * Error executing KissInit.groovy");
 
+        // Only call init2 if there's a SQL database or a NonSqlConnection registered
         Connection db = MainServlet.openNewConnection();
-        (new GroovyService()).internalGroovy(null, "KissInit", "init2", db);
-        MainServlet.closeConnection(db);
+        Object nonSqlConn = environment.get("NonSqlConnection");
+        if (hasDatabase || nonSqlConn != null) {
+            // Pass NonSqlConnection if no SQL DB but NonSqlConnection is registered
+            if (db == null && nonSqlConn instanceof Connection)
+                db = (Connection) nonSqlConn;
+            (new GroovyService()).internalGroovy(null, "KissInit", "init2", db);
+        }
+        if (db != null && !(nonSqlConn instanceof Connection))
+            MainServlet.closeConnection(db);
+
+        if (!hasDatabase)
+            logger.info("* * * No database configured; bypassing login requirements");
 
         try {
             cron = new Cron(MainServlet.getApplicationPath() + "CronTasks/crontab",
@@ -586,12 +597,25 @@ public class MainServlet extends HttpServlet {
     }
 
     /**
-     * Checks if a database is configured.
+     * Checks if a SQL database is actually configured.
      *
-     * @return true if database is configured
+     * @return true if SQL database is configured
+     */
+    public static boolean hasSqlDatabase() {
+        return hasDatabase;
+    }
+
+    /**
+     * Checks if a database is configured or authentication is required.
+     * Returns true if SQL database is configured OR RequireAuthentication is set.
+     *
+     * @return true if database is configured or authentication is required
      */
     public static boolean hasDatabase() {
-        return hasDatabase;
+        if (hasDatabase)
+            return true;
+        String requireAuth = (String) environment.get("RequireAuthentication");
+        return "true".equalsIgnoreCase(requireAuth);
     }
 
     /**

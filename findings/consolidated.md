@@ -447,4 +447,37 @@ KissOO is a **well-architected framework fork** that successfully integrates Per
 
 ---
 
+## Live Build Test Results (2026-03-15)
+
+**Command:** `./bld.cmd -v develop`
+
+**Result:** ❌ **BUILD FAILED** - 18 compilation errors
+
+### ActorManager.java (11 errors)
+| Line | Error |
+|------|-------|
+| 43, 53, 63, 73, 98, 108 | `checkPermission` expects `Class<?>` not `String` |
+| 133 | `PerstHelper.retrieveObject` returns `Object` not `Actor` |
+| 143 | Method signature mismatch - `retrieveObject(Class, String)` not found |
+| 180 | `setUserId(Integer)` method doesn't exist on `Actor` |
+
+### PerstUserManager.java (7 errors)
+| Line | Error |
+|------|-------|
+| 42, 52, 62, 72, 82 | Same `checkPermission` type mismatch |
+| 107 | `retrieveObject` return type issue |
+| 125, 212 | `getPassword()` method doesn't exist on `PerstUser` |
+
+### Root Cause Analysis
+The Perst integration code is **incomplete/broken**:
+- `checkPermission` method signature changed but callers not updated
+- `PerstHelper.retrieveObject` API mismatch with actual implementation
+- Missing getter/setter methods on domain entities
+- Likely Perst API version drift
+
+### Assessment
+The framework **cannot start** in its current state. The Perst integration needs significant bug fixes before it can run.
+
+---
+
 *Last Updated: 2026-03-15*

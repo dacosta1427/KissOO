@@ -320,7 +320,8 @@ public class PerstHelper {
      */
     public static <T extends org.garret.perst.continuous.CVersion> java.util.List<T> getVersionHistory(
             Class<T> clazz, String keyField, String keyValue) {
-        return PerstContext.getInstance().getVersionHistory(clazz, keyField, keyValue);
+        throw new UnsupportedOperationException("Not implemented - PerstContext.getVersionHistory not available");
+        // return PerstContext.getInstance().getVersionHistory(clazz, keyField, keyValue);
     }
     
     /**
@@ -333,6 +334,7 @@ public class PerstHelper {
      */
     public static <T extends org.garret.perst.continuous.CVersion> T getCurrentVersion(
             Class<T> clazz, String keyField, String keyValue) {
-        return PerstContext.getInstance().getCurrentVersion(clazz, keyField, keyValue);
+        throw new UnsupportedOperationException("Not implemented - PerstContext.getCurrentVersion not available");
+        // return PerstContext.getInstance().getCurrentVersion(clazz, keyField, keyValue);
     }
 }

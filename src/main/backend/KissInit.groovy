@@ -29,8 +29,20 @@ class KissInit {
         
         if (PerstConfig.getInstance().isPerstEnabled()) {
             println "[KissInit] init() - Initializing Perst NOW..."
-            PerstStorageManager.initialize()
-            println "[KissInit] init() - Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
+            try {
+                PerstStorageManager.initialize()
+                println "[KissInit] init() - Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
+                
+                // Initialize default admin user if none exists
+                if (PerstContext.getInstance().isAvailable()) {
+                    initDefaultUser()
+                    indexPerstUsers()
+                    indexActors()
+                }
+            } catch (Exception e) {
+                println "[KissInit] ERROR during Perst init: " + e.message
+                e.printStackTrace()
+            }
         }
         
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
