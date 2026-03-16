@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="generator" content={import.meta.env.SVELTE_APP_GENERATOR} />
+  <title>KissOO Svelte 5</title>
+  <script src="https://cdn.ckeditor.com/4.25.0/standard/ckeditor.js"></script>
+</head>
+<body>
+  <div id="svelte"></div>
+  <script>
+    import { Server } from '$lib/services/Server';
+    import App from '$lib/components/App.svelte';
+
+    // Set default backend URL
+    if (window.location.protocol === 'file:') {
+      Server.setURL('http://localhost:8080');
+    } else if (window.location.protocol === 'http:' && window.location.port >= 8000) {
+      Server.setURL(`http://${window.location.hostname}:8080`);
+    } else {
+      Server.setURL(window.location.origin);
+    }
+
+    new App({ target: document.getElementById('svelte') });
+  </script>
+</body>
+</html>
