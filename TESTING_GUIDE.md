@@ -268,6 +268,12 @@ public static UserData login(Connection db, String user, String password, JSONOb
 ./bld -v test
 ```
 
+> **Note:** When running tests outside Tomcat (standalone), some tests may fail due to missing Perst and Jakarta Servlet jars in the test classpath. These tests work correctly when running in the full application context (Tomcat). Tests affected:
+> - Tests that reference Perst domain classes (Actor, PerstUser, etc.)
+> - Tests that use PerstConfig (requires HttpServlet)
+> 
+> The failures are infrastructure-related, not logic errors.
+
 ---
 
 *Last updated: 2026-03-16*
