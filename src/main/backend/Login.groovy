@@ -4,8 +4,8 @@ import org.kissweb.database.Record
 import org.kissweb.restServer.ProcessServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import domain.database.PerstUserManager
-import domain.PerstUser
+import mycompany.database.PerstUserManager
+import mycompany.domain.PerstUser
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -37,7 +37,7 @@ class Login {
         // Use PerstUserManager for authentication
         try {
             // Find and authenticate user via Manager
-            PerstUser perstUser = PerstUserManager.getInstance().authenticate(user, password)
+            PerstUser perstUser = PerstUserManager.authenticate(user, password)
             
             if (perstUser == null) {
                 logger.warn("[PerstAuth] Login FAILED: invalid credentials for user: ${user}")
@@ -49,7 +49,7 @@ class Login {
             
             // Update last login date
             perstUser.setLastLoginDate(System.currentTimeMillis())
-            PerstUserManager.getInstance().update(perstUser)
+            PerstUserManager.update(perstUser)
             
             logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()})")
             

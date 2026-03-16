@@ -16,11 +16,27 @@ class KissInit {
      * Configure the system.
      */
     static void init() {
-
+        println "[KissInit] init() CALLED"
+        
         MainServlet.readIniFile "application.ini", "main"
 
+        println "[KissInit] init() - After readIniFile"
+        
+        // Initialize Perst HERE - before init2() which might not be called
+        // This uses MainServlet.putEnvironment() as suggested by KISS creator
+        println "[KissInit] init() - Checking Perst config..."
+        println "[KissInit] init() - PerstEnabled=" + PerstConfig.getInstance().isPerstEnabled()
+        
+        if (PerstConfig.getInstance().isPerstEnabled()) {
+            println "[KissInit] init() - Initializing Perst NOW..."
+            PerstStorageManager.initialize()
+            println "[KissInit] init() - Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
+        }
+        
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
         MainServlet.allowWithoutAuthentication("", "Login")
+        
+        println "[KissInit] init() COMPLETED"
         
         // Set up a global logout handler that runs whenever any user logs out
         // This can be used for cleanup tasks like logging, closing resources, etc.
@@ -43,19 +59,36 @@ class KissInit {
      * Note: No SQL database is configured - Perst is accessed via MainServlet environment.
      */
     static void init2(Connection db) {
-        // Initialize Perst database at startup via PerstStorageManager
-        // This uses MainServlet.putEnvironment() as suggested by KISS creator
-        if (PerstConfig.getInstance().isPerstEnabled()) {
-            System.out.println("[KissInit] Initializing Perst database via PerstStorageManager...")
-            PerstStorageManager.initialize()
-            System.out.println("[KissInit] Perst database initialized")
-        }
+        try {
+            println "[KissInit] init2() CALLED"
+            println "[KissInit] db = " + db
+            
+            // Initialize Perst database at startup via PerstStorageManager
+            // This uses MainServlet.putEnvironment() as suggested by KISS creator
+            println "[KissInit] Checking Perst config: enabled=" + PerstConfig.getInstance().isPerstEnabled()
+            println "[KissInit] Database path: " + PerstConfig.getInstance().getDatabasePath()
+            
+            if (PerstConfig.getInstance().isPerstEnabled()) {
+                println "[KissInit] Initializing Perst database via PerstStorageManager..."
+                PerstStorageManager.initialize()
+                println "[KissInit] Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
+            } else {
+                println "[KissInit] Perst is NOT enabled - check application.ini"
+            }
 
-        // Initialize default admin user if none exists
-        if (PerstContext.getInstance().isAvailable()) {
-            initDefaultUser()
-            indexPerstUsers()
-            indexActors()
+            // Initialize default admin user if none exists
+            if (PerstContext.getInstance().isAvailable()) {
+                initDefaultUser()
+                indexPerstUsers()
+                indexActors()
+            } else {
+                println "[KissInit] WARNING: Perst not available, skipping user init"
+            }
+            
+            println "[KissInit] init2() COMPLETED"
+        } catch (Exception e) {
+            println "[KissInit] ERROR in init2: " + e.message
+            e.printStackTrace()
         }
     }
     

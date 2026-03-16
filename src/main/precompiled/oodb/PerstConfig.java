@@ -87,6 +87,7 @@ public class PerstConfig {
     }
     
     public boolean isPerstEnabled() {
+        System.out.println("[PerstConfig] isPerstEnabled called, perstEnabled=" + perstEnabled);
         return perstEnabled;
     }
     

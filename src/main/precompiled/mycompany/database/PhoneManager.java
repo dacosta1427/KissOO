@@ -18,8 +18,12 @@ public class PhoneManager {
         }
         CDatabaseRoot root = PerstStorageManager.getRoot();
         List<Phone> result = new ArrayList<>();
+        Set<Long> seenOids = new HashSet<>();  // Deduplicate by OID
         for (Phone p : root.phoneIndex) {
-            result.add(p);
+            if (!seenOids.contains((long) p.getOid())) {
+                seenOids.add((long) p.getOid());
+                result.add(p);
+            }
         }
         return result;
     }
@@ -74,10 +78,13 @@ public class PhoneManager {
             return false;
         }
         
+        PerstStorageManager.beginTransaction();
         try {
-            PerstStorageManager.save(phone);
+            PerstStorageManager.saveInTransaction(phone);
+            PerstStorageManager.commitTransaction();
             return true;
         } catch (Exception e) {
+            PerstStorageManager.rollbackTransaction();
             return false;
         }
     }

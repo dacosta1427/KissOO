@@ -174,6 +174,15 @@ try {
 2. `MainServlet` calls `KissInit.init2(Connection db)` 
 3. `init2()` should call `PerstStorageManager.initialize()`
 
+**Status: DEBUGGING**
+
+Added debug logging to PerstStorageManager to trace initialization:
+- initialize() - logs when called and PerstConfig.isPerstEnabled() result
+- getStorage() - logs lazy initialization attempts  
+- isAvailable() - logs return value
+
+Run the app and check console output to identify where initialization fails.
+
 **Critical: Initialization Flow:**
 ```
 MainServlet.contextInitialized()

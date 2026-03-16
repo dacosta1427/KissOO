@@ -61,6 +61,9 @@ public class PerstStorageManager {
                 root.setCollections(storage);
                 storage.setRoot(root);
                 storage.commit();
+            } else {
+                // Root exists - ensure all indexes are initialized (in case new ones were added)
+                root.setCollections(storage);
             }
             org.kissweb.restServer.MainServlet.putEnvironment(ROOT_KEY, root);
             

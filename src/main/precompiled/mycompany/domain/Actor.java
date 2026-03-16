@@ -19,6 +19,7 @@ public class Actor extends CVersion {
     private String type;  // Generic type field - customize for your domain
     private boolean active = true;
     private long createdDate;
+    private int userId = 0;  // Link to SQL user ID
     private transient PerstUser perstUser;  // Linked PerstUser for authentication
     private Agreement agreement;  // MANDATORY - Authorization contract
     
@@ -81,6 +82,9 @@ public class Actor extends CVersion {
     
     public long getCreatedDate() { return createdDate; }
     public void setCreatedDate(long createdDate) { this.createdDate = createdDate; }
+    
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
     
     public PerstUser getPerstUser() { return perstUser; }
     public void setPerstUser(PerstUser perstUser) { this.perstUser = perstUser; }
