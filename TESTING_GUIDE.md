@@ -271,8 +271,16 @@ public static UserData login(Connection db, String user, String password, JSONOb
 > **Note:** When running tests outside Tomcat (standalone), some tests may fail due to missing Perst and Jakarta Servlet jars in the test classpath. These tests work correctly when running in the full application context (Tomcat). Tests affected:
 > - Tests that reference Perst domain classes (Actor, PerstUser, etc.)
 > - Tests that use PerstConfig (requires HttpServlet)
-> 
+>
 > The failures are infrastructure-related, not logic errors.
+
+---
+
+## Benchmark Screen
+
+> **Status:** ⚠️ Not working - The Benchmark screen buttons do not return results to the frontend. This is a known issue and is currently skipped for further development.
+
+The Benchmark screen in the frontend (`screens/Benchmark/Benchmark.js`) calls the backend service (`services/Benchmark.groovy`) but the results are not being displayed. This appears to be a JSON response handling issue between the frontend and backend.
 
 ---
 
