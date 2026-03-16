@@ -10,14 +10,14 @@ KissOO is a fork of the KISS framework that adds Perst OODB integration.
 - All services use Perst directly
 - Using Java for services (moving away from Groovy)
 
-**Current Status (2026-03-15):**
-- ✅ Perst is initialized and working at startup
-- ✅ Login service works (Java-based, uses PerstUserManager)
-- ✅ Perst-only mode implemented (DatabaseType=Perst)
+**Current Status (2026-03-16):**
+- ✅ Perst is initialized in KissInit.init() (NOT init2 - critical fix!)
+- ✅ Login service works
+- ✅ CRUD operations work (add/edit/delete)
+- ✅ Perst-only mode implemented (no database configured)
 - ✅ JDBC pool skipped for Perst type
-- ✅ Connection wrapper blocks SQL
-- ✅ Transaction handling fixed for standard Storage mode
-- 🔄 Testing/verification in progress
+- ✅ Transaction handling fixed
+- ✅ No core KISS framework modifications needed
 
 ---
 
@@ -169,10 +169,7 @@ try {
 
 **Symptom:** `PerstStorageManager.isAvailable()` returns false when services try to create records.
 
-**Root Cause:** Perst must be initialized ONCE at startup in `KissInit.init2()`. The flow is:
-1. `KissInit.init()` runs first
-2. `MainServlet` calls `KissInit.init2(Connection db)` 
-3. `init2()` should call `PerstStorageManager.initialize()`
+**Root Cause:** Perst must be initialized in `KissInit.init()`, NOT init2. When no database is configured, the KISS framework does NOT call init2().
 
 **Status: DEBUGGING**
 
@@ -200,7 +197,7 @@ MainServlet.contextInitialized()
 4. Check database path exists and is writable
 
 **Files to Check:**
-- `KissInit.groovy` - Must call `PerstStorageManager.initialize()`
+- `KissInit.groovy` - Must call `PerstStorageManager.initialize()` in `init()` (NOT init2!)
 - `PerstConfig.java` - Must load `PerstEnabled` from application.ini
 - `application.ini` - Must have `PerstEnabled = true`
 
@@ -282,7 +279,7 @@ Each Perst Persistent object has a built-in OID that's automatically assigned.
 
 1. **Managers at the Gate** - All data access goes through Managers
 2. **PerstStorageManager handles storage** - save/delete/getRoot operations
-3. **Initialize once at startup** - PerstStorageManager.initialize() in KissInit.init2()
+4. **Initialize once at startup** - PerstStorageManager.initialize() in KissInit.init() (NOT init2!)
 4. **Use OID for IDs** - Don't use custom ID fields, use Perst's built-in OID
 5. **Call index() before save** - Domain objects must be indexed to be findable
 
@@ -304,8 +301,13 @@ PerstPagePoolSize = 536870912
 
 ### Initialization Code (KissInit.groovy)
 
+**IMPORTANT:** Use `init()`, NOT `init2()`. When no database is configured, init2() is not called!
+
 ```groovy
-static void init2(Connection db) {
+static void init() {
+    MainServlet.readIniFile "application.ini", "main"
+    
+    // Initialize Perst in init() - init2() is NOT called when no database configured!
     if (PerstConfig.getInstance().isPerstEnabled()) {
         PerstStorageManager.initialize()
     }
@@ -395,11 +397,11 @@ Response → ProcessServlet.closeSession()
    - Admin user can login
    - Session is created properly
 
-### Completed (2026-03-15)
+### Completed (2026-03-16)
 
-✅ Refactored to use MainServlet environment (no core changes)
-✅ Created PerstStorageManager with save/delete methods
-✅ Created Manager classes (PerstUserManager, ActorManager, PhoneManager, BenchmarkDataManager)
+✅ Perst initialization in KissInit.init() (NOT init2!)
+✅ Perst-only mode works without core KISS framework changes
+✅ CRUD operations work (with proper transaction handling)
 ✅ Managers use PerstStorageManager for all storage operations
 
 ---

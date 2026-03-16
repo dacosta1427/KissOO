@@ -62,16 +62,22 @@ PerstPagePoolSize = 536870912
 
 ### 2. Initialization
 
-Perst is initialized automatically in `KissInit.groovy`:
+Perst is initialized in `KissInit.init()` (NOT init2 - init2 is not called when no database is configured):
 
 ```groovy
-static void init2(Connection db) {
+static void init() {
+    MainServlet.readIniFile "application.ini", "main"
+    
+    // Initialize Perst HERE - before init2() which might not be called
     if (PerstConfig.getInstance().isPerstEnabled()) {
         PerstStorageManager.initialize()
-        initDefaultUser()  // Creates admin user if none exists
     }
+    
+    // Other initialization...
 }
 ```
+
+**Important:** Perst must be initialized in `init()`, not `init2()`. When no SQL database is configured (DatabaseType commented out), the KISS framework does NOT call `init2()`. So all initialization including Perst must happen in `init()`.
 
 ### 3. Creating a Domain Object
 
