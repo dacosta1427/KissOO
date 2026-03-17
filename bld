@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 CP="work/exploded/WEB-INF/classes"
 for jar in libs/*.jar; do
-  CP="$CP;$jar"
+  CP="$CP:$jar"
 done
 
 if [ src/main/precompiled/Tasks.java -nt work/exploded/WEB-INF/classes/Tasks.class ] || [ src/main/core/org/kissweb/BuildUtils.java -nt work/exploded/WEB-INF/classes/org/kissweb/BuildUtils.class ]; then
   echo building the builder
   mkdir -p work/exploded/WEB-INF/classes
-  javac -cp "libs/commons-compress-1.27.1.jar;libs/commons-io-2.16.1.jar;libs/commons-lang3-3.18.0.jar" src/main/precompiled/Tasks.java src/main/core/org/kissweb/BuildUtils.java -d work/exploded/WEB-INF/classes
+  javac -cp "libs/commons-compress-1.27.1.jar:libs/commons-io-2.16.1.jar:libs/commons-lang3-3.18.0.jar" src/main/precompiled/Tasks.java src/main/core/org/kissweb/BuildUtils.java -d work/exploded/WEB-INF/classes
 fi
 java -cp "$CP" -Dsun.security.pkcs11.enable-solaris=false Tasks "$@"
