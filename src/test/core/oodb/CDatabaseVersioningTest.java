@@ -10,8 +10,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * Integration tests for CDatabase versioning functionality.
  * Tests that:
@@ -51,25 +49,28 @@ public class CDatabaseVersioningTest {
         Actor actor1 = createTestActor("John", "Test user for versioning");
         database.insert(actor1);
         String uuid = actor1.getUuid();
+        long txId1 = actor1.getTransactionId();
         System.out.println("   Created Actor with UUID: " + uuid);
-        System.out.println("   Version: " + actor1.getVersion());
+        System.out.println("   Transaction ID: " + txId1);
 
         // 4. Update to create v2
         System.out.println("\n4. Updating to create v2...");
         actor1.setName("John Updated");
         Actor actor2 = database.update(actor1);
-        System.out.println("   New version: " + actor2.getVersion());
+        long txId2 = actor2.getTransactionId();
+        System.out.println("   New Transaction ID: " + txId2);
         System.out.println("   UUID preserved: " + actor2.getUuid().equals(uuid));
 
         // 5. Update again to create v3
         System.out.println("\n5. Updating again to create v3...");
         actor2.setName("John Final");
         Actor actor3 = database.update(actor2);
-        System.out.println("   New version: " + actor3.getVersion());
+        long txId3 = actor3.getTransactionId();
+        System.out.println("   New Transaction ID: " + txId3);
 
         // 6. Get CURRENT version (should be v3)
         System.out.println("\n6. Testing getRecords with CURRENT selector...");
-        List<Actor> currentRecords = getRecords(database, Actor.class, VersionSelector.Kind.CURRENT);
+        List<Actor> currentRecords = getRecords(database, Actor.class, VersionSelector.CURRENT);
         System.out.println("   Current records count: " + currentRecords.size());
         assertEquals(1, currentRecords.size(), "Should have 1 current record");
         assertEquals("John Final", currentRecords.get(0).getName(), "Current should be v3");
@@ -77,21 +78,23 @@ public class CDatabaseVersioningTest {
 
         // 7. Get ALL versions (should include v1, v2, v3)
         System.out.println("\n7. Testing getRecords with ALL selector...");
-        List<Actor> allRecords = getRecords(database, Actor.class, VersionSelector.Kind.ALL);
+        List<Actor> allRecords = getRecords(database, Actor.class, null);  // null means ALL
         System.out.println("   All versions count: " + allRecords.size());
         assertTrue(allRecords.size() >= 3, "Should have at least 3 versions");
         
         // Print all versions
         System.out.println("   All versions:");
         for (Actor a : allRecords) {
-            System.out.println("     - name: " + a.getName() + ", version: " + a.getVersion() + ", current: " + a.isCurrent());
+            System.out.println("     - name: " + a.getName() + ", txId: " + a.getTransactionId());
         }
 
         // 8. Verify non-current versions exist
         System.out.println("\n8. Verifying non-current versions exist...");
-        long nonCurrentCount = allRecords.stream().filter(a -> !a.isCurrent()).count();
-        System.out.println("   Non-current versions: " + nonCurrentCount);
-        assertTrue(nonCurrentCount >= 2, "Should have at least 2 historical versions");
+        // With CURRENT, we should get only 1. With ALL, we should get 3+
+        int currentCount = currentRecords.size();
+        int allCount = allRecords.size();
+        System.out.println("   Current: " + currentCount + ", All: " + allCount);
+        assertTrue(allCount > currentCount, "ALL should return more than CURRENT");
 
         // 9. Test select with query on current
         System.out.println("\n9. Testing select on current versions...");
@@ -117,23 +120,19 @@ public class CDatabaseVersioningTest {
     }
 
     private Actor createTestActor(String name, String description) {
-        Actor actor = new Actor();
-        actor.setName(name);
-        actor.setUserType("USER");
-        actor.setDescription(description);
-        return actor;
+        mycompany.domain.Agreement agreement = new mycompany.domain.Agreement(name + "_agreement");
+        return new Actor(name, "USER", agreement);
     }
 
     private void clearTestData(CDatabase database) {
-        IterableIterator<Actor> iter = database.getRecords(Actor.class, VersionSelector.Kind.ALL);
+        IterableIterator<Actor> iter = database.getRecords(Actor.class, null);  // null = ALL
         while (iter.hasNext()) {
             Actor a = iter.next();
             database.delete(a);
         }
     }
 
-    private List<Actor> getRecords(CDatabase database, Class<Actor> clazz, VersionSelector.Kind kind) {
-        VersionSelector selector = new VersionSelector(kind);
+    private List<Actor> getRecords(CDatabase database, Class<Actor> clazz, VersionSelector selector) {
         IterableIterator<Actor> iter = database.getRecords(clazz, selector);
         return toList(iter);
     }

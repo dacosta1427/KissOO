@@ -236,8 +236,8 @@ public class Tasks {
         copyTree("src/main/backend", explodedDir + "/WEB-INF/backend");
         copyTree(LIBS, explodedDir + "/WEB-INF/lib");
         buildJava("src/main/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
-        buildJava("src/test/core", explodedDir + "/WEB-INF/test-classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         buildJava("src/main/precompiled", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
+        buildJava("src/test/core", explodedDir + "/WEB-INF/test-classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         rm(explodedDir + "/WEB-INF/lib/jakarta.servlet-api-4.0.1.jar");
         copyRegex("src/main/core/org/kissweb/lisp", explodedDir + "/WEB-INF/classes/org/kissweb/lisp", ".*\\.lisp", null, false);
         copy("src/main/core/log4j2.xml", explodedDir + "/WEB-INF/classes");

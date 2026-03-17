@@ -79,6 +79,18 @@ public class ActorManager extends BaseManager<Actor> {
         return null;
     }
     
+    public static Actor getByUserId(int userId) {
+        if (userId <= 0) {
+            return null;
+        }
+        for (Actor a : getAll()) {
+            if (a.getUserId() == userId) {
+                return a;
+            }
+        }
+        return null;
+    }
+    
     public static Actor create(Object... params) {
         if (params.length < 2) {
             throw new IllegalArgumentException("Actor requires name and type");
