@@ -11,6 +11,9 @@ import org.garret.perst.IterableIterator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * SINGLE ENTRY POINT for all Perst database operations.
@@ -35,6 +38,7 @@ public class PerstStorageManager {
     private static final String DBMANAGER_KEY = "perstDBManager";
     private static boolean initialized = false;
     private static Storage storage;
+    private static ScheduledExecutorService optimizerScheduler;
     
     private PerstStorageManager() {}
     
@@ -64,6 +68,8 @@ public class PerstStorageManager {
             org.kissweb.restServer.MainServlet.putEnvironment(DBMANAGER_KEY, dbm);
             
             initialized = true;
+            
+            startOptimizerScheduler(dbm);
             
         } catch (Exception e) {
             System.err.println("[PerstStorageManager] Failed to initialize: " + e.getMessage());
@@ -277,7 +283,50 @@ public class PerstStorageManager {
             storage.close();
             storage = null;
         }
+        stopOptimizerScheduler();
         initialized = false;
+    }
+    
+    private static void startOptimizerScheduler(UnifiedDBManager dbm) {
+        int interval = PerstConfig.getInstance().getPerstOptimizeInterval();
+        if (interval <= 0) {
+            System.out.println("[PerstStorageManager] Lucene optimization disabled (interval=0)");
+            return;
+        }
+        
+        optimizerScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "LuceneOptimizer");
+            t.setDaemon(true);
+            return t;
+        });
+        
+        optimizerScheduler.scheduleAtFixedRate(() -> {
+            try {
+                System.out.println("[PerstStorageManager] Running Lucene full-text index optimization...");
+                dbm.flushHistoryBuffer();
+                System.out.println("[PerstStorageManager] Lucene optimization complete.");
+            } catch (Exception e) {
+                System.err.println("[PerstStorageManager] Lucene optimization failed: " + e.getMessage());
+            }
+        }, interval, interval, TimeUnit.SECONDS);
+        
+        System.out.println("[PerstStorageManager] Lucene optimizer scheduled every " + interval + " seconds");
+    }
+    
+    private static void stopOptimizerScheduler() {
+        if (optimizerScheduler != null) {
+            optimizerScheduler.shutdown();
+            try {
+                if (!optimizerScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    optimizerScheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                optimizerScheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            optimizerScheduler = null;
+            System.out.println("[PerstStorageManager] Lucene optimizer stopped");
+        }
     }
     
     // ========== HELPER METHODS ==========
