@@ -329,6 +329,62 @@ public class PerstStorageManager {
         }
     }
     
+    // ========== HEALTH CHECK ==========
+    
+    public static java.util.Map<String, Object> healthCheck() {
+        java.util.Map<String, Object> health = new java.util.HashMap<>();
+        
+        UnifiedDBManager dbm = getDBManager();
+        
+        health.put("initialized", initialized);
+        health.put("perstEnabled", PerstConfig.getInstance().isPerstEnabled());
+        health.put("useCDatabase", PerstConfig.getInstance().isUseCDatabase());
+        health.put("available", dbm != null);
+        
+        if (dbm != null) {
+            try {
+                health.put("inTransaction", dbm.isInTransaction());
+                health.put("historyBufferSize", dbm.getHistoryBufferSize());
+                health.put("databasePath", PerstConfig.getInstance().getDatabasePath());
+                health.put("optimizerScheduler", optimizerScheduler != null && !optimizerScheduler.isShutdown());
+            } catch (Exception e) {
+                health.put("error", e.getMessage());
+            }
+        }
+        
+        if (storage != null) {
+            try {
+                health.put("databaseSize", storage.getDatabaseSize());
+                health.put("usedSize", storage.getUsedSize());
+            } catch (Exception e) {
+                health.put("storageError", e.getMessage());
+            }
+        }
+        
+        return health;
+    }
+    
+    public static java.util.Map<String, Object> getStats() {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            try {
+                org.garret.perst.dbmanager.MemoryStats memStats = dbm.getMemoryStats();
+                stats.put("usedMemory", memStats.getUsedMemory());
+                stats.put("maxMemory", memStats.getMaxMemory());
+                stats.put("usagePercent", memStats.getUsagePercent());
+                stats.put("loadedObjects", memStats.getLoadedObjects());
+                stats.put("lazyLoadedCollections", memStats.getLazyLoadedCollections());
+                stats.put("lowMemory", memStats.isLowMemory());
+            } catch (Exception e) {
+                stats.put("error", e.getMessage());
+            }
+        }
+        
+        return stats;
+    }
+    
     // ========== HELPER METHODS ==========
     
     private static <T> T getSingleton(IterableIterator<T> iter) {
