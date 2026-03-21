@@ -162,3 +162,60 @@ private static ConcurrentMap<String, Actor> uuidIndex = new ConcurrentHashMap<>(
 **Reason:** Tomcat runs multiple request threads simultaneously. Concurrent HashMap access causes:
 - ConcurrentModificationException
 - Data corruption under load
+
+---
+
+## Session 2026-03-21 - Source Recovery
+
+**Extracted** 7 source files from compiled `.class` files using `javap -p`:
+
+| File | Package | Methods |
+|------|---------|---------|
+| `BaseManager.java` | mycompany.database | 15 - abstract CRUD with permission checks |
+| `ActorManager.java` | mycompany.database | 14 - Actor CRUD operations |
+| `PerstUserManager.java` | mycompany.database | 19 - User CRUD + auth |
+| `PhoneManager.java` | mycompany.database | 6 - Phone CRUD |
+| `BenchmarkDataManager.java` | mycompany.database | 12 - Benchmark operations |
+| `PerstHelper.java` | mycompany.database | 26 - Perst facade |
+| `PerstConnection.java` | mycompany.database | 1 - Connection wrapper |
+
+**NOT created (unnecessary):**
+- `CDatabaseRoot.java` - Perst 4.0.1 CDatabase handles indexing via `@Indexable` automatically
+- `PerstContext.java` - Same, CDatabase manages everything
+
+**Next:** Task 3 - Migrate to UnifiedDBManager API
+
+---
+
+## Session 2026-03-21 - UnifiedDBManager Migration
+
+**Migrated** `PerstStorageManager` to use UnifiedDBManager from Perst 4.0.1.
+
+**New convenience methods for Managers:**
+
+| Method | Purpose |
+|--------|---------|
+| `find(Class, field, String)` | Find by indexed string field |
+| `find(Class, field, int)` | Find by indexed int field |
+| `getAll(Class)` | Get all records |
+| `getByOid(Class, long)` | Get by internal OID |
+| `createContainer()` | Create TransactionContainer |
+| `createSyncContainer()` | Create sync container (critical ops) |
+| `store(TransactionContainer)` | Atomic store with optimistic locking |
+| `insert(obj)` | Simple insert |
+| `update(obj)` | Simple update with optimistic locking |
+| `delete(obj)` | Simple delete |
+| `flushHistory()` | Flush history buffer |
+| `isAvailable()` | Check if Perst is ready |
+
+**Benefits:**
+- Optimistic locking built-in (version checking on updates)
+- Atomic batch operations via TransactionContainer
+- Automatic versioning via CVersion
+- Lin/Lex history management
+- Thread-safe
+
+**Architecture:**
+```
+Manager → PerstStorageManager.find/update/insert → UnifiedDBManager → CDatabase
+```
