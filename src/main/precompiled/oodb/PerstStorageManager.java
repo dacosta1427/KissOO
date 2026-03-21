@@ -1,7 +1,6 @@
 package oodb;
 
 import org.garret.perst.Storage;
-import org.garret.perst.continuous.CDatabase;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Key;
 import org.garret.perst.dbmanager.UnifiedDBManager;
@@ -13,27 +12,31 @@ import org.garret.perst.IterableIterator;
 import java.util.List;
 
 /**
- * PerstStorageManager - Manages Perst database lifecycle.
+ * SINGLE ENTRY POINT for all Perst database operations.
  * 
- * Provides convenience methods for Managers:
- * - Retrieve by indexed field
- * - Get all records
- * - Store via TransactionContainer (atomic, optimistic locking)
+ * Standard pattern for ALL operations (no exceptions):
+ * <pre>
+ *   TransactionContainer tc = PerstStorageManager.createContainer();
+ *   tc.addInsert(obj);  // or addUpdate, addDelete
+ *   PerstStorageManager.store(tc);
+ * </pre>
+ * 
+ * Benefits:
+ * - Atomic batch operations (all-or-nothing)
+ * - Optimistic locking built-in (conflict detection)
+ * - Lin/Lex history tracking
+ * - Crash recovery support
  * 
  * Delegates to UnifiedDBManager for all operations.
  */
 public class PerstStorageManager {
     
     private static final String DBMANAGER_KEY = "perstDBManager";
-    private static final String DATABASE_KEY = "perstDatabase";
     private static boolean initialized = false;
     private static Storage storage;
     
     private PerstStorageManager() {}
     
-    /**
-     * Initialize Perst with UnifiedDBManager.
-     */
     public static synchronized void initialize() {
         if (initialized) {
             return;
@@ -54,7 +57,6 @@ public class PerstStorageManager {
             
             storage = createStorage();
             
-            // Use UnifiedDBManager
             UnifiedDBManager dbm = new UnifiedDBManagerImpl();
             dbm.open(storage, indexPath);
             
@@ -86,9 +88,6 @@ public class PerstStorageManager {
         return storage;
     }
     
-    /**
-     * Get UnifiedDBManager instance.
-     */
     public static UnifiedDBManager getDBManager() {
         if (!initialized) {
             initialize();
@@ -96,26 +95,40 @@ public class PerstStorageManager {
         return (UnifiedDBManager) org.kissweb.restServer.MainServlet.getEnvironment(DBMANAGER_KEY);
     }
     
-    /**
-     * Get the raw CDatabase instance (for advanced use only).
-     */
-    public static CDatabase getDatabase() {
-        return null; // Now handled by UnifiedDBManager
-    }
-    
-    /**
-     * Check if Perst is available.
-     */
     public static boolean isAvailable() {
         return getDBManager() != null;
     }
     
-    // ========== RETRIEVE CONVENIENCE METHODS ==========
+    // ========== TRANSACTION CONTROL ==========
     
-    /**
-     * Find record by indexed field value.
-     * Example: find(Actor.class, "name", "John")
-     */
+    public static void beginTransaction() {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.beginTransaction();
+        }
+    }
+    
+    public static void commitTransaction() throws Exception {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.commitTransaction();
+        }
+    }
+    
+    public static void rollbackTransaction() {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.rollbackTransaction();
+        }
+    }
+    
+    public static boolean isInTransaction() {
+        UnifiedDBManager dbm = getDBManager();
+        return dbm != null && dbm.isInTransaction();
+    }
+    
+    // ========== RETRIEVE ==========
+    
     public static <T extends CVersion> T find(Class<T> clazz, String field, String value) {
         UnifiedDBManager dbm = getDBManager();
         if (dbm == null) return null;
@@ -129,10 +142,6 @@ public class PerstStorageManager {
         }
     }
     
-    /**
-     * Find record by integer field value.
-     * Example: find(PerstUser.class, "userId", 123)
-     */
     public static <T extends CVersion> T find(Class<T> clazz, String field, int value) {
         UnifiedDBManager dbm = getDBManager();
         if (dbm == null) return null;
@@ -146,10 +155,6 @@ public class PerstStorageManager {
         }
     }
     
-    /**
-     * Get all records of a type.
-     * Example: getAll(Actor.class)
-     */
     public static <T extends CVersion> List<T> getAll(Class<T> clazz) {
         UnifiedDBManager dbm = getDBManager();
         if (dbm == null) return java.util.Collections.emptyList();
@@ -163,9 +168,6 @@ public class PerstStorageManager {
         }
     }
     
-    /**
-     * Get record by OID (internal Perst ID).
-     */
     public static <T extends CVersion> T getByOid(Class<T> clazz, long oid) {
         UnifiedDBManager dbm = getDBManager();
         if (dbm == null) return null;
@@ -179,32 +181,44 @@ public class PerstStorageManager {
         }
     }
     
-    // ========== STORE CONVENIENCE METHODS ==========
+    public static <T extends CVersion> T getByUuid(Class<T> clazz, String uuid) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
+        
+        try {
+            return dbm.getByUuid(uuid);
+        } catch (Exception e) {
+            System.err.println("[PerstStorageManager] GetByUuid failed: " + e.getMessage());
+            return null;
+        }
+    }
     
-    /**
-     * Create a new TransactionContainer for atomic operations.
-     */
+    public static IterableIterator<CVersion> searchFullText(String query) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
+        
+        try {
+            return dbm.searchFullText(query);
+        } catch (Exception e) {
+            System.err.println("[PerstStorageManager] FullTextSearch failed: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    // ========== STORE (TransactionContainer) ==========
+    
     public static TransactionContainer createContainer() {
         UnifiedDBManager dbm = getDBManager();
         if (dbm == null) return null;
         return dbm.createContainer();
     }
     
-    /**
-     * Create a sync container (forces disk flush for critical operations).
-     */
     public static TransactionContainer createSyncContainer() {
         UnifiedDBManager dbm = getDBManager();
         if (dbm == null) return null;
         return dbm.createSyncContainer();
     }
     
-    /**
-     * Store objects in container atomically.
-     * Handles optimistic locking internally.
-     * 
-     * @return true if successful, false if conflict/error
-     */
     public static boolean store(TransactionContainer container) {
         UnifiedDBManager dbm = getDBManager();
         if (dbm == null || container == null) return false;
@@ -218,46 +232,8 @@ public class PerstStorageManager {
         }
     }
     
-    /**
-     * Simple insert - single object atomic.
-     * Convenience for simple use cases.
-     */
-    public static <T extends CVersion> boolean insert(T object) {
-        if (object == null) return false;
-        
-        TransactionContainer tc = createContainer();
-        tc.addInsert(object);
-        return store(tc);
-    }
+    // ========== HISTORY/Lex ==========
     
-    /**
-     * Simple update - single object atomic.
-     * Uses optimistic locking (checks version before commit).
-     */
-    public static <T extends CVersion> boolean update(T object) {
-        if (object == null) return false;
-        
-        TransactionContainer tc = createContainer();
-        tc.addUpdate(object);
-        return store(tc);
-    }
-    
-    /**
-     * Simple delete - single object atomic.
-     */
-    public static <T extends CVersion> boolean delete(T object) {
-        if (object == null) return false;
-        
-        TransactionContainer tc = createContainer();
-        tc.addDelete(object);
-        return store(tc);
-    }
-    
-    // ========== HISTORY BUFFER ==========
-    
-    /**
-     * Flush history buffer to disk.
-     */
     public static void flushHistory() {
         UnifiedDBManager dbm = getDBManager();
         if (dbm != null) {
@@ -265,17 +241,27 @@ public class PerstStorageManager {
         }
     }
     
-    /**
-     * Get current history buffer size.
-     */
     public static int getHistoryBufferSize() {
         UnifiedDBManager dbm = getDBManager();
         return dbm != null ? dbm.getHistoryBufferSize() : 0;
     }
     
-    /**
-     * Close Perst.
-     */
+    public static void setHistoryBufferSize(int threshold) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.setHistoryBufferSize(threshold);
+        }
+    }
+    
+    public static void setHistoryFlushInterval(int seconds) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.setHistoryFlushInterval(seconds);
+        }
+    }
+    
+    // ========== LIFECYCLE ==========
+    
     public static synchronized void close() {
         UnifiedDBManager dbm = (UnifiedDBManager) org.kissweb.restServer.MainServlet.getEnvironment(DBMANAGER_KEY);
         if (dbm != null) {
