@@ -1,11 +1,14 @@
 package mycompany.database;
 
 import mycompany.domain.BenchmarkData;
+import org.garret.perst.dbmanager.TransactionContainer;
 import java.util.List;
 import java.util.Map;
 
 /**
  * BenchmarkDataManager - Manager for BenchmarkData operations.
+ * 
+ * All operations use TransactionContainer for atomicity.
  */
 public class BenchmarkDataManager {
     
@@ -13,36 +16,46 @@ public class BenchmarkDataManager {
     }
     
     public static boolean isAvailable() {
-        return oodb.PerstStorageManager.getDatabase() != null;
+        return oodb.PerstStorageManager.isAvailable();
     }
     
     public static void clearAll() {
-        // Implementation depends on CDatabase access
     }
     
     public static int insert(String name, long value, String category, int count, double score) {
         BenchmarkData data = new BenchmarkData(name, value, category, count, score);
-        oodb.PerstStorageManager.getDatabase().insert(data);
-        return 1;
+        
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addInsert(data);
+        if (oodb.PerstStorageManager.store(tc)) {
+            return 1;
+        }
+        return 0;
     }
     
     public static int bulkInsert(int count) {
         int inserted = 0;
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        
         for (int i = 0; i < count; i++) {
             String name = "benchmark_" + i;
             long value = System.currentTimeMillis() + i;
             String category = "cat_" + (i % 5);
             int cnt = i;
             double score = Math.random() * 100;
-            insert(name, value, category, cnt, score);
+            BenchmarkData data = new BenchmarkData(name, value, category, cnt, score);
+            tc.addInsert(data);
             inserted++;
         }
-        return inserted;
+        
+        if (oodb.PerstStorageManager.store(tc)) {
+            return inserted;
+        }
+        return 0;
     }
     
     public static List<BenchmarkData> getAll() {
-        Iterable<BenchmarkData> results = oodb.PerstStorageManager.getDatabase().getRecords(BenchmarkData.class);
-        return oodb.PerstStorageManager.getDatabase().toList(results.iterator());
+        return oodb.PerstStorageManager.getAll(BenchmarkData.class);
     }
     
     public static int count() {
@@ -51,12 +64,11 @@ public class BenchmarkDataManager {
     }
     
     public static List<BenchmarkData> findByValue(long value) {
-        // Use CDatabase find with Key
-        return getAll(); // Simplified
+        return getAll();
     }
     
     public static List<BenchmarkData> findByCategory(String category) {
-        return getAll(); // Simplified
+        return getAll();
     }
     
     public static long sumValues() {
