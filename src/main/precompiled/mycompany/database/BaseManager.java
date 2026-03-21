@@ -25,7 +25,7 @@ public abstract class BaseManager<T> {
      * Check if Perst is available
      */
     protected static boolean isPerstAvailable() {
-        return oodb.PerstStorageManager.getDatabase() != null;
+        return oodb.PerstStorageManager.isAvailable();
     }
     
     /**
