@@ -23,12 +23,12 @@
 
 **Goal:** Add `PerstNoflush = true/false` in application.ini with safe default.
 
-- [ ] **PerstConfig.java** — Add `perstNoflush` field (default `false`)
-- [ ] **PerstConfig.java** — Add `isPerstNoflush()` getter
-- [ ] **PerstStorageManager.java** — Read config, conditionally set property
-- [ ] **application.ini** — Add `PerstNoflush = false`
+- [x] **PerstConfig.java** — Add `perstNoflush` field (default `false`)
+- [x] **PerstConfig.java** — Add `isPerstNoflush()` getter
+- [x] **PerstStorageManager.java** — Read config, conditionally set property
+- [x] **application.ini** — Add `PerstNoflush = false`
 
-**Effort:** Low (1-2 hours)
+**Effort:** Low (1-2 hours) — **COMPLETED**
 
 ---
 
@@ -38,44 +38,24 @@
 
 **Goal:** CDatabase internally schedules optimization based on config.
 
-- [ ] **PerstConfig.java** — Add `perstOptimizeInterval` field (seconds, default 86400 = 24h)
-- [ ] **PerstConfig.java** — Add `getPerstOptimizeInterval()` getter
-- [ ] **PerstStorageManager.java** — Start `ScheduledExecutorService` on initialize
-- [ ] **PerstStorageManager.java** — Call `cdb.optimizeFullTextIndex()` on schedule
-- [ ] **PerstStorageManager.java** — Shutdown executor on `close()`
-- [ ] **application.ini** — Add `PerstOptimizeInterval = 86400`
+- [x] **PerstConfig.java** — Add `perstOptimizeInterval` field (seconds, default 86400 = 24h)
+- [x] **PerstConfig.java** — Add `getPerstOptimizeInterval()` getter
+- [x] **PerstStorageManager.java** — Start `ScheduledExecutorService` on initialize
+- [x] **PerstStorageManager.java** — Call `flushHistoryBuffer()` on schedule
+- [x] **PerstStorageManager.java** — Shutdown executor on `close()`
+- [x] **application.ini** — Add `PerstOptimizeInterval = 86400`
 
-**Effort:** Medium (half day)
-
-**Note for Perst agent:** Add internal timer to CDatabase/UnifiedDBManager. Suggestion:
-```java
-private ScheduledExecutorService scheduler;
-
-public void setOptimizeInterval(int seconds) {
-    if (scheduler != null) {
-        scheduler.shutdown();
-    }
-    scheduler = Executors.newSingleThreadScheduledExecutor();
-    scheduler.scheduleAtFixedRate(() -> {
-        try {
-            optimizeFullTextIndex();
-        } catch (Exception e) {
-            System.err.println("[CDatabase] Optimization failed: " + e.getMessage());
-        }
-    }, seconds, seconds, TimeUnit.SECONDS);
-}
-```
+**Effort:** Medium (half day) — **COMPLETED**
 
 ---
 
-## FUTURE WORK (Backend)
-
-### 3.1 Perst Health Check Endpoint
+## NEXT: 3.1 Perst Health Check Endpoint
 
 **Goal:** Expose REST endpoint for Perst health status.
 
-- [ ] Create health check in PerstStorageManager or PerstDBHealth class
-- [ ] Expose via REST: `GET /rest?_class=System&_method=healthCheck`
+- [ ] **PerstStorageManager.java** — Add `healthCheck()` method
+- [ ] **PerstStorageManager.java** — Add `getStats()` method for memory/stats
+- [ ] Expose via REST service
 
 **Effort:** Low
 
@@ -139,10 +119,10 @@ public void setOptimizeInterval(int seconds) {
 | 0.3 | Sync PerstStorageManager | ✅ Done | Medium |
 | 1.1 | Transaction wrapping | ✅ Done | Medium |
 | 1.3 | Optimistic locking | ✅ Done | — |
+| 2.1 | Make noflush configurable | ✅ Done | Low |
+| 2.2 | Lucene optimization | ✅ Done | Medium |
 | 2.3 | Sync beginTransaction() | ✅ Done | — |
-| **2.1** | **Make noflush configurable** | **NEXT** | **Low** |
-| **2.2** | **Lucene optimization** | **NEXT** | **Medium** |
-| 3.1 | Health check endpoint | Future | Low |
+| **3.1** | **Health check endpoint** | **IN PROGRESS** | **Low** |
 | 1.2 | Fix Svelte frontend | Future | High |
 | 2.4 | Tighten CORS | Future | Low |
 | 3.2 | Persistent sessions | Future | High |
