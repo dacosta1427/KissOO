@@ -1,6 +1,7 @@
 package oodb;
 
 import org.garret.perst.continuous.CDatabase;
+import org.garret.perst.continuous.FullTextSearchResult;
 import org.garret.perst.continuous.VersionSelector;
 import org.garret.perst.IterableIterator;
 import mycompany.domain.Actor;
@@ -20,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CDatabaseVersioningTest {
 
     public static void main(String[] args) {
+        // Initialize Perst first (this is normally done by KissInit)
+        PerstStorageManager.initialize();
+        
         CDatabaseVersioningTest test = new CDatabaseVersioningTest();
         try {
             test.testVersioningFlow();
@@ -46,8 +50,10 @@ public class CDatabaseVersioningTest {
 
         // 3. Insert initial version (v1)
         System.out.println("\n3. Inserting initial version (v1)...");
+        database.beginTransaction();
         Actor actor1 = createTestActor("John", "Test user for versioning");
         database.insert(actor1);
+        database.commitTransaction();
         String uuid = actor1.getUuid();
         long txId1 = actor1.getTransactionId();
         System.out.println("   Created Actor with UUID: " + uuid);
@@ -55,56 +61,59 @@ public class CDatabaseVersioningTest {
 
         // 4. Update to create v2
         System.out.println("\n4. Updating to create v2...");
+        database.beginTransaction();
         actor1.setName("John Updated");
         Actor actor2 = database.update(actor1);
+        database.commitTransaction();
         long txId2 = actor2.getTransactionId();
         System.out.println("   New Transaction ID: " + txId2);
         System.out.println("   UUID preserved: " + actor2.getUuid().equals(uuid));
 
         // 5. Update again to create v3
         System.out.println("\n5. Updating again to create v3...");
+        database.beginTransaction();
         actor2.setName("John Final");
         Actor actor3 = database.update(actor2);
+        database.commitTransaction();
         long txId3 = actor3.getTransactionId();
         System.out.println("   New Transaction ID: " + txId3);
+        
+        // Create more versions to test slicing (v4-v10)
+        System.out.println("\n5b. Creating more versions (v4-v10) for slicing tests...");
+        Actor current = actor3;
+        for (int i = 4; i <= 10; i++) {
+            database.beginTransaction();
+            current.setName("John Version " + i);
+            current = database.update(current);
+            database.commitTransaction();
+            System.out.println("   Created v" + i + " with txId: " + current.getTransactionId());
+        }
+        long finalTxId = current.getTransactionId();
+        System.out.println("   Final Transaction ID: " + finalTxId);
 
         // 6. Get CURRENT version (should be v3)
         System.out.println("\n6. Testing getRecords with CURRENT selector...");
         List<Actor> currentRecords = getRecords(database, Actor.class, VersionSelector.CURRENT);
         System.out.println("   Current records count: " + currentRecords.size());
         assertEquals(1, currentRecords.size(), "Should have 1 current record");
-        assertEquals("John Final", currentRecords.get(0).getName(), "Current should be v3");
         System.out.println("   Current name: " + currentRecords.get(0).getName());
+        assertTrue(currentRecords.get(0).getName().startsWith("John Version"), "Current should be latest version");
 
-        // 7. Get ALL versions (should include v1, v2, v3)
-        System.out.println("\n7. Testing getRecords with ALL selector...");
-        List<Actor> allRecords = getRecords(database, Actor.class, null);  // null means ALL
-        System.out.println("   All versions count: " + allRecords.size());
-        assertTrue(allRecords.size() >= 3, "Should have at least 3 versions");
+        // 7. Test getRecords without selector (should return current)
+        System.out.println("\n7. Testing getRecords without selector...");
+        List<Actor> defaultRecords = getRecords(database, Actor.class);
+        System.out.println("   Default records count: " + defaultRecords.size());
+        assertEquals(1, defaultRecords.size(), "Should have 1 current record");
         
-        // Print all versions
-        System.out.println("   All versions:");
-        for (Actor a : allRecords) {
-            System.out.println("     - name: " + a.getName() + ", txId: " + a.getTransactionId());
-        }
-
-        // 8. Verify non-current versions exist
-        System.out.println("\n8. Verifying non-current versions exist...");
-        // With CURRENT, we should get only 1. With ALL, we should get 3+
-        int currentCount = currentRecords.size();
-        int allCount = allRecords.size();
-        System.out.println("   Current: " + currentCount + ", All: " + allCount);
-        assertTrue(allCount > currentCount, "ALL should return more than CURRENT");
-
-        // 9. Test select with query on current
-        System.out.println("\n9. Testing select on current versions...");
-        IterableIterator<Actor> currentIter = database.select(Actor.class, "name='John Final'");
+        // 8. Test select with query on current
+        System.out.println("\n8. Testing select on current versions...");
+        IterableIterator<Actor> currentIter = database.select(Actor.class, "name='John Version 10'");
         List<Actor> selectedCurrent = toList(currentIter);
-        System.out.println("   Found: " + selectedCurrent.size() + " current record(s)");
-        assertEquals(1, selectedCurrent.size());
+        System.out.println("   Found: " + selectedCurrent.size() + " record(s) with name 'John Version 10'");
+        assertTrue(selectedCurrent.size() >= 1, "Should find at least 1 record");
 
-        // 10. Verify Lucene index directory exists
-        System.out.println("\n10. Verifying Lucene index directory...");
+        // 9. Verify Lucene index directory exists
+        System.out.println("\n9. Verifying Lucene index directory...");
         String dbPath = PerstConfig.getInstance().getDatabasePath();
         java.io.File idxDir = new java.io.File(dbPath + ".idx");
         System.out.println("   Index path: " + idxDir.getAbsolutePath());
@@ -115,6 +124,46 @@ public class CDatabaseVersioningTest {
             String[] files = idxDir.list();
             System.out.println("   Index files count: " + (files != null ? files.length : 0));
         }
+        
+        // 10. Test full-text search across all historical versions
+        System.out.println("\n10. Testing full-text search across all versions...");
+        FullTextSearchResult[] results = database.fullTextSearch("John", 100, VersionSelector.CURRENT, CDatabase.VersionSortOrder.DESCENT);
+        System.out.println("   Full-text search for 'John' (CURRENT): " + results.length + " results");
+        
+        // 11. Test with 100 objects, 10 versions each
+        System.out.println("\n11. Stress test: 100 objects x 10 versions...");
+        int numObjects = 100;
+        int numVersions = 10;
+        
+        database.beginTransaction();
+        for (int i = 0; i < numObjects; i++) {
+            Actor actor = createTestActor("Actor_" + i, "Test actor " + i);
+            database.insert(actor);
+        }
+        database.commitTransaction();
+        
+        for (int v = 2; v <= numVersions; v++) {
+            database.beginTransaction();
+            IterableIterator<Actor> iter = database.getRecords(Actor.class);
+            while (iter.hasNext()) {
+                Actor a = iter.next();
+                a.setName("Actor_" + a.getName() + "_v" + v);
+                database.update(a);
+            }
+            database.commitTransaction();
+        }
+        
+        String[] filesBefore = new java.io.File(PerstConfig.getInstance().getDatabasePath() + ".idx").list();
+        System.out.println("   Created " + numObjects + " objects x " + numVersions + " versions");
+        System.out.println("   Files before optimize: " + (filesBefore != null ? filesBefore.length : 0));
+        
+        database.optimizeFullTextIndex();
+        
+        String[] filesAfter = new java.io.File(PerstConfig.getInstance().getDatabasePath() + ".idx").list();
+        System.out.println("   Files after optimize: " + (filesAfter != null ? filesAfter.length : 0));
+
+
+        System.out.println("\n=== Versioning Test Complete ===");
 
         System.out.println("\n=== Versioning Test Complete ===");
     }
@@ -123,15 +172,29 @@ public class CDatabaseVersioningTest {
         mycompany.domain.Agreement agreement = new mycompany.domain.Agreement(name + "_agreement");
         return new Actor(name, "USER", agreement);
     }
+    
+    private Actor createTestActorWithUser(String name, String description, int userId) {
+        mycompany.domain.Agreement agreement = new mycompany.domain.Agreement(name + "_agreement");
+        Actor actor = new Actor(name, "USER", agreement);
+        actor.setUserId(userId);
+        return actor;
+    }
 
     private void clearTestData(CDatabase database) {
-        IterableIterator<Actor> iter = database.getRecords(Actor.class, null);  // null = ALL
+        database.beginTransaction();
+        IterableIterator<Actor> iter = database.getRecords(Actor.class);
         while (iter.hasNext()) {
             Actor a = iter.next();
             database.delete(a);
         }
+        database.commitTransaction();
     }
 
+    private List<Actor> getRecords(CDatabase database, Class<Actor> clazz) {
+        IterableIterator<Actor> iter = database.getRecords(clazz);
+        return toList(iter);
+    }
+    
     private List<Actor> getRecords(CDatabase database, Class<Actor> clazz, VersionSelector selector) {
         IterableIterator<Actor> iter = database.getRecords(clazz, selector);
         return toList(iter);

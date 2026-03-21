@@ -518,6 +518,7 @@ public class Tasks {
         dep.add(LIBS, "https://repo1.maven.org/maven2/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar");
         dep.add(LIBS, "https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console/1.11.0/junit-platform-console-1.11.0.jar");
         dep.add(LIBS, "https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.11.0/junit-platform-console-standalone-1.11.0.jar");
+        dep.add(LIBS, "https://repo1.maven.org/maven2/com/password4j/password4j/1.8.4/password4j-1.8.4.jar");
         return dep;
     }
 
@@ -534,6 +535,7 @@ public class Tasks {
         dep.add(LIBS, "lombok.jar");
         dep.add(LIBS, "slf4j-api-1.7.30.jar");
         dep.add(LIBS, "slf4j-simple-1.7.30.jar");
+        dep.add(LIBS, "password4j-1.8.4.jar");
         return dep;
     }
 

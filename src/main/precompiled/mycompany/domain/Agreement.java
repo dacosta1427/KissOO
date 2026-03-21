@@ -1,6 +1,8 @@
 package mycompany.domain;
 
 import org.garret.perst.continuous.CVersion;
+import org.garret.perst.Indexable;
+import org.garret.perst.continuous.FullTextSearchable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,15 +31,24 @@ import java.util.Set;
  *   
  *   // Via group
  *   agreement.addGroup(admins);
+ * 
+ * Indexing:
+ * - @Indexable: fields for b-tree indexing (use db.find())
+ * - @FullTextSearchable: fields for Lucene full-text search (use db.fullTextSearch())
  */
 public class Agreement extends CVersion {
     
+    @FullTextSearchable
+    @Indexable
     private String role;
+    
     private Set<String> crudPermissions;
     private Set<EndpointMethod> methodPermissions;
     private Set<Group> groups;
     private long validFrom;
     private Long validTo;
+    
+    @Indexable
     private boolean active = true;
     
     public Agreement() {

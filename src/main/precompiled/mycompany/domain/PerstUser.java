@@ -1,11 +1,15 @@
 package mycompany.domain;
 
 import org.garret.perst.continuous.CVersion;
+import org.garret.perst.Indexable;
+import org.garret.perst.continuous.FullTextSearchable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * PerstUser - User entity stored in Perst OODBMS.
@@ -15,28 +19,48 @@ import java.util.UUID;
  * 
  * IMPORTANT: Email verification is required before user can login.
  * Sign up → Verify email → Active
+ * 
+ * Indexing:
+ * - @Indexable: fields for b-tree indexing (use db.find())
+ * - @FullTextSearchable: fields for Lucene full-text search (use db.fullTextSearch())
  */
 public class PerstUser extends CVersion {
     
+    @FullTextSearchable
+    @Indexable(unique=true)
     private String username;
+    
     private String passwordHash;  // SHA256 hash (64 chars)
+    
+    @Indexable
     private boolean active = true;
+    
+    @Indexable(unique=true)
     private int userId;       // User ID
+    
+    @FullTextSearchable
     private String email;
+    
+    @FullTextSearchable
     private String firstName;
+    
+    @FullTextSearchable
     private String lastName;
+    
     private long createdDate;
     private long lastLoginDate;
     
     // Email verification
+    @Indexable
     private boolean emailVerified = false;
+    
     private String verificationToken;
     private long verificationExpiresAt;
     
-    // Static in-memory indexes
-    private static Map<Integer, PerstUser> idIndex = new HashMap<>();
-    private static Map<String, PerstUser> usernameIndex = new HashMap<>();
-    private static Map<String, PerstUser> tokenIndex = new HashMap<>();  // By verification token
+    // Static in-memory indexes - thread-safe with ConcurrentHashMap
+    private static ConcurrentMap<Integer, PerstUser> idIndex = new ConcurrentHashMap<>();
+    private static ConcurrentMap<String, PerstUser> usernameIndex = new ConcurrentHashMap<>();
+    private static ConcurrentMap<String, PerstUser> tokenIndex = new ConcurrentHashMap<>();
     
     public PerstUser() {
         this.createdDate = System.currentTimeMillis();

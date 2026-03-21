@@ -1,4 +1,4 @@
-import mycompany.database.PerstHelper
+import oodb.PerstStorageManager
 import mycompany.domain.PerstUser
 
 /**
@@ -23,13 +23,13 @@ class PerstInit {
      */
     static void init(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         
-        if (!PerstHelper.isAvailable()) {
+        if (!PerstStorageManager.isAvailable()) {
             if (outjson) outjson.put("error", "Perst is not available")
             return
         }
         
         // Check if any users exist
-        def users = PerstHelper.retrieveAllObjects(PerstUser.class)
+        def users = PerstStorageManager.getAll(PerstUser.class)
         if (users) {
             if (outjson) {
                 outjson.put("status", "skipped")
@@ -41,14 +41,14 @@ class PerstInit {
         
         // Create default admin user
         try {
-            PerstHelper.beginTransaction()
+            PerstStorageManager.beginTransaction()
             
             def admin = new PerstUser("admin", "admin", 1)
             admin.setEmail("admin@localhost")
             admin.setActive(true)
             
-            PerstHelper.storeNewObject(admin)
-            PerstHelper.commitTransaction()
+            PerstStorageManager.save(admin)
+            PerstStorageManager.commitTransaction()
             
             if (outjson) {
                 outjson.put("status", "created")
@@ -58,7 +58,7 @@ class PerstInit {
             println "Default admin user created. CHANGE PASSWORD IMMEDIATELY!"
             
         } catch (Exception e) {
-            PerstHelper.rollbackTransaction()
+            PerstStorageManager.rollbackTransaction()
             if (outjson) outjson.put("error", "Failed: " + e.message)
         }
     }

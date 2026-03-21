@@ -1,16 +1,33 @@
 package mycompany.domain;
 
-import org.garret.perst.Persistent;
+import org.garret.perst.continuous.CVersion;
+import org.garret.perst.Indexable;
+import org.garret.perst.continuous.FullTextSearchable;
 
 /**
  * Phone - Represents a phone record.
+ * 
+ * Indexing:
+ * - @Indexable: fields for b-tree indexing (use db.find())
+ * - @FullTextSearchable: fields for Lucene full-text search (use db.fullTextSearch())
+ * 
+ * NOTE: This class extends Persistent (not CVersion) for non-versioned storage.
+ * Change to extend CVersion if you need versioning.
  */
-public class Phone extends Persistent {
+public class Phone extends CVersion {
     
+    @Indexable
     private String uuid;
+    
+    @FullTextSearchable
     private String firstName;
+    
+    @FullTextSearchable
     private String lastName;
+    
+    @Indexable
     private String phoneNumber;
+    
     private long createdDate;
     
     public Phone() {

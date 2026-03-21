@@ -111,6 +111,36 @@ PerstDatabasePath = ../../../data/oodb
 
 The database and index are stored outside the source tree at `data/oodb` and `data/oodb.idx`.
 
+#### CRITICAL: Lucene Index Segment Management
+
+**⚠️ WARNING: Production Issue**
+
+CDatabase creates a new Lucene segment for each version. Without periodic optimization, this will cause severe performance issues with large datasets:
+
+- Each object version → new Lucene segment
+- With 1M objects × 100 versions = 100M segments = catastrophic performance
+
+**Solution: Periodic Index Optimization**
+
+Add periodic optimization to your application (e.g., nightly job or after N transactions):
+
+```java
+// Option 1: Call periodically (e.g., every 1000 transactions or nightly)
+CDatabase database = PerstStorageManager.getDatabase();
+database.optimizeFullTextIndex();
+
+// Option 2: Check and optimize if segments exceed threshold
+if (transactionCount % 1000 == 0) {
+    database.optimizeFullTextIndex();
+}
+```
+
+**Expected behavior:**
+- Without optimization: ~32 files per version (segment explosion)
+- With optimization: Merged into fewer segments
+
+**Note:** The Perst CDatabase source creates IndexWriter without explicit merge policy configuration. For high-volume production systems, consider modifying CDatabase.java to configure a more aggressive merge policy.
+
 ## Architecture
 
 ```

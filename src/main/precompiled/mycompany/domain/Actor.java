@@ -1,8 +1,12 @@
 package mycompany.domain;
 
 import org.garret.perst.continuous.CVersion;
+import org.garret.perst.Indexable;
+import org.garret.perst.continuous.FullTextSearchable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Actor - Represents an entity that can own and perform actions on resources.
@@ -11,21 +15,41 @@ import java.util.Set;
  * the Actor CANNOT exist. This is enforced at construction time.
  * 
  * This is a generic entity - extend it for domain-specific behavior.
+ * 
+ * NOTE: Indexing is handled manually via static maps for in-memory lookups.
+ * Full-text search is done via Lucene with current/non-current strategy.
  */
 public class Actor extends CVersion {
     
+    @Indexable
     private String uuid;
-    private String name;
-    private String type;  // Generic type field - customize for your domain
-    private boolean active = true;
-    private long createdDate;
-    private int userId = 0;  // Link to SQL user ID
-    private transient PerstUser perstUser;  // Linked PerstUser for authentication
-    private Agreement agreement;  // MANDATORY - Authorization contract
     
-    // Static in-memory indexes
-    private static java.util.Map<Integer, Actor> userIdIndex = new java.util.HashMap<>();
-    private static java.util.Map<String, Actor> uuidIndex = new java.util.HashMap<>();
+    @FullTextSearchable
+    @Indexable
+    private String name;
+    
+    @Indexable
+    private String type;
+    
+    @Indexable
+    private boolean active = true;
+    
+    private long createdDate;
+    
+    @Indexable
+    private int userId = 0;
+    private transient PerstUser perstUser;
+    private Agreement agreement;
+    
+    // Static in-memory indexes - thread-safe with ConcurrentHashMap
+    private static ConcurrentMap<Integer, Actor> userIdIndex = new ConcurrentHashMap<>();
+    private static ConcurrentMap<String, Actor> uuidIndex = new ConcurrentHashMap<>();
+    
+    /**
+     * No-args constructor required for Perst persistence
+     */
+    public Actor() {
+    }
     
     /**
      * Create Actor with Agreement - MANDATORY
