@@ -107,6 +107,8 @@ public class PerstStorageManager {
     }
     
     // ========== TRANSACTION CONTROL ==========
+    // Note: Transaction state is managed by UnifiedDBManager.
+    // If transaction leak issues are suspected, see ChangeNote-UDBM-Improvements.md
     
     public static void beginTransaction() {
         UnifiedDBManager dbm = getDBManager();
