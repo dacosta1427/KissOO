@@ -109,10 +109,13 @@ GET /rest?service=PerstService&method=getStats
 
 ### 3.3 Transaction Leak Detection
 
-- [ ] Add `ThreadLocal<Boolean>` flag for unclosed transactions
-- [ ] Servlet filter to detect and warn about leaks
+**Status:** Documented in `changeNotes/ChangeNote-UDBM-Improvements.md`  
+**Action:** Perst agent needs to fix in UnifiedDBManager
 
-**Effort:** Medium
+- [ ] UnifiedDBManagerImpl needs try-finally in commit/rollback
+- [ ] store() needs inTransaction flag management
+
+**Effort:** Medium (for Perst agent)
 
 ---
 
@@ -132,7 +135,7 @@ GET /rest?service=PerstService&method=getStats
 | 1.2 | Fix Svelte frontend | Future | High |
 | 2.4 | Tighten CORS | Future | Low |
 | 3.2 | Persistent sessions | Future | High |
-| 3.3 | Transaction leak detection | Future | Medium |
+| 3.3 | Transaction leak detection | Future (Perst agent) | Medium |
 
 ---
 
