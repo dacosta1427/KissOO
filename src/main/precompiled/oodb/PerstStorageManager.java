@@ -74,7 +74,7 @@ public class PerstStorageManager {
     private static Storage createStorage() throws Exception {
         Storage storage = org.garret.perst.StorageFactory.getInstance().createStorage();
         storage.setProperty("perst.serialize.transient.objects", java.lang.Boolean.FALSE);
-        storage.setProperty("perst.file.noflush", Boolean.TRUE);
+        storage.setProperty("perst.file.noflush", PerstConfig.getInstance().isPerstNoflush());
         
         String dbPath = PerstConfig.getInstance().getDatabasePath();
         int poolSize = PerstConfig.getInstance().getPagePoolSize();

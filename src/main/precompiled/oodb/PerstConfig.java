@@ -14,6 +14,7 @@ public class PerstConfig {
     
     private boolean perstEnabled = false;
     private boolean useCDatabase = true;  // Use CDatabase for versioning
+    private boolean perstNoflush = false;  // Safe default - flush writes to disk
     private String databasePath = "oodb";
     private String historyIndexPath = "oodb.lex"; // Default path for history index
     private int pagePoolSize = 512 * 1024 * 1024; // 512MB default
@@ -50,6 +51,7 @@ public class PerstConfig {
             
             this.perstEnabled = "true".equalsIgnoreCase(props.getProperty("PerstEnabled", "false"));
             this.useCDatabase = "true".equalsIgnoreCase(props.getProperty("PerstUseCDatabase", "true"));
+            this.perstNoflush = "true".equalsIgnoreCase(props.getProperty("PerstNoflush", "false"));
             String dbPath = props.getProperty("PerstDatabasePath", "oodb");
             String histPath = props.getProperty("PerstHistoryIndexPath", "oodb.lex");
             this.pagePoolSize = Integer.parseInt(props.getProperty("PerstPagePoolSize", "536870912"));
@@ -100,6 +102,7 @@ public class PerstConfig {
             
             System.out.println("[PerstConfig] Perst Enabled: " + perstEnabled);
             System.out.println("[PerstConfig] Use CDatabase: " + useCDatabase);
+            System.out.println("[PerstConfig] NoFlush: " + perstNoflush + " (true = faster but data loss risk on crash)");
             System.out.println("[PerstConfig] Database Path: " + databasePath);
             System.out.println("[PerstConfig] History Index Path: " + historyIndexPath);
             
@@ -117,6 +120,10 @@ public class PerstConfig {
     
     public boolean isUseCDatabase() {
         return useCDatabase;
+    }
+    
+    public boolean isPerstNoflush() {
+        return perstNoflush;
     }
     
     public String getDatabasePath() {
