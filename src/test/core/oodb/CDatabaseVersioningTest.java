@@ -127,7 +127,7 @@ public class CDatabaseVersioningTest {
         
         // 10. Test full-text search across all historical versions
         System.out.println("\n10. Testing full-text search across all versions...");
-        FullTextSearchResult[] results = database.fullTextSearch("John", 100, VersionSelector.CURRENT, CDatabase.VersionSortOrder.DESCENT);
+        FullTextSearchResult[] results = database.fullTextSearch("John", 100, VersionSelector.CURRENT, CDatabase.VersionSortOrder.DESCENT_ORDER);
         System.out.println("   Full-text search for 'John' (CURRENT): " + results.length + " results");
         
         // 11. Test with 100 objects, 10 versions each
