@@ -1,15 +1,20 @@
 package mycompany.database;
 
 import mycompany.domain.Actor;
+import org.garret.perst.dbmanager.TransactionContainer;
 import java.util.Collection;
 
 /**
  * ActorManager - Manager for Actor CRUD operations.
+ * 
+ * All operations use TransactionContainer for atomicity.
  */
 public class ActorManager extends BaseManager<Actor> {
     
     private ActorManager() {
     }
+    
+    // ========== RETRIEVE ==========
     
     public static Collection<Actor> getAll(Actor actor) {
         return getAll();
@@ -23,6 +28,24 @@ public class ActorManager extends BaseManager<Actor> {
         return getByUuid(uuid);
     }
     
+    public static Collection<Actor> getAll() {
+        return oodb.PerstStorageManager.getAll(Actor.class);
+    }
+    
+    public static Actor getByName(String name) {
+        return oodb.PerstStorageManager.find(Actor.class, "name", name);
+    }
+    
+    public static Actor getByUuid(String uuid) {
+        return oodb.PerstStorageManager.find(Actor.class, "uuid", uuid);
+    }
+    
+    public static Actor getByUserId(int userId) {
+        return oodb.PerstStorageManager.find(Actor.class, "userId", userId);
+    }
+    
+    // ========== CRUD ==========
+    
     public static Actor create(Actor actor, Object... args) {
         return create(args);
     }
@@ -35,44 +58,37 @@ public class ActorManager extends BaseManager<Actor> {
         return delete(toDelete);
     }
     
-    public static Collection<Actor> getAll() {
-        return Actor.findAll();
-    }
-    
-    public static Actor getByName(String name) {
-        return Actor.findByName(name);
-    }
-    
-    public static Actor getByUuid(String uuid) {
-        return Actor.findByUuid(uuid);
-    }
-    
-    public static Actor getByUserId(int userId) {
-        return Actor.findByUserId(userId);
-    }
-    
     public static Actor create(Object... args) {
         if (args == null || args.length < 2) {
             return null;
         }
         String name = args[0].toString();
         String type = args.length > 1 ? args[1].toString() : "default";
+        
         Actor actor = new Actor(name, type, new mycompany.domain.Agreement());
-        actor.index();
-        oodb.PerstStorageManager.getDatabase().insert(actor);
+        
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addInsert(actor);
+        if (!oodb.PerstStorageManager.store(tc)) {
+            return null;
+        }
         return actor;
     }
     
     public static boolean update(Actor actor) {
         if (actor == null) return false;
-        actor.index();
-        return true;
+        
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addUpdate(actor);
+        return oodb.PerstStorageManager.store(tc);
     }
     
     public static boolean delete(Actor actor) {
         if (actor == null) return false;
-        actor.removeIndex();
-        return true;
+        
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addDelete(actor);
+        return oodb.PerstStorageManager.store(tc);
     }
     
     public static boolean validate(Actor actor) {
@@ -80,6 +96,6 @@ public class ActorManager extends BaseManager<Actor> {
     }
     
     public static boolean exists(String uuid) {
-        return Actor.findByUuid(uuid) != null;
+        return getByUuid(uuid) != null;
     }
 }
