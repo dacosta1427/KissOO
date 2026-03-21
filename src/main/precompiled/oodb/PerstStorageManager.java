@@ -5,10 +5,11 @@ import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Key;
 import org.garret.perst.dbmanager.UnifiedDBManager;
 import org.garret.perst.dbmanager.UnifiedDBManagerImpl;
-import org.garret.perst.dbmanager.TransactionContainer;
+import org.garret.perst.continuous.TransactionContainer;
 import org.garret.perst.dbmanager.StoreResult;
 import org.garret.perst.IterableIterator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -135,7 +136,7 @@ public class PerstStorageManager {
         
         try {
             IterableIterator<T> results = dbm.find(clazz, field, new Key(value));
-            return dbm.getSingleton(results);
+            return getSingleton(results);
         } catch (Exception e) {
             System.err.println("[PerstStorageManager] Find failed: " + e.getMessage());
             return null;
@@ -148,7 +149,7 @@ public class PerstStorageManager {
         
         try {
             IterableIterator<T> results = dbm.find(clazz, field, new Key(value));
-            return dbm.getSingleton(results);
+            return getSingleton(results);
         } catch (Exception e) {
             System.err.println("[PerstStorageManager] Find failed: " + e.getMessage());
             return null;
@@ -161,7 +162,7 @@ public class PerstStorageManager {
         
         try {
             IterableIterator<T> results = dbm.getRecords(clazz);
-            return dbm.toList(results);
+            return toList(results);
         } catch (Exception e) {
             System.err.println("[PerstStorageManager] GetAll failed: " + e.getMessage());
             return java.util.Collections.emptyList();
@@ -277,5 +278,25 @@ public class PerstStorageManager {
             storage = null;
         }
         initialized = false;
+    }
+    
+    // ========== HELPER METHODS ==========
+    
+    private static <T> T getSingleton(IterableIterator<T> iter) {
+        if (iter == null || !iter.hasNext()) {
+            return null;
+        }
+        T result = iter.next();
+        return result;
+    }
+    
+    private static <T> List<T> toList(IterableIterator<T> iter) {
+        List<T> list = new ArrayList<>();
+        if (iter != null) {
+            while (iter.hasNext()) {
+                list.add(iter.next());
+            }
+        }
+        return list;
     }
 }

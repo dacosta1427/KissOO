@@ -1,6 +1,7 @@
 package mycompany.database;
 
 import mycompany.domain.Actor;
+import mycompany.domain.Agreement;
 import mycompany.domain.EndpointMethod;
 import java.util.Collection;
 
@@ -21,113 +22,68 @@ public abstract class BaseManager<T> {
     protected BaseManager() {
     }
     
-    /**
-     * Check if Perst is available
-     */
     protected static boolean isPerstAvailable() {
         return oodb.PerstStorageManager.isAvailable();
     }
     
-    /**
-     * Check permission for an actor to perform an action on a resource class
-     */
     protected static boolean checkPermission(Actor actor, String action, Class<?> resourceClass) {
         if (actor == null || actor.getAgreement() == null) {
             return false;
         }
-        return actor.getAgreement().hasPermission(action, resourceClass.getSimpleName());
+        return actor.getAgreement().hasCrudPermission(resourceClass.getSimpleName(), action);
     }
     
-    /**
-     * Check permission for an actor using EndpointMethod
-     */
     protected static boolean checkPermission(Actor actor, EndpointMethod method) {
         if (actor == null || actor.getAgreement() == null) {
             return false;
         }
-        return actor.getAgreement().hasPermission(method.getAction(), method.getResourceClass().getSimpleName());
+        return actor.getAgreement().grants(method, method.getResourceClass(), ACTION_EXECUTE);
     }
     
-    /**
-     * Get all entities (no permission check)
-     */
     public static <T> Collection<T> getAll() {
         return getAll(null);
     }
     
-    /**
-     * Get all entities with permission check
-     */
     public static <T> Collection<T> getAll(Actor actor) {
         return java.util.Collections.emptyList();
     }
     
-    /**
-     * Get entity by key (no permission check)
-     */
     public static <T> T getByKey(String key) {
         return getByKey(null, key);
     }
     
-    /**
-     * Get entity by key with permission check
-     */
     public static <T> T getByKey(Actor actor, String key) {
         return null;
     }
     
-    /**
-     * Create entity (no permission check)
-     */
     public static <T> T create(Object... args) {
         return create(null, args);
     }
     
-    /**
-     * Create entity with permission check
-     */
     public static <T> T create(Actor actor, Object... args) {
         return null;
     }
     
-    /**
-     * Update entity (no permission check)
-     */
     public static <T> boolean update(T entity) {
         return update(null, entity);
     }
     
-    /**
-     * Update entity with permission check
-     */
     public static <T> boolean update(Actor actor, T entity) {
         return false;
     }
     
-    /**
-     * Delete entity (no permission check)
-     */
     public static <T> boolean delete(T entity) {
         return delete(null, entity);
     }
     
-    /**
-     * Delete entity with permission check
-     */
     public static <T> boolean delete(Actor actor, T entity) {
         return false;
     }
     
-    /**
-     * Validate entity before create/update
-     */
     protected static <T> boolean validate(T entity) {
         return true;
     }
     
-    /**
-     * Get the resource class for this manager
-     */
     protected static <T> Class<T> getResourceClass() {
         return null;
     }

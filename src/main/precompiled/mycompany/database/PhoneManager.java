@@ -1,7 +1,7 @@
 package mycompany.database;
 
 import mycompany.domain.Phone;
-import org.garret.perst.dbmanager.TransactionContainer;
+import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 
 /**

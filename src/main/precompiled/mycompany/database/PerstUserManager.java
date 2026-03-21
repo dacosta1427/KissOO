@@ -2,7 +2,7 @@ package mycompany.database;
 
 import mycompany.domain.Actor;
 import mycompany.domain.PerstUser;
-import org.garret.perst.dbmanager.TransactionContainer;
+import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
