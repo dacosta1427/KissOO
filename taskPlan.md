@@ -49,15 +49,21 @@
 
 ---
 
-## NEXT: 3.1 Perst Health Check Endpoint
+## ✅ 3.1 Perst Health Check Endpoint — COMPLETE
 
-**Goal:** Expose REST endpoint for Perst health status.
+**Added REST endpoints for Perst health and stats:**
 
-- [x] **PerstStorageManager.java** — Add `healthCheck()` method
-- [x] **PerstStorageManager.java** — Add `getStats()` method for memory/stats
-- [ ] Expose via REST service (TODO: add to a service class)
+- `PerstStorageManager.healthCheck()` — Basic status (initialized, available, inTransaction, etc.)
+- `PerstStorageManager.getStats()` — Memory stats (usedMemory, maxMemory, usagePercent, etc.)
+- `PerstService.java` — REST service exposing both endpoints
 
-**Effort:** Low — **HEALTH CHECK ADDED, REST EXPOSURE PENDING**
+**Usage:**
+```
+GET /rest?service=PerstService&method=healthCheck
+GET /rest?service=PerstService&method=getStats
+```
+
+**Effort:** Low — **COMPLETED**
 
 ---
 
@@ -122,7 +128,7 @@
 | 2.1 | Make noflush configurable | ✅ Done | Low |
 | 2.2 | Lucene optimization | ✅ Done | Medium |
 | 2.3 | Sync beginTransaction() | ✅ Done | — |
-| **3.1** | **Health check endpoint** | **IN PROGRESS** | **Low** |
+| 3.1 | Health check endpoint | ✅ Done | Low |
 | 1.2 | Fix Svelte frontend | Future | High |
 | 2.4 | Tighten CORS | Future | Low |
 | 3.2 | Persistent sessions | Future | High |
@@ -132,6 +138,14 @@
 
 ## Current Execution Order
 
+```
+1. 2.1 Make noflush configurable    ✅ Done
+2. 2.2 Lucene optimization         ✅ Done
+3. 3.1 Health check endpoint      ✅ Done
+4. 1.2 Fix Svelte frontend        (Future - after backend complete)
+5. 2.4 Tighten CORS               (Future - user will tackle)
+6. 3.2 Persistent sessions         (Future)
+7. 3.3 Transaction leak detection  (Future)
 ```
 1. 2.1 Make noflush configurable    (Low effort, quick win)
 2. 2.2 Lucene optimization         (Medium effort, production safety)
