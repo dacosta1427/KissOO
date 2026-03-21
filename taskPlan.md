@@ -53,11 +53,11 @@
 
 **Goal:** Expose REST endpoint for Perst health status.
 
-- [ ] **PerstStorageManager.java** — Add `healthCheck()` method
-- [ ] **PerstStorageManager.java** — Add `getStats()` method for memory/stats
-- [ ] Expose via REST service
+- [x] **PerstStorageManager.java** — Add `healthCheck()` method
+- [x] **PerstStorageManager.java** — Add `getStats()` method for memory/stats
+- [ ] Expose via REST service (TODO: add to a service class)
 
-**Effort:** Low
+**Effort:** Low — **HEALTH CHECK ADDED, REST EXPOSURE PENDING**
 
 ---
 
