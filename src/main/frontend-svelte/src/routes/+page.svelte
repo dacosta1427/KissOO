@@ -11,8 +11,8 @@
       Server.setURL('http://localhost:8080');
     } else {
       const port = parseInt(window.location.port || '0');
-      if (port >= 8000) {
-        Server.setURL(`http://${window.location.hostname}:8080`);
+      if (port === 5173) {
+        Server.setURL('http://localhost:8080');
       } else {
         Server.setURL(window.location.origin);
       }
