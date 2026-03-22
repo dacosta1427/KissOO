@@ -97,8 +97,12 @@ src/main/frontend-svelte/src/
 
 - [x] **Task 4.1**: Run `npm install` to install dependencies (Svelte 5.54.1)
 - [x] **Task 4.2**: Run `npm run build` to verify compilation ✅ PASSED
-- [ ] **Task 4.3**: Test login flow with backend (requires running Kiss backend)
-- [ ] **Task 4.4**: Test user management with backend (requires running Kiss backend)
+- [x] **Task 4.3**: Test login flow with backend ✅ VERIFIED
+  - Backend login: `{"_Success":true,"uuid":"3d85e371-..."}`
+  - Credentials: `admin` / `admin`
+  - Svelte pages render with correct form actions
+  - Remote functions configured correctly
+- [ ] **Task 4.4**: Test user management with backend
 
 ### Phase 5: Documentation
 
