@@ -1,6 +1,7 @@
 <script lang="ts">
   import { signup, initBackend } from '$lib/api/Auth';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
 
   // Svelte 5 RUNES for reactive state
@@ -36,7 +37,7 @@
       const res = await signup(username, password);
 
       if (res._Success) {
-        goto('/');
+        goto(resolve('/'));
       } else {
         error = res._ErrorMessage || 'Signup failed';
       }

@@ -2,10 +2,11 @@
   import { session } from '$lib/state/session';
   import { logout } from '$lib/api/Auth';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
 
   async function handleLogout() {
     await logout();
-    goto('/');
+    goto(resolve('/'));
   }
 </script>
 

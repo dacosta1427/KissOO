@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { Server } from '$lib/services/Server';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { session } from '$lib/state/session';
   import { logout, isAuthenticated } from '$lib/api/Auth';
 
@@ -26,11 +27,11 @@
   }
 
   function navigateToUsers() {
-    goto('/users');
+    goto(resolve('/users'));
   }
   
   function navigateToLogin() {
-    goto('/login');
+    goto(resolve('/login'));
   }
 </script>
 

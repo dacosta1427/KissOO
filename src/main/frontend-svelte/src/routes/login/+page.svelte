@@ -1,6 +1,7 @@
 <script lang="ts">
   import { login, initBackend } from '$lib/api/Auth';
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
 
   // Svelte 5 RUNES for reactive state
@@ -27,7 +28,7 @@
       const res = await login(username, password);
 
       if (res._Success) {
-        goto('/');
+        goto(resolve('/'));
       } else {
         error = res._ErrorMessage || 'Invalid username or password';
         password = '';
