@@ -44,6 +44,7 @@
           <h1 class="text-2xl font-bold text-gray-900">KissOO Svelte 5</h1>
         </div>
         <div class="flex items-center space-x-4">
+          <a href="/login" class="text-blue-600 hover:text-blue-800">Login</a>
           <div class="text-sm text-gray-500">
             {#if isConnected}
               <span class="text-green-600">Connected to {backendUrl}</span>
