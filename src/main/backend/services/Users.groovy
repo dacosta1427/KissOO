@@ -40,6 +40,10 @@ class Users {
             String password = injson.getString("userPassword")
             
             PerstUser user = PerstUserManager.create(userName, password, 0)
+            if (user == null) {
+                outjson.put("error", "Failed to create user")
+                return
+            }
             user.setActive(injson.getString("userActive") == "Y")
             user.setEmailVerified(true)  // Allow immediate login without email verification
             PerstUserManager.update(user)

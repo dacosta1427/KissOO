@@ -122,27 +122,16 @@ class KissInit {
             def users = PerstStorageManager.getAll(PerstUser.class)
             if (!users || users.size() == 0) {
                 println "[KissInit] Creating default admin user..."
-                def admin = new PerstUser("admin", "admin", 1)
-                admin.setEmail("admin@localhost")
-                admin.setActive(true)
-                admin.index()
-                
-                // Use proper transaction handling
-                PerstStorageManager.beginTransaction()
-                PerstStorageManager.save(admin)
-                PerstStorageManager.commitTransaction()
-                
-                println "[KissInit] Default admin user created. CHANGE PASSWORD IMMEDIATELY!"
-                
-                // Pause briefly to allow database to settle
-                println "[KissInit] Pausing for 2 seconds..."
-                Thread.sleep(2000)
-                println "[KissInit] Resume..."
-                
-                // Verify user was saved - use getDatabase().find() for indexed lookup
-                def db = PerstStorageManager.getDatabase()
-                def verify = db.getSingleton(db.find(PerstUser.class, "username", new org.garret.perst.Key("admin")))
-                println "[KissInit] Verification: admin user found = ${verify != null}"
+                def admin = PerstUserManager.create("admin", "admin", 1)
+                if (admin) {
+                    admin.setEmail("admin@localhost")
+                    admin.setActive(true)
+                    admin.setEmailVerified(true)  // Required for canLogin() to return true
+                    PerstUserManager.update(admin)
+                    println "[KissInit] Default admin user created. CHANGE PASSWORD IMMEDIATELY!"
+                } else {
+                    println "[KissInit] ERROR: Failed to create admin user"
+                }
             } else {
                 println "[KissInit] Users already exist (${users.size()}), skipping admin creation"
             }
@@ -156,31 +145,13 @@ class KissInit {
      * Index all PerstUsers for fast lookup
      */
     private static void indexPerstUsers() {
-        try {
-            def users = PerstStorageManager.getAll(PerstUser.class)
-            println "[KissInit] Indexing ${users.size()} PerstUsers..."
-            users.each { PerstUser user ->
-                user.index()
-            }
-            println "[KissInit] PerstUser indexing complete"
-        } catch (Exception e) {
-            println "[KissInit] Warning: Could not index PerstUsers: ${e.message}"
-        }
+        println "[KissInit] Skipping PerstUser indexing (not required for CDatabase)"
     }
     
     /**
      * Index all Actors for fast lookup
      */
     private static void indexActors() {
-        try {
-            def actors = PerstStorageManager.getAll(Actor.class)
-            println "[KissInit] Indexing ${actors.size()} Actors..."
-            actors.each { Actor actor ->
-                actor.index()
-            }
-            println "[KissInit] Actor indexing complete"
-        } catch (Exception e) {
-            println "[KissInit] Warning: Could not index Actors: ${e.message}"
-        }
+        println "[KissInit] Skipping Actor indexing (not required for CDatabase)"
     }
 }

@@ -652,6 +652,7 @@ public class MainServlet extends HttpServlet {
     }
 
     static boolean shouldAllowWithoutAuthentication(String className, String methodName) {
+        className = className.replaceAll("\\.", "/");
         return allowedWithoutAuthentication.contains(className + ":" + methodName);
     }
 
