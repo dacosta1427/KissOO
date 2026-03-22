@@ -1,7 +1,7 @@
 /**
  * FileUpload.ts - File Upload API Module
  * 
- * Simple functions that call Server.call() directly.
+ * Simple functions that call Server.fileUploadSend() directly.
  * Used by Svelte 5 components for file upload operations.
  */
 
@@ -24,13 +24,31 @@ export async function uploadFile(
   file: File,
   additionalData?: Record<string, any>
 ): Promise<UploadResult> {
-  // This will be implemented after adding fileUploadSend to Server.ts
-  // For now, return a placeholder
-  console.warn('File upload not yet implemented in Server.ts');
-  return {
-    success: false,
-    error: 'File upload not implemented'
-  };
+  try {
+    const formData = new FormData();
+    formData.append('_file-0', file);
+    
+    const res = await Server.fileUploadSend(
+      'services.FileUpload',
+      'upload',
+      formData,
+      additionalData,
+      'Uploading file...',
+      'File uploaded successfully'
+    );
+    
+    return {
+      success: res._Success ?? res.success ?? false,
+      error: res._ErrorMessage || res.error,
+      fileName: file.name,
+      fileSize: file.size
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Upload failed'
+    };
+  }
 }
 
 /**
@@ -43,10 +61,29 @@ export async function uploadFiles(
   files: File[],
   additionalData?: Record<string, any>
 ): Promise<UploadResult> {
-  // This will be implemented after adding fileUploadSend to Server.ts
-  console.warn('File upload not yet implemented in Server.ts');
-  return {
-    success: false,
-    error: 'File upload not implemented'
-  };
+  try {
+    const formData = new FormData();
+    files.forEach((file, index) => {
+      formData.append(`_file-${index}`, file);
+    });
+    
+    const res = await Server.fileUploadSend(
+      'services.FileUpload',
+      'upload',
+      formData,
+      additionalData,
+      'Uploading files...',
+      'Files uploaded successfully'
+    );
+    
+    return {
+      success: res._Success ?? res.success ?? false,
+      error: res._ErrorMessage || res.error
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Upload failed'
+    };
+  }
 }
