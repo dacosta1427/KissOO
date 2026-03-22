@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { Server } from '$lib/services/Server';
   import { goto } from '$app/navigation';

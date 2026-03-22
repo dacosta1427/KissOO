@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { init, login } from '$lib/api';
   import { goto } from '$app/navigation';
