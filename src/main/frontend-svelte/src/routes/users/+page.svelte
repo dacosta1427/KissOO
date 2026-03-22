@@ -2,9 +2,9 @@
   import { onMount } from 'svelte';
   import { Server } from '$lib/services/Server';
 
-  let users = [];
-  let loading = false;
-  let newUser = { name: '', email: '' };
+  let users = $state([]);
+  let loading = $state(false);
+  let newUser = $state({ name: '', email: '' });
 
   onMount(async () => {
     await loadUsers();
@@ -74,17 +74,17 @@
         type="text"
         placeholder="Name"
         bind:value={newUser.name}
-        class="input"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <input
         type="email"
         placeholder="Email"
         bind:value={newUser.email}
-        class="input"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
     <button
-      on:click={createUser}
+      onclick={createUser}
       class="mt-3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
       disabled={loading}
     >
@@ -94,7 +94,9 @@
 
   <div>
     <h2 class="text-xl font-semibold mb-3">Users</h2>
-    {loading && <p class="text-gray-500">Loading users...</p>}
+    {#if loading}
+      <p class="text-gray-500">Loading users...</p>
+    {/if}
     <div class="space-y-3">
       {#each users as user}
         <div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
@@ -103,7 +105,7 @@
             <p class="text-gray-600 text-sm">{user.email}</p>
           </div>
           <button
-            on:click={() => deleteUser(user.id)}
+            onclick={() => deleteUser(user.id)}
             class="text-red-600 hover:text-red-800"
             disabled={loading}
           >
@@ -114,9 +116,3 @@
     </div>
   </div>
 </div>
-
-<style>
-  .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
-  }
-</style>

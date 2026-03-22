@@ -130,7 +130,16 @@ src/stores/
 *.temp
 *.cache
 
-# Configuration files
+# SvelteKit
+.svelte-kit/
+package-lock.json
+
+# Configuration files (except project config)
+!.svelte-kit
+!svelte.config.js
+!vite.config.ts
+!postcss.config.js
+!tailwind.config.js
 *.config.js
 *.config.ts
 *.config.json
