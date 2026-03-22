@@ -20,13 +20,6 @@
     "strict": true,
     "skipLibCheck": true,
     "exactOptionalPropertyTypes": true,
-    "baseUrl": ".",
-    "paths": {
-      "$lib/*": ["src/lib/*"],
-      "$components/*": ["src/components/*"],
-      "$services/*": ["src/services/*"],
-      "$stores/*": ["src/stores/*"]
-    },
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": [
