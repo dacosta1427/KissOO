@@ -41,7 +41,7 @@ Port all functional screens from the legacy KissOO frontend (`src/main/frontend/
 - [x] **Task 17**: Create Export placeholder page ✅ **COMPLETED**
 
 ### Phase 5: Navigation & Polish
-- [ ] **Task 18**: Update Navbar with all page links
+- [x] **Task 18**: Update Navbar with all page links ✅ **COMPLETED**
 - [ ] **Task 19**: Create shared layout improvements
 - [ ] **Task 20**: Add mobile responsiveness
 - [ ] **Task 21**: Final testing and bug fixes
