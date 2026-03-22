@@ -1,7 +1,5 @@
 <script lang="ts">
   import { getUsers, addUser, deleteUser } from '$lib/api/Users';
-  import { logout, initBackend } from '$lib/api/Auth';
-  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import type { User } from '$lib/api/Users';
 
@@ -16,9 +14,8 @@
   // DERIVED state - form validity
   let canAddUser = $derived(newUserName.length >= 3 && newUserPassword.length >= 3);
 
-  // Initialize and load data on mount
+  // Load data on mount
   onMount(() => {
-    initBackend();
     loadUsers();
   });
 
@@ -75,20 +72,10 @@
       loading = false;
     }
   }
-
-  async function handleLogout() {
-    await logout();
-    goto('/login');
-  }
 </script>
 
 <div class="p-6 max-w-4xl mx-auto">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">User Management</h1>
-    <button onclick={handleLogout} class="text-red-600 hover:text-red-800">
-      Logout
-    </button>
-  </div>
+  <h1 class="text-2xl font-bold mb-6">User Management</h1>
 
   {#if error}
     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -154,10 +141,5 @@
         {/each}
       </div>
     {/if}
-  </div>
-
-  <!-- Navigation -->
-  <div class="mt-8 pt-4 border-t">
-    <a href="/" class="text-blue-600 hover:text-blue-800">← Back to Home</a>
   </div>
 </div>
