@@ -474,9 +474,10 @@ public class ProcessServlet implements Runnable {
         }
 
         if (res == ProcessServlet.ExecutionReturn.NotFound) {
-            res = (new LispService()).tryLisp(this, response, _className, _method, injson, outjson);
-            if (res == ProcessServlet.ExecutionReturn.Error)
-                return;
+            // Lisp service disabled - requires abcl.jar
+            // res = (new LispService()).tryLisp(this, response, _className, _method, injson, outjson);
+            // if (res == ProcessServlet.ExecutionReturn.Error)
+            //     return;
         }
         if (res == ProcessServlet.ExecutionReturn.NotFound) {
             res = (new CompiledJavaService()).tryCompiledJava(this, response, _className, _method, injson, outjson);
