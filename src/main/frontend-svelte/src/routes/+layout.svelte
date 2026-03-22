@@ -4,6 +4,7 @@
   import { session } from '$lib/state/session';
   import { initBackend } from '$lib/api/Auth';
   import Navbar from '$lib/components/Navbar.svelte';
+  import GlobalModal from '$lib/components/GlobalModal.svelte';
 
   onMount(() => {
     initBackend();
@@ -11,6 +12,7 @@
   });
 </script>
 
+<GlobalModal />
 <Navbar />
 
 <slot />
