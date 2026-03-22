@@ -41,6 +41,7 @@ class Users {
             
             PerstUser user = PerstUserManager.create(userName, password, 0)
             user.setActive(injson.getString("userActive") == "Y")
+            user.setEmailVerified(true)  // Allow immediate login without email verification
             PerstUserManager.update(user)
             
             outjson.put("success", true)

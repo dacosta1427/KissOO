@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { Server } from '$lib/services/Server';
+  import { init, login, addUser } from '$lib/api';
   import { goto } from '$app/navigation';
 
   let username = '';
@@ -11,18 +11,18 @@
 
   onMount(() => {
     if (window.location.protocol === 'file:') {
-      Server.setURL('http://localhost:8080');
+      init('http://localhost:8080');
     } else {
       const port = parseInt(window.location.port || '0');
       if (port === 5173) {
-        Server.setURL('http://localhost:8080');
+        init('http://localhost:8080');
       } else {
-        Server.setURL(window.location.origin);
+        init(window.location.origin);
       }
     }
   });
 
-  async function signup() {
+  async function handleSignup() {
     if (!username || !password || !confirmPassword) {
       error = 'Please fill in all fields';
       return;
@@ -42,23 +42,19 @@
     error = '';
 
     try {
-      const res = await Server.call('Users', 'addRecord', {
+      const res = await addUser({
         userName: username.toLowerCase(),
         userPassword: password,
         userActive: 'Y'
       });
 
       if (res._Success || res.success) {
-        // Auto-login after signup
-        const loginRes = await Server.call('', 'Login', {
-          username: username.toLowerCase(),
-          password: password
-        });
+        const loginRes = await login(username, password);
 
         if (loginRes._Success) {
-          Server.setUUID(loginRes.uuid);
           goto('/');
         } else {
+          error = 'Account created. Please login.';
           goto('/login');
         }
       } else {
@@ -73,7 +69,7 @@
 
   function handleKeydown(event) {
     if (event.key === 'Enter') {
-      signup();
+      handleSignup();
     }
   }
 </script>
@@ -88,7 +84,7 @@
       </div>
     {/if}
 
-    <form on:submit|preventDefault={signup}>
+    <form on:submit|preventDefault={handleSignup}>
       <div class="mb-4">
         <label for="username" class="block text-gray-700 text-sm font-bold mb-2">
           Username

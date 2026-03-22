@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { Server } from '$lib/services/Server';
+  import { init, login } from '$lib/api';
   import { goto } from '$app/navigation';
 
   let username = '';
@@ -10,18 +10,18 @@
 
   onMount(() => {
     if (window.location.protocol === 'file:') {
-      Server.setURL('http://localhost:8080');
+      init('http://localhost:8080');
     } else {
       const port = parseInt(window.location.port || '0');
       if (port === 5173) {
-        Server.setURL('http://localhost:8080');
+        init('http://localhost:8080');
       } else {
-        Server.setURL(window.location.origin);
+        init(window.location.origin);
       }
     }
   });
 
-  async function login() {
+  async function handleLogin() {
     if (!username || !password) {
       error = 'Please enter username and password';
       return;
@@ -31,16 +31,12 @@
     error = '';
 
     try {
-      const res = await Server.call('', 'Login', {
-        username: username.toLowerCase(),
-        password: password
-      });
+      const res = await login(username, password);
 
       if (res._Success) {
-        Server.setUUID(res.uuid);
         goto('/');
       } else {
-        error = 'Invalid username or password';
+        error = res._ErrorMessage || 'Invalid username or password';
         password = '';
       }
     } catch (e) {
@@ -52,7 +48,7 @@
 
   function handleKeydown(event) {
     if (event.key === 'Enter') {
-      login();
+      handleLogin();
     }
   }
 </script>
@@ -67,7 +63,7 @@
       </div>
     {/if}
 
-    <form on:submit|preventDefault={login}>
+    <form on:submit|preventDefault={handleLogin}>
       <div class="mb-4">
         <label for="username" class="block text-gray-700 text-sm font-bold mb-2">
           Username

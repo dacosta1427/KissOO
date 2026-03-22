@@ -1,0 +1,1 @@
+import{S as a}from"./CpEWiglc.js";function n(s){a.setURL(s)}async function t(s,r){const e=await a.call("","Login",{username:s.toLowerCase(),password:r});return e._Success&&e.uuid&&a.setUUID(e.uuid),e}async function c(s){return await a.call("services.Users","addRecord",s)}export{c as a,n as i,t as l};
