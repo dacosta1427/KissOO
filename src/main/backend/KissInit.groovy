@@ -4,6 +4,7 @@ import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
 import oodb.PerstConfig
 import oodb.PerstStorageManager
+import mycompany.database.PerstUserManager
 import mycompany.domain.PerstUser
 import mycompany.domain.Actor
 import com.mycompany.security.PasswordSecurity

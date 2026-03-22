@@ -117,6 +117,7 @@ public class PerstUser extends CVersion {
     public void setLastLoginDate(long lastLoginDate) { this.lastLoginDate = lastLoginDate; }
     
     public boolean isEmailVerified() { return emailVerified; }
+    public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
     public String getVerificationToken() { return verificationToken; }
     public long getVerificationExpiresAt() { return verificationExpiresAt; }
     
