@@ -195,3 +195,16 @@ Ensure all pages work on mobile:
 - Svelte 5 runes used throughout
 - All tests passing
 - Documentation updated
+
+## Porting Status
+**Core porting completed on 2026-03-22.** All functional screens from the legacy frontend have been successfully ported to Svelte 5 with Tailwind CSS. The new frontend includes:
+
+1. **Authentication**: Login, Signup, session management
+2. **User Management**: Add, edit, delete users with modal popups
+3. **Phone Book CRUD**: Full CRUD operations with ag-grid table
+4. **Demo Screens**: REST Services, Benchmark, File Upload, Ollama AI, Controls
+5. **Placeholder Screens**: SQLAccess, Report, Export
+6. **Navigation**: Responsive navbar with dropdown menu for demo screens
+7. **Utilities**: Modal dialogs, loading states, error handling
+
+**Remaining optional tasks**: Layout improvements, mobile responsiveness enhancements, and final integration testing.
