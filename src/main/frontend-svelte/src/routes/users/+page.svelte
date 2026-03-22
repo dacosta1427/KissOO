@@ -2,6 +2,9 @@
   import { onMount } from 'svelte';
   import { Server } from '$lib/services/Server';
 
+  export const params = {};
+  export const data = {};
+
   let users = [];
   let loading = false;
   let newUser = { name: '', email: '' };

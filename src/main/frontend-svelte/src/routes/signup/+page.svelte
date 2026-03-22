@@ -3,6 +3,9 @@
   import { init, login, addUser } from '$lib/api';
   import { goto } from '$app/navigation';
 
+  export const params = {};
+  export const data = {};
+
   let username = '';
   let password = '';
   let confirmPassword = '';

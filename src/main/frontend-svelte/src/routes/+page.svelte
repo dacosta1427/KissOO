@@ -3,6 +3,9 @@
   import { Server } from '$lib/services/Server';
   import { goto } from '$app/navigation';
 
+  export const params = {};
+  export const data = {};
+
   let backendUrl = '';
   let isConnected = false;
 
