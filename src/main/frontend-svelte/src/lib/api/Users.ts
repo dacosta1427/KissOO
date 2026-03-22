@@ -45,7 +45,7 @@ export async function addUser(userName: string, userPassword: string): Promise<A
   });
   
   return {
-    success: res._Success || res.success,
+    success: res._Success ?? res.success ?? false,
     error: res._ErrorMessage || res.error,
     id: res.id
   };
@@ -60,7 +60,7 @@ export async function deleteUser(id: number): Promise<ApiResult> {
   const res = await Server.call('services.Users', 'deleteRecord', { id });
   
   return {
-    success: res._Success || res.success,
+    success: res._Success ?? res.success ?? false,
     error: res._ErrorMessage || res.error
   };
 }
@@ -87,7 +87,7 @@ export async function updateUser(
   });
   
   return {
-    success: res._Success || res.success,
+    success: res._Success ?? res.success ?? false,
     error: res._ErrorMessage || res.error
   };
 }
