@@ -20,7 +20,7 @@ Port all functional screens from the legacy KissOO frontend (`src/main/frontend/
 - [x] **Task 2**: Implement utility system (`Utils.ts`) with modal dialogs, loading overlays, etc. ✅ **COMPLETED**
 - [x] **Task 3**: Create custom Modal component (`Modal.svelte`) ✅ **COMPLETED**
 - [x] **Task 4**: Create AgGrid wrapper component ✅ **COMPLETED**
-- [ ] **Task 5**: Update Server.ts with missing methods (binaryCall, fileUploadSend)
+- [x] **Task 5**: Update Server.ts with missing methods (binaryCall, fileUploadSend) ✅ **COMPLETED**
 
 ### Phase 2: Enhanced Users Page
 - [ ] **Task 6**: Add edit user functionality with modal popup
