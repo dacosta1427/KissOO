@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { getUsers, addUser, deleteUser } from '$lib/api/Users';
+  import { getUsers, addUser, deleteUser, updateUser } from '$lib/api/Users';
   import { onMount } from 'svelte';
   import type { User } from '$lib/api/Users';
+  import Modal from '$lib/components/Modal.svelte';
+  import { Utils } from '$lib/utils/Utils';
 
   // Svelte 5 RUNES for reactive state
   let users = $state<User[]>([]);
@@ -11,8 +13,17 @@
   let error = $state('');
   let dataLoading = $state(true);
 
+  // Edit modal state
+  let editModalOpen = $state(false);
+  let editingUser = $state<User | null>(null);
+  let editUserName = $state('');
+  let editUserPassword = $state('');
+  let editUserActive = $state<'Y' | 'N'>('Y');
+  let editLoading = $state(false);
+
   // DERIVED state - form validity
   let canAddUser = $derived(newUserName.length >= 3 && newUserPassword.length >= 3);
+  let canEditUser = $derived(editUserName.length >= 3 && editUserPassword.length >= 3);
 
   // Load data on mount
   onMount(() => {
@@ -53,24 +64,62 @@
     }
   }
 
-  async function handleDeleteUser(id: number) {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+  function openEditModal(user: User) {
+    editingUser = user;
+    editUserName = user.userName;
+    editUserPassword = user.userPassword;
+    editUserActive = user.userActive;
+    editModalOpen = true;
+  }
 
-    loading = true;
+  async function handleEditUser() {
+    if (!editingUser || !canEditUser) return;
+    
+    editLoading = true;
     error = '';
 
     try {
-      const res = await deleteUser(id);
+      const res = await updateUser(
+        editingUser.id,
+        editUserName,
+        editUserPassword,
+        editUserActive
+      );
       if (res.success) {
+        editModalOpen = false;
         await loadUsers();
       } else {
-        error = res.error || 'Failed to delete user';
+        error = res.error || 'Failed to update user';
       }
     } catch (e: any) {
-      error = 'Failed to delete user: ' + (e.message || 'Unknown error');
+      error = 'Failed to update user: ' + (e.message || 'Unknown error');
     } finally {
-      loading = false;
+      editLoading = false;
     }
+  }
+
+  async function handleDeleteUser(id: number) {
+    await Utils.yesNo(
+      'Confirm',
+      'Are you sure you want to delete this user?',
+      async () => {
+        loading = true;
+        error = '';
+
+        try {
+          const res = await deleteUser(id);
+          if (res.success) {
+            await loadUsers();
+          } else {
+            error = res.error || 'Failed to delete user';
+          }
+        } catch (e: any) {
+          error = 'Failed to delete user: ' + (e.message || 'Unknown error');
+        } finally {
+          loading = false;
+        }
+      }
+    );
   }
 </script>
 
@@ -130,16 +179,79 @@
                 </span>
               </p>
             </div>
-            <button
-              onclick={() => handleDeleteUser(user.id)}
-              class="text-red-600 hover:text-red-800"
-              disabled={loading}
-            >
-              Delete
-            </button>
+            <div class="flex gap-2">
+              <button
+                onclick={() => openEditModal(user)}
+                class="text-blue-600 hover:text-blue-800"
+                disabled={loading}
+              >
+                Edit
+              </button>
+              <button
+                onclick={() => handleDeleteUser(user.id)}
+                class="text-red-600 hover:text-red-800"
+                disabled={loading}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         {/each}
       </div>
     {/if}
   </div>
 </div>
+
+<!-- Edit User Modal -->
+<Modal 
+  bind:open={editModalOpen} 
+  title="Edit User"
+  onClose={() => editModalOpen = false}
+>
+  <div class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Username</label>
+      <input
+        type="text"
+        bind:value={editUserName}
+        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Password</label>
+      <input
+        type="password"
+        bind:value={editUserPassword}
+        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Active</label>
+      <select
+        bind:value={editUserActive}
+        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="Y">Active</option>
+        <option value="N">Inactive</option>
+      </select>
+    </div>
+  </div>
+  
+  {#snippet footer()}
+    <button
+      type="button"
+      class="inline-flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
+      onclick={handleEditUser}
+      disabled={editLoading || !canEditUser}
+    >
+      {editLoading ? 'Saving...' : 'Save'}
+    </button>
+    <button
+      type="button"
+      class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+      onclick={() => editModalOpen = false}
+    >
+      Cancel
+    </button>
+  {/snippet}
+</Modal>
