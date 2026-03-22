@@ -31,7 +31,7 @@ Port all functional screens from the legacy KissOO frontend (`src/main/frontend/
 - [x] **Task 9**: Create CRUD (phone book) page with ag-grid and edit/delete ✅ **COMPLETED**
 - [x] **Task 10**: Create REST Services demo page ✅ **COMPLETED**
 - [x] **Task 11**: Create Benchmark page ✅ **COMPLETED**
-- [ ] **Task 12**: Create File Upload page
+- [x] **Task 12**: Create File Upload page ✅ **COMPLETED**
 - [ ] **Task 13**: Create Ollama AI interface page
 
 ### Phase 4: Demo & Placeholder Screens
