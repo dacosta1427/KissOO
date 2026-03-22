@@ -3,8 +3,8 @@
   import { Server } from '$lib/services/Server';
   import { goto } from '$app/navigation';
 
-  let backendUrl = $state('');
-  let isConnected = $state(false);
+  let backendUrl = '';
+  let isConnected = false;
 
   onMount(() => {
     if (window.location.protocol === 'file:') {

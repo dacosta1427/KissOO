@@ -2,9 +2,9 @@
   import { onMount } from 'svelte';
   import { Server } from '$lib/services/Server';
 
-  let users = $state([]);
-  let loading = $state(false);
-  let newUser = $state({ name: '', email: '' });
+  let users = [];
+  let loading = false;
+  let newUser = { name: '', email: '' };
 
   onMount(async () => {
     await loadUsers();
