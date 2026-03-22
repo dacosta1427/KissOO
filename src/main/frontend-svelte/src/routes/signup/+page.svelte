@@ -5,6 +5,7 @@
 
   let username = '';
   let password = '';
+  let confirmPassword = '';
   let error = '';
   let loading = false;
 
@@ -21,9 +22,19 @@
     }
   });
 
-  async function login() {
-    if (!username || !password) {
-      error = 'Please enter username and password';
+  async function signup() {
+    if (!username || !password || !confirmPassword) {
+      error = 'Please fill in all fields';
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      error = 'Passwords do not match';
+      return;
+    }
+
+    if (password.length < 3) {
+      error = 'Password must be at least 3 characters';
       return;
     }
 
@@ -31,20 +42,30 @@
     error = '';
 
     try {
-      const res = await Server.call('', 'Login', {
-        username: username.toLowerCase(),
-        password: password
+      const res = await Server.call('Users', 'addRecord', {
+        userName: username.toLowerCase(),
+        userPassword: password,
+        userActive: 'Y'
       });
 
-      if (res._Success) {
-        Server.setUUID(res.uuid);
-        goto('/');
+      if (res._Success || res.success) {
+        // Auto-login after signup
+        const loginRes = await Server.call('', 'Login', {
+          username: username.toLowerCase(),
+          password: password
+        });
+
+        if (loginRes._Success) {
+          Server.setUUID(loginRes.uuid);
+          goto('/');
+        } else {
+          goto('/login');
+        }
       } else {
-        error = 'Invalid username or password';
-        password = '';
+        error = res._ErrorMessage || res.error || 'Signup failed';
       }
     } catch (e) {
-      error = 'Login failed: ' + e.message;
+      error = 'Signup failed: ' + e.message;
     } finally {
       loading = false;
     }
@@ -52,14 +73,14 @@
 
   function handleKeydown(event) {
     if (event.key === 'Enter') {
-      login();
+      signup();
     }
   }
 </script>
 
 <div class="min-h-screen bg-gray-50 flex items-center justify-center">
   <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-    <h1 class="text-2xl font-bold text-center mb-6">KissOO Login</h1>
+    <h1 class="text-2xl font-bold text-center mb-6">Sign Up</h1>
 
     {#if error}
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -67,7 +88,7 @@
       </div>
     {/if}
 
-    <form on:submit|preventDefault={login}>
+    <form on:submit|preventDefault={signup}>
       <div class="mb-4">
         <label for="username" class="block text-gray-700 text-sm font-bold mb-2">
           Username
@@ -83,7 +104,7 @@
         />
       </div>
 
-      <div class="mb-6">
+      <div class="mb-4">
         <label for="password" class="block text-gray-700 text-sm font-bold mb-2">
           Password
         </label>
@@ -94,21 +115,36 @@
           on:keydown={handleKeydown}
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           placeholder="Enter password"
-          autocomplete="current-password"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <div class="mb-6">
+        <label for="confirmPassword" class="block text-gray-700 text-sm font-bold mb-2">
+          Confirm Password
+        </label>
+        <input
+          type="password"
+          id="confirmPassword"
+          bind:value={confirmPassword}
+          on:keydown={handleKeydown}
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          placeholder="Confirm password"
+          autocomplete="new-password"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
       >
-        {loading ? 'Logging in...' : 'Login'}
+        {loading ? 'Creating account...' : 'Sign Up'}
       </button>
     </form>
 
     <p class="text-gray-500 text-xs text-center mt-4">
-      Don't have an account? <a href="/signup" class="text-blue-600 hover:text-blue-800">Sign Up</a>
+      Already have an account? <a href="/login" class="text-blue-600 hover:text-blue-800">Login</a>
     </p>
   </div>
 </div>

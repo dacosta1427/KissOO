@@ -51,6 +51,9 @@ class KissInit {
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
         MainServlet.allowWithoutAuthentication("", "Login")
         
+        // Allow user creation without authentication (for first-time setup)
+        MainServlet.allowWithoutAuthentication("services.Users", "addRecord")
+        
         println "[KissInit] init() COMPLETED"
         
         // Set up a global logout handler that runs whenever any user logs out
