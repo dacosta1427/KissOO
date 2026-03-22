@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { isOllamaUp, listModels, ask } from '$lib/api/Ollama';
-  import { Utils } from '$lib/utils/Utils';
 
   // State
   let ollamaUp = $state(false);
@@ -24,7 +23,7 @@
         if (modelsResult.success && modelsResult.models) {
           models = modelsResult.models;
           if (models.length > 0) {
-            selectedModel = models[0];
+            selectedModel = models[0] ?? '';
           }
         } else {
           error = modelsResult.error || 'Failed to load models';

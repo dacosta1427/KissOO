@@ -1,6 +1,5 @@
 <script lang="ts">
   import { addNumbersGroovy, addNumbersJava, addNumbersLisp } from '$lib/api/RestServices';
-  import { Utils } from '$lib/utils/Utils';
 
   // State
   let num1 = $state(0);
@@ -16,7 +15,7 @@
     try {
       const res = await addNumbersGroovy(num1, num2);
       if (res.success) {
-        result = res.num3;
+        result = res.num3 ?? 0;
       } else {
         error = res.error || 'Failed to call Groovy service';
       }
@@ -34,7 +33,7 @@
     try {
       const res = await addNumbersJava(num1, num2);
       if (res.success) {
-        result = res.num3;
+        result = res.num3 ?? 0;
       } else {
         error = res.error || 'Failed to call Java service';
       }
@@ -52,7 +51,7 @@
     try {
       const res = await addNumbersLisp(num1, num2);
       if (res.success) {
-        result = res.num3;
+        result = res.num3 ?? 0;
       } else {
         error = res.error || 'Failed to call Lisp service';
       }

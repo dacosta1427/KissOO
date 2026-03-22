@@ -124,7 +124,7 @@
   }
 
   function handleSelectionChanged(selectedRows: PhoneRecord[]) {
-    selectedRow = selectedRows.length === 1 ? selectedRows[0] : null;
+    selectedRow = selectedRows.length === 1 ? (selectedRows[0] ?? null) : null;
   }
 
   function handleRowDoubleClicked(record: PhoneRecord) {
