@@ -1,18 +1,38 @@
 package mycompany.domain;
 
-import org.garret.perst.Persistent;
+import org.garret.perst.continuous.CVersion;
+import org.garret.perst.Indexable;
+import org.garret.perst.continuous.FullTextSearchable;
 
 /**
  * BenchmarkData - For benchmarking Perst performance.
+ * 
+ * Indexing:
+ * - @Indexable: fields for b-tree indexing (use db.find())
+ * - @FullTextSearchable: fields for Lucene full-text search (use db.fullTextSearch())
  */
-public class BenchmarkData extends Persistent {
+public class BenchmarkData extends CVersion {
     
+    @Indexable
     private String uuid;
+    
+    @FullTextSearchable
+    @Indexable
     private String name;
+    
+    @Indexable
     private long value;
+    
+    @FullTextSearchable
+    @Indexable
     private String category;
+    
+    @Indexable
     private int rating;
+    
+    @Indexable
     private double amount;
+    
     private long createdAt;
     private long updatedAt;
     

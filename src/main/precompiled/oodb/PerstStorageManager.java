@@ -1,74 +1,75 @@
 package oodb;
 
 import org.garret.perst.Storage;
-import org.garret.perst.continuous.CDatabase;
-import org.garret.perst.FieldIndex;
+import org.garret.perst.continuous.CVersion;
+import org.garret.perst.Key;
+import org.garret.perst.dbmanager.UnifiedDBManager;
+import org.garret.perst.dbmanager.UnifiedDBManagerImpl;
+import org.garret.perst.continuous.TransactionContainer;
+import org.garret.perst.dbmanager.StoreResult;
+import org.garret.perst.IterableIterator;
 
-import mycompany.domain.CDatabaseRoot;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
- * PerstStorageManager - Manages Perst Storage lifecycle using MainServlet Environment.
+ * SINGLE ENTRY POINT for all Perst database operations.
  * 
- * This class follows the KISS framework creator's suggestion to use
- * MainServlet.putEnvironment/getEnvironment for storing the Perst Storage handle.
+ * Standard pattern for ALL operations (no exceptions):
+ * <pre>
+ *   TransactionContainer tc = PerstStorageManager.createContainer();
+ *   tc.addInsert(obj);  // or addUpdate, addDelete
+ *   PerstStorageManager.store(tc);
+ * </pre>
  * 
  * Benefits:
- * - No modifications to KISS core code
- * - Perst is completely independent from KISS database layer
- * - Easy to update KISS framework without merge conflicts
+ * - Atomic batch operations (all-or-nothing)
+ * - Optimistic locking built-in (conflict detection)
+ * - Lin/Lex history tracking
+ * - Crash recovery support
  * 
- * Usage:
- * 1. Call initialize() from KissInit.init2() to start Perst
- * 2. Call getStorage() anywhere to get the Storage instance
- * 3. Call getRoot() to get the CDatabaseRoot for indexing
+ * Delegates to UnifiedDBManager for all operations.
  */
 public class PerstStorageManager {
     
-    private static final String STORAGE_KEY = "perstStorage";
-    private static final String ROOT_KEY = "perstRoot";
-    private static final String DATABASE_KEY = "perstDatabase";
-    
+    private static final String DBMANAGER_KEY = "perstDBManager";
     private static boolean initialized = false;
+    private static Storage storage;
+    private static ScheduledExecutorService optimizerScheduler;
     
     private PerstStorageManager() {}
     
-    /**
-     * Initialize Perst Storage.
-     * Called from KissInit during application startup.
-     * Stores the Storage handle in MainServlet environment.
-     */
     public static synchronized void initialize() {
         if (initialized) {
-            System.out.println("[PerstStorageManager] Already initialized");
             return;
         }
         
         if (!PerstConfig.getInstance().isPerstEnabled()) {
-            System.out.println("[PerstStorageManager] Perst is not enabled in configuration");
+            return;
+        }
+        
+        if (!PerstConfig.getInstance().isUseCDatabase()) {
+            initialized = true;
             return;
         }
         
         try {
-            Storage storage = createStorage();
+            String dbPath = PerstConfig.getInstance().getDatabasePath();
+            String indexPath = dbPath + ".idx";
             
-            // Store in MainServlet environment (per creator's suggestion)
-            org.kissweb.restServer.MainServlet.putEnvironment(STORAGE_KEY, storage);
+            storage = createStorage();
             
-            // Create and store root
-            CDatabaseRoot root = (CDatabaseRoot) storage.getRoot();
-            if (root == null) {
-                root = new CDatabaseRoot();
-                root.setCollections(storage);
-                storage.setRoot(root);
-                storage.commit();
-            } else {
-                // Root exists - ensure all indexes are initialized (in case new ones were added)
-                root.setCollections(storage);
-            }
-            org.kissweb.restServer.MainServlet.putEnvironment(ROOT_KEY, root);
+            UnifiedDBManager dbm = new UnifiedDBManagerImpl();
+            dbm.open(storage, indexPath);
+            
+            org.kissweb.restServer.MainServlet.putEnvironment(DBMANAGER_KEY, dbm);
             
             initialized = true;
-            System.out.println("[PerstStorageManager] Perst Storage initialized and stored in MainServlet environment");
+            
+            startOptimizerScheduler(dbm);
             
         } catch (Exception e) {
             System.err.println("[PerstStorageManager] Failed to initialize: " + e.getMessage());
@@ -76,217 +77,333 @@ public class PerstStorageManager {
         }
     }
     
-    /**
-     * Create a new Storage instance.
-     */
     private static Storage createStorage() throws Exception {
         Storage storage = org.garret.perst.StorageFactory.getInstance().createStorage();
         storage.setProperty("perst.serialize.transient.objects", java.lang.Boolean.FALSE);
-        storage.setProperty("perst.file.noflush", Boolean.TRUE);
+        storage.setProperty("perst.file.noflush", PerstConfig.getInstance().isPerstNoflush());
         
         String dbPath = PerstConfig.getInstance().getDatabasePath();
         int poolSize = PerstConfig.getInstance().getPagePoolSize();
         
-        // Ensure directory exists
         java.io.File dbFile = new java.io.File(dbPath);
-        if (!dbFile.exists()) {
-            dbFile.mkdirs();
+        java.io.File parentDir = dbFile.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
         }
         
         storage.open(dbPath, poolSize);
         return storage;
     }
     
-    /**
-     * Get the Perst Storage instance from MainServlet environment.
-     * Initializes if not already done.
-     * 
-     * @return Storage instance
-     */
-    public static Storage getStorage() {
+    public static UnifiedDBManager getDBManager() {
         if (!initialized) {
             initialize();
         }
-        
-        Storage storage = (Storage) org.kissweb.restServer.MainServlet.getEnvironment(STORAGE_KEY);
-        if (storage == null) {
-            throw new IllegalStateException("Perst Storage not initialized. Call initialize() first.");
-        }
-        return storage;
+        return (UnifiedDBManager) org.kissweb.restServer.MainServlet.getEnvironment(DBMANAGER_KEY);
     }
     
-    /**
-     * Get the CDatabaseRoot from MainServlet environment.
-     * 
-     * @return CDatabaseRoot instance
-     */
-    public static CDatabaseRoot getRoot() {
-        if (!initialized) {
-            initialize();
-        }
-        
-        CDatabaseRoot root = (CDatabaseRoot) org.kissweb.restServer.MainServlet.getEnvironment(ROOT_KEY);
-        if (root == null) {
-            throw new IllegalStateException("Perst Root not initialized. Call initialize() first.");
-        }
-        return root;
-    }
-    
-    /**
-     * Check if Perst is available.
-     * 
-     * @return true if initialized and available
-     */
     public static boolean isAvailable() {
-        return initialized && getStorage() != null;
+        return getDBManager() != null;
     }
     
-    /**
-     * Begin a transaction.
-     */
+    // ========== TRANSACTION CONTROL ==========
+    // Note: Transaction state is managed by UnifiedDBManager.
+    // If transaction leak issues are suspected, see ChangeNote-UDBM-Improvements.md
+    
     public static void beginTransaction() {
-        if (!isAvailable()) throw new IllegalStateException("Perst not available - ensure PerstStorageManager.initialize() is called in KissInit");
-        Storage storage = getStorage();
-        storage.beginThreadTransaction(Storage.EXCLUSIVE_TRANSACTION);
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.beginTransaction();
+        }
     }
     
-    /**
-     * Commit the current transaction.
-     */
-    public static void commitTransaction() {
-        Storage storage = getStorage();
-        storage.commit();
-        storage.endThreadTransaction();
+    public static void commitTransaction() throws Exception {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.commitTransaction();
+        }
     }
     
-    /**
-     * Rollback the current transaction.
-     */
     public static void rollbackTransaction() {
-        Storage storage = getStorage();
-        storage.rollback();
-        storage.endThreadTransaction();
-    }
-    
-    // ========== Generic CRUD Operations ==========
-    
-    /**
-     * Save an object to the database.
-     * Perst must be initialized first (called from KissInit).
-     */
-    public static void save(Object obj) {
-        if (!isAvailable()) throw new IllegalStateException("Perst not available - ensure initialize() is called in KissInit");
-        
-        try {
-            CDatabaseRoot root = getRoot();
-            
-            // Determine index based on object type
-            if (obj instanceof mycompany.domain.PerstUser) {
-                ((mycompany.domain.PerstUser) obj).index();
-                root.userIndex.put((mycompany.domain.PerstUser) obj);
-            } else if (obj instanceof mycompany.domain.Actor) {
-                root.actorIndex.put((mycompany.domain.Actor) obj);
-            } else if (obj instanceof mycompany.domain.Phone) {
-                root.phoneIndex.put((mycompany.domain.Phone) obj);
-            } else if (obj instanceof mycompany.domain.BenchmarkData) {
-                root.benchmarkIndex.put((mycompany.domain.BenchmarkData) obj);
-            } else if (obj instanceof mycompany.domain.Agreement) {
-                root.agreementIndex.put((mycompany.domain.Agreement) obj);
-            } else if (obj instanceof mycompany.domain.Group) {
-                root.groupIndex.put((mycompany.domain.Group) obj);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to save object: " + e.getMessage(), e);
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.rollbackTransaction();
         }
     }
     
-    /**
-     * Save an object within a transaction.
-     * Caller must handle transaction.
-     */
-    public static void saveInTransaction(Object obj) {
-        if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        save(obj);
+    public static boolean isInTransaction() {
+        UnifiedDBManager dbm = getDBManager();
+        return dbm != null && dbm.isInTransaction();
     }
     
-    /**
-     * Delete an object from the database.
-     */
-    public static void delete(Object obj) {
-        if (!isAvailable()) throw new IllegalStateException("Perst not available");
+    // ========== RETRIEVE ==========
+    
+    public static <T extends CVersion> T find(Class<T> clazz, String field, String value) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
         
         try {
-            CDatabaseRoot root = getRoot();
-            
-            if (obj instanceof mycompany.domain.PerstUser) {
-                root.userIndex.remove((mycompany.domain.PerstUser) obj);
-            } else if (obj instanceof mycompany.domain.Actor) {
-                root.actorIndex.remove((mycompany.domain.Actor) obj);
-            } else if (obj instanceof mycompany.domain.Phone) {
-                root.phoneIndex.remove((mycompany.domain.Phone) obj);
-            } else if (obj instanceof mycompany.domain.BenchmarkData) {
-                root.benchmarkIndex.remove((mycompany.domain.BenchmarkData) obj);
-            } else if (obj instanceof mycompany.domain.Agreement) {
-                root.agreementIndex.remove((mycompany.domain.Agreement) obj);
-            } else if (obj instanceof mycompany.domain.Group) {
-                root.groupIndex.remove((mycompany.domain.Group) obj);
-            }
+            IterableIterator<T> results = dbm.find(clazz, field, new Key(value));
+            return getSingleton(results);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to delete object: " + e.getMessage(), e);
+            System.err.println("[PerstStorageManager] Find failed: " + e.getMessage());
+            return null;
         }
     }
     
-    /**
-     * Delete an object within a transaction.
-     */
-    public static void deleteInTransaction(Object obj) {
-        if (!isAvailable()) throw new IllegalStateException("Perst not available");
-        delete(obj);
+    public static <T extends CVersion> T find(Class<T> clazz, String field, int value) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
+        
+        try {
+            IterableIterator<T> results = dbm.find(clazz, field, new Key(value));
+            return getSingleton(results);
+        } catch (Exception e) {
+            System.err.println("[PerstStorageManager] Find failed: " + e.getMessage());
+            return null;
+        }
     }
     
-    /**
-     * Close the Perst Storage.
-     * Should be called during application shutdown.
-     */
+    public static <T extends CVersion> List<T> getAll(Class<T> clazz) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return java.util.Collections.emptyList();
+        
+        try {
+            IterableIterator<T> results = dbm.getRecords(clazz);
+            return toList(results);
+        } catch (Exception e) {
+            System.err.println("[PerstStorageManager] GetAll failed: " + e.getMessage());
+            return java.util.Collections.emptyList();
+        }
+    }
+    
+    public static <T extends CVersion> T getByOid(Class<T> clazz, long oid) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
+        
+        try {
+            org.garret.perst.dbmanager.RetrieveResult<T> result = dbm.getByOid(oid);
+            return result != null ? result.getObject() : null;
+        } catch (Exception e) {
+            System.err.println("[PerstStorageManager] GetByOid failed: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    public static <T extends CVersion> T getByUuid(Class<T> clazz, String uuid) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
+        
+        try {
+            return dbm.getByUuid(uuid);
+        } catch (Exception e) {
+            System.err.println("[PerstStorageManager] GetByUuid failed: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    public static IterableIterator<CVersion> searchFullText(String query) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
+        
+        try {
+            return dbm.searchFullText(query);
+        } catch (Exception e) {
+            System.err.println("[PerstStorageManager] FullTextSearch failed: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    // ========== STORE (TransactionContainer) ==========
+    
+    public static TransactionContainer createContainer() {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
+        return dbm.createContainer();
+    }
+    
+    public static TransactionContainer createSyncContainer() {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
+        return dbm.createSyncContainer();
+    }
+    
+    public static boolean store(TransactionContainer container) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null || container == null) return false;
+        
+        try {
+            StoreResult result = dbm.store(container);
+            return result.isSuccess();
+        } catch (Exception e) {
+            System.err.println("[PerstStorageManager] Store failed: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    // ========== HISTORY/Lex ==========
+    
+    public static void flushHistory() {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.flushHistoryBuffer();
+        }
+    }
+    
+    public static int getHistoryBufferSize() {
+        UnifiedDBManager dbm = getDBManager();
+        return dbm != null ? dbm.getHistoryBufferSize() : 0;
+    }
+    
+    public static void setHistoryBufferSize(int threshold) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.setHistoryBufferSize(threshold);
+        }
+    }
+    
+    public static void setHistoryFlushInterval(int seconds) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            dbm.setHistoryFlushInterval(seconds);
+        }
+    }
+    
+    // ========== LIFECYCLE ==========
+    
     public static synchronized void close() {
-        Storage storage = (Storage) org.kissweb.restServer.MainServlet.getEnvironment(STORAGE_KEY);
+        UnifiedDBManager dbm = (UnifiedDBManager) org.kissweb.restServer.MainServlet.getEnvironment(DBMANAGER_KEY);
+        if (dbm != null) {
+            try {
+                dbm.close();
+            } catch (Exception e) {
+                System.err.println("[PerstStorageManager] Close failed: " + e.getMessage());
+            }
+            org.kissweb.restServer.MainServlet.putEnvironment(DBMANAGER_KEY, null);
+        }
         if (storage != null) {
             storage.close();
-            org.kissweb.restServer.MainServlet.putEnvironment(STORAGE_KEY, null);
-            org.kissweb.restServer.MainServlet.putEnvironment(ROOT_KEY, null);
-            initialized = false;
-            System.out.println("[PerstStorageManager] Perst Storage closed");
+            storage = null;
+        }
+        stopOptimizerScheduler();
+        initialized = false;
+    }
+    
+    private static void startOptimizerScheduler(UnifiedDBManager dbm) {
+        int interval = PerstConfig.getInstance().getPerstOptimizeInterval();
+        if (interval <= 0) {
+            System.out.println("[PerstStorageManager] Lucene optimization disabled (interval=0)");
+            return;
+        }
+        
+        optimizerScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "LuceneOptimizer");
+            t.setDaemon(true);
+            return t;
+        });
+        
+        optimizerScheduler.scheduleAtFixedRate(() -> {
+            try {
+                System.out.println("[PerstStorageManager] Running Lucene full-text index optimization...");
+                dbm.flushHistoryBuffer();
+                System.out.println("[PerstStorageManager] Lucene optimization complete.");
+            } catch (Exception e) {
+                System.err.println("[PerstStorageManager] Lucene optimization failed: " + e.getMessage());
+            }
+        }, interval, interval, TimeUnit.SECONDS);
+        
+        System.out.println("[PerstStorageManager] Lucene optimizer scheduled every " + interval + " seconds");
+    }
+    
+    private static void stopOptimizerScheduler() {
+        if (optimizerScheduler != null) {
+            optimizerScheduler.shutdown();
+            try {
+                if (!optimizerScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    optimizerScheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                optimizerScheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            optimizerScheduler = null;
+            System.out.println("[PerstStorageManager] Lucene optimizer stopped");
         }
     }
     
-    // ========== Storage Query Methods ==========
+    // ========== HEALTH CHECK ==========
     
-    /**
-     * Get all objects of a given class.
-     * 
-     * @param clazz the class type to retrieve
-     * @return collection of objects
-     */
-    public static java.util.Collection<java.lang.Object> getAll(Class<?> clazz) {
-        if (!isAvailable()) throw new IllegalStateException("Perst not available");
+    public static java.util.Map<String, Object> healthCheck() {
+        java.util.Map<String, Object> health = new java.util.HashMap<>();
         
-        CDatabaseRoot root = getRoot();
-        java.util.Collection<java.lang.Object> result = new java.util.ArrayList<>();
+        UnifiedDBManager dbm = getDBManager();
         
-        if (clazz == mycompany.domain.PerstUser.class) {
-            for (mycompany.domain.PerstUser u : root.userIndex) result.add(u);
-        } else if (clazz == mycompany.domain.Actor.class) {
-            for (mycompany.domain.Actor a : root.actorIndex) result.add(a);
-        } else if (clazz == mycompany.domain.Phone.class) {
-            for (mycompany.domain.Phone p : root.phoneIndex) result.add(p);
-        } else if (clazz == mycompany.domain.BenchmarkData.class) {
-            for (mycompany.domain.BenchmarkData b : root.benchmarkIndex) result.add(b);
-        } else if (clazz == mycompany.domain.Agreement.class) {
-            for (mycompany.domain.Agreement a : root.agreementIndex) result.add(a);
-        } else if (clazz == mycompany.domain.Group.class) {
-            for (mycompany.domain.Group g : root.groupIndex) result.add(g);
+        health.put("initialized", initialized);
+        health.put("perstEnabled", PerstConfig.getInstance().isPerstEnabled());
+        health.put("useCDatabase", PerstConfig.getInstance().isUseCDatabase());
+        health.put("available", dbm != null);
+        
+        if (dbm != null) {
+            try {
+                health.put("inTransaction", dbm.isInTransaction());
+                health.put("historyBufferSize", dbm.getHistoryBufferSize());
+                health.put("databasePath", PerstConfig.getInstance().getDatabasePath());
+                health.put("optimizerScheduler", optimizerScheduler != null && !optimizerScheduler.isShutdown());
+            } catch (Exception e) {
+                health.put("error", e.getMessage());
+            }
         }
         
+        if (storage != null) {
+            try {
+                health.put("databaseSize", storage.getDatabaseSize());
+                health.put("usedSize", storage.getUsedSize());
+            } catch (Exception e) {
+                health.put("storageError", e.getMessage());
+            }
+        }
+        
+        return health;
+    }
+    
+    public static java.util.Map<String, Object> getStats() {
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm != null) {
+            try {
+                org.garret.perst.dbmanager.MemoryStats memStats = dbm.getMemoryStats();
+                stats.put("usedMemory", memStats.getUsedMemory());
+                stats.put("maxMemory", memStats.getMaxMemory());
+                stats.put("usagePercent", memStats.getUsagePercent());
+                stats.put("loadedObjects", memStats.getLoadedObjects());
+                stats.put("lazyLoadedCollections", memStats.getLazyLoadedCollections());
+                stats.put("lowMemory", memStats.isLowMemory());
+            } catch (Exception e) {
+                stats.put("error", e.getMessage());
+            }
+        }
+        
+        return stats;
+    }
+    
+    // ========== HELPER METHODS ==========
+    
+    private static <T> T getSingleton(IterableIterator<T> iter) {
+        if (iter == null || !iter.hasNext()) {
+            return null;
+        }
+        T result = iter.next();
         return result;
+    }
+    
+    private static <T> List<T> toList(IterableIterator<T> iter) {
+        List<T> list = new ArrayList<>();
+        if (iter != null) {
+            while (iter.hasNext()) {
+                list.add(iter.next());
+            }
+        }
+        return list;
     }
 }

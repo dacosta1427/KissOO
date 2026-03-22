@@ -14,7 +14,10 @@ public class PerstConfig {
     
     private boolean perstEnabled = false;
     private boolean useCDatabase = true;  // Use CDatabase for versioning
+    private boolean perstNoflush = false;  // Safe default - flush writes to disk
+    private int perstOptimizeInterval = 86400;  // Default: optimize every 24 hours
     private String databasePath = "oodb";
+    private String historyIndexPath = "oodb.lex"; // Default path for history index
     private int pagePoolSize = 512 * 1024 * 1024; // 512MB default
     
     private PerstConfig() {
@@ -49,7 +52,10 @@ public class PerstConfig {
             
             this.perstEnabled = "true".equalsIgnoreCase(props.getProperty("PerstEnabled", "false"));
             this.useCDatabase = "true".equalsIgnoreCase(props.getProperty("PerstUseCDatabase", "true"));
+            this.perstNoflush = "true".equalsIgnoreCase(props.getProperty("PerstNoflush", "false"));
+            this.perstOptimizeInterval = Integer.parseInt(props.getProperty("PerstOptimizeInterval", "86400"));
             String dbPath = props.getProperty("PerstDatabasePath", "oodb");
+            String histPath = props.getProperty("PerstHistoryIndexPath", "oodb.lex");
             this.pagePoolSize = Integer.parseInt(props.getProperty("PerstPagePoolSize", "536870912"));
             
 // Convert relative path to absolute using application path
@@ -75,9 +81,33 @@ public class PerstConfig {
                 }
             }
             
+            // Process history index path
+            if (appPath != null && !new java.io.File(histPath).isAbsolute()) {
+                String normalizedAppPath = appPath.replace('/', java.io.File.separatorChar);
+                if (!normalizedAppPath.endsWith(java.io.File.separator)) {
+                    normalizedAppPath += java.io.File.separator;
+                }
+                String combinedHistPath = normalizedAppPath + histPath.replace('/', java.io.File.separatorChar);
+                try {
+                    this.historyIndexPath = new java.io.File(combinedHistPath).getCanonicalPath();
+                } catch (Exception e) {
+                    this.historyIndexPath = combinedHistPath;
+                }
+            } else {
+                String normalizedHistPath = histPath.replace('/', java.io.File.separatorChar);
+                try {
+                    this.historyIndexPath = new java.io.File(normalizedHistPath).getCanonicalPath();
+                } catch (Exception e) {
+                    this.historyIndexPath = normalizedHistPath;
+                }
+            }
+            
             System.out.println("[PerstConfig] Perst Enabled: " + perstEnabled);
             System.out.println("[PerstConfig] Use CDatabase: " + useCDatabase);
+            System.out.println("[PerstConfig] NoFlush: " + perstNoflush + " (true = faster but data loss risk on crash)");
+            System.out.println("[PerstConfig] Optimize Interval: " + perstOptimizeInterval + " seconds (" + (perstOptimizeInterval/3600) + " hours)");
             System.out.println("[PerstConfig] Database Path: " + databasePath);
+            System.out.println("[PerstConfig] History Index Path: " + historyIndexPath);
             
         } catch (IOException e) {
             System.out.println("[PerstConfig] Config file not found, using defaults. Perst disabled.");
@@ -95,8 +125,20 @@ public class PerstConfig {
         return useCDatabase;
     }
     
+    public boolean isPerstNoflush() {
+        return perstNoflush;
+    }
+    
+    public int getPerstOptimizeInterval() {
+        return perstOptimizeInterval;
+    }
+    
     public String getDatabasePath() {
         return databasePath;
+    }
+    
+    public String getHistoryIndexPath() {
+        return historyIndexPath;
     }
     
     public int getPagePoolSize() {

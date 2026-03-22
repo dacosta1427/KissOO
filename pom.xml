@@ -234,9 +234,9 @@
       <!-- Perst OODBMS -->
       <groupId>org.garret.perst</groupId>
       <artifactId>perst-dcg</artifactId>
-      <version>4.0.0</version>
+      <version>4.0.1</version>
       <scope>system</scope>
-      <systemPath>${project.basedir}/libs/perst-dcg-4.0.0.jar</systemPath>
+      <systemPath>${project.basedir}/libs/perst-dcg-4.0.1.jar</systemPath>
     </dependency>
 
     <!-- Mockito for testing -->

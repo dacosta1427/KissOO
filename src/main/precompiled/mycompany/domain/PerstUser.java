@@ -1,10 +1,10 @@
 package mycompany.domain;
 
 import org.garret.perst.continuous.CVersion;
+import org.garret.perst.Indexable;
+import org.garret.perst.continuous.FullTextSearchable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -15,28 +15,41 @@ import java.util.UUID;
  * 
  * IMPORTANT: Email verification is required before user can login.
  * Sign up → Verify email → Active
+ * 
+ * Indexing is handled by CDatabase via @Indexable annotations.
+ * Use PerstUserManager for all database operations.
  */
 public class PerstUser extends CVersion {
     
+    @FullTextSearchable
+    @Indexable(unique=true)
     private String username;
+    
     private String passwordHash;  // SHA256 hash (64 chars)
+    
+    @Indexable
     private boolean active = true;
+    
+    @Indexable(unique=true)
     private int userId;       // User ID
+    
+    @FullTextSearchable
     private String email;
+    
+    @FullTextSearchable
     private String firstName;
+    
+    @FullTextSearchable
     private String lastName;
+    
     private long createdDate;
     private long lastLoginDate;
     
-    // Email verification
+    @Indexable
     private boolean emailVerified = false;
+    
     private String verificationToken;
     private long verificationExpiresAt;
-    
-    // Static in-memory indexes
-    private static Map<Integer, PerstUser> idIndex = new HashMap<>();
-    private static Map<String, PerstUser> usernameIndex = new HashMap<>();
-    private static Map<String, PerstUser> tokenIndex = new HashMap<>();  // By verification token
     
     public PerstUser() {
         this.createdDate = System.currentTimeMillis();
@@ -49,45 +62,6 @@ public class PerstUser extends CVersion {
         this.userId = id;
     }
     
-    // Static finder methods
-    public static PerstUser get(int userId) {
-        return idIndex.get(userId);
-    }
-    
-    public static PerstUser getByUsername(String username) {
-        return usernameIndex.get(username);
-    }
-    
-    public void index() {
-        if (username != null && !username.isEmpty()) {
-            usernameIndex.put(username, this);
-        }
-        if (userId > 0) {
-            idIndex.put(userId, this);
-        }
-        if (verificationToken != null && !verificationToken.isEmpty()) {
-            tokenIndex.put(verificationToken, this);
-        }
-    }
-    
-    public void removeIndex() {
-        usernameIndex.remove(username);
-        if (userId > 0) {
-            idIndex.remove(userId);
-        }
-        if (verificationToken != null) {
-            tokenIndex.remove(verificationToken);
-        }
-    }
-    
-    /**
-     * Find user by verification token
-     */
-    public static PerstUser getByVerificationToken(String token) {
-        return tokenIndex.get(token);
-    }
-    
-    // Password handling
     public static String hashPassword(String password) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -115,7 +89,6 @@ public class PerstUser extends CVersion {
         this.passwordHash = hashPassword(password);
     }
     
-    // Getters and Setters
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
     
@@ -143,23 +116,15 @@ public class PerstUser extends CVersion {
     public long getLastLoginDate() { return lastLoginDate; }
     public void setLastLoginDate(long lastLoginDate) { this.lastLoginDate = lastLoginDate; }
     
-    // ========== Email Verification ==========
-    
     public boolean isEmailVerified() { return emailVerified; }
     public String getVerificationToken() { return verificationToken; }
     public long getVerificationExpiresAt() { return verificationExpiresAt; }
     
-    /**
-     * Generate a new verification token
-     */
     public void generateVerificationToken() {
         this.verificationToken = UUID.randomUUID().toString();
-        this.verificationExpiresAt = System.currentTimeMillis() + (24 * 60 * 60 * 1000); // 24 hours
+        this.verificationExpiresAt = System.currentTimeMillis() + (24 * 60 * 60 * 1000);
     }
     
-    /**
-     * Verify email with token
-     */
     public boolean verifyEmail(String token) {
         if (verificationToken == null || !verificationToken.equals(token)) {
             return false;
@@ -172,16 +137,12 @@ public class PerstUser extends CVersion {
         return true;
     }
     
-    /**
-     * Check if user can login (active AND email verified)
-     */
     public boolean canLogin() {
         return active && emailVerified;
     }
     
-    // Get the Actor associated with this user
     public Actor getActor() {
-        return Actor.findByUserId(userId);
+        return mycompany.database.ActorManager.getByUserId(userId);
     }
     
     public java.util.Map<String, Object> toJSON() {

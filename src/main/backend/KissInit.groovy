@@ -2,12 +2,11 @@ import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import mycompany.database.PerstHelper
 import oodb.PerstConfig
-import oodb.PerstContext
 import oodb.PerstStorageManager
 import mycompany.domain.PerstUser
 import mycompany.domain.Actor
+import com.mycompany.security.PasswordSecurity
 import java.util.function.Consumer
 
 class KissInit {
@@ -19,6 +18,10 @@ class KissInit {
         println "[KissInit] init() CALLED"
         
         MainServlet.readIniFile "application.ini", "main"
+        MainServlet.readIniFile "application.ini", "PasswordSecurity"
+
+        // Example of how to specify a method that is allowed without authentication
+        // MainServlet.allowWithoutAuthentication("services.MyGroovyService", "addNumbers")
 
         println "[KissInit] init() - After readIniFile"
         
@@ -34,7 +37,7 @@ class KissInit {
                 println "[KissInit] init() - Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
                 
                 // Initialize default admin user if none exists
-                if (PerstContext.getInstance().isAvailable()) {
+                if (PerstStorageManager.isAvailable()) {
                     initDefaultUser()
                     indexPerstUsers()
                     indexActors()
@@ -71,6 +74,10 @@ class KissInit {
      * Note: No SQL database is configured - Perst is accessed via MainServlet environment.
      */
     static void init2(Connection db) {
+        // If you use db, make sure you commit.
+        if (!PasswordSecurity.initialise()) System.out.println("! X X X PasswordSecurity NOT initialised!");
+        System.out.println("* * * PasswordSecurity initialised!");
+
         try {
             println "[KissInit] init2() CALLED"
             println "[KissInit] db = " + db
@@ -89,7 +96,7 @@ class KissInit {
             }
 
             // Initialize default admin user if none exists
-            if (PerstContext.getInstance().isAvailable()) {
+            if (PerstStorageManager.isAvailable()) {
                 initDefaultUser()
                 indexPerstUsers()
                 indexActors()
@@ -109,7 +116,7 @@ class KissInit {
      */
     private static void initDefaultUser() {
         try {
-            def users = PerstContext.getInstance().retrieveAllUsers(PerstUser)
+            def users = PerstStorageManager.getAll(PerstUser.class)
             if (!users || users.size() == 0) {
                 println "[KissInit] Creating default admin user..."
                 def admin = new PerstUser("admin", "admin", 1)
@@ -118,9 +125,9 @@ class KissInit {
                 admin.index()
                 
                 // Use proper transaction handling
-                PerstContext.getInstance().beginTransaction()
-                PerstContext.getInstance().storeUser(admin)
-                PerstContext.getInstance().commitTransaction()
+                PerstStorageManager.beginTransaction()
+                PerstStorageManager.save(admin)
+                PerstStorageManager.commitTransaction()
                 
                 println "[KissInit] Default admin user created. CHANGE PASSWORD IMMEDIATELY!"
                 
@@ -129,8 +136,9 @@ class KissInit {
                 Thread.sleep(2000)
                 println "[KissInit] Resume..."
                 
-                // Verify user was saved
-                def verify = PerstContext.getInstance().retrieveUser(PerstUser.class, "username", "admin")
+                // Verify user was saved - use getDatabase().find() for indexed lookup
+                def db = PerstStorageManager.getDatabase()
+                def verify = db.getSingleton(db.find(PerstUser.class, "username", new org.garret.perst.Key("admin")))
                 println "[KissInit] Verification: admin user found = ${verify != null}"
             } else {
                 println "[KissInit] Users already exist (${users.size()}), skipping admin creation"
@@ -146,7 +154,7 @@ class KissInit {
      */
     private static void indexPerstUsers() {
         try {
-            def users = PerstContext.getInstance().retrieveAllUsers(PerstUser)
+            def users = PerstStorageManager.getAll(PerstUser.class)
             println "[KissInit] Indexing ${users.size()} PerstUsers..."
             users.each { PerstUser user ->
                 user.index()
@@ -162,7 +170,7 @@ class KissInit {
      */
     private static void indexActors() {
         try {
-            def actors = PerstContext.getInstance().retrieveAllObjects(Actor)
+            def actors = PerstStorageManager.getAll(Actor.class)
             println "[KissInit] Indexing ${actors.size()} Actors..."
             actors.each { Actor actor ->
                 actor.index()

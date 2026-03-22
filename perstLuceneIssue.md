@@ -1,8 +1,40 @@
 # Perst CDatabase Lucene Index Directory Issue
 
+> **STATUS: RESOLVED** - See fix in branch `feature/cdatabase-lucene-fix`
+
 ## Executive Summary
 
-When attempting to initialize Perst CDatabase (with versioning/full-text indexing), the application fails to create the required Lucene index directory. The database path (`data/oodb`) is being created as a FILE instead of a DIRECTORY, causing subsequent Lucene index initialization to fail with `NoSuchFileException`.
+When attempting to initialize Perst CDatabase (with versioning/full-text indexing), the application fails to create the required Lucene index directory. The database path (`data/oodb`) was being created as a FILE instead of a DIRECTORY, causing subsequent Lucene index initialization to fail with `NoSuchFileException`.
+
+## Root Cause
+
+The issue was in `PerstStorageManager.java`:
+1. The code tried to create `data/oodb` as a directory with `mkdirs()`
+2. The Lucene index path was set to `data/oodb/idx` (subdirectory inside the file path)
+3. Perst correctly creates `oodb` as a FILE, so `oodb/idx` is impossible
+
+## Resolution
+
+**Fixed in** `feature/cdatabase-lucene-fix` branch:
+
+1. **`createStorage()`** - Only create parent directory, not the db file:
+   ```java
+   java.io.File parentDir = dbFile.getParentFile();
+   if (parentDir != null && !parentDir.exists()) {
+       parentDir.mkdirs();
+   }
+   ```
+
+2. **`initialize()`** - Create CDatabase with correct index path:
+   ```java
+   String indexPath = dbPath + ".idx";  // "data/oodb.idx" - adjacent to file
+   database.open(storage, indexPath);
+   ```
+
+3. **`application.ini`** - Enable CDatabase:
+   ```ini
+   PerstUseCDatabase = true
+   ```
 
 ## Current Status
 
@@ -10,10 +42,22 @@ When attempting to initialize Perst CDatabase (with versioning/full-text indexin
 |------|--------|
 | Perst Enabled | true |
 | Use CDatabase | true |
-| Configured Path | `C:\opt\Projects\KissOO\data\oodb` |
-| Path Resolution | Working (correctly resolves to project root) |
-| Directory Creation | FAILING |
-| Lucene Index | NOT CREATED |
+| Configured Path | `data/oodb` |
+| Lucene Index | `data/oodb.idx` (adjacent directory) |
+
+## Previous Issue Details (for reference)
+
+When attempting to initialize Perst CDatabase (with versioning/full-text indexing), the application failed to create the required Lucene index directory. The database path (`data/oodb`) is being created as a FILE instead of a DIRECTORY, causing subsequent Lucene index initialization to fail with `NoSuchFileException`.
+
+### Error Log (before fix)
+
+```
+[PerstContext] Database path: C:\opt\Projects\KissOO\data\oodb
+[PerstContext] Checking idx dir: C:\opt\Projects\KissOO\data\oodb\idx exists=false
+[PerstContext] Created idx directory: false at C:\opt\Projects\KissOO\data\oodb\idx
+[PerstContext] idx dir isWritable: false
+[PerstContext] Failed to initialize Perst CDatabase: java.nio.file.NoSuchFileException: C:\opt\Projects\KissOO\data\oodb\idx
+```
 
 ## Error Log
 

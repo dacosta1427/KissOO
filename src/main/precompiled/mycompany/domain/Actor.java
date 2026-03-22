@@ -1,6 +1,8 @@
 package mycompany.domain;
 
 import org.garret.perst.continuous.CVersion;
+import org.garret.perst.Indexable;
+import org.garret.perst.continuous.FullTextSearchable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,25 +13,35 @@ import java.util.Set;
  * the Actor CANNOT exist. This is enforced at construction time.
  * 
  * This is a generic entity - extend it for domain-specific behavior.
+ * 
+ * Indexing is handled by CDatabase via @Indexable annotations.
+ * Use ActorManager for all database operations.
  */
 public class Actor extends CVersion {
     
+    @Indexable
     private String uuid;
+    
+    @FullTextSearchable
+    @Indexable
     private String name;
-    private String type;  // Generic type field - customize for your domain
+    
+    @Indexable
+    private String type;
+    
+    @Indexable
     private boolean active = true;
+    
     private long createdDate;
-    private int userId = 0;  // Link to SQL user ID
-    private transient PerstUser perstUser;  // Linked PerstUser for authentication
-    private Agreement agreement;  // MANDATORY - Authorization contract
     
-    // Static in-memory indexes
-    private static java.util.Map<Integer, Actor> userIdIndex = new java.util.HashMap<>();
-    private static java.util.Map<String, Actor> uuidIndex = new java.util.HashMap<>();
+    @Indexable
+    private int userId = 0;
+    private transient PerstUser perstUser;
+    private Agreement agreement;
     
-    /**
-     * Create Actor with Agreement - MANDATORY
-     */
+    public Actor() {
+    }
+    
     public Actor(String name, String type, Agreement agreement) {
         this.createdDate = System.currentTimeMillis();
         this.name = name;
@@ -42,32 +54,6 @@ public class Actor extends CVersion {
         this.agreement = agreement;
     }
     
-    // Static finder methods
-    public static Actor findByUserId(int userId) {
-        return userIdIndex.get(userId);
-    }
-    
-    public static Actor findByUuid(String uuid) {
-        return uuidIndex.get(uuid);
-    }
-    
-    public void index() {
-        if (uuid != null && !uuid.isEmpty()) {
-            uuidIndex.put(uuid, this);
-        }
-        if (perstUser != null && perstUser.getUserId() > 0) {
-            userIdIndex.put(perstUser.getUserId(), this);
-        }
-    }
-    
-    public void removeIndex() {
-        uuidIndex.remove(uuid);
-        if (perstUser != null && perstUser.getUserId() > 0) {
-            userIdIndex.remove(perstUser.getUserId());
-        }
-    }
-    
-    // Manual getters/setters
     public String getUuid() { return uuid; }
     public void setUuid(String uuid) { this.uuid = uuid; }
     
@@ -89,22 +75,9 @@ public class Actor extends CVersion {
     public PerstUser getPerstUser() { return perstUser; }
     public void setPerstUser(PerstUser perstUser) { this.perstUser = perstUser; }
     
-    /**
-     * Get the Actor's Agreement (MANDATORY).
-     * Returns null if no agreement - which means no operations are permitted.
-     */
     public Agreement getAgreement() { return agreement; }
-    
-    /**
-     * Set the Actor's Agreement.
-     */
     public void setAgreement(Agreement agreement) { this.agreement = agreement; }
     
-    // ========== Convenience Methods for Groups ==========
-    
-    /**
-     * Add a group to this actor's agreement
-     */
     public void addToGroup(Group group) {
         if (agreement == null) {
             agreement = new Agreement();
@@ -112,18 +85,12 @@ public class Actor extends CVersion {
         agreement.addGroup(group);
     }
     
-    /**
-     * Remove a group from this actor's agreement
-     */
     public void removeFromGroup(Group group) {
         if (agreement != null) {
             agreement.removeGroup(group);
         }
     }
     
-    /**
-     * Check if actor belongs to a group
-     */
     public boolean belongsToGroup(String groupName) {
         return agreement != null && agreement.hasGroup(groupName);
     }

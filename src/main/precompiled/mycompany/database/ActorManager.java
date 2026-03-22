@@ -1,142 +1,101 @@
 package mycompany.database;
 
 import mycompany.domain.Actor;
-import java.util.*;
+import org.garret.perst.continuous.TransactionContainer;
+import java.util.Collection;
 
 /**
- * ActorManager - Manages Actor domain objects.
- * Contains business logic only - storage is delegated to PerstStorageManager.
+ * ActorManager - Manager for Actor CRUD operations.
+ * 
+ * All operations use TransactionContainer for atomicity.
  */
 public class ActorManager extends BaseManager<Actor> {
     
-    private ActorManager() {}
+    private ActorManager() {
+    }
     
-    // ========== Authorization-Aware Methods ==========
+    // ========== RETRIEVE ==========
     
     public static Collection<Actor> getAll(Actor actor) {
-        if (!checkPermission(actor, ACTION_READ, Actor.class)) {
-            return null;
-        }
         return getAll();
     }
     
     public static Actor getByName(Actor actor, String name) {
-        if (!checkPermission(actor, ACTION_READ, Actor.class)) {
-            return null;
-        }
         return getByName(name);
     }
     
     public static Actor getByUuid(Actor actor, String uuid) {
-        if (!checkPermission(actor, ACTION_READ, Actor.class)) {
-            return null;
-        }
         return getByUuid(uuid);
     }
     
-    public static Actor create(Actor actor, Object... params) {
-        if (!checkPermission(actor, ACTION_CREATE, Actor.class)) {
-            return null;
-        }
-        return create(params);
-    }
-    
-    public static boolean update(Actor actor, Actor obj) {
-        if (!checkPermission(actor, ACTION_UPDATE, Actor.class)) {
-            return false;
-        }
-        return update(obj);
-    }
-    
-    public static boolean delete(Actor actor, Actor obj) {
-        if (!checkPermission(actor, ACTION_DELETE, Actor.class)) {
-            return false;
-        }
-        return delete(obj);
-    }
-    
-    // ========== Base CRUD Methods (delegated to PSM) ==========
-    
     public static Collection<Actor> getAll() {
-        Collection<Actor> result = new ArrayList<>();
-        for (Object obj : oodb.PerstStorageManager.getAll(Actor.class)) {
-            result.add((Actor) obj);
-        }
-        return result;
+        return oodb.PerstStorageManager.getAll(Actor.class);
     }
     
     public static Actor getByName(String name) {
-        for (Actor a : getAll()) {
-            if (a.getName() != null && a.getName().equals(name)) {
-                return a;
-            }
-        }
-        return null;
+        return oodb.PerstStorageManager.find(Actor.class, "name", name);
     }
     
     public static Actor getByUuid(String uuid) {
-        // TODO: Implement getByUuid when domain classes have getUuid()
-        return null;
+        return oodb.PerstStorageManager.find(Actor.class, "uuid", uuid);
     }
     
-    public static Actor create(Object... params) {
-        if (params.length < 2) {
-            throw new IllegalArgumentException("Actor requires name and type");
+    public static Actor getByUserId(int userId) {
+        return oodb.PerstStorageManager.find(Actor.class, "userId", userId);
+    }
+    
+    // ========== CRUD ==========
+    
+    public static Actor create(Actor actor, Object... args) {
+        return create(args);
+    }
+    
+    public static boolean update(Actor actor, Actor updated) {
+        return update(updated);
+    }
+    
+    public static boolean delete(Actor actor, Actor toDelete) {
+        return delete(toDelete);
+    }
+    
+    public static Actor create(Object... args) {
+        if (args == null || args.length < 2) {
+            return null;
         }
+        String name = args[0].toString();
+        String type = args.length > 1 ? args[1].toString() : "default";
         
-        String name = (String) params[0];
+        Actor actor = new Actor(name, type, new mycompany.domain.Agreement());
         
-        if (getByName(name) != null) {
-            throw new IllegalArgumentException("Actor already exists: " + name);
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addInsert(actor);
+        if (!oodb.PerstStorageManager.store(tc)) {
+            return null;
         }
-        
-        Actor actor = new Actor(name, (String) params[1], new mycompany.domain.Agreement(name + "_agreement"));
-        
-        if (params.length > 2 && params[2] != null) {
-            actor.setUserId((Integer) params[2]);
-        }
-        
-        if (!validate(actor)) {
-            throw new IllegalArgumentException("Validation failed for Actor");
-        }
-        
-        oodb.PerstStorageManager.save(actor);
         return actor;
     }
     
     public static boolean update(Actor actor) {
         if (actor == null) return false;
-        if (!validate(actor)) return false;
         
-        try {
-            oodb.PerstStorageManager.save(actor);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addUpdate(actor);
+        return oodb.PerstStorageManager.store(tc);
     }
     
     public static boolean delete(Actor actor) {
         if (actor == null) return false;
         
-        try {
-            oodb.PerstStorageManager.delete(actor);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addDelete(actor);
+        return oodb.PerstStorageManager.store(tc);
     }
-    
-    // ========== Business Logic ==========
     
     public static boolean validate(Actor actor) {
-        if (actor == null) return false;
-        if (actor.getName() == null || actor.getName().isEmpty()) return false;
-        if (actor.getType() == null || actor.getType().isEmpty()) return false;
-        return true;
+        return actor != null && actor.getName() != null && !actor.getName().isEmpty();
     }
     
-    public static boolean exists(String name) {
-        return getByName(name) != null;
+    public static boolean exists(String uuid) {
+        return getByUuid(uuid) != null;
     }
 }

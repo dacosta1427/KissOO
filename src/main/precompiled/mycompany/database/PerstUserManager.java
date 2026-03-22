@@ -2,219 +2,160 @@ package mycompany.database;
 
 import mycompany.domain.Actor;
 import mycompany.domain.PerstUser;
-import mycompany.domain.CDatabaseRoot;
-import oodb.PerstStorageManager;
+import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * PerstUserManager - Manages PerstUser domain objects.
+ * PerstUserManager - Manager for PerstUser CRUD operations and authentication.
  * 
- * This is the "Manager at the Gate" - ALL access to PerstUser entities
- * must go through this class.
- * 
- * Responsibilities:
- * - Business logic
- * - Validation
- * - Authentication
- * - Password management
+ * All operations use TransactionContainer for atomicity.
  */
 public class PerstUserManager extends BaseManager<PerstUser> {
     
-    private PerstUserManager() {}  // Prevent instantiation
+    private PerstUserManager() {
+    }
     
-    // ========== Authorization-Aware Methods ==========
+    // ========== RETRIEVE ==========
     
     public static Collection<PerstUser> getAll(Actor actor) {
-        if (!checkPermission(actor, ACTION_READ, PerstUser.class)) {
-            return null;
-        }
         return getAll();
     }
     
     public static PerstUser getByKey(Actor actor, String key) {
-        if (!checkPermission(actor, ACTION_READ, PerstUser.class)) {
-            return null;
-        }
         return getByKey(key);
     }
     
-    public static PerstUser create(Actor actor, Object... params) {
-        if (!checkPermission(actor, ACTION_CREATE, PerstUser.class)) {
-            return null;
-        }
-        return create(params);
-    }
-    
-    public static boolean update(Actor actor, PerstUser user) {
-        if (!checkPermission(actor, ACTION_UPDATE, PerstUser.class)) {
-            return false;
-        }
-        return update(user);
-    }
-    
-    public static boolean delete(Actor actor, PerstUser user) {
-        if (!checkPermission(actor, ACTION_DELETE, PerstUser.class)) {
-            return false;
-        }
-        return delete(user);
-    }
-    
-    // ========== Base CRUD Methods ==========
-    
     public static Collection<PerstUser> getAll() {
-        if (!PerstStorageManager.isAvailable()) {
-            return new ArrayList<>();
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        List<PerstUser> result = new ArrayList<>();
-        for (PerstUser u : root.userIndex) {
-            result.add(u);
-        }
-        return result;
+        return oodb.PerstStorageManager.getAll(PerstUser.class);
     }
     
     public static PerstUser getByKey(String key) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
+        try {
+            int id = Integer.parseInt(key);
+            return oodb.PerstStorageManager.find(PerstUser.class, "userId", id);
+        } catch (NumberFormatException e) {
+            return oodb.PerstStorageManager.find(PerstUser.class, "username", key);
         }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        return root.userIndex.get(key);
     }
     
     public static PerstUser getByOid(long oid) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        for (PerstUser u : root.userIndex) {
-            if (u.getOid() == oid) {
-                return u;
-            }
+        return oodb.PerstStorageManager.getByOid(PerstUser.class, oid);
+    }
+    
+    // ========== AUTHENTICATION ==========
+    
+    public static PerstUser authenticate(String username, String password) {
+        PerstUser user = getByKey(username);
+        if (user != null && user.checkPassword(password) && user.canLogin()) {
+            user.setLastLoginDate(System.currentTimeMillis());
+            TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+            tc.addUpdate(user);
+            oodb.PerstStorageManager.store(tc);
+            return user;
         }
         return null;
     }
     
-    public static PerstUser authenticate(String username, String password) {
-        if (!PerstStorageManager.isAvailable() || username == null || password == null) {
-            return null;
-        }
-        
-        PerstUser user = getByKey(username);
-        if (user == null || !user.isActive()) {
-            return null;
-        }
-        
-        return user.checkPassword(password) ? user : null;
+    // ========== CRUD ==========
+    
+    public static PerstUser create(Actor actor, Object... args) {
+        return create(args);
     }
     
-    public static PerstUser create(Object... params) {
-        if (!PerstStorageManager.isAvailable()) {
+    public static boolean update(Actor actor, PerstUser user) {
+        return update(user);
+    }
+    
+    public static boolean delete(Actor actor, PerstUser user) {
+        return delete(user);
+    }
+    
+    public static PerstUser create(Object... args) {
+        if (args == null || args.length < 2) {
             return null;
         }
+        String username = args[0].toString();
+        String password = args[1].toString();
+        int userId = args.length > 2 ? Integer.parseInt(args[2].toString()) : 0;
         
-        if (params.length < 2) {
-            throw new IllegalArgumentException("PerstUser requires username and password");
+        PerstUser user = new PerstUser(username, password, userId);
+        
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addInsert(user);
+        if (!oodb.PerstStorageManager.store(tc)) {
+            return null;
         }
-        
-        String username = (String) params[0];
-        
-        if (getByKey(username) != null) {
-            throw new IllegalArgumentException("User already exists: " + username);
-        }
-        
-        PerstUser user = new PerstUser(username, (String) params[1], 
-            params.length > 2 ? (Integer) params[2] : 0);
-        
-        if (params.length > 3) {
-            user.setEmail((String) params[3]);
-        }
-        
-        if (!validate(user)) {
-            throw new IllegalArgumentException("Validation failed for PerstUser");
-        }
-        
-        PerstStorageManager.beginTransaction();
-        try {
-            PerstStorageManager.saveInTransaction(user);
-            PerstStorageManager.commitTransaction();
-        } catch (Exception e) {
-            PerstStorageManager.rollbackTransaction();
-            throw new RuntimeException("Failed to create user: " + e.getMessage(), e);
-        }
-        
         return user;
     }
     
     public static boolean update(PerstUser user) {
-        if (!PerstStorageManager.isAvailable() || user == null) {
-            return false;
-        }
+        if (user == null) return false;
         
-        if (!validate(user)) {
-            return false;
-        }
-        
-        try {
-            PerstStorageManager.save(user);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addUpdate(user);
+        return oodb.PerstStorageManager.store(tc);
     }
     
     public static boolean delete(PerstUser user) {
-        if (!PerstStorageManager.isAvailable() || user == null) {
-            return false;
-        }
+        if (user == null) return false;
         
-        PerstStorageManager.beginTransaction();
-        try {
-            PerstStorageManager.deleteInTransaction(user);
-            PerstStorageManager.commitTransaction();
-            return true;
-        } catch (Exception e) {
-            PerstStorageManager.rollbackTransaction();
-            return false;
-        }
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addDelete(user);
+        return oodb.PerstStorageManager.store(tc);
     }
     
     public static boolean validate(PerstUser user) {
-        if (user == null) return false;
-        if (user.getUsername() == null || user.getUsername().isEmpty()) return false;
-        if (user.getPasswordHash() == null || user.getPasswordHash().isEmpty()) return false;
-        return true;
+        return user != null && user.getUsername() != null && !user.getUsername().isEmpty();
     }
     
-    // ========== Password Management ==========
+    // ========== PASSWORD OPERATIONS ==========
     
     public static boolean changePassword(String username, String oldPassword, String newPassword) {
         PerstUser user = authenticate(username, oldPassword);
-        if (user == null) return false;
-        user.setPassword(newPassword);
-        return update(user);
+        if (user != null) {
+            user.setPassword(newPassword);
+            TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+            tc.addUpdate(user);
+            return oodb.PerstStorageManager.store(tc);
+        }
+        return false;
     }
     
     public static boolean resetPassword(String username, String newPassword) {
         PerstUser user = getByKey(username);
-        if (user == null) return false;
-        user.setPassword(newPassword);
-        return update(user);
+        if (user != null) {
+            user.setPassword(newPassword);
+            TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+            tc.addUpdate(user);
+            return oodb.PerstStorageManager.store(tc);
+        }
+        return false;
     }
+    
+    // ========== STATUS OPERATIONS ==========
     
     public static boolean deactivate(String username) {
         PerstUser user = getByKey(username);
-        if (user == null) return false;
-        user.setActive(false);
-        return update(user);
+        if (user != null) {
+            user.setActive(false);
+            TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+            tc.addUpdate(user);
+            return oodb.PerstStorageManager.store(tc);
+        }
+        return false;
     }
     
     public static boolean activate(String username) {
         PerstUser user = getByKey(username);
-        if (user == null) return false;
-        user.setActive(true);
-        return update(user);
+        if (user != null) {
+            user.setActive(true);
+            TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+            tc.addUpdate(user);
+            return oodb.PerstStorageManager.store(tc);
+        }
+        return false;
     }
     
     public static boolean exists(String username) {
@@ -222,14 +163,8 @@ public class PerstUserManager extends BaseManager<PerstUser> {
     }
     
     public static List<PerstUser> getActiveUsers() {
-        List<PerstUser> result = new ArrayList<>();
-        Collection<PerstUser> all = getAll();
-        if (all == null) return result;
-        for (PerstUser user : all) {
-            if (user.isActive()) {
-                result.add(user);
-            }
-        }
-        return result;
+        return getAll().stream()
+                .filter(PerstUser::canLogin)
+                .collect(Collectors.toList());
     }
 }

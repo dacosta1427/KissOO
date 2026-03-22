@@ -1,6 +1,8 @@
 package mycompany.domain;
 
 import org.garret.perst.continuous.CVersion;
+import org.garret.perst.Indexable;
+import org.garret.perst.continuous.FullTextSearchable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,10 +21,17 @@ import java.util.Set;
  *   admins.grant(Actor.class, CRUD.CREATE);     // Type-safe CRUD
  *   
  *   actor.getAgreement().addGroup(admins);
+ * 
+ * Indexing:
+ * - @Indexable: fields for b-tree indexing (use db.find())
+ * - @FullTextSearchable: fields for Lucene full-text search (use db.fullTextSearch())
  */
 public class Group extends CVersion {
     
+    @FullTextSearchable
+    @Indexable(unique=true)
     private String name;
+    
     private Set<EndpointMethod> methodPermissions;
     private Set<String> crudPermissions;
     

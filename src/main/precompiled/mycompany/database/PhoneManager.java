@@ -1,107 +1,55 @@
 package mycompany.database;
 
 import mycompany.domain.Phone;
-import mycompany.domain.CDatabaseRoot;
-import oodb.PerstStorageManager;
-import java.util.*;
+import org.garret.perst.continuous.TransactionContainer;
+import java.util.Collection;
 
 /**
- * PhoneManager - Manages Phone domain objects.
+ * PhoneManager - Manager for Phone CRUD operations.
+ * 
+ * All operations use TransactionContainer for atomicity.
  */
 public class PhoneManager {
     
-    private PhoneManager() {}
+    private PhoneManager() {
+    }
     
     public static Collection<Phone> getAll() {
-        if (!PerstStorageManager.isAvailable()) {
-            return new ArrayList<>();
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        List<Phone> result = new ArrayList<>();
-        Set<Long> seenOids = new HashSet<>();  // Deduplicate by OID
-        for (Phone p : root.phoneIndex) {
-            if (!seenOids.contains((long) p.getOid())) {
-                seenOids.add((long) p.getOid());
-                result.add(p);
-            }
-        }
-        return result;
+        return oodb.PerstStorageManager.getAll(Phone.class);
     }
     
     public static Phone getByUuid(String uuid) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        for (Phone p : root.phoneIndex) {
-            if (p.getUuid() != null && p.getUuid().equals(uuid)) {
-                return p;
-            }
-        }
-        return null;
+        return oodb.PerstStorageManager.find(Phone.class, "uuid", uuid);
     }
     
     public static Phone getByOid(long oid) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
-        }
-        CDatabaseRoot root = PerstStorageManager.getRoot();
-        for (Phone p : root.phoneIndex) {
-            if (p.getOid() == oid) {
-                return p;
-            }
+        return oodb.PerstStorageManager.getByOid(Phone.class, oid);
+    }
+    
+    public static Phone create(String firstName, String lastName, String phoneNumber) {
+        Phone phone = new Phone(firstName, lastName, phoneNumber);
+        
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addInsert(phone);
+        if (oodb.PerstStorageManager.store(tc)) {
+            return phone;
         }
         return null;
     }
     
-    public static Phone create(String firstName, String lastName, String phoneNumber) {
-        if (!PerstStorageManager.isAvailable()) {
-            return null;
-        }
-        
-        Phone phone = new Phone(firstName, lastName, phoneNumber);
-        
-        PerstStorageManager.beginTransaction();
-        try {
-            PerstStorageManager.saveInTransaction(phone);
-            PerstStorageManager.commitTransaction();
-        } catch (Exception e) {
-            PerstStorageManager.rollbackTransaction();
-            throw new RuntimeException("Failed to create phone: " + e.getMessage(), e);
-        }
-        
-        return phone;
-    }
-    
     public static boolean update(Phone phone) {
-        if (!PerstStorageManager.isAvailable() || phone == null) {
-            return false;
-        }
+        if (phone == null) return false;
         
-        PerstStorageManager.beginTransaction();
-        try {
-            PerstStorageManager.saveInTransaction(phone);
-            PerstStorageManager.commitTransaction();
-            return true;
-        } catch (Exception e) {
-            PerstStorageManager.rollbackTransaction();
-            return false;
-        }
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addUpdate(phone);
+        return oodb.PerstStorageManager.store(tc);
     }
     
     public static boolean delete(Phone phone) {
-        if (!PerstStorageManager.isAvailable() || phone == null) {
-            return false;
-        }
+        if (phone == null) return false;
         
-        PerstStorageManager.beginTransaction();
-        try {
-            PerstStorageManager.deleteInTransaction(phone);
-            PerstStorageManager.commitTransaction();
-            return true;
-        } catch (Exception e) {
-            PerstStorageManager.rollbackTransaction();
-            return false;
-        }
+        TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+        tc.addDelete(phone);
+        return oodb.PerstStorageManager.store(tc);
     }
 }
