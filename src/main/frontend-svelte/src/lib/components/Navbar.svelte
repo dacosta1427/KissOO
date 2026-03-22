@@ -5,7 +5,7 @@
 
   async function handleLogout() {
     await logout();
-    goto('/login');
+    goto('/');
   }
 </script>
 
