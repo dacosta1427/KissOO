@@ -23,9 +23,9 @@ Port all functional screens from the legacy KissOO frontend (`src/main/frontend/
 - [x] **Task 5**: Update Server.ts with missing methods (binaryCall, fileUploadSend) ✅ **COMPLETED**
 
 ### Phase 2: Enhanced Users Page
-- [ ] **Task 6**: Add edit user functionality with modal popup
-- [ ] **Task 7**: Improve delete confirmation with modal
-- [ ] **Task 8**: Add loading states and better error handling
+- [x] **Task 6**: Add edit user functionality with modal popup ✅ **COMPLETED**
+- [x] **Task 7**: Improve delete confirmation with modal ✅ **COMPLETED**
+- [x] **Task 8**: Add loading states and better error handling ✅ **COMPLETED**
 
 ### Phase 3: Core Screens
 - [ ] **Task 9**: Create CRUD (phone book) page with ag-grid and edit/delete
