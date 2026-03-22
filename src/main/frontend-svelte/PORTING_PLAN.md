@@ -28,7 +28,7 @@ Port all functional screens from the legacy KissOO frontend (`src/main/frontend/
 - [x] **Task 8**: Add loading states and better error handling ✅ **COMPLETED**
 
 ### Phase 3: Core Screens
-- [ ] **Task 9**: Create CRUD (phone book) page with ag-grid and edit/delete
+- [x] **Task 9**: Create CRUD (phone book) page with ag-grid and edit/delete ✅ **COMPLETED**
 - [ ] **Task 10**: Create REST Services demo page
 - [ ] **Task 11**: Create Benchmark page
 - [ ] **Task 12**: Create File Upload page
