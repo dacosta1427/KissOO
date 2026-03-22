@@ -8,6 +8,19 @@
   let error = '';
   let loading = false;
 
+  onMount(() => {
+    if (window.location.protocol === 'file:') {
+      Server.setURL('http://localhost:8080');
+    } else {
+      const port = parseInt(window.location.port || '0');
+      if (port === 5173) {
+        Server.setURL('http://localhost:8080');
+      } else {
+        Server.setURL(window.location.origin);
+      }
+    }
+  });
+
   async function login() {
     if (!username || !password) {
       error = 'Please enter username and password';
