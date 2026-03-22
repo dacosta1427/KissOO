@@ -36,13 +36,7 @@
     gridOptions = {
       columnDefs,
       rowData,
-      rowSelection: {
-        mode: singleSelection ? 'singleRow' : 'multiRow',
-        enableDeselection: singleSelection,
-        enableClickSelection: true,
-        checkboxes: false,
-        headerCheckbox: false
-      },
+      rowSelection: singleSelection ? 'single' : 'multiple',
       suppressHorizontalScroll,
       suppressRowHoverHighlight: false,
       suppressCellFocus: true,
@@ -162,13 +156,7 @@
 
   $effect(() => {
     if (api) {
-      api.setGridOption('rowSelection', {
-        mode: singleSelection ? 'singleRow' : 'multiRow',
-        enableDeselection: singleSelection,
-        enableClickSelection: true,
-        checkboxes: false,
-        headerCheckbox: false
-      });
+      api.setGridOption('rowSelection', singleSelection ? 'single' : 'multiple');
     }
   });
 </script>
