@@ -6,7 +6,7 @@
 
 import { modal } from '$lib/state/modalStore';
 import { validators, commonValidations } from './validation';
-import { notificationActions } from '$lib/state/notificationStore.svelte.ts';
+import { notificationActions } from '$lib/stores.svelte.js';
 
 // Legacy compatibility - these will be replaced with Modal component
 export const Utils = {

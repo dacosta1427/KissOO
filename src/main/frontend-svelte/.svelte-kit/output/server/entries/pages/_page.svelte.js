@@ -1,15 +1,12 @@
 import "../../chunks/async.js";
 import "clsx";
+import { i as isAuthenticated } from "../../chunks/Auth.js";
 import "@sveltejs/kit/internal";
 import "../../chunks/exports.js";
 import "../../chunks/utils.js";
 import "@sveltejs/kit/internal/server";
 import "../../chunks/root.js";
 import "../../chunks/state.svelte.js";
-import { s as session } from "../../chunks/session.svelte.js";
-function isAuthenticated() {
-  return session.isAuthenticated;
-}
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     $$renderer2.push(`<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><div class="text-center"><h2 class="text-3xl font-bold text-gray-900 mb-4">Welcome to KissOO Svelte 5</h2> <p class="text-lg text-gray-600 mb-8">Modern Svelte 5 frontend with Simple API Modules</p> <div class="mb-4">`);

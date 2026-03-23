@@ -1,5 +1,5 @@
 import "../../../chunks/async.js";
-import { c as attr_class, d as derived, e as stringify } from "../../../chunks/index2.js";
+import { a as attr_class, d as derived, b as stringify } from "../../../chunks/index2.js";
 import { a as attr, e as escape_html } from "../../../chunks/attributes.js";
 import "@sveltejs/kit/internal";
 import "../../../chunks/exports.js";

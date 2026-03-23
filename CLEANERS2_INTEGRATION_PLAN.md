@@ -58,9 +58,9 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | **Phase 1: KissOO Master2** | | | | |
 | 1.0 | Create master2 branch | ✅ Completed | - | Already created as copy of master |
 | 1.1 | Enhanced Session Management | ✅ Completed | c2e1f836 | Encrypted credentials, silent re-auth |
-| 1.2 | Component Integration | ✅ Completed | - | Form.svelte, validation.ts, NotificationToast.svelte integrated |
-| 1.3 | State Management Pattern | ✅ Completed | - | Notification store using cleaners reactive pattern |
-| 1.4 | API Layer Standardization | ✅ Completed | - | No changes needed (already standard) |
+| 1.2 | Component Integration | ✅ Completed | bd27ef69 | Form.svelte, validation.ts, NotificationToast.svelte integrated |
+| 1.3 | State Management Pattern | ✅ Completed | bd27ef69 | Notification store using cleaners reactive pattern |
+| 1.4 | API Layer Standardization | ✅ Completed | bd27ef69 | No changes needed (already standard) |
 | **Phase 2: Manager Pattern** | | | | |
 | 2.0 | Design Decision | ✅ Completed | - | Keep PerstStorageManager (minimal layers) |
 | **Phase 3: Cleaners2 Branch** | | | | |

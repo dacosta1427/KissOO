@@ -1,5 +1,5 @@
 import "./async.js";
-import { c as attr_class, a4 as bind_props, e as stringify } from "./index2.js";
+import { a as attr_class, h as bind_props, b as stringify } from "./index2.js";
 import { e as escape_html } from "./attributes.js";
 function Modal($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {

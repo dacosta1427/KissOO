@@ -1,14 +1,18 @@
 {
 	"/": [],
 	"/benchmark": [],
+	"/bookings": [],
+	"/cleaners": [],
 	"/controls": [],
 	"/crud": [],
 	"/export": [],
 	"/file-upload": [],
+	"/houses": [],
 	"/login": [],
 	"/ollama": [],
 	"/report": [],
 	"/rest-services": [],
+	"/schedules": [],
 	"/signup": [],
 	"/sql-access": [],
 	"/users": []

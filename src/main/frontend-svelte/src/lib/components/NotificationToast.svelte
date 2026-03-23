@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { notifications, notificationActions } from '$lib/state/notificationStore.svelte.ts';
+	import { notificationsState, notificationActions } from '$lib/stores.svelte.js';
 	
 	// Svelte 5: Use $derived for reactive store access
-	let notificationList = $derived(notifications.value);
+	let notificationList = $derived(notificationsState.value);
 	
 	function getNotificationClass(type: string): string {
 		switch (type) {

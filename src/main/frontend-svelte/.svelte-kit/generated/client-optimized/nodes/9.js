@@ -1,1 +1,1 @@
-export { default as component } from "../../../../src/routes/ollama/+page.svelte";
+export { default as component } from "../../../../src/routes/file-upload/+page.svelte";
