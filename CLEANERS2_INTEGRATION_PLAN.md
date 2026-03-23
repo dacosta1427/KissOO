@@ -21,19 +21,18 @@
 
 ## Executive Summary
 
-Create a **cleaners2** branch that combines the best of both codebases:
+Create a **master2** branch (copy of current master) and a **cleaners2** branch built on master2, combining the best of both codebases:
 
 ### Goals
-1. **KissOO Master Branch** = Generic scaffolding for any Kiss framework + OO database project
-   - Solid authentication and session management
-   - Reusable components (Form, Validation, Notifications)
-   - Demo pages showing framework capabilities
-   - Simple, elegant foundation
+1. **KissOO Master2 Branch** = Copy of current master, then enrich & improve
+   - **Start**: Direct copy of current master (preserves original)
+   - **Then enhance**: Add session management, reusable components, etc.
+   - **Do not modify original master branch**
 
-2. **Cleaners2 Branch** = Cleaning scheduler application built ON KissOO master
+2. **Cleaners2 Branch** = Cleaning scheduler application built ON improved master2
    - All cleaning scheduler functionality
    - Domain-specific components and logic
-   - Shares same foundation as KissOO master
+   - Shares same improved foundation as master2
 
 ### Key Principles
 - **Minimal layers and wrappers** - Use static methods where practical
@@ -144,7 +143,20 @@ Create a **cleaners2** branch that combines the best of both codebases:
 
 ---
 
-## Phase 1: KissOO Master Foundation
+## Phase 1: KissOO Master2 Foundation (Create enriched & improved master branch)
+
+### Task 1.0: Create master2 Branch (Already Done)
+**Goal**: Create a new branch for improvements without modifying original master.
+
+**Status**: ✅ Already completed - master2 branch created as copy of master.
+
+```bash
+# Already executed:
+git checkout -b master2
+git push -u origin master2
+```
+
+**Important**: All improvements will be made on `master2` branch, not on `master`. This preserves the original master branch.
 
 ### Task 1.1: Enhanced Session Management
 **Goal**: Add "underwater login" with encrypted credential storage.
@@ -243,8 +255,15 @@ public static Collection<Actor> getAllActiveActors() {
 
 ### Task 3.1: Create Branch
 ```bash
-git checkout -b cleaners2 origin/master
-# Apply Phase 1 enhancements to master first
+# Ensure we're on master2 branch with all Phase 1 enhancements
+git checkout master2
+git pull origin master2
+
+# Create cleaners2 branch from master2
+git checkout -b cleaners2
+
+# Push to remote
+git push -u origin cleaners2
 ```
 
 ### Task 3.2: Copy Cleaning Scheduler Code
@@ -295,7 +314,7 @@ export const cleaningApi = {
 
 ## Phase 4: Implementation Roadmap
 
-### Week 1: KissOO Master Foundation
+### Week 1: KissOO Master2 Foundation
 **Days 1-2**: Session enhancements
 - Implement encrypted credential storage
 - Add silent re-authentication
@@ -469,7 +488,7 @@ export const cleaningApi = {
 
 ## Success Criteria
 
-### KissOO Master (Generic Skeleton)
+### KissOO Master2 (Enriched & Improved Generic Skeleton)
 - [ ] **Session Management**: Silent re-authentication with encrypted credentials
 - [ ] **Components**: Form.svelte, validation.ts, NotificationToast.svelte integrated
 - [ ] **Demo Pages**: All existing pages working with enhanced UX
@@ -478,7 +497,7 @@ export const cleaningApi = {
 
 ### Cleaners2 (Domain Extension)
 - [ ] **Functionality**: Full cleaning scheduler (cleaners, bookings, schedules, houses)
-- [ ] **Foundation**: Built on enhanced KissOO master
+- [ ] **Foundation**: Built on enhanced KissOO master2
 - [ ] **Integration**: Uses KissOO session management and components
 - [ ] **Domain Logic**: All cleaning scheduler business logic preserved
 - [ ] **API**: Connected to KissOO backend services
@@ -496,8 +515,8 @@ export const cleaningApi = {
 
 ### Immediate Actions
 1. **Approve this plan** - Review and provide feedback
-2. **Create feature branch** - `feature/session-enhancements` on KissOO master
-3. **Start Phase 1** - Implement session enhancements first
+2. **Work on master2 branch** - Already created as copy of master
+3. **Start Phase 1** - Implement session enhancements on master2
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
