@@ -4,6 +4,15 @@
 **Author:** opencode  
 **Purpose:** Plan for integrating KissOO master frontend-svelte with cleaners branch to create a solid foundation (KissOO master) and a domain-specific extension (cleaners2 branch).
 
+## ⚠️ CRITICAL REQUIREMENTS ⚠️
+1. **SVELTE 5 ONLY** - No Svelte 4 patterns allowed. Use Svelte 5 runes ($state, $derived, $effect, $props).
+2. **PROTOCOL MUST BE HONORED** - After each completed, tested, and committed task:
+   - Read the 2 guides (KissOO-Guide.md and sv5guide.md)
+   - Read this plan document
+   - Update this plan with progress
+   - Commit and push changes
+   This prevents regression and maintains context.
+
 ## Table of Contents
 1. [Executive Summary](#executive-summary)
 2. [Current State Analysis](#current-state-analysis)
