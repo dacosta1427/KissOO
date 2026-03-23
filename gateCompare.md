@@ -416,6 +416,17 @@ If available, this comparison would examine:
 
 ---
 
+## Detailed Integration Plan
+
+For comprehensive integration plan combining KissOO master and cleaners branch, see `CLEANERS2_INTEGRATION_PLAN.md` which includes:
+- Session management enhancements with "underwater login"
+- Component integration priorities (Form, Validation, Notifications)
+- Manager pattern decision (minimal layers approach)
+- Implementation roadmap (2-week plan)
+- Technical specifications and risk mitigation
+
+---
+
 **Document Status**: Complete  
 **Last Updated**: 2026-03-23  
 **Next Review**: After integration of high-priority items
