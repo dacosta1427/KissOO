@@ -35,7 +35,7 @@ public class ScheduleManager extends BaseManager<Schedule> {
     public static Collection<Schedule> getByDateRange(String startDate, String endDate) {
         return getAll().stream()
                 .filter(s -> {
-                    String date = s.getDate();
+                    String date = s.getScheduleDate();
                     return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
                 })
                 .collect(Collectors.toList());
@@ -59,12 +59,12 @@ public class ScheduleManager extends BaseManager<Schedule> {
         }
         int cleanerId = Integer.parseInt(args[0].toString());
         int bookingId = Integer.parseInt(args[1].toString());
-        String date = args[2].toString();
+        String scheduleDate = args[2].toString();
         String startTime = args[3].toString();
         String endTime = args[4].toString();
         String notes = args.length > 5 ? args[5].toString() : null;
         
-        Schedule schedule = new Schedule(cleanerId, bookingId, date, startTime, endTime, notes);
+        Schedule schedule = new Schedule(cleanerId, bookingId, scheduleDate, startTime, endTime, notes);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(schedule);
@@ -91,7 +91,7 @@ public class ScheduleManager extends BaseManager<Schedule> {
     }
     
     public static boolean validate(Schedule schedule) {
-        return schedule != null && schedule.getDate() != null && !schedule.getDate().isEmpty();
+        return schedule != null && schedule.getScheduleDate() != null && !schedule.getScheduleDate().isEmpty();
     }
     
     // ========== STATUS OPERATIONS ==========

@@ -16,9 +16,9 @@ public class Schedule extends CVersion {
     @Indexable
     private int bookingId;
     
-    private String date;        // ISO date string
-    private String startTime;   // HH:mm
-    private String endTime;     // HH:mm
+    private String scheduleDate;   // ISO date string
+    private String startTime;      // HH:mm
+    private String endTime;        // HH:mm
     private String notes;
     
     @Indexable
@@ -28,11 +28,11 @@ public class Schedule extends CVersion {
         this.status = "scheduled";
     }
     
-    public Schedule(int cleanerId, int bookingId, String date, 
+    public Schedule(int cleanerId, int bookingId, String scheduleDate, 
                     String startTime, String endTime, String notes) {
         this.cleanerId = cleanerId;
         this.bookingId = bookingId;
-        this.date = date;
+        this.scheduleDate = scheduleDate;
         this.startTime = startTime;
         this.endTime = endTime;
         this.notes = notes;
@@ -46,8 +46,8 @@ public class Schedule extends CVersion {
     public int getBookingId() { return bookingId; }
     public void setBookingId(int bookingId) { this.bookingId = bookingId; }
     
-    public String getDate() { return date; }
-    public void setDate(String date) { this.date = date; }
+    public String getScheduleDate() { return scheduleDate; }
+    public void setScheduleDate(String scheduleDate) { this.scheduleDate = scheduleDate; }
     
     public String getStartTime() { return startTime; }
     public void setStartTime(String startTime) { this.startTime = startTime; }
@@ -66,7 +66,7 @@ public class Schedule extends CVersion {
         return "Schedule{" +
                 "cleanerId=" + cleanerId +
                 ", bookingId=" + bookingId +
-                ", date='" + date + '\'' +
+                ", scheduleDate='" + scheduleDate + '\'' +
                 ", status='" + status + '\'' +
                 '}';
     }
