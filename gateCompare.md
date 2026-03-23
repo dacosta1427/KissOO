@@ -186,6 +186,8 @@ The cleaners branch contains a Svelte 5 frontend with **significant additional c
 
 ## Deep Code Comparison: Cleaners vs Master Frontend-Svelte
 
+**Note**: For comprehensive analysis, see `CLEANERS_VS_KISSOO_COMPARISON.md` with detailed side-by-side comparisons, code examples, and integration strategies.
+
 ### State Management
 
 **Master Approach:**
