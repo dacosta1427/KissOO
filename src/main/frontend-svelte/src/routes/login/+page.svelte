@@ -3,19 +3,31 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
+  import { session } from '$lib/state/session';
 
   // Svelte 5 RUNES for reactive state
   let username = $state('');
   let password = $state('');
   let loading = $state(false);
   let error = $state('');
+  let rememberMe = $state(false);
 
   // DERIVED state - form validity
   let isValid = $derived(username.length > 0 && password.length > 0);
 
-  // Initialize backend on mount
-  onMount(() => {
+  // Initialize backend on mount and check for stored credentials
+  onMount(async () => {
     initBackend();
+    
+    // Check if we have stored credentials
+    if (session.hasStoredCredentials()) {
+      rememberMe = true;
+      const credentials = await session.getStoredCredentials();
+      if (credentials) {
+        username = credentials.username;
+        // Don't pre-fill password for security
+      }
+    }
   });
 
   async function handleLogin() {
@@ -28,6 +40,12 @@
       const res = await login(username, password);
 
       if (res._Success) {
+        // Store credentials if "Remember me" is checked
+        if (rememberMe) {
+          await session.storeCredentials(username, password);
+        } else {
+          session.clearCredentials();
+        }
         goto(resolve('/'));
       } else {
         error = res._ErrorMessage || 'Invalid username or password';
@@ -78,6 +96,18 @@
           placeholder="Enter password"
           autocomplete="current-password"
         />
+      </div>
+
+      <div class="mb-6 flex items-center">
+        <input
+          type="checkbox"
+          id="rememberMe"
+          bind:checked={rememberMe}
+          class="mr-2 leading-tight"
+        />
+        <label for="rememberMe" class="text-sm text-gray-700">
+          Remember me (store login for automatic re-login)
+        </label>
       </div>
 
       <button

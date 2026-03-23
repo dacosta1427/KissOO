@@ -44,6 +44,7 @@ export async function logout(): Promise<void> {
     // Ignore errors on logout
   }
   session.clear();
+  session.clearCredentials(); // Clear encrypted credentials
 }
 
 /**

@@ -2,11 +2,13 @@
  * Server service for communicating with the backend
  * Implements the Server.call(...) pattern using modern fetch API
  */
+import { session } from '$lib/state/session';
+import { login } from '$lib/api/Auth';
+
 export class Server {
   private static url: string = '';
   private static uuid: string = '';
   private static suspendDepth: number = 0;
-  private static errorMessage: string = 'Error communicating with the server.';
   private static timeLastCall: number = 0;
   private static maxInactiveSeconds: number = 0;
 
@@ -127,7 +129,8 @@ export class Server {
       let i = 0;
       const m = bytes.length;
       while (i < m && bytes[i] !== 0x03) { // ETX character
-        json += String.fromCharCode(bytes[i++]);
+        json += String.fromCharCode(bytes[i]!);
+        i++;
       }
       
       const result = JSON.parse(json);
@@ -182,7 +185,7 @@ export class Server {
     } else if (fd instanceof FileList) {
       formData = new FormData();
       for (let i = 0; i < fd.length; i++) {
-        formData.append(`_file-${i}`, fd[i]);
+        formData.append(`_file-${i}`, fd[i]!);
       }
     } else if (Array.isArray(fd)) {
       formData = new FormData();
@@ -361,7 +364,35 @@ export class Server {
    */
   private static async handleSessionError(message: string): Promise<void> {
     console.error('Session error:', message);
-    // In a real app, redirect to login page
+    
+    // Attempt silent re-authentication if credentials are stored
+    const credentials = await session.getStoredCredentials();
+    if (credentials) {
+      console.log('Attempting silent re-authentication...');
+      try {
+        const res = await login(credentials.username, credentials.password);
+        if (res._Success && res.uuid) {
+          // Update session with new UUID
+          session.setUUID(res.uuid);
+          Server.uuid = res.uuid;
+          console.log('Silent re-authentication successful');
+          return; // Don't throw - let the original call continue
+        }
+      } catch (loginError) {
+        console.error('Silent re-authentication failed:', loginError);
+      }
+    }
+    
+    // If we get here, either no credentials or re-auth failed
+    // Clear stored credentials and redirect to login
+    session.clearCredentials();
+    session.clear();
+    
+    // Redirect to login with error message
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login?expired=true';
+    }
+    
     throw new Error(message);
   }
 
@@ -382,6 +413,8 @@ export class Server {
     }
 
     Server.uuid = '';
+    session.clear();
+    session.clearCredentials();
     console.log('User logged out');
     // In a real app, redirect to login page
   }

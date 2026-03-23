@@ -59,7 +59,7 @@ export const Utils = {
    * Legacy popup functions (for compatibility with legacy code pattern)
    * These will be replaced with Modal component
    */
-  popup_open(id: string, focusId?: string): void {
+  popup_open(id: string, _focusId?: string): void {
     console.warn(`popup_open(${id}) - Not yet implemented with Modal component`);
   },
 
