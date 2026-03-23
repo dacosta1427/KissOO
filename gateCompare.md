@@ -184,6 +184,113 @@ The cleaners branch contains a Svelte 5 frontend with **significant additional c
 
 ---
 
+## Deep Code Comparison: Cleaners vs Master Frontend-Svelte
+
+### State Management
+
+**Master Approach:**
+```typescript
+// session.svelte.ts - Dedicated session store
+let uuid = $state('');
+export const session = {
+  get uuid(): string { return uuid; },
+  setUUID(newUuid: string) { uuid = newUuid; },
+  // ... with localStorage persistence
+};
+```
+
+**Cleaners Approach:**
+```javascript
+// stores.svelte.js - Reactive object pattern
+export const userState = $state({ value: null });
+export const userActions = {
+  login: (userData) => { userState.value = userData; },
+  logout: () => { userState.value = null; }
+};
+```
+
+**Analysis:**
+- **Master**: More structured, TypeScript-first, separate concerns
+- **Cleaners**: Simpler, reactive objects, action-based pattern
+- **Recommendation**: Keep master's approach for session, consider cleaners' pattern for other state
+
+### Validation
+
+**Master**: Inline validation in components
+```svelte
+<!-- users/+page.svelte -->
+let canAddUser = $derived(newUserName.length >= 3 && newUserPassword.length >= 3);
+```
+
+**Cleaners**: Centralized validation utilities
+```typescript
+// validation.ts
+export const validators = {
+  required: (value) => value?.trim() ? null : 'Required',
+  email: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? null : 'Invalid email',
+  // ...
+};
+```
+
+**Analysis:**
+- **Cleaners' approach is superior** - reusable, testable, consistent
+- **Recommendation**: Adopt cleaners' validation.ts and integrate with Form.svelte
+
+### Component Design
+
+**Master**: Specialized, single-purpose components
+- `AgGridWrapper.svelte` - Complex data grids
+- `Modal.svelte` - Dialogs
+- `GlobalModal.svelte` - Application-wide modals
+
+**Cleaners**: Generic, reusable components
+- `Form.svelte` - Dynamic form generation
+- `Table.svelte` - Simple tables (alternative to AgGrid)
+- `NotificationToast.svelte` - Toast notifications
+- `Navigation.svelte` - Navigation menu
+
+**Analysis:**
+- Both approaches have merit
+- **Cleaners' Form.svelte** could replace our inline forms
+- **Cleaners' NotificationToast** could replace alerts/confirms
+- **Keep AgGridWrapper** for complex data (CRUD page)
+
+### API Layer
+
+**Master**: Dedicated API modules per service
+```typescript
+// api/Users.ts
+export async function getUsers(): Promise<User[]> {
+  const res = await Server.call('services.Users', 'getRecords', {});
+  return res.rows || [];
+}
+```
+
+**Cleaners**: Single client wrapper
+```typescript
+// kiss-client.ts
+export async function kissCall<T>(service: string, method: string, args?: any): Promise<T> {
+  const response = await Server.call(service, method, args);
+  // ... error handling, type safety
+}
+```
+
+**Analysis:**
+- **Master's approach is more maintainable** for large applications
+- **Cleaners' approach is simpler** for small-to-medium apps
+- **Recommendation**: Keep master's API modules, maybe add a helper function for common patterns
+
+### Documentation
+
+**Master**: `PORTING_PLAN.md` (task-oriented)
+**Cleaners**: `SVELTE5_GUIDELINES.md`, `howToSvelte.md` (knowledge-oriented)
+
+**Analysis:**
+- **Cleaners' documentation is more valuable** for team onboarding
+- **Recommendation**: Adopt cleaners' Svelte 5 guidelines
+
+---
+
 ## Comparison with Current Frontend-Svelte (Master)
 
 ### Component Architecture
@@ -262,6 +369,20 @@ If available, this comparison would examine:
 3. **Add `validation.ts`** and centralize validation logic
 4. **Add Svelte 5 guidelines** as team documentation
 5. **Consider `Table.svelte`** for simple tables (keep AgGrid for complex)
+
+### For FullSkeleton Project Analysis
+
+**Status**: Project not found at `../fullSkeleton/KissOO/src/main/frontend-svelte/`
+
+**Action Required**:
+- Please provide the correct path to the sv5 project
+- Once located, analyze for:
+  - Advanced Svelte 5 patterns
+  - Production-grade component designs
+  - Integration examples with Kiss backend
+  - Alternative architectural approaches
+
+**Potential Location**: May be in a separate repository or different branch
 
 ### General Next Steps
 
