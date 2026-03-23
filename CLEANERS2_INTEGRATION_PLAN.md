@@ -1,0 +1,518 @@
+# Cleaners2 Integration Plan
+
+**Date:** 2026-03-23  
+**Author:** opencode  
+**Purpose:** Plan for integrating KissOO master frontend-svelte with cleaners branch to create a solid foundation (KissOO master) and a domain-specific extension (cleaners2 branch).
+
+## Table of Contents
+1. [Executive Summary](#executive-summary)
+2. [Current State Analysis](#current-state-analysis)
+3. [Phase 0: Design Decisions](#phase-0-design-decisions)
+4. [Phase 1: KissOO Master Foundation](#phase-1-kissoo-master-foundation)
+5. [Phase 2: Manager Pattern Decision](#phase-2-manager-pattern-decision)
+6. [Phase 3: Cleaners2 Branch Creation](#phase-3-cleaners2-branch-creation)
+7. [Phase 4: Implementation Roadmap](#phase-4-implementation-roadmap)
+8. [Technical Specifications](#technical-specifications)
+9. [Risks & Mitigations](#risks--mitigations)
+10. [Success Criteria](#success-criteria)
+11. [Next Steps](#next-steps)
+
+---
+
+## Executive Summary
+
+Create a **cleaners2** branch that combines the best of both codebases:
+
+### Goals
+1. **KissOO Master Branch** = Generic scaffolding for any Kiss framework + OO database project
+   - Solid authentication and session management
+   - Reusable components (Form, Validation, Notifications)
+   - Demo pages showing framework capabilities
+   - Simple, elegant foundation
+
+2. **Cleaners2 Branch** = Cleaning scheduler application built ON KissOO master
+   - All cleaning scheduler functionality
+   - Domain-specific components and logic
+   - Shares same foundation as KissOO master
+
+### Key Principles
+- **Minimal layers and wrappers** - Use static methods where practical
+- **Svelte 5 only** - No Svelte 4 patterns
+- **"Underwater login"** - Store encrypted credentials for silent re-authentication
+- **Backend-driven session timeout** - Frontend sends UUID with every request, backend validates
+
+---
+
+## Current State Analysis
+
+### KissOO Master Frontend-Svelte
+**Strengths:**
+- Complete session management with localStorage persistence
+- TypeScript throughout
+- Tailwind CSS styling
+- Demo pages (users, CRUD, benchmarks, etc.)
+- Proper Svelte 5 runes usage
+
+**Weaknesses:**
+- No session expiration handling
+- Inline forms and validation (not reusable)
+- Alert/confirm dialogs (poor UX)
+- No notification system
+
+### Cleaners Branch Frontend-Svelte
+**Strengths:**
+- Advanced Svelte 5 patterns ($state, $derived, $effect)
+- Reusable Form.svelte component
+- Centralized validation.ts
+- NotificationToast.svelte for better UX
+- Reactive store patterns
+
+**Weaknesses:**
+- Domain-specific (cleaning scheduler)
+- Uses different API endpoint format
+- No session persistence
+- Less mature error handling
+
+### Backend Session Management
+- **Timeout**: 30 minutes (`userInactiveSeconds = 1800`)
+- **Mechanism**: Server checks `lastAccess` on each request
+- **Frontend sends**: UUID with every API call
+- **Problem**: No client-side awareness of timeout
+
+### Manager Patterns
+| Approach | KissOO Master | Manager-at-the-Gate Branch |
+|----------|---------------|----------------------------|
+| **Entry Point** | `oodb.PerstStorageManager` | `PerstContext` → `PerstHelper` |
+| **Manager Style** | Static methods | Static methods (via helper) |
+| **Layers** | 2 (StorageManager → UnifiedDBManager) | 3 (PerstHelper → PerstContext → Storage) |
+| **Permission** | Integrated in BaseManager | Not implemented |
+
+---
+
+## Phase 0: Design Decisions
+
+### 1. Session Management Approach
+**Decision**: Store encrypted credentials for "underwater login" (silent re-authentication).
+
+**Rationale**:
+- User wants minimal disruption when session expires
+- Backend has 30-minute timeout
+- Credentials stored encrypted in localStorage (client-side only)
+- Only used when session expires (401 response)
+
+**Implementation**:
+- Use Web Crypto API for AES-GCM encryption
+- Derive key from user password (not stored)
+- Opt-in with "Remember me" checkbox
+- Fallback to login page if decryption fails
+
+### 2. Manager Pattern Approach
+**Decision**: Keep current PerstStorageManager pattern (minimal layers).
+
+**Rationale**:
+- User wants "few layers and wrappers"
+- Current pattern already works
+- Static methods are acceptable (GetInstance() adds complexity)
+- Single entry point (PerstStorageManager) already acts as "librarian"
+
+**Implementation**:
+- Keep `oodb.PerstStorageManager` as main entry point
+- Add optional `PerstHelper` only for convenience methods
+- No major refactoring needed
+
+### 3. Component Integration Priority
+**Decision**: Integrate Form.svelte, validation.ts, NotificationToast.svelte.
+
+**Rationale**:
+- Most advanced Svelte 5 components
+- Solve real UX problems (forms, validation, notifications)
+- Generic enough for any application
+- Medium integration effort
+
+**Not integrating now**:
+- `stores.svelte.js` (different paradigm, high integration effort)
+- `Table.svelte` (already have ag-grid for complex tables)
+- `ScheduleBoard.svelte` (domain-specific)
+
+### 4. Demo Pages Inclusion
+**Decision**: Keep demo pages in KissOO master.
+
+**Rationale**:
+- Demonstrate framework capabilities
+- Provide examples for developers
+- Already implemented and working
+
+---
+
+## Phase 1: KissOO Master Foundation
+
+### Task 1.1: Enhanced Session Management
+**Goal**: Add "underwater login" with encrypted credential storage.
+
+**Files to modify**:
+- `src/lib/state/session.svelte.ts` - Add credential storage methods
+- `src/lib/services/Server.ts` - Add silent re-auth on 401
+- `src/routes/login/+page.svelte` - Add "Remember me" checkbox
+
+**Implementation details**:
+```typescript
+// session.svelte.ts additions
+storeCredentials(username: string, password: string, remember: boolean): void
+silentLogin(): Promise<boolean>
+clearCredentials(): void
+
+// Server.ts modifications
+On 401 response: 
+1. Check for stored credentials
+2. Attempt silent re-auth
+3. Retry original call with new UUID
+4. If fails, redirect to login
+```
+
+### Task 1.2: Component Integration from Cleaners
+**Goal**: Add Form.svelte, validation.ts, NotificationToast.svelte.
+
+**Files to create**:
+- `src/lib/components/Form.svelte` (adapted from cleaners)
+- `src/lib/utils/validation.ts` (copied from cleaners)
+- `src/lib/components/NotificationToast.svelte` (adapted from cleaners)
+
+**Files to modify**:
+- `src/lib/utils/Utils.ts` - Integrate notification system
+- `src/routes/users/+page.svelte` - Refactor to use Form component
+- `src/routes/crud/+page.svelte` - Add toast notifications
+- `src/routes/+layout.svelte` - Add NotificationToast component
+
+**Adaptation needed**:
+- Convert CSS to Tailwind classes
+- Integrate with existing modal store
+- Add TypeScript types
+- Ensure Svelte 5 runes compatibility
+
+### Task 1.3: State Management Pattern Adoption
+**Goal**: Use cleaners' reactive object pattern for new state.
+
+**Implementation**:
+```javascript
+// New notification store (following cleaners pattern)
+export const notificationState = $state({ value: [] });
+export const notificationActions = {
+  success: (message) => { /* add notification */ },
+  error: (message) => { /* add error notification */ },
+  clear: () => { notificationState.value = []; }
+};
+
+// Keep session store as-is (encapsulated pattern)
+```
+
+### Task 1.4: API Layer Standardization
+**Goal**: Ensure consistent API communication.
+
+**Current state**: Server.ts already handles Kiss backend format.
+**No changes needed** - keep existing pattern.
+
+---
+
+## Phase 2: Manager Pattern Decision
+
+### Recommended Approach: Minimal Wrapper
+**Keep** `oodb.PerstStorageManager` as the single entry point (librarian).
+
+**Optional additions** (only if they reduce boilerplate):
+```java
+// In PerstStorageManager - add convenience methods only
+public static Actor findActorByUuid(String uuid) {
+  return find(Actor.class, "uuid", uuid);
+}
+
+public static Collection<Actor> getAllActiveActors() {
+  return getAll(Actor.class).stream()
+    .filter(Actor::isActive)
+    .collect(Collectors.toList());
+}
+```
+
+**No new layers** - work directly with PerstStorageManager.
+
+### Integration with Frontend
+**No frontend changes needed** - backend manager pattern is transparent to frontend.
+
+---
+
+## Phase 3: Cleaners2 Branch Creation
+
+### Task 3.1: Create Branch
+```bash
+git checkout -b cleaners2 origin/master
+# Apply Phase 1 enhancements to master first
+```
+
+### Task 3.2: Copy Cleaning Scheduler Code
+**Copy from cleaners branch**:
+- `src/routes/cleaners/` - Cleaner management pages
+- `src/routes/bookings/` - Booking management pages  
+- `src/routes/schedules/` - Schedule management pages
+- `src/routes/houses/` - House management pages
+- `src/lib/components/ScheduleBoard.svelte` - Domain-specific component
+
+**Adapt to KissOO patterns**:
+- Use KissOO's session management
+- Use KissOO's Server.ts for API calls
+- Use integrated Form/Validation components
+
+### Task 3.3: API Layer Integration
+**Cleaners uses**: `/api/kiss` endpoint with `{service, method, args}` format  
+**KissOO uses**: `/rest` endpoint with `{...injson, _uuid, _method, _class}` format
+
+**Solution**: Create adapter:
+```typescript
+// adapters/kiss-adapter.ts
+export async function callCleaningService(method: string, args: any) {
+  // Convert to KissOO format
+  return Server.call('services.Cleaning', method, args);
+}
+
+// Or adapt each service call individually
+export const cleaningApi = {
+  getCleaners: () => Server.call('services.Cleaning', 'getCleaners', {}),
+  createBooking: (data) => Server.call('services.Cleaning', 'createBooking', data)
+};
+```
+
+### Task 3.4: Domain Logic Integration
+**Keep cleaning scheduler business logic**:
+- Cleaner scheduling algorithms
+- Booking management
+- House information tracking
+- Schedule coordination
+
+**Adapt to KissOO backend services**:
+- Create `Cleaning.groovy` service in backend
+- Implement required methods
+- Connect to Perst database via PerstStorageManager
+
+---
+
+## Phase 4: Implementation Roadmap
+
+### Week 1: KissOO Master Foundation
+**Days 1-2**: Session enhancements
+- Implement encrypted credential storage
+- Add silent re-authentication
+- Test session expiration handling
+
+**Days 3-4**: Component integration
+- Copy and adapt Form.svelte
+- Copy validation.ts
+- Copy and adapt NotificationToast.svelte
+- Update Utils.ts with notification system
+
+**Days 5-6**: Page updates
+- Refactor users page to use Form component
+- Add toast notifications to CRUD operations
+- Update other pages as needed
+
+**Day 7**: Testing and refinement
+- Test all enhanced functionality
+- Fix any integration issues
+- Update documentation
+
+### Week 2: Cleaners2 Branch
+**Day 1**: Branch creation and setup
+- Create cleaners2 branch
+- Copy cleaning scheduler code
+- Set up project structure
+
+**Days 2-3**: API integration
+- Create API adapter layer
+- Connect to KissOO backend services
+- Test API calls
+
+**Days 4-5**: UI integration
+- Integrate with KissOO session management
+- Use Form/Validation components
+- Add toast notifications
+
+**Days 6-7**: Testing and polish
+- End-to-end testing
+- Domain-specific adjustments
+- Performance optimization
+
+---
+
+## Technical Specifications
+
+### 1. Encrypted Credential Storage
+**Algorithm**: AES-GCM with Web Crypto API  
+**Key derivation**: PBKDF2 with user password  
+**Storage**: localStorage (client-side only)  
+**Security**:
+- Credentials never sent to server in plain text after initial login
+- Key derived from password (not stored)
+- Only encrypted blob stored in localStorage
+
+**Implementation**:
+```typescript
+async function encryptCredentials(username: string, password: string): Promise<string> {
+  const key = await deriveKey(password);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const data = new TextEncoder().encode(JSON.stringify({ username, password }));
+  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+  return JSON.stringify({ iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) });
+}
+```
+
+### 2. Session Expiration Flow
+```
+1. User makes API call (Server.call)
+2. Server returns 401 (_ErrorCode === 2)
+3. Server.ts catches error
+4. Check for stored credentials
+5. Attempt silent re-auth (session.silentLogin)
+6. If success: retry original call with new UUID
+7. If failure: redirect to /login?expired=true
+```
+
+### 3. Component Integration Details
+
+#### Form.svelte Adaptation
+```svelte
+<!-- Original from cleaners -->
+<Form fields={[...]} data={formData} errors={formErrors} onSubmit={handleSubmit} />
+
+<!-- Adapted for KissOO (with Tailwind) -->
+<Form 
+  fields={[
+    { name: 'username', label: 'Username', type: 'text', required: true },
+    { name: 'password', label: 'Password', type: 'password', required: true }
+  ]}
+  data={loginData}
+  errors={loginErrors}
+  onSubmit={handleLogin}
+  class="tailwind-classes"
+/>
+```
+
+#### Validation.ts Integration
+```typescript
+// Add to existing Utils.ts
+import { validators } from './validation';
+
+export const Utils = {
+  // ... existing methods
+  validate: {
+    required: validators.required,
+    email: validators.email,
+    phone: validators.phone
+  }
+};
+```
+
+#### NotificationToast Integration
+- Replace `alert()` calls with `notificationActions.error()`
+- Replace `confirm()` with modal system (keep existing)
+- Add toasts for success/warning/info messages
+
+### 4. API Adapter Pattern
+```typescript
+// Cleaners2 API adapter
+export const cleaningApi = {
+  // Convert cleaners branch calls to KissOO format
+  getCleaners: () => Server.call('services.Cleaning', 'getCleaners', {}),
+  createBooking: (data: Partial<Booking>) => 
+    Server.call('services.Cleaning', 'createBooking', data),
+  // ... other methods
+};
+```
+
+---
+
+## Risks & Mitigations
+
+### Risk 1: Security of Stored Credentials
+**Impact**: High (credential theft)  
+**Probability**: Low (with proper encryption)  
+**Mitigation**:
+- Use Web Crypto API (browser-native)
+- Derive key from password (not stored)
+- Add "Remember me" checkbox (opt-in only)
+- Clear credentials on logout
+- Timeout encrypted credentials (e.g., 7 days)
+
+### Risk 2: Breaking Existing Functionality
+**Impact**: Medium (user disruption)  
+**Probability**: Medium (large changes)  
+**Mitigation**:
+- Feature flags for new components
+- Gradual migration (one page at a time)
+- Comprehensive testing
+- Rollback plan
+
+### Risk 3: Performance Impact
+**Impact**: Low (user experience)  
+**Probability**: Low  
+**Mitigation**:
+- Lazy load new components
+- Cache decrypted credentials in memory
+- Minimal re-renders with Svelte 5 runes
+- Profile before/after
+
+### Risk 4: Svelte 5 Compatibility
+**Impact**: High (application breaks)  
+**Probability**: Low (tested patterns)  
+**Mitigation**:
+- Use only Svelte 5 runes ($state, $derived, $effect, $props)
+- Test with Svelte 5 compiler
+- Avoid Svelte 4 patterns
+
+---
+
+## Success Criteria
+
+### KissOO Master (Generic Skeleton)
+- [ ] **Session Management**: Silent re-authentication with encrypted credentials
+- [ ] **Components**: Form.svelte, validation.ts, NotificationToast.svelte integrated
+- [ ] **Demo Pages**: All existing pages working with enhanced UX
+- [ ] **Type Safety**: Full TypeScript coverage
+- [ ] **Documentation**: Updated guides and examples
+
+### Cleaners2 (Domain Extension)
+- [ ] **Functionality**: Full cleaning scheduler (cleaners, bookings, schedules, houses)
+- [ ] **Foundation**: Built on enhanced KissOO master
+- [ ] **Integration**: Uses KissOO session management and components
+- [ ] **Domain Logic**: All cleaning scheduler business logic preserved
+- [ ] **API**: Connected to KissOO backend services
+
+### Code Quality
+- [ ] **Svelte 5**: No Svelte 4 patterns
+- [ ] **TypeScript**: Full type coverage
+- [ ] **Styling**: Consistent Tailwind CSS
+- [ ] **Error Handling**: Comprehensive error handling
+- [ ] **Testing**: Unit and integration tests
+
+---
+
+## Next Steps
+
+### Immediate Actions
+1. **Approve this plan** - Review and provide feedback
+2. **Create feature branch** - `feature/session-enhancements` on KissOO master
+3. **Start Phase 1** - Implement session enhancements first
+
+### Questions for Clarification
+1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
+2. **"Remember me" default**: Should it be checked by default?
+3. **Component migration**: Should we migrate ALL existing forms to Form.svelte or only new ones?
+4. **Backend changes**: Do we need to create `Cleaning.groovy` service or adapt existing services?
+
+### Long-term Considerations
+1. **Manager pattern**: Evaluate if PerstHelper adds value over direct PerstStorageManager calls
+2. **State management**: Consider adopting cleaners' reactive pattern for more stores
+3. **Component library**: Build reusable component library for future projects
+4. **Documentation**: Create comprehensive developer guide for both codebases
+
+---
+
+**Document Status**: Ready for review  
+**Last Updated**: 2026-03-23  
+**Next Review**: After implementation of Phase 1
