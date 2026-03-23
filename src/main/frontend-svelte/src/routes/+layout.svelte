@@ -5,6 +5,7 @@
   import { initBackend } from '$lib/api/Auth';
   import Navbar from '$lib/components/Navbar.svelte';
   import GlobalModal from '$lib/components/GlobalModal.svelte';
+  import NotificationToast from '$lib/components/NotificationToast.svelte';
 
   onMount(() => {
     initBackend();
@@ -13,6 +14,7 @@
 </script>
 
 <GlobalModal />
+<NotificationToast />
 <Navbar />
 
 <slot />

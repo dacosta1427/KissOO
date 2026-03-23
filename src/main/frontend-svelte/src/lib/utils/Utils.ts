@@ -5,6 +5,8 @@
  */
 
 import { modal } from '$lib/state/modalStore';
+import { validators, commonValidations } from './validation';
+import { notificationActions } from '$lib/state/notificationStore.svelte.ts';
 
 // Legacy compatibility - these will be replaced with Modal component
 export const Utils = {
@@ -101,6 +103,31 @@ export const Utils = {
   preventNavigation(prevent: boolean, callback?: () => void): void {
     // In SvelteKit, use beforeNavigate() instead
     console.warn('preventNavigation - Use SvelteKit beforeNavigate() instead');
+  },
+
+  /**
+   * Validation utilities
+   */
+  validate: {
+    required: validators.required,
+    email: validators.email,
+    phone: validators.phone,
+    date: validators.date,
+    number: validators.number,
+    length: validators.length,
+    pattern: validators.pattern,
+    ...commonValidations
+  },
+
+  /**
+   * Notification utilities
+   */
+  notify: {
+    success: notificationActions.success,
+    error: notificationActions.error,
+    warning: notificationActions.warning,
+    info: notificationActions.info,
+    clear: notificationActions.clear
   }
 };
 
