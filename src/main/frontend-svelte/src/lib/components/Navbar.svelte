@@ -37,6 +37,9 @@
           <a href="/crud" class="text-gray-600 hover:text-gray-900 font-medium">
             CRUD
           </a>
+          <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">
+            Schedules
+          </a>
           
           <!-- Cleaning Scheduler Dropdown -->
           <div class="relative">
@@ -107,6 +110,7 @@
           {#if session.isAuthenticated}
             <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">Users</a>
             <a href="/crud" class="text-gray-600 hover:text-gray-900 font-medium">CRUD</a>
+            <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">Schedules</a>
             <div class="border-t border-gray-200 my-2"></div>
             <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">Cleaners</a>
             <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">Bookings</a>
