@@ -105,5 +105,5 @@
   </div>
 </header>
 
-<!-- Close dropdown when clicking outside -->
-<svelte:window onclick={() => { if (demoMenuOpen) demoMenuOpen = false; if (cleaningMenuOpen) cleaningMenuOpen = false; }} />
+<!-- Close mobile menu when clicking outside -->
+<svelte:window onclick={() => { if (mobileMenuOpen) mobileMenuOpen = false; }} />

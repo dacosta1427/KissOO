@@ -30,20 +30,12 @@
 	});
 
 	// Svelte 5: Use $derived for form options
-	let cleanerOptions = $derived.by(() => {
-		const opts = cleaners.map((c) => ({ value: String(c.id), label: c.name }));
-		console.log('[DEBUG] cleanerOptions:', opts.length, opts);
-		return opts;
-	});
-	let bookingOptions = $derived.by(() => {
-		const opts = bookings.map((b) => ({
-			value: String(b.id),
-			label: `${b.guest_name || 'Guest'} - ${b.check_in_date} to ${b.check_out_date}`,
-			checkOutDate: b.check_out_date
-		}));
-		console.log('[DEBUG] bookingOptions:', opts.length, opts);
-		return opts;
-	});
+	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.id), label: c.name })));
+	let bookingOptions = $derived(bookings.map((b) => ({
+		value: String(b.id),
+		label: `${b.guest_name || 'Guest'} - ${b.check_in_date} to ${b.check_out_date}`,
+		checkOutDate: b.check_out_date
+	})));
 
 	// Status options
 	const statusOptions = [
