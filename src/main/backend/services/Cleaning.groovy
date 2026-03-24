@@ -23,8 +23,10 @@ class Cleaning {
     // ==================== CLEANERS ====================
     
     void getCleaners(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        println "[Cleaning.groovy] getCleaners called"
         try {
             Collection<Cleaner> cleaners = CleanerManager.getAll()
+            println "[Cleaning.groovy] Found ${cleaners?.size() ?: 0} cleaners"
             JSONArray rows = new JSONArray()
             
             for (Cleaner cleaner : cleaners) {
@@ -39,7 +41,9 @@ class Cleaning {
             }
             
             outjson.put("data", rows)
+            println "[Cleaning.groovy] Returning ${rows.length()} rows"
         } catch (Exception e) {
+            println "[Cleaning.groovy] ERROR: ${e.message}"
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
         }
@@ -72,10 +76,10 @@ class Cleaning {
         try {
             JSONObject data = injson.getJSONObject("data")
             String name = data.getString("name")
-            String phone = data.optString("phone", null)
-            String email = data.optString("email", null)
-            String address = data.optString("address", null)
-            boolean active = data.optBoolean("active", true)
+            String phone = data.getString("phone", "")
+            String email = data.getString("email", "")
+            String address = data.getString("address", "")
+            boolean active = data.getBoolean("active", true)
             
             Cleaner cleaner = CleanerManager.create(name, phone, email, address, active)
             if (cleaner == null) {
@@ -217,8 +221,8 @@ class Cleaning {
             String checkOutDate = data.getString("check_out_date")
             String guestName = data.getString("guest_name")
             String guestEmail = data.getString("guest_email")
-            String guestPhone = data.optString("guest_phone", null)
-            String notes = data.optString("notes", null)
+            String guestPhone = data.getString("guest_phone", "")
+            String notes = data.getString("notes", "")
             
             Booking booking = BookingManager.create(houseId, checkInDate, checkOutDate,
                     guestName, guestEmail, guestPhone, notes)
@@ -419,7 +423,7 @@ class Cleaning {
             String date = data.getString("date")
             String startTime = data.getString("start_time")
             String endTime = data.getString("end_time")
-            String notes = data.optString("notes", null)
+            String notes = data.getString("notes", "")
             
             Schedule schedule = ScheduleManager.create(cleanerId, bookingId, date, startTime, endTime, notes)
             if (schedule == null) {
@@ -628,9 +632,9 @@ class Cleaning {
         try {
             JSONObject data = injson.getJSONObject("data")
             String name = data.getString("name")
-            String address = data.optString("address", null)
-            String description = data.optString("description", null)
-            boolean active = data.optBoolean("active", true)
+            String address = data.getString("address", "")
+            String description = data.getString("description", "")
+            boolean active = data.getBoolean("active", true)
             
             House house = HouseManager.create(name, address, description, active)
             if (house == null) {

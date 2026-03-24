@@ -587,7 +587,13 @@ export const cleaningApi = {
 - **Files to investigate**: `PerstUser.java:141-143`, `KissInit.groovy` (default user creation), `Auth.ts` (signup)
 - **Note**: Backend authentication returns generic error; frontend doesn't distinguish between wrong credentials and unverified email.
 
-**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag.
+**Issue 3: Backend Cleaning.groovy API bugs**
+- **Root Cause**: `Cleaning.groovy` used `optString` and `optBoolean` methods that don't exist in `org.kissweb.json.JSONObject`. Service calls failed with "No signature of method" errors.
+- **Solution**: Changed all `optString(key, default)` to `getString(key, default)` and `optBoolean(key, default)` to `getBoolean(key, default)`.
+- **Files modified**: `src/main/backend/services/Cleaning.groovy`
+- **Result**: Added sample cleaners via API; dropdown now has data.
+
+**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library.
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?

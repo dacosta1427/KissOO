@@ -66,7 +66,9 @@ export interface ApiResult {
 // Helper to handle API calls with notifications
 async function callCleaningService(method: string, args: any = {}, operationName?: string): Promise<CleaningResult> {
   try {
+    console.log(`[Cleaning.ts] Calling ${method} with args:`, args);
     const res = await Server.call('services.Cleaning', method, args) as CleaningResult;
+    console.log(`[Cleaning.ts] ${method} response:`, res);
     if (res._Success && operationName) {
       notificationActions.success(`${operationName} completed successfully`);
     } else if (!res._Success && operationName) {
@@ -75,6 +77,7 @@ async function callCleaningService(method: string, args: any = {}, operationName
     return res;
   } catch (error: any) {
     const errorMessage = error.message || 'Network error';
+    console.error(`[Cleaning.ts] ${method} error:`, errorMessage);
     if (operationName) {
       notificationActions.error(`${operationName} failed: ${errorMessage}`);
     }
