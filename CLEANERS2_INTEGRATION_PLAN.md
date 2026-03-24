@@ -75,7 +75,8 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.3 | Cleaning Scheduler Alignment | ✅ Completed | f897fe65 | Frontend-backend field mapping, address field added |  
 | 4.0.4 | Runtime Testing | 🔄 In Progress | - | Testing with backend server (server started) |  
 | 4.0.5 | Bug Fix: GlobalModal Binding | ✅ Completed | 151ad7cd | Fixed Svelte 5 binding error in modal component |  
-| 4.0.6 | Backend Authentication Fix | ✅ Completed | 9f327899 | Fixed admin user emailVerified flag for login |
+| 4.0.6 | Backend Authentication Fix | ✅ Completed | 9f327899 | Fixed admin user emailVerified flag for login |  
+| 4.0.7 | Frontend Auth UUID Fix | ✅ Completed | 4cf6a316 | Added Server.setUUID in Auth.ts, debug logging |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 Pending | - | Days 1-7 |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
@@ -585,5 +586,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-23 (Fixed admin emailVerified flag, need backend restart to apply changes)  
-**Next Review**: After backend restart and login test
+**Last Updated**: 2026-03-23 (Fixed frontend Auth.ts to set Server.uuid after login)  
+**Next Review**: After testing SV5 frontend login with debug logs
