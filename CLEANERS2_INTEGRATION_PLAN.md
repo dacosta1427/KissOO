@@ -577,7 +577,8 @@ export const cleaningApi = {
 **Issue 1: Cleaners dropdown not showing anything in schedules page**
 - **Root Cause**: `scheduleFields` array in `schedules/+page.svelte` is a `const` array, not reactive. Mutating its properties doesn't trigger Svelte 5 reactivity.
 - **Solution**: Convert `scheduleFields` to `$state` variable and ensure proper reactivity after data fetch.
-- **Files to modify**: `src/routes/schedules/+page.svelte`
+- **Files modified**: `src/routes/schedules/+page.svelte`
+- **Additional**: Added empty state warning when no cleaners found; added error display for API failures.
 
 **Issue 2: Login failure for user `a@b.c:asd`**
 - **Root Cause**: `PerstUser.canLogin()` requires `emailVerified == true`. New users created via signup have `emailVerified = false` by default.

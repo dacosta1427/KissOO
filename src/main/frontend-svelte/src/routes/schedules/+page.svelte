@@ -150,6 +150,17 @@
 		</div>
 	</div>
 
+	{#if cleaners.length === 0 && !loading}
+		<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+			No cleaners found. Please add cleaners before creating schedules.
+		</div>
+	{/if}
+	{#if error}
+		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+			{error}
+		</div>
+	{/if}
+
 	{#if showForm}
 		<div class="form-section">
 			<Form
