@@ -57,6 +57,9 @@ export class Server {
       _method: meth,
       _class: cls
     };
+    if (cls === 'services.Cleaning') {
+      console.log('[Server] Cleaning service call:', meth, 'UUID:', Server.uuid);
+    }
 
     try {
       Server.incCount();

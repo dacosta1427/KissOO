@@ -27,7 +27,9 @@ export interface ApiResult {
  * @returns Array of users
  */
 export async function getUsers(): Promise<User[]> {
+  console.log('[Users.ts] getUsers called, Server.uuid:', (Server as any).uuid);
   const res = await Server.call('services.Users', 'getRecords', {});
+  console.log('[Users.ts] getUsers response:', res);
   return res.rows || [];
 }
 
@@ -38,11 +40,13 @@ export async function getUsers(): Promise<User[]> {
  * @returns API result
  */
 export async function addUser(userName: string, userPassword: string): Promise<ApiResult> {
+  console.log('[Users.ts] addUser called:', userName);
   const res = await Server.call('services.Users', 'addRecord', {
     userName: userName.toLowerCase(),
     userPassword,
     userActive: 'Y'
   });
+  console.log('[Users.ts] addUser response:', res);
   
   return {
     success: res._Success ?? res.success ?? false,

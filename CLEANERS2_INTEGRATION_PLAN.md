@@ -600,7 +600,13 @@ export const cleaningApi = {
 - **Files modified**: `src/main/backend/services/Users.groovy`
 - **Note**: Also fixed response to include `_Success` field for proper error handling.
 
-**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields.
+**Issue 5: Session UUID not restored after page refresh**
+- **Root Cause**: `session.restore()` updates `session.uuid` but does not update `Server.uuid`. All subsequent `Server.call` use empty UUID, causing authentication failures for protected services.
+- **Solution**: In `+layout.svelte`, after `session.restore()`, call `Server.setUUID(session.uuid)` if UUID exists.
+- **Files modified**: `src/routes/+layout.svelte`
+- **Impact**: Fixes cleaning dropdown, user list loading, and any other authenticated API calls after page refresh.
+
+**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized.
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?

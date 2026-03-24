@@ -68,12 +68,16 @@
 			cleaners = cleanersResult;
 			bookings = bookingsResult;
 
+			console.log('[schedules] cleaners loaded:', cleaners.length, cleaners);
+			console.log('[schedules] bookings loaded:', bookings.length);
+
 			// Update form options
 			scheduleFields[0].options = cleaners.map((c) => ({ value: c.id, label: c.name }));
 			scheduleFields[1].options = bookings.map((b) => ({
 				value: b.id,
 				label: `House: ${b.house_name || 'Unknown'} - ${b.check_in_date} to ${b.check_out_date}`
 			}));
+			console.log('[scheduleFields] cleaner options:', scheduleFields[0].options);
 			// Trigger reactivity by reassigning array
 			scheduleFields = [...scheduleFields];
 
