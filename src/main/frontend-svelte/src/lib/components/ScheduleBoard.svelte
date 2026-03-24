@@ -108,6 +108,7 @@
 	}
 
 	function handleScheduleClick(schedule) {
+		console.log('[ScheduleBoard] Schedule clicked:', schedule);
 		onScheduleClick?.(schedule);
 	}
 

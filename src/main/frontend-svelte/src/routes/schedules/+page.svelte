@@ -143,6 +143,7 @@
 	}
 
 	function handleScheduleClick(schedule) {
+		console.log('[schedules] Schedule clicked:', schedule);
 		editingSchedule = schedule;
 		showForm = true;
 	}
@@ -219,6 +220,12 @@
 				onSubmit={handleFormSubmit}
 				onCancel={handleFormCancel}
 			/>
+		</div>
+	{/if}
+
+	{#if selectedCleanerId}
+		<div class="mb-4 p-2 bg-blue-100 text-blue-800 rounded">
+			Showing schedule for: {cleaners.find(c => c.id === selectedCleanerId)?.name || 'Unknown'}
 		</div>
 	{/if}
 
