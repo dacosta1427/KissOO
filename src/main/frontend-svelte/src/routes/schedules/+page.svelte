@@ -74,6 +74,8 @@
 				value: b.id,
 				label: `House: ${b.house_name || 'Unknown'} - ${b.check_in_date} to ${b.check_out_date}`
 			}));
+			// Trigger reactivity by reassigning array
+			scheduleFields = [...scheduleFields];
 
 			dataStores.schedules.set(schedules);
 			dataStores.cleaners.set(cleaners);

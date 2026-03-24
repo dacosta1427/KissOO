@@ -78,3 +78,18 @@ Note: `.svelte-kit/` is auto-generated and should not be committed.
 - Run `npm run build` in `src/main/frontend-svelte/` to catch TypeScript errors
 - Check browser console for API errors
 - Verify backend server is running on port 8080
+
+### Common Pitfalls
+1. **Non-reactive arrays in Svelte 5**: Use `$state` for arrays that need reactivity; mutating `const` arrays doesn't trigger re-renders.
+2. **Missing `_Success` field**: Ensure backend services set `_Success: true/false` in response JSON.
+3. **Unique constraints**: Check `@Indexable(unique=true)` annotations on Perst entities; generate unique IDs for indexed fields.
+4. **JSON method signatures**: Verify `JSONObject` methods exist (e.g., `getString` vs `optString`).
+5. **Session expiration**: UUIDs expire; re-login if API returns `_ErrorCode: 2`.
+6. **Hot reload limitations**: Groovy service changes may require backend restart if not auto-reloaded.
+
+### Mistakes to Avoid (Recent Lessons)
+1. **Assuming dropdown issues are only frontend**: Always test backend API independently (curl) before modifying frontend.
+2. **Not checking unique constraints**: When creating new records, always ensure indexed fields (like `userId`) are unique.
+3. **Overlooking response format**: Backend responses must include `_Success` field; frontend expects it for error handling.
+4. **Incomplete testing**: Test both success and failure paths; verify data persistence in database.
+5. **Assuming hot reload works**: After modifying Groovy services, verify they are actually reloaded (check logs).

@@ -594,7 +594,13 @@ export const cleaningApi = {
 - **Files modified**: `src/main/backend/services/Cleaning.groovy`
 - **Result**: Added sample cleaners via API; dropdown now has data.
 
-**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library.
+**Issue 4: User creation fails due to duplicate userId**
+- **Root Cause**: `Users.groovy` called `PerstUserManager.create` with `userId = 0` for all new users, violating unique constraint on `userId` field.
+- **Solution**: Generate unique `userId` by finding max existing userId + 1.
+- **Files modified**: `src/main/backend/services/Users.groovy`
+- **Note**: Also fixed response to include `_Success` field for proper error handling.
+
+**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields.
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?

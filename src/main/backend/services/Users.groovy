@@ -6,6 +6,7 @@ import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
 import mycompany.database.PerstUserManager
 import mycompany.domain.PerstUser
+import java.util.Collection
 
 /**
  * Users service for CRUD operations on PerstUser.
@@ -39,8 +40,19 @@ class Users {
             String userName = injson.getString("userName")
             String password = injson.getString("userPassword")
             
-            PerstUser user = PerstUserManager.create(userName, password, 0)
+            // Generate unique userId
+            Collection<PerstUser> existingUsers = PerstUserManager.getAll()
+            int maxUserId = 0
+            for (PerstUser u : existingUsers) {
+                if (u.getUserId() > maxUserId) {
+                    maxUserId = u.getUserId()
+                }
+            }
+            int newUserId = maxUserId + 1
+            
+            PerstUser user = PerstUserManager.create(userName, password, newUserId)
             if (user == null) {
+                outjson.put("_Success", false)
                 outjson.put("error", "Failed to create user")
                 return
             }
@@ -48,6 +60,7 @@ class Users {
             user.setEmailVerified(true)  // Allow immediate login without email verification
             PerstUserManager.update(user)
             
+            outjson.put("_Success", true)
             outjson.put("success", true)
             outjson.put("id", user.getOid())
         } catch (Exception e) {
@@ -61,6 +74,7 @@ class Users {
             PerstUser userToUpdate = PerstUserManager.getByOid(oid)
             
             if (userToUpdate == null) {
+                outjson.put("_Success", false)
                 outjson.put("error", "User not found")
                 return
             }
@@ -71,6 +85,7 @@ class Users {
             
             PerstUserManager.update(userToUpdate)
             
+            outjson.put("_Success", true)
             outjson.put("success", true)
         } catch (Exception e) {
             outjson.put("error", e.message)
@@ -83,12 +98,14 @@ class Users {
             PerstUser userToDelete = PerstUserManager.getByOid(oid)
             
             if (userToDelete == null) {
+                outjson.put("_Success", false)
                 outjson.put("error", "User not found")
                 return
             }
             
             PerstUserManager.delete(userToDelete)
             
+            outjson.put("_Success", true)
             outjson.put("success", true)
         } catch (Exception e) {
             outjson.put("error", e.message)
