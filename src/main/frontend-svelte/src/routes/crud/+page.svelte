@@ -4,7 +4,9 @@
   import type { PhoneRecord } from '$lib/api/Crud';
   import AgGridWrapper from '$lib/components/AgGridWrapper.svelte';
   import Modal from '$lib/components/Modal.svelte';
+  import Form from '$lib/components/Form.svelte';
   import { Utils } from '$lib/utils/Utils';
+  import { notificationActions } from '$lib/stores.svelte.js';
 
   // State
   let records = $state<PhoneRecord[]>([]);
@@ -16,14 +18,21 @@
   // Modal state
   let editModalOpen = $state(false);
   let editingRecord = $state<PhoneRecord | null>(null);
-  let editFirstName = $state('');
-  let editLastName = $state('');
-  let editPhoneNumber = $state('');
+  let editFormData = $state<Record<string, any>>({ firstName: '', lastName: '', phoneNumber: '' });
   let editLoading = $state(false);
   let isAddMode = $state(false);
 
+  // Field definitions for Form component
+  const editFields = [
+    { name: 'firstName', label: 'First Name', type: 'text' as const, required: true, placeholder: 'Enter first name' },
+    { name: 'lastName', label: 'Last Name', type: 'text' as const, required: true, placeholder: 'Enter last name' },
+    { name: 'phoneNumber', label: 'Phone Number', type: 'text' as const, required: false, placeholder: 'Enter phone number' }
+  ];
+
   // Derived validation
-  let canSave = $derived(editFirstName.length >= 1 && editLastName.length >= 1);
+  let canSave = $derived(
+    (editFormData.firstName?.length ?? 0) >= 1 && (editFormData.lastName?.length ?? 0) >= 1
+  );
 
   // Grid column definitions
   const columnDefs = [
@@ -56,23 +65,23 @@
 
   function openAddModal() {
     editingRecord = null;
-    editFirstName = '';
-    editLastName = '';
-    editPhoneNumber = '';
+    editFormData = { firstName: '', lastName: '', phoneNumber: '' };
     isAddMode = true;
     editModalOpen = true;
   }
 
   function openEditModal(record: PhoneRecord) {
     editingRecord = record;
-    editFirstName = record.firstName;
-    editLastName = record.lastName;
-    editPhoneNumber = record.phoneNumber;
+    editFormData = {
+      firstName: record.firstName,
+      lastName: record.lastName,
+      phoneNumber: record.phoneNumber
+    };
     isAddMode = false;
     editModalOpen = true;
   }
 
-  async function handleSave() {
+  async function handleSave(data: Record<string, any>) {
     if (!canSave) return;
     
     editLoading = true;
@@ -81,19 +90,22 @@
     try {
       let res;
       if (isAddMode) {
-        res = await addRecord(editFirstName, editLastName, editPhoneNumber);
+        res = await addRecord(data.firstName, data.lastName, data.phoneNumber);
       } else if (editingRecord) {
-        res = await updateRecord(editingRecord.id, editFirstName, editLastName, editPhoneNumber);
+        res = await updateRecord(editingRecord.id, data.firstName, data.lastName, data.phoneNumber);
       }
       
       if (res && res.success) {
+        notificationActions.success(isAddMode ? 'Record added successfully' : 'Record updated successfully');
         editModalOpen = false;
         await loadRecords();
       } else if (res) {
         error = res.error || 'Failed to save record';
+        notificationActions.error(error);
       }
     } catch (e: any) {
       error = 'Failed to save record: ' + (e.message || 'Unknown error');
+      notificationActions.error(error);
     } finally {
       editLoading = false;
     }
@@ -110,12 +122,15 @@
         try {
           const res = await deleteRecord(id);
           if (res.success) {
+            notificationActions.success('Record deleted successfully');
             await loadRecords();
           } else {
             error = res.error || 'Failed to delete record';
+            notificationActions.error(error);
           }
         } catch (e: any) {
           error = 'Failed to delete record: ' + (e.message || 'Unknown error');
+          notificationActions.error(error);
         } finally {
           loading = false;
         }
@@ -225,53 +240,13 @@
   title={isAddMode ? 'Add Record' : 'Edit Record'}
   onClose={() => editModalOpen = false}
 >
-  <div class="space-y-4">
-    <div>
-      <label class="block text-sm font-medium text-gray-700">First Name</label>
-      <input
-        type="text"
-        bind:value={editFirstName}
-        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        maxlength="20"
-        required
-      />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Last Name</label>
-      <input
-        type="text"
-        bind:value={editLastName}
-        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        maxlength="20"
-        required
-      />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-      <input
-        type="text"
-        bind:value={editPhoneNumber}
-        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        maxlength="25"
-      />
-    </div>
-  </div>
-  
-  {#snippet footer()}
-    <button
-      type="button"
-      class="inline-flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-      onclick={handleSave}
-      disabled={editLoading || !canSave}
-    >
-      {editLoading ? 'Saving...' : 'OK'}
-    </button>
-    <button
-      type="button"
-      class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-      onclick={() => editModalOpen = false}
-    >
-      Cancel
-    </button>
-  {/snippet}
+  <Form
+    fields={editFields}
+    bind:data={editFormData}
+    loading={editLoading}
+    submitLabel={isAddMode ? 'Add' : 'Update'}
+    cancelLabel="Cancel"
+    onSubmit={handleSave}
+    onCancel={() => editModalOpen = false}
+  />
 </Modal>
