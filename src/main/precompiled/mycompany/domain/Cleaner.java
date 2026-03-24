@@ -18,6 +18,8 @@ public class Cleaner extends CVersion {
     
     private String email;
     
+    private String address;
+    
     @Indexable
     private boolean active = true;
     
@@ -26,9 +28,14 @@ public class Cleaner extends CVersion {
     }
     
     public Cleaner(String name, String phone, String email, boolean active) {
+        this(name, phone, email, null, active);
+    }
+    
+    public Cleaner(String name, String phone, String email, String address, boolean active) {
         this.name = name;
         this.phone = phone;
         this.email = email;
+        this.address = address;
         this.active = active;
     }
     
@@ -42,6 +49,9 @@ public class Cleaner extends CVersion {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     
@@ -49,6 +59,8 @@ public class Cleaner extends CVersion {
     public String toString() {
         return "Cleaner{" +
                 "name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", address='" + address + '\'' +
                 ", active=" + active +
                 '}';
     }

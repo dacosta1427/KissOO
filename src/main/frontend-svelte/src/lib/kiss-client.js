@@ -12,14 +12,21 @@ class KissClient {
 
 	/**
 	 * Make a remote function call using KissOO's Server.call() pattern
-	 * @param {string} service - The service name (e.g., 'services.Cleaning')
+	 * @param {string} service - The service name (e.g., 'cleaners', 'bookings', 'schedules', 'houses')
 	 * @param {string} method - The method name (e.g., 'getCleaners')
 	 * @param {object} args - Arguments to pass to the remote function
 	 * @returns {Promise} - Promise that resolves to the remote function result
 	 */
 	async call(service, method, args = {}) {
-		// Use Server.call with className = service, methodName = method
-		return await Server.call(service, method, args);
+		// Map cleaning scheduler services to the unified Cleaning service
+		const serviceMap = {
+			'cleaners': 'services.Cleaning',
+			'bookings': 'services.Cleaning',
+			'schedules': 'services.Cleaning',
+			'houses': 'services.Cleaning'
+		};
+		const className = serviceMap[service] || service;
+		return await Server.call(className, method, args);
 	}
 
 	// Service-specific convenience methods (optional)

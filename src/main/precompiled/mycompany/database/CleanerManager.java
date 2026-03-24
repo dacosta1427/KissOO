@@ -38,9 +38,10 @@ public class CleanerManager extends BaseManager<Cleaner> {
         String name = args[0].toString();
         String phone = args.length > 1 ? args[1].toString() : null;
         String email = args.length > 2 ? args[2].toString() : null;
-        boolean active = args.length > 3 ? Boolean.parseBoolean(args[3].toString()) : true;
+        String address = args.length > 3 ? args[3].toString() : null;
+        boolean active = args.length > 4 ? Boolean.parseBoolean(args[4].toString()) : true;
         
-        Cleaner cleaner = new Cleaner(name, phone, email, active);
+        Cleaner cleaner = new Cleaner(name, phone, email, address, active);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(cleaner);

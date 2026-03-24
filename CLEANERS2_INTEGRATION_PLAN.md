@@ -69,7 +69,9 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 3.3 | API Layer Integration | ✅ Completed | d3f3a3f1 | Frontend API adapter (kiss-client.js) uses Server.call() |
 | 3.4 | Domain Logic Integration | ✅ Completed | d3f3a3f1 + 4a60c57e | Backend service created, Schedule conflict fixed, build passes |
 | **Phase 4: Implementation** | | | | |
-| 4.0 | Week 1: Master2 Foundation | 🔄 In Progress | - | Days 1-7 (UI Refinements) |
+| 4.0 | Week 1: Master2 Foundation | 🔄 In Progress | - | Days 1-7 (UI Refinements) |  
+| 4.0.1 | Users Page Refinement | ✅ Completed | f21e388b | Form.svelte integration, toast notifications |  
+| 4.0.2 | CRUD Page Refinement | ✅ Completed | 135854c6 | Form.svelte integration, toast notifications |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 Pending | - | Days 1-7 |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
@@ -579,5 +581,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-23 (Starting UI refinements: users page migration, toast notifications, form components)  
-**Next Review**: After UI refinements completed
+**Last Updated**: 2026-03-23 (CRUD page refined: Form component integration, toast notifications added)  
+**Next Review**: After remaining UI refinements and testing

@@ -33,6 +33,7 @@ class Cleaning {
                 row.put("name", cleaner.getName())
                 row.put("phone", cleaner.getPhone())
                 row.put("email", cleaner.getEmail())
+                row.put("address", cleaner.getAddress())
                 row.put("active", cleaner.isActive())
                 rows.put(row)
             }
@@ -58,6 +59,7 @@ class Cleaning {
             data.put("name", cleaner.getName())
             data.put("phone", cleaner.getPhone())
             data.put("email", cleaner.getEmail())
+            data.put("address", cleaner.getAddress())
             data.put("active", cleaner.isActive())
             outjson.put("data", data)
         } catch (Exception e) {
@@ -72,9 +74,10 @@ class Cleaning {
             String name = data.getString("name")
             String phone = data.optString("phone", null)
             String email = data.optString("email", null)
+            String address = data.optString("address", null)
             boolean active = data.optBoolean("active", true)
             
-            Cleaner cleaner = CleanerManager.create(name, phone, email, active)
+            Cleaner cleaner = CleanerManager.create(name, phone, email, address, active)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create cleaner")
@@ -85,6 +88,7 @@ class Cleaning {
             result.put("name", cleaner.getName())
             result.put("phone", cleaner.getPhone())
             result.put("email", cleaner.getEmail())
+            result.put("address", cleaner.getAddress())
             result.put("active", cleaner.isActive())
             outjson.put("data", result)
         } catch (Exception e) {
@@ -106,6 +110,7 @@ class Cleaning {
             if (data.has("name")) cleaner.setName(data.getString("name"))
             if (data.has("phone")) cleaner.setPhone(data.getString("phone"))
             if (data.has("email")) cleaner.setEmail(data.getString("email"))
+            if (data.has("address")) cleaner.setAddress(data.getString("address"))
             if (data.has("active")) cleaner.setActive(data.getBoolean("active"))
             
             boolean success = CleanerManager.update(cleaner)
@@ -119,6 +124,7 @@ class Cleaning {
             result.put("name", cleaner.getName())
             result.put("phone", cleaner.getPhone())
             result.put("email", cleaner.getEmail())
+            result.put("address", cleaner.getAddress())
             result.put("active", cleaner.isActive())
             outjson.put("data", result)
         } catch (Exception e) {

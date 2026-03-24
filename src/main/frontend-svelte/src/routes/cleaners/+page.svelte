@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { cleanersAPI } from '../api/kiss-remote.js';
 	import { dataStores, loadingActions, errorActions } from '../../lib/stores.svelte.js';
 	import Table from '$lib/components/Table.svelte';
@@ -20,36 +20,36 @@
 		{
 			name: 'name',
 			label: 'Name',
-			type: 'text',
+			type: 'text' as const,
 			required: true,
 			placeholder: 'Enter cleaner name'
 		},
 		{
 			name: 'email',
 			label: 'Email',
-			type: 'email',
+			type: 'email' as const,
 			required: true,
 			placeholder: 'Enter cleaner email'
 		},
 		{
 			name: 'phone',
 			label: 'Phone',
-			type: 'tel',
+			type: 'tel' as const,
 			required: false,
 			placeholder: 'Enter cleaner phone number'
 		},
 		{
 			name: 'address',
 			label: 'Address',
-			type: 'textarea',
+			type: 'textarea' as const,
 			required: false,
 			placeholder: 'Enter cleaner address',
 			rows: 3
 		},
 		{
-			name: 'is_active',
+			name: 'active',
 			label: 'Active',
-			type: 'checkbox',
+			type: 'checkbox' as const,
 			required: false
 		}
 	];
@@ -58,8 +58,9 @@
 		{ key: 'name', label: 'Name' },
 		{ key: 'email', label: 'Email' },
 		{ key: 'phone', label: 'Phone' },
+		{ key: 'address', label: 'Address' },
 		{
-			key: 'is_active',
+			key: 'active',
 			label: 'Status',
 			formatter: (value) => (value ? 'Active' : 'Inactive')
 		}
