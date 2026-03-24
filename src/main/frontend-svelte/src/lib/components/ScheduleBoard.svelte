@@ -8,7 +8,9 @@
 		loading = false,
 		error = null,
 		onScheduleChange,
-		onScheduleClick
+		onScheduleClick,
+		onCleanerClick,
+		selectedCleanerId = null
 	} = $props();
 
 	// Svelte 5: Use $state for reactive variables
@@ -19,6 +21,7 @@
 	// Svelte 5: Use $derived for reactive computed values
 	let dates = $derived(generateDateRange(dateRange.start, dateRange.end));
 	let scheduleMatrix = $derived(buildScheduleMatrix(schedules, cleaners, dates));
+	let filteredCleaners = $derived(selectedCleanerId ? cleaners.filter(c => c.id === selectedCleanerId) : cleaners);
 
 	function generateDateRange(start, end) {
 		if (!start || !end) return [];
@@ -135,9 +138,14 @@
 	{:else if loading}
 		<div class="loading-message">Loading schedule...</div>
 	{:else}
-		{#each cleaners as cleaner}
+		{#each filteredCleaners as cleaner}
 			<div class="board-row" key={cleaner.id}>
-				<div class="cleaner-cell">
+				<div 
+					class="cleaner-cell {selectedCleanerId === cleaner.id ? 'selected' : ''}"
+					onclick={() => onCleanerClick?.(cleaner.id)}
+					role="button"
+					tabindex="0"
+				>
 					<div class="cleaner-name">{cleaner.name}</div>
 					<div class="cleaner-info">{cleaner.email}</div>
 				</div>
@@ -241,6 +249,18 @@
 		padding: 15px;
 		border-right: 1px solid var(--border-color);
 		background: var(--row-bg);
+		cursor: pointer;
+		transition: background-color 0.2s;
+	}
+	
+	.cleaner-cell.selected {
+		background: var(--primary-color);
+		color: white;
+	}
+	
+	.cleaner-cell.selected .cleaner-name,
+	.cleaner-cell.selected .cleaner-info {
+		color: white;
 	}
 
 	.cleaner-name {

@@ -116,7 +116,7 @@
 						onchange={(e) => updateField(field.name, (e.target as HTMLSelectElement).value)}
 					>
 						<option value="">-- Select {field.label} --</option>
-						{#each field.options ?? [] as option}
+						{#each (field.options ? [...field.options] : []) as option}
 							<option value={option.value}>{option.label}</option>
 						{/each}
 					</select>

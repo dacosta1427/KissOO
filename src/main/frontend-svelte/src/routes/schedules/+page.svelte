@@ -16,6 +16,8 @@
 		start: new Date().toISOString().split('T')[0],
 		end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 	});
+	
+	let selectedCleanerId = $state<number | null>(null);
 
 	let scheduleFields = $state([
 		{
@@ -143,6 +145,14 @@
 		editingSchedule = schedule;
 		showForm = true;
 	}
+	
+	function handleCleanerClick(cleanerId) {
+		if (selectedCleanerId === cleanerId) {
+			selectedCleanerId = null; // deselect
+		} else {
+			selectedCleanerId = cleanerId;
+		}
+	}
 
 	// Svelte 5: Use $effect for lifecycle management
 	$effect(() => {
@@ -178,6 +188,14 @@
 		</div>
 	</div>
 
+	{#if selectedCleanerId}
+		<div class="mb-4">
+			<button class="btn btn-secondary" onclick={() => selectedCleanerId = null}>
+				Show All Cleaners
+			</button>
+		</div>
+	{/if}
+
 	{#if cleaners.length === 0 && !loading}
 		<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
 			No cleaners found. Please add cleaners before creating schedules.
@@ -212,6 +230,8 @@
 		{error}
 		onScheduleChange={handleScheduleChange}
 		onScheduleClick={handleScheduleClick}
+		onCleanerClick={handleCleanerClick}
+		selectedCleanerId={selectedCleanerId}
 	/>
 </div>
 
