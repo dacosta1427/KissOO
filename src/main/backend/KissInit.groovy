@@ -142,6 +142,18 @@ class KissInit {
                     PerstUserManager.update(admin)
                     println "[KissInit] Admin user emailVerified set to true"
                 }
+                // Ensure all users have emailVerified = true (fix for existing users)
+                def updated = 0
+                users.each { user ->
+                    if (!user.isEmailVerified()) {
+                        user.setEmailVerified(true)
+                        PerstUserManager.update(user)
+                        updated++
+                    }
+                }
+                if (updated > 0) {
+                    println "[KissInit] Set emailVerified=true for ${updated} users"
+                }
             }
         } catch (Exception e) {
             println "[KissInit] Error creating default user: ${e.message}"

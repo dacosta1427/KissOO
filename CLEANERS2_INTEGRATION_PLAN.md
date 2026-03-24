@@ -572,11 +572,29 @@ export const cleaningApi = {
 - 🔄 **API integration** in progress (kiss-client.js adapted to Server.call)
 - 🔄 **Backend service** not yet created (Cleaning.groovy needed)
 
+### Bug Fixes and Investigation Results (2026-03-24)
+
+**Issue 1: Cleaners dropdown not showing anything in schedules page**
+- **Root Cause**: `scheduleFields` array in `schedules/+page.svelte` is a `const` array, not reactive. Mutating its properties doesn't trigger Svelte 5 reactivity.
+- **Solution**: Convert `scheduleFields` to `$state` variable and ensure proper reactivity after data fetch.
+- **Files to modify**: `src/routes/schedules/+page.svelte`
+
+**Issue 2: Login failure for user `a@b.c:asd`**
+- **Root Cause**: `PerstUser.canLogin()` requires `emailVerified == true`. New users created via signup have `emailVerified = false` by default.
+- **Solution**: 
+  1. Immediate: Manually set `emailVerified = true` for existing user.
+  2. Long-term: Modify signup flow to auto-verify or add email verification workflow.
+- **Files to investigate**: `PerstUser.java:141-143`, `KissInit.groovy` (default user creation), `Auth.ts` (signup)
+- **Note**: Backend authentication returns generic error; frontend doesn't distinguish between wrong credentials and unverified email.
+
+**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag.
+
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
 2. **"Remember me" default**: Should it be checked by default?
 3. **Component migration**: Should we migrate ALL existing forms to Form.svelte or only new ones?
 4. **Backend changes**: Do we need to create `Cleaning.groovy` service or adapt existing services?
+5. **Email verification**: Should new users be auto-verified or require email verification workflow?
 
 ### Long-term Considerations
 1. **Manager pattern**: Evaluate if PerstHelper adds value over direct PerstStorageManager calls
