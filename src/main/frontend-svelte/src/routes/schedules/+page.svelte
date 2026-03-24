@@ -135,6 +135,15 @@
 	$effect(() => {
 		loadData();
 	});
+
+	// Debug effect for form visibility
+	$effect(() => {
+		console.log('[schedules] showForm changed:', showForm);
+		if (showForm) {
+			console.log('[schedules] scheduleFields[0].options length:', scheduleFields[0].options.length);
+			console.log('[schedules] scheduleFields[0].options:', scheduleFields[0].options);
+		}
+	});
 </script>
 
 <div class="schedules-page">

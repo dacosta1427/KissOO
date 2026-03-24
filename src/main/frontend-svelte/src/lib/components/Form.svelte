@@ -37,6 +37,14 @@
 		onUpdate
 	}: Props = $props();
 
+	// Debug logging for fields
+	$effect(() => {
+		console.log('[Form] fields updated:', fields?.length);
+		if (fields && fields.length > 0) {
+			console.log('[Form] first field options:', fields[0].options);
+		}
+	});
+
 	function handleSubmit(event: Event) {
 		event.preventDefault();
 		onSubmit?.(data);
