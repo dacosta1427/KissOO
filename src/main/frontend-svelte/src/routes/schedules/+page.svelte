@@ -215,10 +215,11 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<!-- Cleaner Dropdown - Native Select -->
 				<div>
-					<label class="block text-sm font-medium text-gray-700 mb-1">
+					<label for="cleaner_id" class="block text-sm font-medium text-gray-700 mb-1">
 						Cleaner <span class="text-red-500">*</span>
 					</label>
 					<select
+						id="cleaner_id"
 						bind:value={formData.cleaner_id}
 						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
 						required
@@ -232,10 +233,11 @@
 
 				<!-- Booking Dropdown - Native Select -->
 				<div>
-					<label class="block text-sm font-medium text-gray-700 mb-1">
+					<label for="booking_id" class="block text-sm font-medium text-gray-700 mb-1">
 						Booking <span class="text-red-500">*</span>
 					</label>
 					<select
+						id="booking_id"
 						value={formData.booking_id}
 						onchange={(e) => handleBookingChange((e.target as HTMLSelectElement).value)}
 						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
