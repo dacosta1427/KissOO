@@ -659,7 +659,21 @@ export const cleaningApi = {
 - Improved booking label to show guest name instead of house
 - Cleaner filter now shows selected cleaner name in banner
 
-**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, use $derived for options instead of mutating $state arrays.
+**Issue 15: Cleaning dropdown still not working - FIXED with native selects**
+- **Root Cause**: Form component's select wasn't rendering options properly
+- **Solution**: Use native HTML select elements directly in schedules page instead of Form component for dropdowns
+- **Files modified**: `src/routes/schedules/+page.svelte`
+
+**Issue 16: Booking selection should auto-fill work date**
+- **Feature**: When selecting a booking in schedule form, the work date field now auto-fills with the booking's check_out_date
+- **Files modified**: `src/routes/schedules/+page.svelte`
+
+**Issue 17: Houses page exists but needs cleanup**
+- Simplified houses page to match backend fields (name, address, description)
+- Added card-based layout with add/edit/delete buttons
+- Uses toast notifications for add/update/delete
+
+**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, use $derived for options instead of mutating $state arrays; if Form component dropdowns fail, use native HTML select elements.
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
@@ -677,5 +691,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-24 (Fixed cleaning dropdown with $derived, added time fields, improved UI)  
-**Next Review**: After testing cleaning dropdown and schedule board functionality
+**Last Updated**: 2026-03-24 (Fixed cleaning dropdown with native selects, auto-fill workdate, houses page)  
+**Next Review**: After testing cleaning dropdown, booking auto-fill, and houses page

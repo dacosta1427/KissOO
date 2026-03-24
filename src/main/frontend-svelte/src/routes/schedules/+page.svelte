@@ -19,32 +19,22 @@
 	
 	let selectedCleanerId = $state<number | null>(null);
 
-	// Svelte 5: Use $derived for form options - this ensures reactivity
+	// Form data - using simple state
+	let formData = $state<Record<string, string>>({});
+
+	// Svelte 5: Use $derived for form options
 	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.id), label: c.name })));
 	let bookingOptions = $derived(bookings.map((b) => ({
 		value: String(b.id),
-		label: `${b.guest_name || 'Guest'} - ${b.check_in_date} to ${b.check_out_date}`
+		label: `${b.guest_name || 'Guest'} - ${b.check_in_date} to ${b.check_out_date}`,
+		checkOutDate: b.check_out_date
 	})));
 	
-	// Build fields as $derived so they update when options change
-	let scheduleFields = $derived([
-		{
-			name: 'cleaner_id',
-			label: 'Cleaner',
-			type: 'select' as const,
-			required: true,
-			options: cleanerOptions
-		},
-		{
-			name: 'booking_id',
-			label: 'Booking',
-			type: 'select' as const,
-			required: true,
-			options: bookingOptions
-		},
+	// Simple form fields (text inputs only - dropdowns handled separately)
+	let formFields = $derived([
 		{
 			name: 'date',
-			label: 'Date',
+			label: 'Work Date',
 			type: 'date' as const,
 			required: true
 		},
@@ -79,6 +69,15 @@
 		selectedCleanerId ? cleaners.find(c => c.id === selectedCleanerId)?.name || 'Unknown' : ''
 	);
 
+	// Handle booking selection - auto-fill date with check_out_date
+	function handleBookingChange(bookingId: string) {
+		formData.booking_id = bookingId;
+		const booking = bookingOptions.find(b => b.value === bookingId);
+		if (booking) {
+			formData.date = booking.checkOutDate;
+		}
+	}
+
 	async function loadData() {
 		loading = true;
 		error = null;
@@ -104,16 +103,27 @@
 		}
 	}
 
-	async function handleFormSubmit(data: Record<string, any>) {
+	async function handleFormSubmit() {
+		// Build the schedule data
+		const scheduleData = {
+			cleaner_id: parseInt(formData.cleaner_id),
+			booking_id: parseInt(formData.booking_id),
+			date: formData.date,
+			start_time: formData.start_time,
+			end_time: formData.end_time,
+			status: formData.status
+		};
+
 		try {
 			if (editingSchedule) {
-				await schedulesAPI.update(editingSchedule.id, data);
+				await schedulesAPI.update(editingSchedule.id, scheduleData);
 			} else {
-				await schedulesAPI.create(data);
+				await schedulesAPI.create(scheduleData);
 			}
 
 			showForm = false;
 			editingSchedule = null;
+			formData = {};
 			await loadData();
 		} catch (err) {
 			error = err.message;
@@ -123,10 +133,32 @@
 	function handleFormCancel() {
 		showForm = false;
 		editingSchedule = null;
+		formData = {};
+	}
+
+	function openAddForm() {
+		editingSchedule = null;
+		formData = {
+			cleaner_id: '',
+			booking_id: '',
+			date: '',
+			start_time: '09:00',
+			end_time: '12:00',
+			status: 'pending'
+		};
+		showForm = true;
 	}
 
 	function handleScheduleClick(schedule: Schedule) {
 		editingSchedule = schedule;
+		formData = {
+			cleaner_id: String(schedule.cleaner_id),
+			booking_id: String(schedule.booking_id),
+			date: schedule.date,
+			start_time: schedule.start_time || '09:00',
+			end_time: schedule.end_time || '12:00',
+			status: schedule.status || 'pending'
+		};
 		showForm = true;
 	}
 	
@@ -148,7 +180,7 @@
 	<div class="page-header">
 		<h1>Scheduling Board</h1>
 		<div class="header-actions">
-			<button class="btn btn-primary" onclick={() => (showForm = true)}> Add Schedule </button>
+			<button class="btn btn-primary" onclick={openAddForm}> Add Schedule </button>
 		</div>
 	</div>
 
@@ -178,13 +210,53 @@
 
 	{#if showForm}
 		<div class="form-section">
+			<h3 class="text-lg font-medium mb-4">{editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}</h3>
+			
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<!-- Cleaner Dropdown - Native Select -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">
+						Cleaner <span class="text-red-500">*</span>
+					</label>
+					<select
+						bind:value={formData.cleaner_id}
+						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+						required
+					>
+						<option value="">-- Select Cleaner --</option>
+						{#each cleanerOptions as option}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
+				</div>
+
+				<!-- Booking Dropdown - Native Select -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">
+						Booking <span class="text-red-500">*</span>
+					</label>
+					<select
+						value={formData.booking_id}
+						onchange={(e) => handleBookingChange((e.target as HTMLSelectElement).value)}
+						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+						required
+					>
+						<option value="">-- Select Booking --</option>
+						{#each bookingOptions as option}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
+				</div>
+			</div>
+
+			<!-- Simple fields using Form component -->
 			<Form
-				fields={scheduleFields}
-				data={editingSchedule || {}}
-				title={editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}
-				submitLabel={editingSchedule ? 'Update Schedule' : 'Add Schedule'}
+				fields={formFields}
+				bind:data={formData}
 				onSubmit={handleFormSubmit}
 				onCancel={handleFormCancel}
+				submitLabel={editingSchedule ? 'Update Schedule' : 'Add Schedule'}
+				cancelLabel="Cancel"
 			/>
 		</div>
 	{/if}
@@ -285,7 +357,6 @@
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
-	/* Responsive design */
 	@media (max-width: 768px) {
 		.page-header {
 			flex-direction: column;
