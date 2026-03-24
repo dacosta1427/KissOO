@@ -38,6 +38,7 @@
 
     try {
       const res = await login(username, password);
+      console.log('Login response:', res);
 
       if (res._Success) {
         // Store credentials if "Remember me" is checked
@@ -53,6 +54,7 @@
       }
     } catch (e: any) {
       error = 'Login failed: ' + (e.message || 'Unknown error');
+      console.error('Login error:', e);
     } finally {
       loading = false;
     }

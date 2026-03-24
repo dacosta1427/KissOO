@@ -29,6 +29,7 @@ export async function login(username: string, password: string): Promise<LoginRe
   
   if (res._Success && res.uuid) {
     session.setUUID(res.uuid);
+    Server.setUUID(res.uuid);
   }
   
   return res;
