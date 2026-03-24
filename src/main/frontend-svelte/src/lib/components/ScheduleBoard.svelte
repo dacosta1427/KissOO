@@ -162,6 +162,7 @@
 							? 'drag-over'
 							: ''}"
 						role="gridcell"
+						tabindex="-1"
 						ondragover={handleDragOver}
 						ondragenter={(e) => handleDragEnter(e, cleaner.id, date)}
 						ondragleave={(e) => handleDragLeave(e, cleaner.id, date)}
