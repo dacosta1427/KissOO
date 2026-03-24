@@ -1,38 +1,20 @@
 <script lang="ts">
 	import { housesAPI, type House } from '$lib/api/Cleaning';
-	import { Utils } from '$lib/utils/Utils';
 	import { notificationActions } from '$lib/stores.svelte.js';
 
-	// Svelte 5: Use $state for reactive variables
+	// Svelte 5: Use $state
 	let houses = $state<House[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingHouse = $state<House | null>(null);
 
-	const houseFields = [
-		{
-			name: 'name',
-			label: 'House Name',
-			type: 'text' as const,
-			required: true,
-			placeholder: 'Enter house name'
-		},
-		{
-			name: 'address',
-			label: 'Address',
-			type: 'text' as const,
-			required: true,
-			placeholder: 'Enter house address'
-		},
-		{
-			name: 'description',
-			label: 'Description',
-			type: 'text' as const,
-			required: false,
-			placeholder: 'Enter house description'
-		}
-	];
+	// Form data
+	let formData = $state({
+		name: '',
+		address: '',
+		description: ''
+	});
 
 	async function loadHouses() {
 		loading = true;
@@ -47,53 +29,59 @@
 		}
 	}
 
-	async function handleDelete(house: House) {
-		await Utils.yesNo(
-			'Confirm Delete',
-			`Are you sure you want to delete "${house.name}"?`,
-			async () => {
-				try {
-					await housesAPI.delete(house.id);
-					notificationActions.success('House deleted successfully');
-					await loadHouses();
-				} catch (err: any) {
-					notificationActions.error(err.message || 'Failed to delete house');
-				}
-			}
-		);
+	function openAddForm() {
+		editingHouse = null;
+		formData = { name: '', address: '', description: '' };
+		showForm = true;
 	}
 
-	async function handleFormSubmit(data: Record<string, any>) {
+	function openEditForm(house: House) {
+		editingHouse = house;
+		formData = { 
+			name: house.name, 
+			address: house.address, 
+			description: house.description || '' 
+		};
+		showForm = true;
+	}
+
+	function handleFormCancel() {
+		showForm = false;
+		editingHouse = null;
+		formData = { name: '', address: '', description: '' };
+	}
+
+	async function handleFormSubmit(e: Event) {
+		e.preventDefault();
+		
 		try {
 			if (editingHouse) {
-				await housesAPI.update(editingHouse.id, data);
+				await housesAPI.update(editingHouse.id, formData);
 				notificationActions.success('House updated successfully');
 			} else {
-				await housesAPI.create(data);
+				await housesAPI.create(formData);
 				notificationActions.success('House created successfully');
 			}
 
 			showForm = false;
 			editingHouse = null;
+			formData = { name: '', address: '', description: '' };
 			await loadHouses();
 		} catch (err: any) {
 			notificationActions.error(err.message || 'Failed to save house');
 		}
 	}
 
-	function handleFormCancel() {
-		showForm = false;
-		editingHouse = null;
-	}
-
-	function openAddForm() {
-		editingHouse = null;
-		showForm = true;
-	}
-
-	function openEditForm(house: House) {
-		editingHouse = house;
-		showForm = true;
+	async function handleDelete(house: House) {
+		if (confirm(`Are you sure you want to delete "${house.name}"?`)) {
+			try {
+				await housesAPI.delete(house.id);
+				notificationActions.success('House deleted successfully');
+				await loadHouses();
+			} catch (err: any) {
+				notificationActions.error(err.message || 'Failed to delete house');
+			}
+		}
 	}
 
 	// Load data on mount
@@ -105,85 +93,90 @@
 <div class="houses-page">
 	<div class="page-header">
 		<h1>Houses</h1>
-		<button class="btn btn-primary" onclick={openAddForm}> Add House </button>
+		<button class="btn btn-primary" onclick={openAddForm}>Add House</button>
 	</div>
 
 	{#if loading}
-		<div class="fixed top-4 right-4 z-50 bg-blue-600 text-white px-4 py-2 rounded shadow-lg">
-			<span class="inline-block animate-spin mr-2">⏳</span>
+		<div class="loading-spinner">
+			<span class="spinner"></span>
 			Loading...
 		</div>
 	{/if}
 
 	{#if error}
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-			{error}
-		</div>
+		<div class="error-message">{error}</div>
 	{/if}
 
 	{#if showForm}
 		<div class="form-section">
-			<h3 class="text-lg font-medium mb-4">{editingHouse ? 'Edit House' : 'Add New House'}</h3>
-			{#if houseFields.length === 0}
-				<div class="text-gray-500">No fields defined</div>
-			{:else}
-				<form onsubmit={(e) => { e.preventDefault(); handleFormSubmit({}); }}>
-					{#each houseFields as field}
-						<div class="form-group">
-							<label for={field.name} class="block text-sm font-medium text-gray-700">
-								{field.label}
-								{#if field.required}<span class="text-red-500">*</span>{/if}
-							</label>
-							{#if field.type === 'textarea'}
-								<textarea
-									id={field.name}
-									name={field.name}
-									placeholder={field.placeholder}
-									required={field.required}
-									class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-									rows="3"
-								></textarea>
-							{:else}
-								<input
-									type={field.type}
-									id={field.name}
-									name={field.name}
-									placeholder={field.placeholder}
-									required={field.required}
-									class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-								/>
-							{/if}
-						</div>
-					{/each}
-					<div class="flex justify-end gap-3 mt-4">
-						<button type="button" onclick={handleFormCancel} class="btn btn-secondary">
-							Cancel
-						</button>
-						<button type="submit" class="btn btn-primary">
-							{editingHouse ? 'Update' : 'Add'} House
-						</button>
+			<h3 class="form-title">{editingHouse ? 'Edit House' : 'Add New House'}</h3>
+			
+			<form onsubmit={handleFormSubmit}>
+				<div class="form-grid">
+					<!-- Name -->
+					<div class="form-field">
+						<label for="name">Name <span class="required">*</span></label>
+						<input 
+							type="text" 
+							id="name" 
+							bind:value={formData.name} 
+							placeholder="Enter house name"
+							required 
+						/>
 					</div>
-				</form>
-			{/if}
+
+					<!-- Address -->
+					<div class="form-field full-width">
+						<label for="address">Address <span class="required">*</span></label>
+						<input 
+							type="text" 
+							id="address" 
+							bind:value={formData.address} 
+							placeholder="Enter house address"
+							required 
+						/>
+					</div>
+
+					<!-- Description -->
+					<div class="form-field full-width">
+						<label for="description">Description</label>
+						<textarea 
+							id="description" 
+							bind:value={formData.description} 
+							placeholder="Enter house description"
+							rows="3"
+						></textarea>
+					</div>
+				</div>
+
+				<div class="form-actions">
+					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
+						Cancel
+					</button>
+					<button type="submit" class="btn btn-primary">
+						{editingHouse ? 'Update' : 'Add'} House
+					</button>
+				</div>
+			</form>
 		</div>
 	{/if}
 
 	<div class="houses-grid">
 		{#if houses.length === 0}
-			<div class="text-gray-500 text-center py-8">No houses found. Add one to get started.</div>
+			<div class="empty-message">No houses found. Add one to get started.</div>
 		{:else}
 			{#each houses as house}
 				<div class="house-card">
-					<h3 class="font-semibold text-lg">{house.name}</h3>
-					<p class="text-gray-600 text-sm">{house.address}</p>
+					<h3 class="house-name">{house.name}</h3>
+					<p class="house-address">{house.address}</p>
 					{#if house.description}
-						<p class="text-gray-500 text-sm mt-2">{house.description}</p>
+						<p class="house-description">{house.description}</p>
 					{/if}
 					<div class="house-actions">
-						<button class="btn btn-sm btn-secondary" onclick={() => openEditForm(house)}>
+						<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(house)}>
 							Edit
 						</button>
-						<button class="btn btn-sm btn-danger" onclick={() => handleDelete(house)}>
+						<button class="btn btn-danger btn-sm" onclick={() => handleDelete(house)}>
 							Delete
 						</button>
 					</div>
@@ -205,13 +198,155 @@
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 2rem;
-		border-bottom: 2px solid var(--border-color);
+		border-bottom: 2px solid var(--border-color, #e5e7eb);
 		padding-bottom: 1rem;
 	}
 
 	.page-header h1 {
 		margin: 0;
-		color: var(--text-color);
+		color: var(--text-color, #111827);
+	}
+
+	.loading-spinner {
+		position: fixed;
+		top: 1rem;
+		right: 1rem;
+		z-index: 50;
+		background: #3b82f6;
+		color: white;
+		padding: 0.5rem 1rem;
+		border-radius: 6px;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.spinner {
+		display: inline-block;
+		width: 1rem;
+		height: 1rem;
+		border: 2px solid white;
+		border-top-color: transparent;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+
+	.error-message {
+		background: #fee2e2;
+		border: 1px solid #fca5a5;
+		color: #991b1b;
+		padding: 1rem;
+		border-radius: 6px;
+		margin-bottom: 1rem;
+	}
+
+	.form-section {
+		background: white;
+		border: 1px solid var(--border-color, #e5e7eb);
+		border-radius: 8px;
+		padding: 1.5rem;
+		margin-bottom: 2rem;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+
+	.form-title {
+		margin: 0 0 1.5rem 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+	}
+
+	.form-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 1rem;
+	}
+
+	.form-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.form-field.full-width {
+		grid-column: 1 / -1;
+	}
+
+	.form-field label {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: #374151;
+	}
+
+	.form-field .required {
+		color: #ef4444;
+	}
+
+	.form-field input,
+	.form-field textarea {
+		padding: 0.5rem;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-family: inherit;
+	}
+
+	.form-field input:focus,
+	.form-field textarea:focus {
+		outline: none;
+		border-color: #3b82f6;
+		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+	}
+
+	.form-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.75rem;
+		margin-top: 1.5rem;
+		padding-top: 1rem;
+		border-top: 1px solid #e5e7eb;
+	}
+
+	.houses-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.house-card {
+		background: white;
+		border: 1px solid var(--border-color, #e5e7eb);
+		border-radius: 8px;
+		padding: 1rem;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+
+	.house-name {
+		margin: 0 0 0.5rem 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-color, #111827);
+	}
+
+	.house-address {
+		margin: 0;
+		color: #6b7280;
+		font-size: 0.875rem;
+	}
+
+	.house-description {
+		margin: 0.5rem 0 0 0;
+		color: #9ca3af;
+		font-size: 0.75rem;
+	}
+
+	.house-actions {
+		display: flex;
+		gap: 0.5rem;
+		margin-top: 1rem;
 	}
 
 	.btn {
@@ -225,12 +360,12 @@
 	}
 
 	.btn-primary {
-		background: var(--primary-color, #3b82f6);
+		background: #3b82f6;
 		color: white;
 	}
 
 	.btn-primary:hover {
-		background: var(--primary-hover, #2563eb);
+		background: #2563eb;
 	}
 
 	.btn-secondary {
@@ -256,42 +391,11 @@
 		font-size: 0.75rem;
 	}
 
-	.form-section {
-		background: white;
-		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 1.5rem;
-		margin-bottom: 2rem;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	}
-
-	.form-group {
-		margin-bottom: 1rem;
-	}
-
-	.houses-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 1.5rem;
-	}
-
-	.house-card {
-		background: white;
-		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 1rem;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-	}
-
-	.house-card h3 {
-		margin: 0 0 0.5rem 0;
-		color: var(--text-color);
-	}
-
-	.house-actions {
-		display: flex;
-		gap: 0.5rem;
-		margin-top: 1rem;
+	.empty-message {
+		grid-column: 1 / -1;
+		text-align: center;
+		color: #6b7280;
+		padding: 2rem;
 	}
 
 	@media (max-width: 768px) {

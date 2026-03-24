@@ -2,7 +2,6 @@
 	import { schedulesAPI, cleanersAPI, bookingsAPI, type Schedule, type Cleaner, type Booking } from '$lib/api/Cleaning';
 	import { dataStores } from '../../lib/stores.svelte.js';
 	import ScheduleBoard from '$lib/components/ScheduleBoard.svelte';
-	import Form from '$lib/components/Form.svelte';
 
 	// Svelte 5: Use $state for reactive variables
 	let schedules = $state<Schedule[]>([]);
@@ -19,8 +18,15 @@
 	
 	let selectedCleanerId = $state<number | null>(null);
 
-	// Form data - using simple state
-	let formData = $state<Record<string, string>>({});
+	// Form data
+	let formData = $state({
+		cleaner_id: '',
+		booking_id: '',
+		date: '',
+		start_time: '09:00',
+		end_time: '12:00',
+		status: 'pending'
+	});
 
 	// Svelte 5: Use $derived for form options
 	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.id), label: c.name })));
@@ -29,40 +35,14 @@
 		label: `${b.guest_name || 'Guest'} - ${b.check_in_date} to ${b.check_out_date}`,
 		checkOutDate: b.check_out_date
 	})));
-	
-	// Simple form fields (text inputs only - dropdowns handled separately)
-	let formFields = $derived([
-		{
-			name: 'date',
-			label: 'Work Date',
-			type: 'date' as const,
-			required: true
-		},
-		{
-			name: 'start_time',
-			label: 'Start Time',
-			type: 'time' as const,
-			required: true
-		},
-		{
-			name: 'end_time',
-			label: 'End Time',
-			type: 'time' as const,
-			required: true
-		},
-		{
-			name: 'status',
-			label: 'Status',
-			type: 'select' as const,
-			required: true,
-			options: [
-				{ value: 'pending', label: 'Pending' },
-				{ value: 'confirmed', label: 'Confirmed' },
-				{ value: 'completed', label: 'Completed' },
-				{ value: 'cancelled', label: 'Cancelled' }
-			]
-		}
-	]);
+
+	// Status options
+	const statusOptions = [
+		{ value: 'pending', label: 'Pending' },
+		{ value: 'confirmed', label: 'Confirmed' },
+		{ value: 'completed', label: 'Completed' },
+		{ value: 'cancelled', label: 'Cancelled' }
+	];
 
 	// Computed: get selected cleaner name
 	let selectedCleanerName = $derived(
@@ -103,8 +83,9 @@
 		}
 	}
 
-	async function handleFormSubmit() {
-		// Build the schedule data
+	async function handleFormSubmit(e: Event) {
+		e.preventDefault();
+		
 		const scheduleData = {
 			cleaner_id: parseInt(formData.cleaner_id),
 			booking_id: parseInt(formData.booking_id),
@@ -123,21 +104,14 @@
 
 			showForm = false;
 			editingSchedule = null;
-			formData = {};
+			resetForm();
 			await loadData();
 		} catch (err) {
 			error = err.message;
 		}
 	}
 
-	function handleFormCancel() {
-		showForm = false;
-		editingSchedule = null;
-		formData = {};
-	}
-
-	function openAddForm() {
-		editingSchedule = null;
+	function resetForm() {
 		formData = {
 			cleaner_id: '',
 			booking_id: '',
@@ -146,6 +120,17 @@
 			end_time: '12:00',
 			status: 'pending'
 		};
+	}
+
+	function handleFormCancel() {
+		showForm = false;
+		editingSchedule = null;
+		resetForm();
+	}
+
+	function openAddForm() {
+		editingSchedule = null;
+		resetForm();
 		showForm = true;
 	}
 
@@ -180,7 +165,7 @@
 	<div class="page-header">
 		<h1>Scheduling Board</h1>
 		<div class="header-actions">
-			<button class="btn btn-primary" onclick={openAddForm}> Add Schedule </button>
+			<button class="btn btn-primary" onclick={openAddForm}>Add Schedule</button>
 		</div>
 	</div>
 
@@ -196,80 +181,95 @@
 	</div>
 
 	{#if loading}
-		<div class="fixed top-4 right-4 z-50 bg-blue-600 text-white px-4 py-2 rounded shadow-lg">
-			<span class="inline-block animate-spin mr-2">⏳</span>
+		<div class="loading-spinner">
+			<span class="spinner"></span>
 			Loading...
 		</div>
 	{/if}
 
 	{#if error}
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-			{error}
-		</div>
+		<div class="error-message">{error}</div>
 	{/if}
 
 	{#if showForm}
 		<div class="form-section">
-			<h3 class="text-lg font-medium mb-4">{editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}</h3>
+			<h3 class="form-title">{editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}</h3>
 			
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<!-- Cleaner Dropdown - Native Select -->
-				<div>
-					<label for="cleaner_id" class="block text-sm font-medium text-gray-700 mb-1">
-						Cleaner <span class="text-red-500">*</span>
-					</label>
-					<select
-						id="cleaner_id"
-						bind:value={formData.cleaner_id}
-						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-						required
-					>
-						<option value="">-- Select Cleaner --</option>
-						{#each cleanerOptions as option}
-							<option value={option.value}>{option.label}</option>
-						{/each}
-					</select>
+			<form onsubmit={handleFormSubmit}>
+				<div class="form-grid">
+					<!-- Cleaner -->
+					<div class="form-field">
+						<label for="cleaner_id">Cleaner <span class="required">*</span></label>
+						<select id="cleaner_id" bind:value={formData.cleaner_id} required>
+							<option value="">-- Select Cleaner --</option>
+							{#each cleanerOptions as option}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
+					</div>
+
+					<!-- Booking -->
+					<div class="form-field">
+						<label for="booking_id">Booking <span class="required">*</span></label>
+						<select 
+							id="booking_id" 
+							value={formData.booking_id} 
+							onchange={(e) => handleBookingChange((e.target as HTMLSelectElement).value)}
+							required
+						>
+							<option value="">-- Select Booking --</option>
+							{#each bookingOptions as option}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
+					</div>
+
+					<!-- Date -->
+					<div class="form-field">
+						<label for="date">Work Date <span class="required">*</span></label>
+						<input type="date" id="date" bind:value={formData.date} required />
+					</div>
+
+					<!-- Start Time -->
+					<div class="form-field">
+						<label for="start_time">Start Time <span class="required">*</span></label>
+						<input type="time" id="start_time" bind:value={formData.start_time} required />
+					</div>
+
+					<!-- End Time -->
+					<div class="form-field">
+						<label for="end_time">End Time <span class="required">*</span></label>
+						<input type="time" id="end_time" bind:value={formData.end_time} required />
+					</div>
+
+					<!-- Status -->
+					<div class="form-field">
+						<label for="status">Status <span class="required">*</span></label>
+						<select id="status" bind:value={formData.status} required>
+							{#each statusOptions as option}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
+					</div>
 				</div>
 
-				<!-- Booking Dropdown - Native Select -->
-				<div>
-					<label for="booking_id" class="block text-sm font-medium text-gray-700 mb-1">
-						Booking <span class="text-red-500">*</span>
-					</label>
-					<select
-						id="booking_id"
-						value={formData.booking_id}
-						onchange={(e) => handleBookingChange((e.target as HTMLSelectElement).value)}
-						class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-						required
-					>
-						<option value="">-- Select Booking --</option>
-						{#each bookingOptions as option}
-							<option value={option.value}>{option.label}</option>
-						{/each}
-					</select>
+				<div class="form-actions">
+					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
+						Cancel
+					</button>
+					<button type="submit" class="btn btn-primary">
+						{editingSchedule ? 'Update' : 'Add'} Schedule
+					</button>
 				</div>
-			</div>
-
-			<!-- Simple fields using Form component -->
-			<Form
-				fields={formFields}
-				bind:data={formData}
-				onSubmit={handleFormSubmit}
-				onCancel={handleFormCancel}
-				submitLabel={editingSchedule ? 'Update Schedule' : 'Add Schedule'}
-				cancelLabel="Cancel"
-			/>
+			</form>
 		</div>
 	{/if}
 
 	{#if selectedCleanerName}
-		<div class="mb-4 flex items-center gap-4">
-			<span class="px-4 py-2 bg-blue-100 text-blue-800 rounded">
-				Showing: <strong>{selectedCleanerName}</strong>
-			</span>
-			<button class="btn btn-secondary" onclick={() => selectedCleanerId = null}>
-				Show All Cleaners
+		<div class="filter-banner">
+			<span>Showing: <strong>{selectedCleanerName}</strong></span>
+			<button class="btn btn-secondary btn-sm" onclick={() => selectedCleanerId = null}>
+				Show All
 			</button>
 		</div>
 	{/if}
@@ -328,7 +328,7 @@
 		gap: 2rem;
 		margin-bottom: 2rem;
 		padding: 1.5rem;
-		background: var(--card-bg);
+		background: var(--card-bg, #f9fafb);
 		border-radius: 8px;
 	}
 
@@ -346,9 +346,46 @@
 
 	.form-group input {
 		padding: 0.5rem;
-		border: 1px solid var(--border-color);
+		border: 1px solid var(--border-color, #d1d5db);
 		border-radius: 6px;
 		font-size: 1rem;
+	}
+
+	.loading-spinner {
+		position: fixed;
+		top: 1rem;
+		right: 1rem;
+		z-index: 50;
+		background: #3b82f6;
+		color: white;
+		padding: 0.5rem 1rem;
+		border-radius: 6px;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.spinner {
+		display: inline-block;
+		width: 1rem;
+		height: 1rem;
+		border: 2px solid white;
+		border-top-color: transparent;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+
+	.error-message {
+		background: #fee2e2;
+		border: 1px solid #fca5a5;
+		color: #991b1b;
+		padding: 1rem;
+		border-radius: 6px;
+		margin-bottom: 1rem;
 	}
 
 	.form-section {
@@ -357,6 +394,103 @@
 		border-radius: 8px;
 		padding: 1.5rem;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+
+	.form-title {
+		margin: 0 0 1.5rem 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+	}
+
+	.form-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 1rem;
+	}
+
+	.form-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.form-field label {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: #374151;
+	}
+
+	.form-field .required {
+		color: #ef4444;
+	}
+
+	.form-field input,
+	.form-field select {
+		padding: 0.5rem;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		background: white;
+	}
+
+	.form-field input:focus,
+	.form-field select:focus {
+		outline: none;
+		border-color: #3b82f6;
+		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+	}
+
+	.form-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.75rem;
+		margin-top: 1.5rem;
+		padding-top: 1rem;
+		border-top: 1px solid #e5e7eb;
+	}
+
+	.btn {
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.btn-primary {
+		background: #3b82f6;
+		color: white;
+	}
+
+	.btn-primary:hover {
+		background: #2563eb;
+	}
+
+	.btn-secondary {
+		background: #6b7280;
+		color: white;
+	}
+
+	.btn-secondary:hover {
+		background: #4b5563;
+	}
+
+	.btn-sm {
+		padding: 0.25rem 0.75rem;
+		font-size: 0.75rem;
+	}
+
+	.filter-banner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		background: #dbeafe;
+		color: #1e40af;
+		padding: 0.75rem 1rem;
+		border-radius: 6px;
+		margin-bottom: 1rem;
 	}
 
 	@media (max-width: 768px) {
@@ -368,16 +502,14 @@
 
 		.header-actions {
 			flex-direction: column;
-			align-items: stretch;
 		}
 
 		.date-range-controls {
 			flex-direction: column;
-			align-items: stretch;
 		}
 
-		.form-section {
-			padding: 1rem;
+		.form-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>
