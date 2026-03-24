@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { cleanersAPI } from '../api/kiss-remote.js';
-	import { dataStores, loadingActions, errorActions } from '../../lib/stores.svelte.js';
+	import { cleanersAPI, type Cleaner } from '$lib/api/Cleaning';
+	import { dataStores } from '../../lib/stores.svelte.js';
 	import Table from '$lib/components/Table.svelte';
 	import Form from '$lib/components/Form.svelte';
 
 	// Svelte 5: Use runes for state management
-	let cleaners = $state([]);
+	let cleaners = $state<Cleaner[]>([]);
 	let loading = $state(false);
-	let error = $state(null);
+	let error = $state<string | null>(null);
 	let showForm = $state(false);
-	let editingCleaner = $state(null);
+	let editingCleaner = $state<Cleaner | null>(null);
 
 	// Load data on mount
 	$effect(() => {
@@ -86,8 +86,7 @@
 		error = null;
 
 		try {
-			const result = await cleanersAPI.getAll();
-			cleaners = result.data || [];
+			cleaners = await cleanersAPI.getAll();
 			dataStores.cleaners.set(cleaners);
 		} catch (err) {
 			error = err.message;

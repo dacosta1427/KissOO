@@ -1,16 +1,16 @@
-<script>
-	import { bookingsAPI, housesAPI } from '../api/kiss-remote.js';
+<script lang="ts">
+	import { bookingsAPI, housesAPI, type Booking, type House } from '$lib/api/Cleaning';
 	import { dataStores } from '../../lib/stores.svelte.js';
 	import Table from '$lib/components/Table.svelte';
 	import Form from '$lib/components/Form.svelte';
 
 	// Svelte 5: Use $state for reactive variables
-	let bookings = $state([]);
-	let houses = $state([]);
+	let bookings = $state<Booking[]>([]);
+	let houses = $state<House[]>([]);
 	let loading = $state(false);
-	let error = $state(null);
+	let error = $state<string | null>(null);
 	let showForm = $state(false);
-	let editingBooking = $state(null);
+	let editingBooking = $state<Booking | null>(null);
 
 	const bookingFields = [
 		{
@@ -106,8 +106,8 @@
 				housesAPI.getAll()
 			]);
 
-			bookings = bookingsResult.data || [];
-			houses = housesResult.data || [];
+			bookings = bookingsResult;
+			houses = housesResult;
 
 			// Update form options
 			bookingFields[0].options = houses.map((h) => ({ value: h.id, label: h.name }));

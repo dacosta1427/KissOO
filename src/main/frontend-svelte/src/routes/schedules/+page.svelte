@@ -1,17 +1,17 @@
-<script>
-	import { schedulesAPI, cleanersAPI, bookingsAPI } from '../api/kiss-remote.js';
+<script lang="ts">
+	import { schedulesAPI, cleanersAPI, bookingsAPI, type Schedule, type Cleaner, type Booking } from '$lib/api/Cleaning';
 	import { dataStores } from '../../lib/stores.svelte.js';
 	import ScheduleBoard from '$lib/components/ScheduleBoard.svelte';
 	import Form from '$lib/components/Form.svelte';
 
 	// Svelte 5: Use $state for reactive variables
-	let schedules = $state([]);
-	let cleaners = $state([]);
-	let bookings = $state([]);
+	let schedules = $state<Schedule[]>([]);
+	let cleaners = $state<Cleaner[]>([]);
+	let bookings = $state<Booking[]>([]);
 	let loading = $state(false);
-	let error = $state(null);
+	let error = $state<string | null>(null);
 	let showForm = $state(false);
-	let editingSchedule = $state(null);
+	let editingSchedule = $state<Schedule | null>(null);
 	let dateRange = $state({
 		start: new Date().toISOString().split('T')[0],
 		end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -64,9 +64,9 @@
 				bookingsAPI.getAll()
 			]);
 
-			schedules = schedulesResult.data || [];
-			cleaners = cleanersResult.data || [];
-			bookings = bookingsResult.data || [];
+			schedules = schedulesResult;
+			cleaners = cleanersResult;
+			bookings = bookingsResult;
 
 			// Update form options
 			scheduleFields[0].options = cleaners.map((c) => ({ value: c.id, label: c.name }));

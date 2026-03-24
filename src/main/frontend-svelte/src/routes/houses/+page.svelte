@@ -1,15 +1,15 @@
-<script>
-	import { housesAPI } from '../api/kiss-remote.js';
+<script lang="ts">
+	import { housesAPI, type House } from '$lib/api/Cleaning';
 	import { dataStores } from '../../lib/stores.svelte.js';
 	import Table from '$lib/components/Table.svelte';
 	import Form from '$lib/components/Form.svelte';
 
 	// Svelte 5: Use $state for reactive variables
-	let houses = $state([]);
+	let houses = $state<House[]>([]);
 	let loading = $state(false);
-	let error = $state(null);
+	let error = $state<string | null>(null);
 	let showForm = $state(false);
-	let editingHouse = $state(null);
+	let editingHouse = $state<House | null>(null);
 
 	const houseFields = [
 		{
@@ -86,8 +86,7 @@
 		error = null;
 
 		try {
-			const result = await housesAPI.getAll();
-			houses = result.data || [];
+			houses = await housesAPI.getAll();
 			dataStores.houses.set(houses);
 		} catch (err) {
 			error = err.message;

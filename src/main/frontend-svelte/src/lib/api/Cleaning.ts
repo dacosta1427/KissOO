@@ -3,6 +3,7 @@
  * 
  * Provides API functions for cleaners, bookings, schedules, houses.
  * Uses KissOO Server.call() for backend communication.
+ * Includes loading state and notification handling.
  */
 
 import { Server } from '$lib/services/Server';
@@ -14,6 +15,7 @@ export interface Cleaner {
   name: string;
   phone?: string;
   email?: string;
+  address?: string;
   active: boolean;
 }
 
@@ -53,6 +55,12 @@ export interface CleaningResult {
   _ErrorMessage?: string;
   _ErrorCode?: number;
   data?: any;
+}
+
+export interface ApiResult {
+  success: boolean;
+  error?: string;
+  id?: number;
 }
 
 // Helper to handle API calls with notifications
