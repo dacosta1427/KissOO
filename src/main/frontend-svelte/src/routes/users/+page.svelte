@@ -3,13 +3,14 @@
   import { onMount } from 'svelte';
   import type { User } from '$lib/api/Users';
   import Modal from '$lib/components/Modal.svelte';
+  import Form from '$lib/components/Form.svelte';
   import { Utils } from '$lib/utils/Utils';
+  import { notificationActions } from '$lib/stores.svelte.js';
 
   // Svelte 5 RUNES for reactive state
   let users = $state<User[]>([]);
   let loading = $state(false);
-  let newUserName = $state('');
-  let newUserPassword = $state('');
+  // old variables removed, now using addFormData
   let error = $state('');
   let dataLoading = $state(true);
 
@@ -19,11 +20,35 @@
   let editUserName = $state('');
   let editUserPassword = $state('');
   let editUserActive = $state<'Y' | 'N'>('Y');
+  
+  // Form data objects
+  let addFormData = $state<Record<string, any>>({ username: '', password: '' });
+  let editFormData = $state<Record<string, any>>({ username: '', password: '', active: 'Y' });
   let editLoading = $state(false);
 
   // DERIVED state - form validity
-  let canAddUser = $derived(newUserName.length >= 3 && newUserPassword.length >= 3);
-  let canEditUser = $derived(editUserName.length >= 3 && editUserPassword.length >= 3);
+  let canAddUser = $derived(
+    (addFormData.username?.length ?? 0) >= 3 && (addFormData.password?.length ?? 0) >= 3
+  );
+  let canEditUser = $derived(
+    (editFormData.username?.length ?? 0) >= 3 && (editFormData.password?.length ?? 0) >= 3
+  );
+
+  // Field definitions for Form component
+  const addUserFields: Array<{name: string, label: string, type: 'text' | 'password', required: boolean, placeholder: string, helpText: string}> = [
+    { name: 'username', label: 'Username', type: 'text', required: true, placeholder: 'Enter username', helpText: 'Minimum 3 characters' },
+    { name: 'password', label: 'Password', type: 'password', required: true, placeholder: 'Enter password', helpText: 'Minimum 3 characters' }
+  ];
+
+  const editUserFields = [
+    { name: 'username', label: 'Username', type: 'text' as const, required: true, placeholder: 'Enter username', helpText: 'Minimum 3 characters' },
+    { name: 'password', label: 'Password', type: 'password' as const, required: true, placeholder: 'Enter password', helpText: 'Minimum 3 characters' },
+    { name: 'active', label: 'Active', type: 'select' as const, required: true, options: [{ value: 'Y', label: 'Active' }, { value: 'N', label: 'Inactive' }] }
+  ];
+
+  // editUserFields removed, using editUserFields constant defined earlier? Actually we still need it for edit form. We'll keep but rename to editFields. Let's just keep but ensure it's used. We'll keep as is.
+
+
 
   // Load data on mount
   onMount(() => {
@@ -42,23 +67,25 @@
     }
   }
 
-  async function handleAddUser() {
+  async function handleAddUser(data: Record<string, any>) {
     if (!canAddUser) return;
     
     loading = true;
     error = '';
 
     try {
-      const res = await addUser(newUserName, newUserPassword);
+      const res = await addUser(data.username, data.password);
       if (res.success) {
-        newUserName = '';
-        newUserPassword = '';
+        notificationActions.success('User added successfully');
+        addFormData = { username: '', password: '' };
         await loadUsers();
       } else {
         error = res.error || 'Failed to add user';
+        notificationActions.error(error);
       }
     } catch (e: any) {
       error = 'Failed to add user: ' + (e.message || 'Unknown error');
+      notificationActions.error(error);
     } finally {
       loading = false;
     }
@@ -66,13 +93,15 @@
 
   function openEditModal(user: User) {
     editingUser = user;
-    editUserName = user.userName;
-    editUserPassword = user.userPassword;
-    editUserActive = user.userActive;
+    editFormData = {
+      username: user.userName,
+      password: user.userPassword,
+      active: user.userActive
+    };
     editModalOpen = true;
   }
 
-  async function handleEditUser() {
+  async function handleEditUser(data: Record<string, any>) {
     if (!editingUser || !canEditUser) return;
     
     editLoading = true;
@@ -81,18 +110,21 @@
     try {
       const res = await updateUser(
         editingUser.id,
-        editUserName,
-        editUserPassword,
-        editUserActive
+        data.username,
+        data.password,
+        data.active
       );
       if (res.success) {
+        notificationActions.success('User updated successfully');
         editModalOpen = false;
         await loadUsers();
       } else {
         error = res.error || 'Failed to update user';
+        notificationActions.error(error);
       }
     } catch (e: any) {
       error = 'Failed to update user: ' + (e.message || 'Unknown error');
+      notificationActions.error(error);
     } finally {
       editLoading = false;
     }
@@ -109,12 +141,15 @@
         try {
           const res = await deleteUser(id);
           if (res.success) {
+            notificationActions.success('User deleted successfully');
             await loadUsers();
           } else {
             error = res.error || 'Failed to delete user';
+            notificationActions.error(error);
           }
         } catch (e: any) {
           error = 'Failed to delete user: ' + (e.message || 'Unknown error');
+          notificationActions.error(error);
         } finally {
           loading = false;
         }
@@ -135,29 +170,13 @@
   <!-- Add User Form -->
   <div class="mb-6">
     <h2 class="text-xl font-semibold mb-3">Add New User</h2>
-    <div class="space-y-4">
-      <div class="grid grid-cols-2 gap-4">
-        <input
-          type="text"
-          placeholder="Username"
-          bind:value={newUserName}
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          bind:value={newUserPassword}
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <button
-        onclick={handleAddUser}
-        disabled={loading || !canAddUser}
-        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-      >
-        {loading ? 'Adding...' : 'Add User'}
-      </button>
-    </div>
+    <Form
+      fields={addUserFields}
+      bind:data={addFormData}
+      loading={loading}
+      submitLabel="Add User"
+      onSubmit={handleAddUser}
+    />
   </div>
 
   <!-- Users List -->
@@ -208,50 +227,13 @@
   title="Edit User"
   onClose={() => editModalOpen = false}
 >
-  <div class="space-y-4">
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Username</label>
-      <input
-        type="text"
-        bind:value={editUserName}
-        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Password</label>
-      <input
-        type="password"
-        bind:value={editUserPassword}
-        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Active</label>
-      <select
-        bind:value={editUserActive}
-        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        <option value="Y">Active</option>
-        <option value="N">Inactive</option>
-      </select>
-    </div>
-  </div>
-  
-  {#snippet footer()}
-    <button
-      type="button"
-      class="inline-flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-      onclick={handleEditUser}
-      disabled={editLoading || !canEditUser}
-    >
-      {editLoading ? 'Saving...' : 'Save'}
-    </button>
-    <button
-      type="button"
-      class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-      onclick={() => editModalOpen = false}
-    >
-      Cancel
-    </button>
-  {/snippet}
+  <Form
+    fields={editUserFields}
+    bind:data={editFormData}
+    loading={editLoading}
+    submitLabel="Save"
+    cancelLabel="Cancel"
+    onSubmit={handleEditUser}
+    onCancel={() => editModalOpen = false}
+  />
 </Modal>

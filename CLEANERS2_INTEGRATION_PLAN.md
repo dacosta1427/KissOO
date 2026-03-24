@@ -64,12 +64,12 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | **Phase 2: Manager Pattern** | | | | |
 | 2.0 | Design Decision | ✅ Completed | - | Keep PerstStorageManager (minimal layers) |
 | **Phase 3: Cleaners2 Branch** | | | | |
-| 3.1 | Create Branch | 🔄 Pending | - | Create from enhanced master2 |
-| 3.2 | Copy Cleaning Scheduler | 🔄 Pending | - | Copy from cleaners branch |
-| 3.3 | API Layer Integration | 🔄 Pending | - | Adapt cleaners API to KissOO format |
-| 3.4 | Domain Logic Integration | 🔄 Pending | - | Connect to KissOO backend services |
+| 3.1 | Create Branch | ✅ Completed | b9f81cf3 | Created cleaners2 branch from master2 |
+| 3.2 | Copy Cleaning Scheduler | ✅ Completed | b9f81cf3 | Copied pages and components from cleaners branch |
+| 3.3 | API Layer Integration | ✅ Completed | d3f3a3f1 | Frontend API adapter (kiss-client.js) uses Server.call() |
+| 3.4 | Domain Logic Integration | ✅ Completed | d3f3a3f1 + 4a60c57e | Backend service created, Schedule conflict fixed, build passes |
 | **Phase 4: Implementation** | | | | |
-| 4.0 | Week 1: Master2 Foundation | 🔄 Pending | - | Days 1-7 |
+| 4.0 | Week 1: Master2 Foundation | 🔄 In Progress | - | Days 1-7 (UI Refinements) |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 Pending | - | Days 1-7 |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
@@ -551,16 +551,18 @@ export const cleaningApi = {
 ## Next Steps
 
 ### Immediate Actions
-1. **Phase 1 Foundation Complete** - Tasks 1.1, 1.2, 1.3, 1.4 completed
-2. **Test integration** - Ensure all existing pages work with new components
-3. **Proceed to Phase 2** - Manager Pattern Decision (already decided)
+1. **Phase 3 Started** - Branch created, cleaning scheduler code copied
+2. **Complete API Integration** - Ensure kiss-client.js works with Server.call()
+3. **Create Backend Service** - Implement Cleaning.groovy service in backend
+4. **Test Integration** - Verify cleaning pages can communicate with backend
 
 ### Current Status
 - ✅ **master2 branch** created and pushed
-- ✅ **Task 1.1** (Session Management) completed
-- ✅ **Task 1.2** (Component Integration) completed
-- ✅ **Task 1.3** (State Management Pattern) completed
-- ✅ **Task 1.4** (API Layer Standardization) completed
+- ✅ **Phase 1 tasks** completed (session, components, state, API)
+- ✅ **cleaners2 branch** created from master2
+- ✅ **Cleaning scheduler code** copied (pages, components, API adapter)
+- 🔄 **API integration** in progress (kiss-client.js adapted to Server.call)
+- 🔄 **Backend service** not yet created (Cleaning.groovy needed)
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
@@ -576,6 +578,6 @@ export const cleaningApi = {
 
 ---
 
-**Document Status**: Phase 1 Complete  
-**Last Updated**: 2026-03-23 (Phase 1 tasks completed: session management, components, state management, API layer)  
-**Next Review**: After Phase 2 (Manager Pattern Decision) - already decided, can proceed to Phase 3
+**Document Status**: Phase 4 In Progress  
+**Last Updated**: 2026-03-23 (Starting UI refinements: users page migration, toast notifications, form components)  
+**Next Review**: After UI refinements completed

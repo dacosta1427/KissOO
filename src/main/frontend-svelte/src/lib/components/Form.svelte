@@ -3,7 +3,7 @@
 	interface Field {
 		name: string;
 		label: string;
-		type?: 'text' | 'email' | 'tel' | 'number' | 'select' | 'textarea' | 'checkbox';
+		type?: 'text' | 'email' | 'tel' | 'number' | 'select' | 'textarea' | 'checkbox' | 'password';
 		required?: boolean;
 		placeholder?: string;
 		options?: Array<{ value: string; label: string }>;
@@ -81,7 +81,7 @@
 					{/if}
 				</label>
 
-				{#if field.type === 'text' || field.type === 'email' || field.type === 'tel' || field.type === 'number'}
+				{#if field.type === 'text' || field.type === 'email' || field.type === 'tel' || field.type === 'number' || field.type === 'password'}
 					<input
 						type={field.type}
 						id={field.name}
