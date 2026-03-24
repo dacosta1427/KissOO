@@ -70,6 +70,7 @@
 			cleaners = cleanersResult;
 			bookings = bookingsResult;
 
+			console.log('[schedules] schedules loaded:', schedules.length, schedules);
 			console.log('[schedules] cleaners loaded:', cleaners.length, cleaners);
 			console.log('[schedules] bookings loaded:', bookings.length);
 
