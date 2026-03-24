@@ -19,8 +19,16 @@ public class PerstInit {
             // Check if admin user exists
             PerstUser existing = PerstUserManager.getByKey("admin");
             if (existing != null) {
-                result.put("message", "Admin user already exists");
-                logger.info("Admin user already exists");
+                // Ensure emailVerified is true for existing admin
+                if (!existing.isEmailVerified()) {
+                    existing.setEmailVerified(true);
+                    PerstUserManager.update(existing);
+                    result.put("message", "Admin user updated with emailVerified=true");
+                    logger.info("Admin user updated with emailVerified=true");
+                } else {
+                    result.put("message", "Admin user already exists");
+                    logger.info("Admin user already exists");
+                }
                 return result;
             }
             
@@ -28,6 +36,7 @@ public class PerstInit {
             PerstUser admin = new PerstUser("admin", "admin", 1);
             admin.setEmail("admin@localhost");
             admin.setActive(true);
+            admin.setEmailVerified(true);  // Allow login without email verification
             PerstUserManager.create(admin);
             
             result.put("message", "Admin user created successfully");

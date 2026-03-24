@@ -134,7 +134,14 @@ class KissInit {
                     println "[KissInit] ERROR: Failed to create admin user"
                 }
             } else {
-                println "[KissInit] Users already exist (${users.size()}), skipping admin creation"
+                println "[KissInit] Users already exist (${users.size()}), checking admin user..."
+                // Ensure admin user has emailVerified = true
+                def admin = PerstUserManager.getByKey("admin")
+                if (admin != null && !admin.isEmailVerified()) {
+                    admin.setEmailVerified(true)
+                    PerstUserManager.update(admin)
+                    println "[KissInit] Admin user emailVerified set to true"
+                }
             }
         } catch (Exception e) {
             println "[KissInit] Error creating default user: ${e.message}"
