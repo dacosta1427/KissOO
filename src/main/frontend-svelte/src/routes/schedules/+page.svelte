@@ -11,6 +11,7 @@
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingSchedule = $state<Schedule | null>(null);
+	let viewMode = $state<'calendar' | 'table'>('calendar');
 	let dateRange = $state({
 		start: new Date().toISOString().split('T')[0],
 		end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -29,12 +30,20 @@
 	});
 
 	// Svelte 5: Use $derived for form options
-	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.id), label: c.name })));
-	let bookingOptions = $derived(bookings.map((b) => ({
-		value: String(b.id),
-		label: `${b.guest_name || 'Guest'} - ${b.check_in_date} to ${b.check_out_date}`,
-		checkOutDate: b.check_out_date
-	})));
+	let cleanerOptions = $derived.by(() => {
+		const opts = cleaners.map((c) => ({ value: String(c.id), label: c.name }));
+		console.log('[DEBUG] cleanerOptions:', opts.length, opts);
+		return opts;
+	});
+	let bookingOptions = $derived.by(() => {
+		const opts = bookings.map((b) => ({
+			value: String(b.id),
+			label: `${b.guest_name || 'Guest'} - ${b.check_in_date} to ${b.check_out_date}`,
+			checkOutDate: b.check_out_date
+		}));
+		console.log('[DEBUG] bookingOptions:', opts.length, opts);
+		return opts;
+	});
 
 	// Status options
 	const statusOptions = [
@@ -165,6 +174,22 @@
 	<div class="page-header">
 		<h1>Scheduling Board</h1>
 		<div class="header-actions">
+			<div class="view-toggle">
+				<button 
+					class="toggle-btn" 
+					class:active={viewMode === 'calendar'}
+					onclick={() => viewMode = 'calendar'}
+				>
+					Calendar
+				</button>
+				<button 
+					class="toggle-btn" 
+					class:active={viewMode === 'table'}
+					onclick={() => viewMode = 'table'}
+				>
+					Table
+				</button>
+			</div>
 			<button class="btn btn-primary" onclick={openAddForm}>Add Schedule</button>
 		</div>
 	</div>
@@ -274,27 +299,68 @@
 		</div>
 	{/if}
 
-	<ScheduleBoard
-		{schedules}
-		{cleaners}
-		{bookings}
-		{dateRange}
-		{loading}
-		{error}
-		onScheduleChange={async (newSchedule) => {
-			try {
-				if (editingSchedule) {
-					await schedulesAPI.update(editingSchedule.id, newSchedule);
+	{#if viewMode === 'calendar'}
+		<ScheduleBoard
+			{schedules}
+			{cleaners}
+			{bookings}
+			{dateRange}
+			{loading}
+			{error}
+			onScheduleChange={async (newSchedule) => {
+				try {
+					if (editingSchedule) {
+						await schedulesAPI.update(editingSchedule.id, newSchedule);
+					}
+					await loadData();
+				} catch (err) {
+					error = err.message;
 				}
-				await loadData();
-			} catch (err) {
-				error = err.message;
-			}
-		}}
-		onScheduleClick={handleScheduleClick}
-		onCleanerClick={handleCleanerClick}
-		{selectedCleanerId}
-	/>
+			}}
+			onScheduleClick={handleScheduleClick}
+			onCleanerClick={handleCleanerClick}
+			{selectedCleanerId}
+		/>
+	{:else}
+		<div class="table-view">
+			<table class="schedule-table">
+				<thead>
+					<tr>
+						<th>Cleaner</th>
+						<th>Guest</th>
+						<th>Date</th>
+						<th>Time</th>
+						<th>Status</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each schedules as schedule}
+						{@const cleaner = cleaners.find(c => c.id === schedule.cleaner_id)}
+						{@const booking = bookings.find(b => b.id === schedule.booking_id)}
+						<tr>
+							<td>{cleaner?.name || 'Unknown'}</td>
+							<td>{booking?.guest_name || 'Unknown'}</td>
+							<td>{schedule.date}</td>
+							<td>{schedule.start_time || ''} - {schedule.end_time || ''}</td>
+							<td>
+								<span class="status-badge status-{schedule.status}">{schedule.status}</span>
+							</td>
+							<td>
+								<button class="btn btn-sm btn-secondary" onclick={() => handleScheduleClick(schedule)}>
+									Edit
+								</button>
+							</td>
+						</tr>
+					{:else}
+						<tr>
+							<td colspan="6" class="empty-row">No schedules found</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -321,6 +387,32 @@
 	.header-actions {
 		display: flex;
 		gap: 1rem;
+		align-items: center;
+	}
+
+	.view-toggle {
+		display: flex;
+		background: #e5e7eb;
+		border-radius: 6px;
+		padding: 2px;
+	}
+
+	.toggle-btn {
+		padding: 0.375rem 0.75rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		border: none;
+		background: transparent;
+		color: #6b7280;
+		cursor: pointer;
+		border-radius: 4px;
+		transition: all 0.2s;
+	}
+
+	.toggle-btn.active {
+		background: white;
+		color: #111827;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 	}
 
 	.date-range-controls {
@@ -511,5 +603,71 @@
 		.form-grid {
 			grid-template-columns: 1fr;
 		}
+	}
+
+	/* Table View */
+	.table-view {
+		background: white;
+		border-radius: 8px;
+		overflow: hidden;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+
+	.schedule-table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.schedule-table th,
+	.schedule-table td {
+		padding: 0.75rem 1rem;
+		text-align: left;
+		border-bottom: 1px solid #e5e7eb;
+	}
+
+	.schedule-table th {
+		background: #f9fafb;
+		font-weight: 600;
+		font-size: 0.875rem;
+		color: #374151;
+	}
+
+	.schedule-table tbody tr:hover {
+		background: #f9fafb;
+	}
+
+	.empty-row {
+		text-align: center;
+		color: #6b7280;
+		padding: 2rem;
+	}
+
+	.status-badge {
+		display: inline-block;
+		padding: 0.25rem 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		border-radius: 4px;
+		text-transform: capitalize;
+	}
+
+	.status-pending {
+		background: #fef3c7;
+		color: #92400e;
+	}
+
+	.status-confirmed {
+		background: #dbeafe;
+		color: #1e40af;
+	}
+
+	.status-completed {
+		background: #d1fae5;
+		color: #065f46;
+	}
+
+	.status-cancelled {
+		background: #fee2e2;
+		color: #991b1b;
 	}
 </style>

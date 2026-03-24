@@ -55,10 +55,11 @@
             
             {#if cleaningMenuOpen}
               <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                <a href="/cleaners" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cleaners</a>
-                <a href="/bookings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Bookings</a>
-                <a href="/schedules" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Schedules</a>
+                <a href="/owners" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Owners</a>
                 <a href="/houses" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Houses</a>
+                <a href="/bookings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Bookings</a>
+                <a href="/cleaners" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cleaners</a>
+                <a href="/schedules" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Schedules</a>
                 <div class="border-t border-gray-200 my-1"></div>
                 <a href="/benchmark" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Benchmark</a>
                 <a href="/rest-services" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">REST Services</a>
