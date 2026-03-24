@@ -41,7 +41,11 @@
 	$effect(() => {
 		console.log('[Form] fields updated:', fields?.length);
 		if (fields && fields.length > 0) {
-			console.log('[Form] first field options:', fields[0].options);
+			fields.forEach((field, i) => {
+				if (field.options) {
+					console.log(`[Form] field ${i} (${field.name}) options:`, field.options.map(o => ({ value: o.value, label: o.label })));
+				}
+			});
 		}
 	});
 

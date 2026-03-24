@@ -47,7 +47,7 @@
 		});
 
 		schedules.forEach((schedule) => {
-			const dateString = schedule.assigned_date;
+			const dateString = schedule.date;
 			cleaners.forEach((cleaner) => {
 				if (cleaner.id === schedule.cleaner_id && matrix[cleaner.id][dateString]) {
 					matrix[cleaner.id][dateString] = schedule;
@@ -88,7 +88,7 @@
 			const newSchedule = {
 				...dragData,
 				cleaner_id: cleanerId,
-				assigned_date: date.toISOString().split('T')[0]
+				date: date.toISOString().split('T')[0]
 			};
 
 			onScheduleChange?.(newSchedule);
@@ -163,12 +163,12 @@
 									handleScheduleClick(scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]])}
 							>
 								<div class="schedule-house">
-									{getBookingInfo(
-										scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].booking_id
-									)?.house_name || 'Unknown House'}
+								{getBookingInfo(
+									scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].booking_id
+								)?.guest_name || 'Unknown Guest'}
 								</div>
 								<div class="schedule-dates">
-									{scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].assigned_date}
+									{scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].date}
 								</div>
 								<div class="schedule-status">
 									{scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].status}

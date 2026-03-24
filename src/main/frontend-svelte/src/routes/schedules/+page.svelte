@@ -33,8 +33,8 @@
 			options: []
 		},
 		{
-			name: 'assigned_date',
-			label: 'Assigned Date',
+			name: 'date',
+			label: 'Date',
 			type: 'date',
 			required: true
 		},
