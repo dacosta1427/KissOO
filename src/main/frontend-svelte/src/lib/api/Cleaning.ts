@@ -39,7 +39,7 @@ export interface Schedule {
   start_time: string;
   end_time: string;
   notes?: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'completed' | 'cancelled' | 'pending';
 }
 
 export interface House {

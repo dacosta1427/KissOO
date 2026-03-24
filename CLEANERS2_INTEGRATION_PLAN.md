@@ -82,6 +82,8 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.10 | Owner Frontend Integration | ✅ Completed | - | Added Owner type, ownersAPI, functional owners page |
 | 4.0.11 | House Owner Association | ✅ Completed | - | Added owner_id to House, updated houses page with owner dropdown |
 | 4.0.12 | New Owner Modal | ✅ Completed | - | Added "+ New owner" option in house form dropdown that opens modal |
+| 4.0.13 | Schedule Form Fixes | ✅ Completed | - | Fixed status to include 'scheduled', 24H time, yyyymmdd date format |
+| 4.0.14 | ScheduleBoard Improvements | ✅ Completed | - | Show time in schedule boxes, add + button on empty cells, improved drag/drop |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 Pending | - | Days 1-7 |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed

@@ -26,7 +26,7 @@
 		date: '',
 		start_time: '09:00',
 		end_time: '12:00',
-		status: 'pending'
+		status: 'scheduled'
 	});
 
 	// Svelte 5: Use $derived for form options
@@ -39,10 +39,10 @@
 
 	// Status options
 	const statusOptions = [
-		{ value: 'pending', label: 'Pending' },
-		{ value: 'confirmed', label: 'Confirmed' },
+		{ value: 'scheduled', label: 'Scheduled' },
 		{ value: 'completed', label: 'Completed' },
-		{ value: 'cancelled', label: 'Cancelled' }
+		{ value: 'cancelled', label: 'Cancelled' },
+		{ value: 'pending', label: 'Pending' }
 	];
 
 	// Computed: get selected cleaner name
@@ -119,7 +119,7 @@
 			date: '',
 			start_time: '09:00',
 			end_time: '12:00',
-			status: 'pending'
+			status: 'scheduled'
 		};
 	}
 
@@ -143,7 +143,7 @@
 			date: schedule.date,
 			start_time: schedule.start_time || '09:00',
 			end_time: schedule.end_time || '12:00',
-			status: schedule.status || 'pending'
+			status: schedule.status || 'scheduled'
 		};
 		showForm = true;
 	}
@@ -154,6 +154,19 @@
 		} else {
 			selectedCleanerId = cleanerId;
 		}
+	}
+
+	function handleEmptyCellClick(cleanerId: number, date: Date) {
+		editingSchedule = null;
+		formData = {
+			cleaner_id: String(cleanerId),
+			booking_id: '',
+			date: date.toISOString().split('T')[0],
+			start_time: '09:00',
+			end_time: '12:00',
+			status: 'scheduled'
+		};
+		showForm = true;
 	}
 
 	// Load data on mount
@@ -243,20 +256,20 @@
 
 					<!-- Date -->
 					<div class="form-field">
-						<label for="date">Work Date <span class="required">*</span></label>
+						<label for="date">Work Date <span class="required">*</span> (yyyymmdd)</label>
 						<input type="date" id="date" bind:value={formData.date} required />
 					</div>
 
 					<!-- Start Time -->
 					<div class="form-field">
-						<label for="start_time">Start Time <span class="required">*</span></label>
-						<input type="time" id="start_time" bind:value={formData.start_time} required />
+						<label for="start_time">Start Time <span class="required">*</span> (24H)</label>
+						<input type="time" id="start_time" bind:value={formData.start_time} step="3600" required />
 					</div>
 
 					<!-- End Time -->
 					<div class="form-field">
-						<label for="end_time">End Time <span class="required">*</span></label>
-						<input type="time" id="end_time" bind:value={formData.end_time} required />
+						<label for="end_time">End Time <span class="required">*</span> (24H)</label>
+						<input type="time" id="end_time" bind:value={formData.end_time} step="3600" required />
 					</div>
 
 					<!-- Status -->
@@ -311,6 +324,7 @@
 			}}
 			onScheduleClick={handleScheduleClick}
 			onCleanerClick={handleCleanerClick}
+			onEmptyCellClick={handleEmptyCellClick}
 			{selectedCleanerId}
 		/>
 	{:else}
@@ -648,7 +662,7 @@
 		color: #92400e;
 	}
 
-	.status-confirmed {
+	.status-scheduled {
 		background: #dbeafe;
 		color: #1e40af;
 	}

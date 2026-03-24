@@ -10,6 +10,7 @@
 		onScheduleChange,
 		onScheduleClick,
 		onCleanerClick,
+		onEmptyCellClick,
 		selectedCleanerId = null
 	} = $props();
 
@@ -105,6 +106,10 @@
 		onScheduleClick?.(schedule);
 	}
 
+	function handleEmptyCellClick(cleanerId, date) {
+		onEmptyCellClick?.(cleanerId, date);
+	}
+
 	function getBookingInfo(bookingId) {
 		return bookings.find((b) => b.id === bookingId);
 	}
@@ -184,22 +189,26 @@
 									}
 								}}
 							>
+								<div class="schedule-time">
+									{scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].start_time || ''} - {scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].end_time || ''}
+								</div>
 								<div class="schedule-house">
 								{getBookingInfo(
 									scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].booking_id
 								)?.guest_name || 'Unknown Guest'}
-								</div>
-								<div class="schedule-dates">
-									{scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].date}
 								</div>
 								<div class="schedule-status">
 									{scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].status}
 								</div>
 							</div>
 						{:else}
-							<div class="empty-cell">
-								<span class="empty-text">Available</span>
-							</div>
+							<button
+								class="add-schedule-btn"
+								onclick={() => handleEmptyCellClick(cleaner.id, date)}
+								title="Add schedule"
+							>
+								+
+							</button>
 						{/if}
 					</div>
 				{/each}
@@ -293,6 +302,7 @@
 		min-height: 100px;
 		position: relative;
 		transition: background-color 0.2s;
+		padding: 4px;
 	}
 
 	.schedule-cell.weekend {
@@ -300,18 +310,27 @@
 	}
 
 	.schedule-cell.drag-over {
-		background-color: rgba(52, 152, 219, 0.2);
-		border: 2px dashed var(--primary-color);
+		background-color: rgba(52, 152, 219, 0.3);
+		box-shadow: inset 0 0 10px rgba(52, 152, 219, 0.5);
+	}
+
+	.schedule-cell:not(:has(.schedule-item)):hover {
+		background-color: rgba(52, 152, 219, 0.1);
+		cursor: pointer;
 	}
 
 	.schedule-item {
 		background: var(--primary-color);
 		color: white;
-		padding: 10px;
+		padding: 8px;
 		border-radius: 6px;
 		cursor: grab;
 		transition: all 0.2s;
 		border: 1px solid rgba(255, 255, 255, 0.3);
+		min-height: 80px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
 	}
 
 	.schedule-item:hover {
@@ -324,40 +343,55 @@
 		cursor: grabbing;
 	}
 
-	.schedule-house {
-		font-weight: 600;
-		font-size: 14px;
-		margin-bottom: 4px;
+	.schedule-time {
+		font-weight: 700;
+		font-size: 13px;
+		background: rgba(255, 255, 255, 0.25);
+		padding: 2px 6px;
+		border-radius: 4px;
+		text-align: center;
 	}
 
-	.schedule-dates {
-		font-size: 12px;
-		opacity: 0.9;
-		margin-bottom: 6px;
+	.schedule-house {
+		font-weight: 600;
+		font-size: 13px;
+		text-align: center;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.schedule-status {
-		font-size: 11px;
+		font-size: 10px;
 		text-transform: uppercase;
 		font-weight: 700;
 		letter-spacing: 0.5px;
 		background: rgba(255, 255, 255, 0.2);
 		padding: 2px 6px;
 		border-radius: 4px;
-		display: inline-block;
+		text-align: center;
 	}
 
-	.empty-cell {
+	.add-schedule-btn {
+		width: 100%;
+		height: 100%;
+		min-height: 80px;
+		background: transparent;
+		border: 2px dashed rgba(0, 0, 0, 0.1);
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 24px;
+		color: rgba(0, 0, 0, 0.2);
+		transition: all 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 100%;
-		color: var(--muted-color);
-		font-size: 12px;
 	}
 
-	.empty-text {
-		opacity: 0.5;
+	.add-schedule-btn:hover {
+		border-color: var(--primary-color);
+		color: var(--primary-color);
+		background: rgba(52, 152, 219, 0.05);
 	}
 
 	.loading-message,
