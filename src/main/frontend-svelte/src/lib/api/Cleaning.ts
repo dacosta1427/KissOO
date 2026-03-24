@@ -47,6 +47,16 @@ export interface House {
   name: string;
   address: string;
   description?: string;
+  owner_id?: number;
+  active: boolean;
+}
+
+export interface Owner {
+  id: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
   active: boolean;
 }
 
@@ -64,7 +74,7 @@ export interface ApiResult {
 }
 
 // Operations that should show toasts
-const operationsWithToast = ['create', 'add', 'delete', 'update', 'deleteCleaner', 'deleteBooking', 'deleteHouse'];
+const operationsWithToast = ['create', 'add', 'delete', 'update', 'deleteCleaner', 'deleteBooking', 'deleteHouse', 'deleteOwner'];
 
 // Helper to handle API calls with notifications (only for add, delete, update)
 async function callCleaningService(method: string, args: any = {}, operationName?: string): Promise<CleaningResult> {
@@ -226,5 +236,32 @@ export const housesAPI = {
   
   delete: async (id: number): Promise<void> => {
     await callCleaningService('deleteHouse', { id }, 'Delete house');
+  }
+};
+
+// Owners API
+export const ownersAPI = {
+  getAll: async (): Promise<Owner[]> => {
+    const res = await callCleaningService('getOwners', {}, 'Load owners');
+    return res.data || [];
+  },
+  
+  getById: async (id: number): Promise<Owner | null> => {
+    const res = await callCleaningService('getOwner', { id }, 'Load owner');
+    return res.data || null;
+  },
+  
+  create: async (data: Partial<Owner>): Promise<Owner> => {
+    const res = await callCleaningService('createOwner', { data }, 'Create owner');
+    return res.data;
+  },
+  
+  update: async (id: number, data: Partial<Owner>): Promise<Owner> => {
+    const res = await callCleaningService('updateOwner', { id, data }, 'Update owner');
+    return res.data;
+  },
+  
+  delete: async (id: number): Promise<void> => {
+    await callCleaningService('deleteOwner', { id }, 'Delete owner');
   }
 };

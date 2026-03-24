@@ -36,9 +36,10 @@ public class HouseManager extends BaseManager<House> {
         String name = args[0].toString();
         String address = args.length > 1 ? args[1].toString() : null;
         String description = args.length > 2 ? args[2].toString() : null;
-        boolean active = args.length > 3 ? Boolean.parseBoolean(args[3].toString()) : true;
+        long ownerId = args.length > 3 ? Long.parseLong(args[3].toString()) : 0;
+        boolean active = args.length > 4 ? Boolean.parseBoolean(args[4].toString()) : true;
         
-        House house = new House(name, address, description, active);
+        House house = new House(name, address, description, ownerId, active);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(house);

@@ -78,6 +78,10 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.6 | Backend Authentication Fix | ✅ Completed | 9f327899 | Fixed admin user emailVerified flag for login |  
 | 4.0.7 | Frontend Auth UUID Fix | ✅ Completed | 4cf6a316 | Added Server.setUUID in Auth.ts, debug logging |
 | 4.0.8 | Cleaners API Consolidation | ✅ Completed | 99efcc78 | Consolidated cleaning API in Cleaning.ts, fixed imports, added TypeScript types |
+| 4.0.9 | Owner Entity Backend | ✅ Completed | - | Created Owner.java, OwnerManager.java, added Owner CRUD to Cleaning.groovy |
+| 4.0.10 | Owner Frontend Integration | ✅ Completed | - | Added Owner type, ownersAPI, functional owners page |
+| 4.0.11 | House Owner Association | ✅ Completed | - | Added owner_id to House, updated houses page with owner dropdown |
+| 4.0.12 | New Owner Modal | ✅ Completed | - | Added "+ New owner" option in house form dropdown that opens modal |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 Pending | - | Days 1-7 |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed

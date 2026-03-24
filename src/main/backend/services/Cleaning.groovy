@@ -8,10 +8,12 @@ import mycompany.database.CleanerManager
 import mycompany.database.BookingManager
 import mycompany.database.ScheduleManager
 import mycompany.database.HouseManager
+import mycompany.database.OwnerManager
 import mycompany.domain.Cleaner
 import mycompany.domain.Booking
 import mycompany.domain.Schedule
 import mycompany.domain.House
+import mycompany.domain.Owner
 
 /**
  * Cleaning service for CRUD operations on cleaning scheduler entities.
@@ -595,6 +597,7 @@ class Cleaning {
                 row.put("name", house.getName())
                 row.put("address", house.getAddress())
                 row.put("description", house.getDescription())
+                row.put("owner_id", house.getOwnerId())
                 row.put("active", house.isActive())
                 rows.put(row)
             }
@@ -620,6 +623,7 @@ class Cleaning {
             data.put("name", house.getName())
             data.put("address", house.getAddress())
             data.put("description", house.getDescription())
+            data.put("owner_id", house.getOwnerId())
             data.put("active", house.isActive())
             outjson.put("data", data)
         } catch (Exception e) {
@@ -634,9 +638,10 @@ class Cleaning {
             String name = data.getString("name")
             String address = data.getString("address", "")
             String description = data.getString("description", "")
+            long ownerId = data.optLong("owner_id", 0)
             boolean active = data.getBoolean("active", true)
             
-            House house = HouseManager.create(name, address, description, active)
+            House house = HouseManager.create(name, address, description, ownerId, active)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create house")
@@ -647,6 +652,7 @@ class Cleaning {
             result.put("name", house.getName())
             result.put("address", house.getAddress())
             result.put("description", house.getDescription())
+            result.put("owner_id", house.getOwnerId())
             result.put("active", house.isActive())
             outjson.put("data", result)
         } catch (Exception e) {
@@ -668,6 +674,7 @@ class Cleaning {
             if (data.has("name")) house.setName(data.getString("name"))
             if (data.has("address")) house.setAddress(data.getString("address"))
             if (data.has("description")) house.setDescription(data.getString("description"))
+            if (data.has("owner_id")) house.setOwnerId(data.getLong("owner_id"))
             if (data.has("active")) house.setActive(data.getBoolean("active"))
             
             boolean success = HouseManager.update(house)
@@ -681,6 +688,7 @@ class Cleaning {
             result.put("name", house.getName())
             result.put("address", house.getAddress())
             result.put("description", house.getDescription())
+            result.put("owner_id", house.getOwnerId())
             result.put("active", house.isActive())
             outjson.put("data", result)
         } catch (Exception e) {
@@ -702,6 +710,141 @@ class Cleaning {
             if (!success) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to delete house")
+                return
+            }
+            outjson.put("_Success", true)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    // ==================== OWNERS ====================
+    
+    void getOwners(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            Collection<Owner> owners = OwnerManager.getAll()
+            JSONArray rows = new JSONArray()
+            
+            for (Owner owner : owners) {
+                JSONObject row = new JSONObject()
+                row.put("id", owner.getOid())
+                row.put("name", owner.getName())
+                row.put("email", owner.getEmail())
+                row.put("phone", owner.getPhone())
+                row.put("address", owner.getAddress())
+                row.put("active", owner.isActive())
+                rows.put(row)
+            }
+            
+            outjson.put("data", rows)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void getOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            long oid = injson.getLong("id")
+            Owner owner = OwnerManager.getByOid(oid)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found")
+                return
+            }
+            JSONObject data = new JSONObject()
+            data.put("id", owner.getOid())
+            data.put("name", owner.getName())
+            data.put("email", owner.getEmail())
+            data.put("phone", owner.getPhone())
+            data.put("address", owner.getAddress())
+            data.put("active", owner.isActive())
+            outjson.put("data", data)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void createOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            JSONObject data = injson.getJSONObject("data")
+            String name = data.getString("name")
+            String email = data.getString("email", "")
+            String phone = data.getString("phone", "")
+            String address = data.getString("address", "")
+            boolean active = data.getBoolean("active", true)
+            
+            Owner owner = OwnerManager.create(name, email, phone, address, active)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Failed to create owner")
+                return
+            }
+            JSONObject result = new JSONObject()
+            result.put("id", owner.getOid())
+            result.put("name", owner.getName())
+            result.put("email", owner.getEmail())
+            result.put("phone", owner.getPhone())
+            result.put("address", owner.getAddress())
+            result.put("active", owner.isActive())
+            outjson.put("data", result)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void updateOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            long oid = injson.getLong("id")
+            JSONObject data = injson.getJSONObject("data")
+            Owner owner = OwnerManager.getByOid(oid)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found")
+                return
+            }
+            if (data.has("name")) owner.setName(data.getString("name"))
+            if (data.has("email")) owner.setEmail(data.getString("email"))
+            if (data.has("phone")) owner.setPhone(data.getString("phone"))
+            if (data.has("address")) owner.setAddress(data.getString("address"))
+            if (data.has("active")) owner.setActive(data.getBoolean("active"))
+            
+            boolean success = OwnerManager.update(owner)
+            if (!success) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Failed to update owner")
+                return
+            }
+            JSONObject result = new JSONObject()
+            result.put("id", owner.getOid())
+            result.put("name", owner.getName())
+            result.put("email", owner.getEmail())
+            result.put("phone", owner.getPhone())
+            result.put("address", owner.getAddress())
+            result.put("active", owner.isActive())
+            outjson.put("data", result)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void deleteOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            long oid = injson.getLong("id")
+            Owner owner = OwnerManager.getByOid(oid)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found")
+                return
+            }
+            boolean success = OwnerManager.delete(owner)
+            if (!success) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Failed to delete owner")
                 return
             }
             outjson.put("_Success", true)

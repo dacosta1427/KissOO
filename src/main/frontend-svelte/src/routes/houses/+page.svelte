@@ -1,19 +1,27 @@
 <script lang="ts">
-	import { housesAPI, type House } from '$lib/api/Cleaning';
+	import { housesAPI, ownersAPI, type House, type Owner } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
 
-	// Svelte 5: Use $state
 	let houses = $state<House[]>([]);
+	let owners = $state<Owner[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingHouse = $state<House | null>(null);
+	let showNewOwnerModal = $state(false);
 
-	// Form data
 	let formData = $state({
 		name: '',
 		address: '',
-		description: ''
+		description: '',
+		owner_id: 0 as number
+	});
+
+	let newOwnerData = $state({
+		name: '',
+		email: '',
+		phone: '',
+		address: ''
 	});
 
 	async function loadHouses() {
@@ -29,9 +37,17 @@
 		}
 	}
 
+	async function loadOwners() {
+		try {
+			owners = await ownersAPI.getAll();
+		} catch (err: any) {
+			console.error('Failed to load owners:', err);
+		}
+	}
+
 	function openAddForm() {
 		editingHouse = null;
-		formData = { name: '', address: '', description: '' };
+		formData = { name: '', address: '', description: '', owner_id: 0 };
 		showForm = true;
 	}
 
@@ -40,7 +56,8 @@
 		formData = { 
 			name: house.name, 
 			address: house.address, 
-			description: house.description || '' 
+			description: house.description || '',
+			owner_id: house.owner_id || 0
 		};
 		showForm = true;
 	}
@@ -48,24 +65,61 @@
 	function handleFormCancel() {
 		showForm = false;
 		editingHouse = null;
-		formData = { name: '', address: '', description: '' };
+		formData = { name: '', address: '', description: '', owner_id: 0 };
+	}
+
+	function handleOwnerChange() {
+		if (formData.owner_id === -1) {
+			showNewOwnerModal = true;
+			formData.owner_id = 0;
+		}
+	}
+
+	async function handleAddNewOwner() {
+		if (!newOwnerData.name.trim()) {
+			notificationActions.error('Owner name is required');
+			return;
+		}
+		
+		try {
+			const newOwner = await ownersAPI.create(newOwnerData);
+			notificationActions.success('Owner created successfully');
+			await loadOwners();
+			formData.owner_id = newOwner.id;
+			showNewOwnerModal = false;
+			newOwnerData = { name: '', email: '', phone: '', address: '' };
+		} catch (err: any) {
+			notificationActions.error(err.message || 'Failed to create owner');
+		}
+	}
+
+	function cancelNewOwnerModal() {
+		showNewOwnerModal = false;
+		newOwnerData = { name: '', email: '', phone: '', address: '' };
 	}
 
 	async function handleFormSubmit(e: Event) {
 		e.preventDefault();
 		
+		const dataToSend = {
+			name: formData.name,
+			address: formData.address,
+			description: formData.description,
+			owner_id: formData.owner_id || 0
+		};
+		
 		try {
 			if (editingHouse) {
-				await housesAPI.update(editingHouse.id, formData);
+				await housesAPI.update(editingHouse.id, dataToSend);
 				notificationActions.success('House updated successfully');
 			} else {
-				await housesAPI.create(formData);
+				await housesAPI.create(dataToSend);
 				notificationActions.success('House created successfully');
 			}
 
 			showForm = false;
 			editingHouse = null;
-			formData = { name: '', address: '', description: '' };
+			formData = { name: '', address: '', description: '', owner_id: 0 };
 			await loadHouses();
 		} catch (err: any) {
 			notificationActions.error(err.message || 'Failed to save house');
@@ -84,9 +138,15 @@
 		}
 	}
 
-	// Load data on mount
+	function getOwnerName(ownerId: number): string {
+		if (!ownerId || ownerId === 0) return 'No owner';
+		const owner = owners.find(o => o.id === ownerId);
+		return owner ? owner.name : 'Unknown';
+	}
+
 	$effect(() => {
 		loadHouses();
+		loadOwners();
 	});
 </script>
 
@@ -137,6 +197,18 @@
 						/>
 					</div>
 
+					<!-- Owner -->
+					<div class="form-field">
+						<label for="owner">Owner</label>
+						<select id="owner" bind:value={formData.owner_id} onchange={handleOwnerChange}>
+							<option value={0}>-- No Owner --</option>
+							{#each owners as owner}
+								<option value={owner.id}>{owner.name}</option>
+							{/each}
+							<option value={-1}>+ New owner</option>
+						</select>
+					</div>
+
 					<!-- Description -->
 					<div class="form-field full-width">
 						<label for="description">Description</label>
@@ -161,6 +233,63 @@
 		</div>
 	{/if}
 
+	{#if showNewOwnerModal}
+		<div class="modal-overlay" onclick={cancelNewOwnerModal}>
+			<div class="modal-content" onclick={(e) => e.stopPropagation()}>
+				<h3 class="modal-title">Add New Owner</h3>
+				<form onsubmit={(e) => { e.preventDefault(); handleAddNewOwner(); }}>
+					<div class="form-grid">
+						<div class="form-field">
+							<label for="newOwnerName">Name <span class="required">*</span></label>
+							<input 
+								type="text" 
+								id="newOwnerName" 
+								bind:value={newOwnerData.name} 
+								placeholder="Enter owner name"
+								required 
+							/>
+						</div>
+						<div class="form-field">
+							<label for="newOwnerEmail">Email</label>
+							<input 
+								type="email" 
+								id="newOwnerEmail" 
+								bind:value={newOwnerData.email} 
+								placeholder="Enter email"
+							/>
+						</div>
+						<div class="form-field">
+							<label for="newOwnerPhone">Phone</label>
+							<input 
+								type="tel" 
+								id="newOwnerPhone" 
+								bind:value={newOwnerData.phone} 
+								placeholder="Enter phone"
+							/>
+						</div>
+						<div class="form-field full-width">
+							<label for="newOwnerAddress">Address</label>
+							<input 
+								type="text" 
+								id="newOwnerAddress" 
+								bind:value={newOwnerData.address} 
+								placeholder="Enter address"
+							/>
+						</div>
+					</div>
+					<div class="form-actions">
+						<button type="button" class="btn btn-secondary" onclick={cancelNewOwnerModal}>
+							Cancel
+						</button>
+						<button type="submit" class="btn btn-primary">
+							Add Owner
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	{/if}
+
 	<div class="houses-grid">
 		{#if houses.length === 0}
 			<div class="empty-message">No houses found. Add one to get started.</div>
@@ -169,6 +298,9 @@
 				<div class="house-card">
 					<h3 class="house-name">{house.name}</h3>
 					<p class="house-address">{house.address}</p>
+					{#if house.owner_id}
+						<p class="house-owner">Owner: {getOwnerName(house.owner_id)}</p>
+					{/if}
 					{#if house.description}
 						<p class="house-description">{house.description}</p>
 					{/if}
@@ -286,7 +418,8 @@
 	}
 
 	.form-field input,
-	.form-field textarea {
+	.form-field textarea,
+	.form-field select {
 		padding: 0.5rem;
 		border: 1px solid #d1d5db;
 		border-radius: 6px;
@@ -295,7 +428,8 @@
 	}
 
 	.form-field input:focus,
-	.form-field textarea:focus {
+	.form-field textarea:focus,
+	.form-field select:focus {
 		outline: none;
 		border-color: #3b82f6;
 		box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
@@ -335,6 +469,13 @@
 		margin: 0;
 		color: #6b7280;
 		font-size: 0.875rem;
+	}
+
+	.house-owner {
+		margin: 0.25rem 0 0 0;
+		color: #3b82f6;
+		font-size: 0.875rem;
+		font-weight: 500;
 	}
 
 	.house-description {
@@ -404,5 +545,34 @@
 			gap: 1rem;
 			align-items: stretch;
 		}
+	}
+
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 100;
+	}
+
+	.modal-content {
+		background: white;
+		border-radius: 8px;
+		padding: 1.5rem;
+		width: 90%;
+		max-width: 500px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+	}
+
+	.modal-title {
+		margin: 0 0 1.5rem 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: #111827;
 	}
 </style>

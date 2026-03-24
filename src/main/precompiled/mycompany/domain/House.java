@@ -18,6 +18,9 @@ public class House extends CVersion {
     private String description;
     
     @Indexable
+    private long ownerId;
+    
+    @Indexable
     private boolean active = true;
     
     public House() {
@@ -28,6 +31,15 @@ public class House extends CVersion {
         this.name = name;
         this.address = address;
         this.description = description;
+        this.active = active;
+        this.ownerId = 0;
+    }
+    
+    public House(String name, String address, String description, long ownerId, boolean active) {
+        this.name = name;
+        this.address = address;
+        this.description = description;
+        this.ownerId = ownerId;
         this.active = active;
     }
     
@@ -41,6 +53,9 @@ public class House extends CVersion {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     
+    public long getOwnerId() { return ownerId; }
+    public void setOwnerId(long ownerId) { this.ownerId = ownerId; }
+    
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     
@@ -49,6 +64,7 @@ public class House extends CVersion {
         return "House{" +
                 "name='" + name + '\'' +
                 ", address='" + address + '\'' +
+                ", ownerId=" + ownerId +
                 ", active=" + active +
                 '}';
     }

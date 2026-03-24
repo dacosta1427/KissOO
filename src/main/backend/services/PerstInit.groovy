@@ -46,6 +46,7 @@ class PerstInit {
             def admin = new PerstUser("admin", "admin", 1)
             admin.setEmail("admin@localhost")
             admin.setActive(true)
+            admin.setEmailVerified(true)
             
             PerstStorageManager.save(admin)
             PerstStorageManager.commitTransaction()
