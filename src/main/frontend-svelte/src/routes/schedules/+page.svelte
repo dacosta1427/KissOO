@@ -163,6 +163,13 @@
 		</div>
 	</div>
 
+	{#if loading}
+		<div class="fixed top-4 right-4 z-50 bg-blue-600 text-white px-4 py-2 rounded shadow-lg">
+			<span class="inline-block animate-spin mr-2">⏳</span>
+			Loading...
+		</div>
+	{/if}
+
 	{#if error}
 		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
 			{error}
@@ -174,7 +181,6 @@
 			<Form
 				fields={scheduleFields}
 				data={editingSchedule || {}}
-				{loading}
 				title={editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}
 				submitLabel={editingSchedule ? 'Update Schedule' : 'Add Schedule'}
 				onSubmit={handleFormSubmit}
