@@ -71,7 +71,9 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | **Phase 4: Implementation** | | | | |
 | 4.0 | Week 1: Master2 Foundation | 🔄 In Progress | - | Days 1-7 (UI Refinements) |  
 | 4.0.1 | Users Page Refinement | ✅ Completed | f21e388b | Form.svelte integration, toast notifications |  
-| 4.0.2 | CRUD Page Refinement | ✅ Completed | 135854c6 | Form.svelte integration, toast notifications |
+| 4.0.2 | CRUD Page Refinement | ✅ Completed | 135854c6 | Form.svelte integration, toast notifications |  
+| 4.0.3 | Cleaning Scheduler Alignment | ✅ Completed | f897fe65 | Frontend-backend field mapping, address field added |  
+| 4.0.4 | Runtime Testing | 🔄 In Progress | - | Testing with backend server (server started) |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 Pending | - | Days 1-7 |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
@@ -581,5 +583,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-23 (CRUD page refined: Form component integration, toast notifications added)  
-**Next Review**: After remaining UI refinements and testing
+**Last Updated**: 2026-03-23 (Runtime testing in progress, backend server responding)  
+**Next Review**: After runtime testing and any fixes
