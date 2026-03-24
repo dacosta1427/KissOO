@@ -42,7 +42,7 @@
   ];
 
   // Grid reference
-  let gridRef: AgGridWrapper;
+  let gridRef = $state<AgGridWrapper | null>(null);
 
   onMount(() => {
     loadRecords();

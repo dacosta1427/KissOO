@@ -139,10 +139,15 @@
 		<div class="loading-message">Loading schedule...</div>
 	{:else}
 		{#each filteredCleaners as cleaner}
-			<div class="board-row" key={cleaner.id}>
+			<div class="board-row" key={cleaner.id} role="row">
 				<div 
 					class="cleaner-cell {selectedCleanerId === cleaner.id ? 'selected' : ''}"
 					onclick={() => onCleanerClick?.(cleaner.id)}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							onCleanerClick?.(cleaner.id);
+						}
+					}}
 					role="button"
 					tabindex="0"
 				>
@@ -156,6 +161,7 @@
 							cleaner.id && dragOverDate === date
 							? 'drag-over'
 							: ''}"
+						role="gridcell"
 						ondragover={handleDragOver}
 						ondragenter={(e) => handleDragEnter(e, cleaner.id, date)}
 						ondragleave={(e) => handleDragLeave(e, cleaner.id, date)}
@@ -165,10 +171,17 @@
 							<div
 								class="schedule-item"
 								draggable="true"
+								role="button"
+								tabindex="0"
 								ondragstart={(e) =>
 									handleDragStart(e, scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]])}
 								onclick={() =>
 									handleScheduleClick(scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]])}
+								onkeydown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										handleScheduleClick(scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]]);
+									}
+								}}
 							>
 								<div class="schedule-house">
 								{getBookingInfo(
