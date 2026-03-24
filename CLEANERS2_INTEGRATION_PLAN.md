@@ -639,7 +639,16 @@ export const cleaningApi = {
 - **Fix**: Convert option values to strings and ensure plain objects.
 - **Files modified**: `src/routes/schedules/+page.svelte`
 
-**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, ensure option values are strings.
+**Issue 11: Schedule board not showing schedules due to field mismatch**
+- **Root Cause**: Frontend ScheduleBoard expected `assigned_date` and `house_name` but backend returns `date` and `guest_name`.
+- **Fix**: Updated ScheduleBoard to use `date` and `guest_name`; changed form field name from `assigned_date` to `date`.
+- **Files modified**: `src/lib/components/ScheduleBoard.svelte`, `src/routes/schedules/+page.svelte`
+
+**Issue 12: Added comprehensive test data**
+- Created 3 houses, 4 bookings, 2 additional cleaners for testing.
+- Ensures dropdowns have sufficient data.
+
+**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, ensure option values are strings; for data mismatch, verify field names between frontend and backend.
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
@@ -657,5 +666,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-24 (Session expiry redirect, bookings test data, cleaning dropdown value conversion)  
-**Next Review**: After testing cleaning dropdown and user addition with debug logs
+**Last Updated**: 2026-03-24 (Schedule board field fix, cleaning dropdown logging, comprehensive test data)  
+**Next Review**: After testing schedule board and cleaning dropdown with debug logs
