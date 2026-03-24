@@ -73,7 +73,8 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.1 | Users Page Refinement | ✅ Completed | f21e388b | Form.svelte integration, toast notifications |  
 | 4.0.2 | CRUD Page Refinement | ✅ Completed | 135854c6 | Form.svelte integration, toast notifications |  
 | 4.0.3 | Cleaning Scheduler Alignment | ✅ Completed | f897fe65 | Frontend-backend field mapping, address field added |  
-| 4.0.4 | Runtime Testing | 🔄 In Progress | - | Testing with backend server (server started) |
+| 4.0.4 | Runtime Testing | 🔄 In Progress | - | Testing with backend server (server started) |  
+| 4.0.5 | Bug Fix: GlobalModal Binding | ✅ Completed | 151ad7cd | Fixed Svelte 5 binding error in modal component |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 Pending | - | Days 1-7 |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
@@ -583,5 +584,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-23 (Runtime testing in progress, backend server responding)  
-**Next Review**: After runtime testing and any fixes
+**Last Updated**: 2026-03-23 (Fixed GlobalModal binding error, login issue remains - backend authentication problem)  
+**Next Review**: After backend authentication issue resolved
