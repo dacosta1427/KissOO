@@ -71,13 +71,26 @@
 			console.log('[schedules] cleaners loaded:', cleaners.length, cleaners);
 			console.log('[schedules] bookings loaded:', bookings.length);
 
-			// Update form options
-			scheduleFields[0].options = cleaners.map((c) => ({ value: c.id, label: c.name }));
-			scheduleFields[1].options = bookings.map((b) => ({
-				value: b.id,
-				label: `House: ${b.house_name || 'Unknown'} - ${b.check_in_date} to ${b.check_out_date}`
-			}));
+			// Update form options with plain objects
+			const cleanerOptions = cleaners.map((c) => {
+				const opt = { value: String(c.id), label: c.name };
+				console.log('[schedules] cleaner option:', opt);
+				return opt;
+			});
+			scheduleFields[0].options = cleanerOptions;
+			
+			const bookingOptions = bookings.map((b) => {
+				const opt = {
+					value: String(b.id),
+					label: `House: ${b.house_name || 'Unknown'} - ${b.check_in_date} to ${b.check_out_date}`
+				};
+				console.log('[schedules] booking option:', opt);
+				return opt;
+			});
+			scheduleFields[1].options = bookingOptions;
+			
 			console.log('[scheduleFields] cleaner options:', scheduleFields[0].options);
+			console.log('[scheduleFields] booking options:', scheduleFields[1].options);
 			// Trigger reactivity by reassigning array
 			scheduleFields = [...scheduleFields];
 

@@ -622,11 +622,24 @@ export const cleaningApi = {
   3. Frontend mapping incorrect (options not set)
 - **Next Steps**: Request user to provide console logs from `[Cleaning.ts]` and `[schedules]` prefixes.
 
-**Enhancement: Added direct Schedules link to navbar**
-- Added Schedules link in desktop and mobile navigation for easier access (previously only in Cleaning dropdown)
-- Files modified: `src/lib/components/Navbar.svelte`
+**Issue 8: Session expiry should redirect to Home screen**
+- **Change**: Modified `Server.handleSessionError` to redirect to '/' instead of '/login?expired=true'.
+- **Added**: "Logged out" indicator in Navbar when not authenticated.
+- **Files modified**: `src/lib/services/Server.ts`, `src/lib/components/Navbar.svelte`
 
-**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized.
+**Issue 9: Add bookings to test data**
+- **Action**: Created a test house and booking via backend API.
+- **Result**: Bookings dropdown now has at least one entry.
+
+**Issue 10: Cleaners dropdown not working despite data being present**
+- **Observation**: Logs show cleaners loaded (3), options length 3, but dropdown not showing options.
+- **Possible Causes**: 
+  1. Options values were numbers instead of strings (select expects string values)
+  2. Proxy objects interfering with rendering
+- **Fix**: Convert option values to strings and ensure plain objects.
+- **Files modified**: `src/routes/schedules/+page.svelte`
+
+**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, ensure option values are strings.
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
@@ -644,5 +657,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-24 (Added schedules button, session UUID fix, detailed logging)  
+**Last Updated**: 2026-03-24 (Session expiry redirect, bookings test data, cleaning dropdown value conversion)  
 **Next Review**: After testing cleaning dropdown and user addition with debug logs

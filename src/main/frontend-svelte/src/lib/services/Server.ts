@@ -391,9 +391,9 @@ export class Server {
     session.clearCredentials();
     session.clear();
     
-    // Redirect to login with error message
+    // Redirect to home with logout message
     if (typeof window !== 'undefined') {
-      window.location.href = '/login?expired=true';
+      window.location.href = '/';
     }
     
     throw new Error(message);

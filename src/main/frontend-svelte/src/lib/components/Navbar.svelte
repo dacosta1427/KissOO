@@ -81,6 +81,7 @@
           <a href="/signup" class="text-gray-600 hover:text-gray-900 font-medium">
             Sign Up
           </a>
+          <span class="text-red-600 text-sm">Logged out</span>
         {/if}
       </nav>
       
