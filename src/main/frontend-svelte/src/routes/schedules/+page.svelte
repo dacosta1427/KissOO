@@ -19,31 +19,51 @@
 	
 	let selectedCleanerId = $state<number | null>(null);
 
-	let scheduleFields = $state([
+	// Svelte 5: Use $derived for form options - this ensures reactivity
+	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.id), label: c.name })));
+	let bookingOptions = $derived(bookings.map((b) => ({
+		value: String(b.id),
+		label: `${b.guest_name || 'Guest'} - ${b.check_in_date} to ${b.check_out_date}`
+	})));
+	
+	// Build fields as $derived so they update when options change
+	let scheduleFields = $derived([
 		{
 			name: 'cleaner_id',
 			label: 'Cleaner',
-			type: 'select',
+			type: 'select' as const,
 			required: true,
-			options: []
+			options: cleanerOptions
 		},
 		{
 			name: 'booking_id',
 			label: 'Booking',
-			type: 'select',
+			type: 'select' as const,
 			required: true,
-			options: []
+			options: bookingOptions
 		},
 		{
 			name: 'date',
 			label: 'Date',
-			type: 'date',
+			type: 'date' as const,
+			required: true
+		},
+		{
+			name: 'start_time',
+			label: 'Start Time',
+			type: 'time' as const,
+			required: true
+		},
+		{
+			name: 'end_time',
+			label: 'End Time',
+			type: 'time' as const,
 			required: true
 		},
 		{
 			name: 'status',
 			label: 'Status',
-			type: 'select',
+			type: 'select' as const,
 			required: true,
 			options: [
 				{ value: 'pending', label: 'Pending' },
@@ -54,12 +74,16 @@
 		}
 	]);
 
+	// Computed: get selected cleaner name
+	let selectedCleanerName = $derived(
+		selectedCleanerId ? cleaners.find(c => c.id === selectedCleanerId)?.name || 'Unknown' : ''
+	);
+
 	async function loadData() {
 		loading = true;
 		error = null;
 
 		try {
-			// Load all data in parallel
 			const [schedulesResult, cleanersResult, bookingsResult] = await Promise.all([
 				schedulesAPI.getAll({ dateRange }),
 				cleanersAPI.getAll(),
@@ -69,33 +93,6 @@
 			schedules = schedulesResult;
 			cleaners = cleanersResult;
 			bookings = bookingsResult;
-
-			console.log('[schedules] schedules loaded:', schedules.length, schedules);
-			console.log('[schedules] cleaners loaded:', cleaners.length, cleaners);
-			console.log('[schedules] bookings loaded:', bookings.length);
-
-			// Update form options with plain objects
-			const cleanerOptions = cleaners.map((c) => {
-				const opt = { value: String(c.id), label: c.name };
-				console.log('[schedules] cleaner option:', opt);
-				return opt;
-			});
-			scheduleFields[0].options = cleanerOptions;
-			
-			const bookingOptions = bookings.map((b) => {
-				const opt = {
-					value: String(b.id),
-					label: `House: ${b.house_name || 'Unknown'} - ${b.check_in_date} to ${b.check_out_date}`
-				};
-				console.log('[schedules] booking option:', opt);
-				return opt;
-			});
-			scheduleFields[1].options = bookingOptions;
-			
-			console.log('[scheduleFields] cleaner options:', scheduleFields[0].options);
-			console.log('[scheduleFields] booking options:', scheduleFields[1].options);
-			// Trigger reactivity by reassigning array
-			scheduleFields = [...scheduleFields];
 
 			dataStores.schedules.set(schedules);
 			dataStores.cleaners.set(cleaners);
@@ -107,21 +104,7 @@
 		}
 	}
 
-	async function handleScheduleChange(newSchedule) {
-		try {
-			if (editingSchedule) {
-				await schedulesAPI.update(editingSchedule.id, newSchedule);
-			} else {
-				await schedulesAPI.create(newSchedule);
-			}
-
-			await loadData();
-		} catch (err) {
-			error = err.message;
-		}
-	}
-
-	async function handleFormSubmit(data) {
+	async function handleFormSubmit(data: Record<string, any>) {
 		try {
 			if (editingSchedule) {
 				await schedulesAPI.update(editingSchedule.id, data);
@@ -142,32 +125,22 @@
 		editingSchedule = null;
 	}
 
-	function handleScheduleClick(schedule) {
-		console.log('[schedules] Schedule clicked:', schedule);
+	function handleScheduleClick(schedule: Schedule) {
 		editingSchedule = schedule;
 		showForm = true;
 	}
 	
-	function handleCleanerClick(cleanerId) {
+	function handleCleanerClick(cleanerId: number) {
 		if (selectedCleanerId === cleanerId) {
-			selectedCleanerId = null; // deselect
+			selectedCleanerId = null;
 		} else {
 			selectedCleanerId = cleanerId;
 		}
 	}
 
-	// Svelte 5: Use $effect for lifecycle management
+	// Load data on mount
 	$effect(() => {
 		loadData();
-	});
-
-	// Debug effect for form visibility
-	$effect(() => {
-		console.log('[schedules] showForm changed:', showForm);
-		if (showForm) {
-			console.log('[schedules] scheduleFields[0].options length:', scheduleFields[0].options.length);
-			console.log('[schedules] scheduleFields[0].options:', scheduleFields[0].options);
-		}
 	});
 </script>
 
@@ -190,19 +163,6 @@
 		</div>
 	</div>
 
-	{#if selectedCleanerId}
-		<div class="mb-4">
-			<button class="btn btn-secondary" onclick={() => selectedCleanerId = null}>
-				Show All Cleaners
-			</button>
-		</div>
-	{/if}
-
-	{#if cleaners.length === 0 && !loading}
-		<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-			No cleaners found. Please add cleaners before creating schedules.
-		</div>
-	{/if}
 	{#if error}
 		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
 			{error}
@@ -223,9 +183,14 @@
 		</div>
 	{/if}
 
-	{#if selectedCleanerId}
-		<div class="mb-4 p-2 bg-blue-100 text-blue-800 rounded">
-			Showing schedule for: {cleaners.find(c => c.id === selectedCleanerId)?.name || 'Unknown'}
+	{#if selectedCleanerName}
+		<div class="mb-4 flex items-center gap-4">
+			<span class="px-4 py-2 bg-blue-100 text-blue-800 rounded">
+				Showing: <strong>{selectedCleanerName}</strong>
+			</span>
+			<button class="btn btn-secondary" onclick={() => selectedCleanerId = null}>
+				Show All Cleaners
+			</button>
 		</div>
 	{/if}
 
@@ -236,10 +201,19 @@
 		{dateRange}
 		{loading}
 		{error}
-		onScheduleChange={handleScheduleChange}
+		onScheduleChange={async (newSchedule) => {
+			try {
+				if (editingSchedule) {
+					await schedulesAPI.update(editingSchedule.id, newSchedule);
+				}
+				await loadData();
+			} catch (err) {
+				error = err.message;
+			}
+		}}
 		onScheduleClick={handleScheduleClick}
 		onCleanerClick={handleCleanerClick}
-		selectedCleanerId={selectedCleanerId}
+		{selectedCleanerId}
 	/>
 </div>
 

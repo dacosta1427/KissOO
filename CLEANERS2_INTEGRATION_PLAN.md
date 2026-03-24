@@ -648,7 +648,18 @@ export const cleaningApi = {
 - Created 3 houses, 4 bookings, 2 additional cleaners for testing.
 - Ensures dropdowns have sufficient data.
 
-**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, ensure option values are strings; for data mismatch, verify field names between frontend and backend.
+**Issue 13: Cleaning dropdown not rendering options (FIXED)**
+- **Root Cause**: Svelte 5 $state proxy reactivity - mutating options array inside $state object doesn't trigger re-render
+- **Solution**: Rewrote schedules page to use $derived for cleanerOptions and bookingOptions, making scheduleFields also $derived
+- **Key Change**: `let cleanerOptions = $derived(cleaners.map(...))` ensures options update when cleaners array changes
+- **Files modified**: `src/routes/schedules/+page.svelte`, `src/lib/components/Form.svelte` (removed debug)
+
+**Issue 14: Schedule board improvements**
+- Added time fields (start_time, end_time) to form
+- Improved booking label to show guest name instead of house
+- Cleaner filter now shows selected cleaner name in banner
+
+**Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, use $derived for options instead of mutating $state arrays.
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
@@ -666,5 +677,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-24 (Schedule board field fix, cleaning dropdown logging, comprehensive test data)  
-**Next Review**: After testing schedule board and cleaning dropdown with debug logs
+**Last Updated**: 2026-03-24 (Fixed cleaning dropdown with $derived, added time fields, improved UI)  
+**Next Review**: After testing cleaning dropdown and schedule board functionality

@@ -22,12 +22,6 @@
 	let dates = $derived(generateDateRange(dateRange.start, dateRange.end));
 	let scheduleMatrix = $derived(buildScheduleMatrix(schedules, cleaners, dates));
 	let filteredCleaners = $derived(selectedCleanerId ? cleaners.filter(c => c.id === selectedCleanerId) : cleaners);
-	
-	// Debug log for schedules
-	$effect(() => {
-		console.log('[ScheduleBoard] schedules received:', schedules.length, schedules);
-		console.log('[ScheduleBoard] scheduleMatrix:', scheduleMatrix);
-	});
 
 	function generateDateRange(start, end) {
 		if (!start || !end) return [];
@@ -108,7 +102,6 @@
 	}
 
 	function handleScheduleClick(schedule) {
-		console.log('[ScheduleBoard] Schedule clicked:', schedule);
 		onScheduleClick?.(schedule);
 	}
 

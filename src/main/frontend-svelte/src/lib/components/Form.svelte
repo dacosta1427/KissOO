@@ -37,18 +37,6 @@
 		onUpdate
 	}: Props = $props();
 
-	// Debug logging for fields
-	$effect(() => {
-		console.log('[Form] fields updated:', fields?.length);
-		if (fields && fields.length > 0) {
-			fields.forEach((field, i) => {
-				if (field.options) {
-					console.log(`[Form] field ${i} (${field.name}) options:`, field.options.map(o => ({ value: o.value, label: o.label })));
-				}
-			});
-		}
-	});
-
 	function handleSubmit(event: Event) {
 		event.preventDefault();
 		onSubmit?.(data);
@@ -114,7 +102,6 @@
 						disabled={loading}
 						class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm {isFieldInvalid(field) ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : ''}"
 						onchange={(e) => updateField(field.name, (e.target as HTMLSelectElement).value)}
-						style="background-color: red;"
 					>
 						<option value="">-- Select {field.label} --</option>
 						{#each (field.options ? [...field.options] : []) as option}
