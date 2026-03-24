@@ -56,35 +56,46 @@
   });
 
   async function loadUsers() {
+    console.log('[users] loadUsers called');
     dataLoading = true;
     error = '';
     try {
       users = await getUsers();
+      console.log('[users] loadUsers success, count:', users.length);
     } catch (e: any) {
       error = 'Failed to load users: ' + (e.message || 'Unknown error');
+      console.error('[users] loadUsers error:', error);
     } finally {
       dataLoading = false;
     }
   }
 
   async function handleAddUser(data: Record<string, any>) {
-    if (!canAddUser) return;
+    console.log('[users] handleAddUser called with:', data);
+    if (!canAddUser) {
+      console.log('[users] canAddUser false, aborting');
+      return;
+    }
     
     loading = true;
     error = '';
 
     try {
       const res = await addUser(data.username, data.password);
+      console.log('[users] addUser response:', res);
       if (res.success) {
         notificationActions.success('User added successfully');
         addFormData = { username: '', password: '' };
+        console.log('[users] addUser success, reloading users...');
         await loadUsers();
       } else {
         error = res.error || 'Failed to add user';
+        console.error('[users] addUser failed:', error);
         notificationActions.error(error);
       }
     } catch (e: any) {
       error = 'Failed to add user: ' + (e.message || 'Unknown error');
+      console.error('[users] addUser exception:', error);
       notificationActions.error(error);
     } finally {
       loading = false;

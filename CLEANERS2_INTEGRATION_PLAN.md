@@ -606,6 +606,22 @@ export const cleaningApi = {
 - **Files modified**: `src/routes/+layout.svelte`
 - **Impact**: Fixes cleaning dropdown, user list loading, and any other authenticated API calls after page refresh.
 
+**Issue 6: Adding user does not update UI (list) and may not be persisted**
+- **Observation**: `getUsers` returns 4 rows (works), but adding user via UI may fail silently or not trigger UI update.
+- **Possible Causes**:
+  1. `addUser` API returns success but user not created (duplicate username? unique constraint?)
+  2. `loadUsers` not called after successful addition
+  3. Reactivity issue: `users` array not updated correctly
+- **Next Steps**: Add detailed logging to `users/+page.svelte` to trace add user flow.
+
+**Issue 7: Cleaning dropdown still not showing data**
+- **Observation**: Session UUID now restored (logs show UUID present), but dropdown may still be empty.
+- **Possible Causes**:
+  1. Cleaning service call fails (need console logs from Cleaning.ts)
+  2. Cleaning service returns empty data (no cleaners in DB? but we added three)
+  3. Frontend mapping incorrect (options not set)
+- **Next Steps**: Request user to provide console logs from `[Cleaning.ts]` and `[schedules]` prefixes.
+
 **Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized.
 
 ### Questions for Clarification
