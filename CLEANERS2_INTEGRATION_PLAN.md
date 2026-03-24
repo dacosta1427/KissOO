@@ -622,6 +622,10 @@ export const cleaningApi = {
   3. Frontend mapping incorrect (options not set)
 - **Next Steps**: Request user to provide console logs from `[Cleaning.ts]` and `[schedules]` prefixes.
 
+**Enhancement: Added direct Schedules link to navbar**
+- Added Schedules link in desktop and mobile navigation for easier access (previously only in Cleaning dropdown)
+- Files modified: `src/lib/components/Navbar.svelte`
+
 **Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized.
 
 ### Questions for Clarification
@@ -640,5 +644,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-23 (Fixed frontend Auth.ts to set Server.uuid after login)  
-**Next Review**: After testing SV5 frontend login with debug logs
+**Last Updated**: 2026-03-24 (Added schedules button, session UUID fix, detailed logging)  
+**Next Review**: After testing cleaning dropdown and user addition with debug logs
