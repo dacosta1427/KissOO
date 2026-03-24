@@ -16,7 +16,7 @@
 </script>
 
 <Modal 
-  bind:open={modalState.open} 
+  bind:open={$modalStore.open} 
   title={modalState.title}
   onClose={handleCancel}
 >
