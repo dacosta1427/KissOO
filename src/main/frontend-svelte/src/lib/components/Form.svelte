@@ -114,6 +114,7 @@
 						disabled={loading}
 						class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm {isFieldInvalid(field) ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500' : ''}"
 						onchange={(e) => updateField(field.name, (e.target as HTMLSelectElement).value)}
+						style="background-color: red;"
 					>
 						<option value="">-- Select {field.label} --</option>
 						{#each (field.options ? [...field.options] : []) as option}
