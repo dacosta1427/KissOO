@@ -72,9 +72,8 @@ class Users {
                 return
             }
             
-            // Link user to owner
-            user.setOwner(owner)
-            PerstUserManager.update(user)
+            // Owner already has perstUser set via OwnerManager.create
+            // No need to link user to owner separately (Actor.perstUser is set)
             
             user.setActive(injson.getString("userActive") == "Y")
             user.setEmailVerified(true)  // Allow immediate login without email verification

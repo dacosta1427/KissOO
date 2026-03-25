@@ -37,7 +37,8 @@ public class OwnerManager extends BaseManager<Owner> {
         boolean active = args.length > 4 ? Boolean.parseBoolean(args[4].toString()) : true;
         PerstUser user = args.length > 5 && args[5] instanceof PerstUser ? (PerstUser) args[5] : null;
         
-        Owner owner = new Owner(name, email, phone, address, active);
+        Owner owner = new Owner(name, email, phone, address);
+        owner.setActive(active);
         owner.setUser(user);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
