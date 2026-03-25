@@ -129,6 +129,12 @@
 </script>
 
 <div class="schedule-board">
+	<div class="status-legend">
+		<span class="legend-item"><span class="legend-color status-scheduled"></span> Scheduled</span>
+		<span class="legend-item"><span class="legend-color status-completed"></span> Completed</span>
+		<span class="legend-item"><span class="legend-color status-cancelled"></span> Cancelled</span>
+		<span class="legend-item"><span class="legend-color status-pending"></span> Pending</span>
+	</div>
 	<div class="board-header">
 		<div class="cleaner-header">Cleaners</div>
 		{#each dates as date}
@@ -174,31 +180,28 @@
 						ondrop={(e) => handleDrop(e, cleaner.id, date)}
 					>
 						{#if scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]]}
+							{@const item = scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]]}
 							<div
-								class="schedule-item"
+								class="schedule-item status-{item.status}"
 								draggable="true"
 								role="button"
 								tabindex="0"
-								ondragstart={(e) =>
-									handleDragStart(e, scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]])}
-								onclick={() =>
-									handleScheduleClick(scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]])}
+								ondragstart={(e) => handleDragStart(e, item)}
+								onclick={() => handleScheduleClick(item)}
 								onkeydown={(e) => {
 									if (e.key === 'Enter' || e.key === ' ') {
-										handleScheduleClick(scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]]);
+										handleScheduleClick(item);
 									}
 								}}
 							>
 								<div class="schedule-time">
-									{scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].start_time || ''} - {scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].end_time || ''}
+									{item.start_time || ''} - {item.end_time || ''}
 								</div>
 								<div class="schedule-house">
-								{getBookingInfo(
-									scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].booking_id
-								)?.guest_name || 'Unknown Guest'}
+								{getBookingInfo(item.booking_id)?.guest_name || 'Unknown Guest'}
 								</div>
 								<div class="schedule-status">
-									{scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]].status}
+									{item.status}
 								</div>
 							</div>
 						{:else}
@@ -224,6 +227,43 @@
 		border: 1px solid var(--border-color);
 		border-radius: 8px;
 		background: white;
+	}
+
+	.status-legend {
+		display: flex;
+		gap: 1.5rem;
+		padding: 0.75rem 1rem;
+		background: #f9fafb;
+		border-bottom: 1px solid var(--border-color);
+		font-size: 0.85rem;
+	}
+
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.legend-color {
+		width: 16px;
+		height: 16px;
+		border-radius: 4px;
+	}
+
+	.legend-color.status-scheduled {
+		background: #3b82f6;
+	}
+
+	.legend-color.status-completed {
+		background: #10b981;
+	}
+
+	.legend-color.status-cancelled {
+		background: #ef4444;
+	}
+
+	.legend-color.status-pending {
+		background: #f59e0b;
 	}
 
 	.board-header {
@@ -320,8 +360,6 @@
 	}
 
 	.schedule-item {
-		background: var(--primary-color);
-		color: white;
 		padding: 8px;
 		border-radius: 6px;
 		cursor: grab;
@@ -333,8 +371,27 @@
 		justify-content: space-between;
 	}
 
+	.schedule-item.status-scheduled {
+		background: #3b82f6;
+		color: white;
+	}
+
+	.schedule-item.status-completed {
+		background: #10b981;
+		color: white;
+	}
+
+	.schedule-item.status-cancelled {
+		background: #ef4444;
+		color: white;
+	}
+
+	.schedule-item.status-pending {
+		background: #f59e0b;
+		color: white;
+	}
+
 	.schedule-item:hover {
-		background: var(--primary-hover);
 		transform: translateY(-2px);
 		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 	}
