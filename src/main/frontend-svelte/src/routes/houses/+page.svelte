@@ -235,7 +235,7 @@
 
 	{#if showNewOwnerModal}
 		<div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={cancelNewOwnerModal} onkeydown={(e) => e.key === 'Escape' && cancelNewOwnerModal()}>
-			<div class="modal-content" role="document" onclick={(e) => e.stopPropagation()}>
+			<div class="modal-content" role="document">
 				<h3 class="modal-title">Add New Owner</h3>
 				<form onsubmit={(e) => { e.preventDefault(); handleAddNewOwner(); }}>
 					<div class="form-grid">
