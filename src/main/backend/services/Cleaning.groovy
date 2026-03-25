@@ -425,8 +425,8 @@ class Cleaning {
             String date = data.getString("date")
             String startTime = data.getString("start_time")
             String endTime = data.getString("end_time")
-            String notes = data.optString("notes", "")
-            String status = data.optString("status", "scheduled")
+            String notes = data.getString("notes", "")
+            String status = data.getString("status", "scheduled")
             if (status == null || status.isEmpty()) {
                 status = "scheduled"
             }
@@ -436,11 +436,14 @@ class Cleaning {
             
             def tc = oodb.PerstStorageManager.createContainer()
             tc.addInsert(schedule)
+            println "[Cleaning.groovy] createSchedule: storing schedule with cleanerId=${cleanerId}, bookingId=${bookingId}, date=${date}"
             if (!oodb.PerstStorageManager.store(tc)) {
+                println "[Cleaning.groovy] createSchedule: store failed"
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to save schedule")
                 return
             }
+            println "[Cleaning.groovy] createSchedule: store succeeded, schedule OID=${schedule.getOid()}"
             
             JSONObject result = new JSONObject()
             result.put("id", schedule.getOid())
@@ -452,6 +455,7 @@ class Cleaning {
             result.put("notes", notes)
             result.put("status", status)
             outjson.put("data", result)
+            println "[Cleaning.groovy] createSchedule: returning data with id=${schedule.getOid()}"
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
@@ -647,7 +651,7 @@ class Cleaning {
             String name = data.getString("name")
             String address = data.getString("address", "")
             String description = data.getString("description", "")
-            long ownerId = data.optLong("owner_id", 0)
+            long ownerId = data.has("owner_id") ? data.getLong("owner_id") : 0
             boolean active = data.getBoolean("active", true)
             
             House house = HouseManager.create(name, address, description, ownerId, active)

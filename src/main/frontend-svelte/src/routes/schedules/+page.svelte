@@ -73,6 +73,7 @@
 			schedules = schedulesResult;
 			cleaners = cleanersResult;
 			bookings = bookingsResult;
+			console.log('[schedules] loaded schedules:', schedules.length, 'cleaners:', cleaners.length, 'bookings:', bookings.length);
 
 			dataStores.schedules.set(schedules);
 			dataStores.cleaners.set(cleaners);

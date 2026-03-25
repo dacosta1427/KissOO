@@ -105,6 +105,7 @@ if (session.uuid) {
 | Issue Pattern | Failed Solution | Root Cause | Correct Solution | File References |
 |---------------|-----------------|------------|------------------|-----------------|
 | Backend JSON method errors | Used `optString`/`optBoolean` | Methods don't exist in JSONObject | Use `getString`/`getBoolean` | `Cleaning.groovy` |
+| Optional JSON methods missing | Used `optLong` with default | JSONObject may not have optLong with default | Use `has()` + `getLong()` or default value | `Cleaning.groovy` |
 | Field name mismatches | Expected `assigned_date`/`house_name` | Backend returns `date`/`guest_name` | Align field names between frontend/backend | `ScheduleBoard.svelte` |
 | Unique constraint violations | `userId = 0` for all users | Unique constraint on `userId` field | Generate unique `userId` (max+1) | `Users.groovy` |
 | Missing `_Success` field | Inconsistent backend responses | All services must return `_Success` | Ensure all service methods set `_Success` | All service files |

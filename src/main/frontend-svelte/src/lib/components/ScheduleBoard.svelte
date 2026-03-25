@@ -23,6 +23,15 @@
 	let dates = $derived(generateDateRange(dateRange.start, dateRange.end));
 	let scheduleMatrix = $derived(buildScheduleMatrix(schedules, cleaners, dates));
 	let filteredCleaners = $derived(selectedCleanerId ? cleaners.filter(c => c.id === selectedCleanerId) : cleaners);
+	
+	$effect(() => {
+		console.log('[ScheduleBoard] schedules changed:', schedules.length, 'scheduleMatrix keys:', Object.keys(scheduleMatrix).length);
+		if (cleaners.length > 0 && dates.length > 0) {
+			const firstCleaner = cleaners[0];
+			const firstDate = dates[0].toISOString().split('T')[0];
+			console.log('[ScheduleBoard] sample cell:', firstCleaner.id, firstDate, scheduleMatrix[firstCleaner.id]?.[firstDate]);
+		}
+	});
 
 	function generateDateRange(start, end) {
 		if (!start || !end) return [];
@@ -50,8 +59,10 @@
 			});
 		});
 
+		console.log('[ScheduleBoard] building matrix with', schedules.length, 'schedules');
 		schedules.forEach((schedule) => {
 			const dateString = schedule.date;
+			console.log('[ScheduleBoard] schedule', schedule.id, 'date', dateString, 'cleaner', schedule.cleaner_id);
 			cleaners.forEach((cleaner) => {
 				if (cleaner.id === schedule.cleaner_id && matrix[cleaner.id][dateString] !== undefined) {
 					matrix[cleaner.id][dateString] = schedule;
