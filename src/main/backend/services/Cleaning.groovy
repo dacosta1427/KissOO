@@ -426,8 +426,9 @@ class Cleaning {
             String startTime = data.getString("start_time")
             String endTime = data.getString("end_time")
             String notes = data.getString("notes", "")
+            String status = data.optString("status", "scheduled")
             
-            Schedule schedule = ScheduleManager.create(cleanerId, bookingId, date, startTime, endTime, notes)
+            Schedule schedule = ScheduleManager.create(cleanerId, bookingId, date, startTime, endTime, notes, status)
             if (schedule == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create schedule")
