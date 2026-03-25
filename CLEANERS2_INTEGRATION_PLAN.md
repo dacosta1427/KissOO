@@ -8,10 +8,12 @@
 1. **SVELTE 5 ONLY** - No Svelte 4 patterns allowed. Use Svelte 5 runes ($state, $derived, $effect, $props).
 2. **PROTOCOL MUST BE HONORED** - After each completed, tested, and committed task:
    - Read the 2 guides (KissOO-Guide.md and sv5guide.md)
+   - Read AGENTS_FRONTEND.MD for frontend-specific issues
    - Read this plan document
-   - Update this plan with progress
+   - Update this plan with progress (within 4 hours)
    - Commit and push changes
    This prevents regression and maintains context.
+3. **FRONTEND NON-WORKING SOLUTIONS** - Document all frontend non-working solutions in AGENTS_FRONTEND.MD immediately after discovery.
 
 ## Table of Contents
 1. [Executive Summary](#executive-summary)
@@ -86,7 +88,7 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.14 | ScheduleBoard Improvements | ✅ Completed | - | Show time in schedule boxes, add + button on empty cells, improved drag/drop |
 | 4.0.15 | Status Legend & Colors | ✅ Completed | - | Added color legend, fixed schedule colors, fixed createSchedule to pass status |
 | 4.0.16 | Fix ScheduleManager.create | ✅ Completed | - | Added status parameter handling to ScheduleManager.create |
-| 4.1 | Week 2: Cleaners2 Branch | 🔄 Pending | - | Days 1-7 |
+| 4.1 | Week 2: Cleaners2 Branch | 🔄 In Progress | - | Days 1-7 - Active development per commits (owners, schedules, UI fixes) |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
 
@@ -567,18 +569,18 @@ export const cleaningApi = {
 ## Next Steps
 
 ### Immediate Actions
-1. **Phase 3 Started** - Branch created, cleaning scheduler code copied
-2. **Complete API Integration** - Ensure kiss-client.js works with Server.call()
-3. **Create Backend Service** - Implement Cleaning.groovy service in backend
-4. **Test Integration** - Verify cleaning pages can communicate with backend
+1. **Phase 3 Completed** - Branch created, cleaning scheduler code copied, API integrated
+2. **Complete Week 2 Tasks** - Finish cleaning scheduler features (owners, schedules, UI polish)
+3. **Address Frontend Questions** - Answer the 10 clarification questions (including new frontend ones)
+4. **Protocol Compliance** - Update this plan within 4 hours of task completion
 
 ### Current Status
 - ✅ **master2 branch** created and pushed
 - ✅ **Phase 1 tasks** completed (session, components, state, API)
 - ✅ **cleaners2 branch** created from master2
 - ✅ **Cleaning scheduler code** copied (pages, components, API adapter)
-- 🔄 **API integration** in progress (kiss-client.js adapted to Server.call)
-- 🔄 **Backend service** not yet created (Cleaning.groovy needed)
+- ✅ **API integration** completed (kiss-client.js adapted to Server.call)
+- ✅ **Backend service** created (Cleaning.groovy implemented and fixed)
 
 ### Bug Fixes and Investigation Results (2026-03-24)
 
@@ -689,6 +691,11 @@ export const cleaningApi = {
 3. **Component migration**: Should we migrate ALL existing forms to Form.svelte or only new ones?
 4. **Backend changes**: Do we need to create `Cleaning.groovy` service or adapt existing services?
 5. **Email verification**: Should new users be auto-verified or require email verification workflow?
+6. **Reactivity Strategy**: Should we adopt $derived pattern for all computed options?
+7. **Component Migration**: Migrate all existing forms to Form.svelte or create hybrid approach?
+8. **Native vs Custom Components**: When to use native HTML elements vs custom Svelte components?
+9. **Proxy Object Handling**: Establish guidelines for dealing with Svelte 5 proxy objects?
+10. **Error Differentiation**: How to differentiate between auth errors (unverified email vs wrong password)?
 
 ### Long-term Considerations
 1. **Manager pattern**: Evaluate if PerstHelper adds value over direct PerstStorageManager calls
@@ -699,5 +706,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-24 (Fixed cleaning dropdown with native selects, auto-fill workdate, houses page)  
-**Next Review**: After testing cleaning dropdown, booking auto-fill, and houses page
+**Last Updated**: 2026-03-25 (Updated progress tracker, created AGENTS_FRONTEND.MD)  
+**Next Review**: After completing Week 2 tasks (protocol requires updates within 4 hours of task completion)
