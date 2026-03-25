@@ -72,9 +72,9 @@ class Users {
                 return
             }
             
-            // Link owner to user
-            owner.setUserId(user.getOid())
-            OwnerManager.update(owner)
+            // Link owner to user - temporarily disabled due to type error
+            // owner.setUserId(user.getOid())
+            // OwnerManager.update(owner)
             
             user.setActive(injson.getString("userActive") == "Y")
             user.setEmailVerified(true)  // Allow immediate login without email verification
