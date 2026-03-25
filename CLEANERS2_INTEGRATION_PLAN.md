@@ -689,6 +689,19 @@ export const cleaningApi = {
 - **Files modified**: `src/main/backend/services/Cleaning.groovy` (lines 428-429, 654)
 - **Result**: Schedule creation now works correctly, schedule appears in database and UI.
 
+**Issue 19: Enhanced booking management with owner-house relationship and calendar view**
+- **Requirement**: Add mandatory check-in (16:00) and check-out (10:00) times to houses, number of dogs field to bookings, and calendar month view for booking date selection.
+- **Backend Changes**:
+  - Added `check_in_time`, `check_out_time` fields to House entity (default 16:00/10:00)
+  - Added `dogs_count` field to Booking entity (default 0)
+  - Updated all CRUD methods in Cleaning.groovy and managers
+- **Frontend Changes**:
+  - Updated houses page form with time input fields
+  - Updated Booking interface with dogs_count
+  - Added CalendarMonth.svelte component with drag date selection
+  - Started enhancing bookings page with owner selection (pending full integration)
+- **Status**: Backend changes complete, frontend partially updated. Need to integrate calendar component, owner-house filtering, and time defaults into booking form.
+
 **Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, use $derived for options instead of mutating $state arrays; if Form component dropdowns fail, use native HTML select elements.
 
 ### Questions for Clarification
@@ -712,5 +725,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-25 (Fixed schedule creation missing JSON methods, updated AGENTS_FRONTEND.MD)  
-**Next Review**: After completing Week 2 tasks (protocol requires updates within 4 hours of task completion)
+**Last Updated**: 2026-03-25 (Added house times, booking dogs count, calendar component; booking form integration pending)  
+**Next Review**: After completing booking form enhancements (protocol requires updates within 4 hours of task completion)
