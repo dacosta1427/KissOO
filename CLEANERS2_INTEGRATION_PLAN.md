@@ -85,6 +85,7 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.13 | Schedule Form Fixes | ✅ Completed | - | Fixed status to include 'scheduled', 24H time, yyyymmdd date format |
 | 4.0.14 | ScheduleBoard Improvements | ✅ Completed | - | Show time in schedule boxes, add + button on empty cells, improved drag/drop |
 | 4.0.15 | Status Legend & Colors | ✅ Completed | - | Added color legend, fixed schedule colors, fixed createSchedule to pass status |
+| 4.0.16 | Fix ScheduleManager.create | ✅ Completed | - | Added status parameter handling to ScheduleManager.create |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 Pending | - | Days 1-7 |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed

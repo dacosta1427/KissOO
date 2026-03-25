@@ -63,8 +63,10 @@ public class ScheduleManager extends BaseManager<Schedule> {
         String startTime = args[3].toString();
         String endTime = args[4].toString();
         String notes = args.length > 5 ? args[5].toString() : null;
+        String status = args.length > 6 ? args[6].toString() : "scheduled";
         
         Schedule schedule = new Schedule(cleanerId, bookingId, scheduleDate, startTime, endTime, notes);
+        schedule.setStatus(status);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(schedule);
