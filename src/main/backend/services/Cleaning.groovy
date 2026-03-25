@@ -446,9 +446,9 @@ class Cleaning {
             }
             
             JSONObject result = new JSONObject()
-            result.put("id", schedule.getOid())
-            result.put("cleaner_id", schedule.getCleanerId())
-            result.put("booking_id", schedule.getBookingId())
+            result.put("id", ((long)schedule.getOid()))
+            result.put("cleaner_id", ((int)schedule.getCleanerId()))
+            result.put("booking_id", ((int)schedule.getBookingId()))
             result.put("date", schedule.getScheduleDate())
             result.put("start_time", schedule.getStartTime())
             result.put("end_time", schedule.getEndTime())
