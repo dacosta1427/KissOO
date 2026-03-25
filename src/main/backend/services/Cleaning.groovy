@@ -431,20 +431,20 @@ class Cleaning {
                 status = "scheduled"
             }
             
-            Schedule schedule = ScheduleManager.create(
-                String.valueOf(cleanerId),
-                String.valueOf(bookingId),
-                date,
-                startTime,
-                endTime,
-                notes,
-                status
-            )
-            if (schedule == null) {
+            Schedule schedule = new Schedule(cleanerId, bookingId, date, startTime, endTime, notes)
+            schedule.setStatus(status)
+            
+            // Save using PerstStorageManager directly
+            def tc = oodb.PerstStorageManager.createContainer()
+            tc.addInsert(schedule)
+            boolean saved = oodb.PerstStorageManager.store(tc)
+            
+            if (!saved) {
                 outjson.put("_Success", false)
-                outjson.put("_ErrorMessage", "Failed to create schedule")
+                outjson.put("_ErrorMessage", "Failed to save schedule")
                 return
             }
+            
             JSONObject result = new JSONObject()
             result.put("id", schedule.getOid())
             result.put("cleaner_id", schedule.getCleanerId())
@@ -458,6 +458,7 @@ class Cleaning {
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
+            e.printStackTrace()
         }
     }
     
