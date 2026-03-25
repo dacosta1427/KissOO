@@ -48,7 +48,7 @@
           >
             Logout
           </button>
-          <span class="text-green-600 text-sm">Authenticated</span>
+          <span class="text-green-600 text-sm">Authenticated as {session.username || 'User'}</span>
         {:else}
           <a href="/login" class="text-gray-600 hover:text-gray-900 font-medium">
             Login
@@ -95,6 +95,7 @@
             >
               Logout
             </button>
+            <span class="text-green-600 text-sm mt-2">Logged in as {session.username || 'User'}</span>
           {:else}
             <a href="/login" class="text-gray-600 hover:text-gray-900 font-medium">Login</a>
             <a href="/signup" class="text-gray-600 hover:text-gray-900 font-medium">Sign Up</a>
