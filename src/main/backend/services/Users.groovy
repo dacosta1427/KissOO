@@ -5,7 +5,9 @@ import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
 import mycompany.database.PerstUserManager
+import mycompany.database.OwnerManager
 import mycompany.domain.PerstUser
+import mycompany.domain.Owner
 import java.util.Collection
 
 /**
@@ -39,6 +41,10 @@ class Users {
         try {
             String userName = injson.getString("userName")
             String password = injson.getString("userPassword")
+            String email = injson.getString("email", "")
+            String name = injson.getString("name", userName)
+            String phone = injson.getString("phone", "")
+            String address = injson.getString("address", "")
             
             // Generate unique userId
             Collection<PerstUser> existingUsers = PerstUserManager.getAll()
@@ -50,19 +56,35 @@ class Users {
             }
             int newUserId = maxUserId + 1
             
-            PerstUser user = PerstUserManager.create(userName, password, newUserId)
+            // Create Owner first
+            Owner owner = OwnerManager.create(name, email, phone, address, true)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("error", "Failed to create owner")
+                return
+            }
+            
+            // Create User with ownerId
+            PerstUser user = PerstUserManager.create(userName, password, newUserId, owner.getOid())
             if (user == null) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Failed to create user")
                 return
             }
+            
+            // Link owner to user
+            owner.setUserId((long) user.getOid())
+            OwnerManager.update(owner)
+            
             user.setActive(injson.getString("userActive") == "Y")
             user.setEmailVerified(true)  // Allow immediate login without email verification
+            user.setEmail(email)
             PerstUserManager.update(user)
             
             outjson.put("_Success", true)
             outjson.put("success", true)
             outjson.put("id", user.getOid())
+            outjson.put("ownerId", owner.getOid())
         } catch (Exception e) {
             outjson.put("error", e.message)
         }
