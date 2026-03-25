@@ -808,7 +808,7 @@ class Cleaning {
             Collection<Owner> allOwners = OwnerManager.getAll()
             Owner found = null
             for (Owner owner : allOwners) {
-                PerstUser user = owner.getPerstUser()
+                PerstUser user = owner.getUser()
                 if (user != null && user.getUserId() == userId) {
                     found = owner
                     break
@@ -826,7 +826,7 @@ class Cleaning {
             data.put("phone", found.getPhone())
             data.put("address", found.getAddress())
             data.put("active", found.isActive())
-            data.put("userId", found.getPerstUser()?.getOid() ?: 0)
+            data.put("userId", found.getUser()?.getOid() ?: 0)
             outjson.put("data", data)
         } catch (Exception e) {
             outjson.put("_Success", false)
@@ -843,7 +843,7 @@ class Cleaning {
                 outjson.put("_ErrorMessage", "Owner not found")
                 return
             }
-            PerstUser user = owner.getPerstUser()
+            PerstUser user = owner.getUser()
             if (user == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "User not found for owner")
