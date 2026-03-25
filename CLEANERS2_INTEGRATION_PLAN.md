@@ -91,7 +91,7 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 In Progress | - | Days 1-7 - Active development per commits (owners, schedules, UI fixes) |
 | **Phase 5: User-Owner Integration** | | | | |
 | 5.1 | Database Schema Changes | ✅ Completed | - | Add ownerId to PerstUser, userId to Owner |
-| 5.2 | Backend Service Updates | ✅ Completed | - | User-owner linking in signup, new methods |
+| 5.2 | Backend Service Updates | 🔄 In Progress | - | Switching to object references instead of IDs |
 | 5.3 | Email Verification Workflow | 🔄 Pending | - | Implement verification tokens and SMTP |
 | 5.4 | Frontend Updates | ✅ Completed | - | Update signup, home page, navbar |
 | 5.5 | Session Management | 🔄 In Progress | - | Store ownerId in session (requires backend login changes) |
@@ -766,5 +766,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 5 In Progress  
-**Last Updated**: 2026-03-25 (Signup works, creates User and Owner but linking disabled due to type error. Frontend builds successfully.)  
-**Next Review**: After fixing Owner.setUserId type error (protocol requires updates within 4 hours of task completion)
+**Last Updated**: 2026-03-25 (Switching to object references: Owner holds PerstUser, PerstUser holds Owner. Need to resolve PerstUser.setOwner() error.)  
+**Next Review**: After resolving PerstUser.setOwner() error (protocol requires updates within 4 hours of task completion)
