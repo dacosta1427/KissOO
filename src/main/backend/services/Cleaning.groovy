@@ -426,39 +426,35 @@ class Cleaning {
             String startTime = data.getString("start_time")
             String endTime = data.getString("end_time")
             String notes = data.optString("notes", "")
-            String status = data.optString("status")
+            String status = data.optString("status", "scheduled")
             if (status == null || status.isEmpty()) {
                 status = "scheduled"
             }
             
-            Schedule schedule = new Schedule(cleanerId, bookingId, date, startTime, endTime, notes)
+            def schedule = new Schedule(cleanerId, bookingId, date, startTime, endTime, notes)
             schedule.setStatus(status)
             
-            // Save using PerstStorageManager directly
             def tc = oodb.PerstStorageManager.createContainer()
             tc.addInsert(schedule)
-            boolean saved = oodb.PerstStorageManager.store(tc)
-            
-            if (!saved) {
+            if (!oodb.PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to save schedule")
                 return
             }
             
             JSONObject result = new JSONObject()
-            result.put("id", ((long)schedule.getOid()))
-            result.put("cleaner_id", ((int)schedule.getCleanerId()))
-            result.put("booking_id", ((int)schedule.getBookingId()))
-            result.put("date", schedule.getScheduleDate())
-            result.put("start_time", schedule.getStartTime())
-            result.put("end_time", schedule.getEndTime())
-            result.put("notes", schedule.getNotes())
-            result.put("status", schedule.getStatus())
+            result.put("id", schedule.getOid())
+            result.put("cleaner_id", cleanerId)
+            result.put("booking_id", bookingId)
+            result.put("date", date)
+            result.put("start_time", startTime)
+            result.put("end_time", endTime)
+            result.put("notes", notes)
+            result.put("status", status)
             outjson.put("data", result)
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
-            e.printStackTrace()
         }
     }
     
