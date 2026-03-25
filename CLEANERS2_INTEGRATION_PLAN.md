@@ -91,11 +91,11 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 In Progress | - | Days 1-7 - Active development per commits (owners, schedules, UI fixes) |
 | **Phase 5: User-Owner Integration** | | | | |
 | 5.1 | Database Schema Changes | ✅ Completed | - | Add ownerId to PerstUser, userId to Owner |
-| 5.2 | Backend Service Updates | 🔄 In Progress | - | User-owner linking in signup, new methods |
+| 5.2 | Backend Service Updates | ✅ Completed | - | User-owner linking in signup, new methods |
 | 5.3 | Email Verification Workflow | 🔄 Pending | - | Implement verification tokens and SMTP |
-| 5.4 | Frontend Updates | 🔄 Pending | - | Update signup, home page, navbar |
-| 5.5 | Session Management | 🔄 Pending | - | Store ownerId in session |
-| 5.6 | Testing & Protocol Compliance | 🔄 Pending | - | Test flow, update plan, document issues |
+| 5.4 | Frontend Updates | ✅ Completed | - | Update signup, home page, navbar |
+| 5.5 | Session Management | 🔄 In Progress | - | Store ownerId in session (requires backend login changes) |
+| 5.6 | Testing & Protocol Compliance | 🔄 In Progress | - | Test flow, update plan, document issues |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
 
@@ -743,7 +743,7 @@ export const cleaningApi = {
 - [ ] Update plan within 4 hours of each task
 - [ ] Document non-working solutions in AGENTS_FRONTEND.MD
 
-**Status**: ✅ Completed - Database schema changes done. Starting 5.2 Backend Service Updates
+**Status**: ✅ Completed - User-Owner Integration Phase 5 mostly complete (5.5 and 5.6 pending)
 
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
