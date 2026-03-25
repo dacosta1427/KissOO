@@ -73,7 +73,7 @@ class Users {
             }
             
             // Link owner to user
-            owner.setUserId((long) user.getOid())
+            owner.setUserId(user.getOid())
             OwnerManager.update(owner)
             
             user.setActive(injson.getString("userActive") == "Y")
