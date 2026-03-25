@@ -683,6 +683,12 @@ export const cleaningApi = {
 - Added card-based layout with add/edit/delete buttons
 - Uses toast notifications for add/update/delete
 
+**Issue 18: Schedule creation fails with "No signature of method" error**
+- **Root Cause**: `Cleaning.groovy` used `optString`, `optBoolean`, `optLong` methods that don't exist in `org.kissweb.json.JSONObject`. Service calls failed with "No signature of method" errors.
+- **Solution**: Changed `optString(key, default)` to `getString(key, default)`, `optBoolean` to `getBoolean`, and `optLong` to `has() + getLong()` with default value.
+- **Files modified**: `src/main/backend/services/Cleaning.groovy` (lines 428-429, 654)
+- **Result**: Schedule creation now works correctly, schedule appears in database and UI.
+
 **Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, use $derived for options instead of mutating $state arrays; if Form component dropdowns fail, use native HTML select elements.
 
 ### Questions for Clarification
@@ -706,5 +712,5 @@ export const cleaningApi = {
 ---
 
 **Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-25 (Updated progress tracker, created AGENTS_FRONTEND.MD)  
+**Last Updated**: 2026-03-25 (Fixed schedule creation missing JSON methods, updated AGENTS_FRONTEND.MD)  
 **Next Review**: After completing Week 2 tasks (protocol requires updates within 4 hours of task completion)
