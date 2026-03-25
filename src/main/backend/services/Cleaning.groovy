@@ -804,21 +804,29 @@ class Cleaning {
     
     void getOwnerByUserId(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            long userId = injson.getLong("userId")
-            Owner owner = OwnerManager.getByUserId(userId)
-            if (owner == null) {
+            int userId = injson.getInt("userId")
+            Collection<Owner> allOwners = OwnerManager.getAll()
+            Owner found = null
+            for (Owner owner : allOwners) {
+                PerstUser user = owner.getPerstUser()
+                if (user != null && user.getUserId() == userId) {
+                    found = owner
+                    break
+                }
+            }
+            if (found == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found for user")
                 return
             }
             JSONObject data = new JSONObject()
-            data.put("id", owner.getOid())
-            data.put("name", owner.getName())
-            data.put("email", owner.getEmail())
-            data.put("phone", owner.getPhone())
-            data.put("address", owner.getAddress())
-            data.put("active", owner.isActive())
-            data.put("userId", owner.getUserId())
+            data.put("id", found.getOid())
+            data.put("name", found.getName())
+            data.put("email", found.getEmail())
+            data.put("phone", found.getPhone())
+            data.put("address", found.getAddress())
+            data.put("active", found.isActive())
+            data.put("userId", found.getPerstUser()?.getOid() ?: 0)
             outjson.put("data", data)
         } catch (Exception e) {
             outjson.put("_Success", false)
@@ -829,7 +837,13 @@ class Cleaning {
     void getUserByOwnerId(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             long ownerId = injson.getLong("ownerId")
-            PerstUser user = PerstUserManager.getByOwnerId(ownerId)
+            Owner owner = OwnerManager.getByOid(ownerId)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found")
+                return
+            }
+            PerstUser user = owner.getPerstUser()
             if (user == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "User not found for owner")
@@ -841,7 +855,7 @@ class Cleaning {
             data.put("email", user.getEmail())
             data.put("active", user.isActive())
             data.put("emailVerified", user.isEmailVerified())
-            data.put("ownerId", user.getOwnerId())
+            data.put("ownerId", owner.getOid())
             data.put("userId", user.getUserId())
             outjson.put("data", data)
         } catch (Exception e) {
