@@ -13,6 +13,10 @@ public class OwnerManager extends BaseManager<Owner> {
         return oodb.PerstStorageManager.getAll(Owner.class);
     }
     
+    public static Owner getByUserId(long userId) {
+        return oodb.PerstStorageManager.find(Owner.class, "userId", userId);
+    }
+    
     public static Owner getByKey(String key) {
         return oodb.PerstStorageManager.find(Owner.class, "name", key);
     }
@@ -30,8 +34,10 @@ public class OwnerManager extends BaseManager<Owner> {
         String phone = args.length > 2 ? args[2].toString() : null;
         String address = args.length > 3 ? args[3].toString() : null;
         boolean active = args.length > 4 ? Boolean.parseBoolean(args[4].toString()) : true;
+        long userId = args.length > 5 ? Long.parseLong(args[5].toString()) : 0;
         
         Owner owner = new Owner(name, email, phone, address, active);
+        owner.setUserId(userId);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(owner);

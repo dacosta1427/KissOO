@@ -48,6 +48,9 @@ public class PerstUser extends CVersion {
     @Indexable
     private boolean emailVerified = false;
     
+    @Indexable
+    private long ownerId = 0;  // Reference to Owner entity (0 = no owner)
+    
     private String verificationToken;
     private long verificationExpiresAt;
     
@@ -118,6 +121,8 @@ public class PerstUser extends CVersion {
     
     public boolean isEmailVerified() { return emailVerified; }
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
+    public long getOwnerId() { return ownerId; }
+    public void setOwnerId(long ownerId) { this.ownerId = ownerId; }
     public String getVerificationToken() { return verificationToken; }
     public long getVerificationExpiresAt() { return verificationExpiresAt; }
     
@@ -151,6 +156,7 @@ public class PerstUser extends CVersion {
         json.put("username", username);
         json.put("active", active);
         json.put("userId", userId);
+        json.put("ownerId", ownerId);
         json.put("email", email);
         json.put("firstName", firstName);
         json.put("lastName", lastName);
@@ -165,6 +171,7 @@ public class PerstUser extends CVersion {
                 "username='" + username + '\'' +
                 ", active=" + active +
                 ", userId=" + userId +
+                ", ownerId=" + ownerId +
                 '}';
     }
 }

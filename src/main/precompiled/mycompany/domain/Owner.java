@@ -23,6 +23,9 @@ public class Owner extends CVersion {
     @Indexable
     private boolean active = true;
     
+    @Indexable
+    private long userId = 0;  // Reference to PerstUser entity (0 = no user)
+    
     public Owner() {
         // default constructor
     }
@@ -51,6 +54,9 @@ public class Owner extends CVersion {
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     
+    public long getUserId() { return userId; }
+    public void setUserId(long userId) { this.userId = userId; }
+    
     @Override
     public String toString() {
         return "Owner{" +
@@ -59,6 +65,7 @@ public class Owner extends CVersion {
                 ", phone='" + phone + '\'' +
                 ", address='" + address + '\'' +
                 ", active=" + active +
+                ", userId=" + userId +
                 '}';
     }
 }

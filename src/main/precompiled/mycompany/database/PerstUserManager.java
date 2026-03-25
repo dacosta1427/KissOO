@@ -44,6 +44,10 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         return oodb.PerstStorageManager.getByOid(PerstUser.class, oid);
     }
     
+    public static PerstUser getByOwnerId(long ownerId) {
+        return oodb.PerstStorageManager.find(PerstUser.class, "ownerId", ownerId);
+    }
+    
     // ========== AUTHENTICATION ==========
     
     public static PerstUser authenticate(String username, String password) {
@@ -79,8 +83,10 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         String username = args[0].toString();
         String password = args[1].toString();
         int userId = args.length > 2 ? Integer.parseInt(args[2].toString()) : 0;
+        long ownerId = args.length > 3 ? Long.parseLong(args[3].toString()) : 0;
         
         PerstUser user = new PerstUser(username, password, userId);
+        user.setOwnerId(ownerId);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(user);

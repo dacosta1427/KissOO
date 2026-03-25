@@ -89,6 +89,13 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.15 | Status Legend & Colors | ✅ Completed | - | Added color legend, fixed schedule colors, fixed createSchedule to pass status |
 | 4.0.16 | Fix ScheduleManager.create | ✅ Completed | - | Added status parameter handling to ScheduleManager.create |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 In Progress | - | Days 1-7 - Active development per commits (owners, schedules, UI fixes) |
+| **Phase 5: User-Owner Integration** | | | | |
+| 5.1 | Database Schema Changes | ✅ Completed | - | Add ownerId to PerstUser, userId to Owner |
+| 5.2 | Backend Service Updates | 🔄 Pending | - | User-owner linking in signup, new methods |
+| 5.3 | Email Verification Workflow | 🔄 Pending | - | Implement verification tokens and SMTP |
+| 5.4 | Frontend Updates | 🔄 Pending | - | Update signup, home page, navbar |
+| 5.5 | Session Management | 🔄 Pending | - | Store ownerId in session |
+| 5.6 | Testing & Protocol Compliance | 🔄 Pending | - | Test flow, update plan, document issues |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
 
@@ -704,6 +711,40 @@ export const cleaningApi = {
 
 **Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, use $derived for options instead of mutating $state arrays; if Form component dropdowns fail, use native HTML select elements.
 
+### Phase 5: User-Owner Integration & Authentication (In Progress)
+**Goal**: Integrate PerstUser with Owner entity, implement email verification, enhance home page, and establish role-based access foundation.
+
+#### 5.1 Database Schema Changes
+- [ ] Add `ownerId` field to `PerstUser.java`
+- [ ] Add `userId` field to `Owner.java` (bidirectional relationship)
+- [ ] Add `@Indexable` annotations for efficient queries
+
+#### 5.2 Backend Service Updates
+- [ ] Modify signup to create Owner automatically
+- [ ] Add `getOwnerByUserId` and `getUserByOwnerId` methods to `Cleaning.groovy`
+- [ ] Create `AuthService.groovy` for user-owner linking
+
+#### 5.3 Email Verification Workflow
+- [ ] Implement email verification with tokens (already in PerstUser)
+- [ ] Create `EmailService.groovy` (SMTP integration or stub)
+- [ ] Add verification endpoint
+
+#### 5.4 Frontend Updates
+- [ ] Update `signup/+page.svelte` to include owner creation
+- [ ] Enhance home page (`+page.svelte`) with login status indicator (green/red ball)
+- [ ] Update `Navbar.svelte` with user info and owner/house quick links
+
+#### 5.5 Session Management
+- [ ] Store `ownerId` in session
+- [ ] Add methods to get current user's owner
+
+#### 5.6 Testing & Protocol Compliance
+- [ ] Test user-owner linking flow
+- [ ] Update plan within 4 hours of each task
+- [ ] Document non-working solutions in AGENTS_FRONTEND.MD
+
+**Status**: ✅ Completed - Database schema changes done. Starting 5.2 Backend Service Updates
+
 ### Questions for Clarification
 1. **Encryption duration**: Should encrypted credentials expire (7 days, 30 days, never)?
 2. **"Remember me" default**: Should it be checked by default?
@@ -724,6 +765,6 @@ export const cleaningApi = {
 
 ---
 
-**Document Status**: Phase 4 In Progress  
-**Last Updated**: 2026-03-25 (Added house times, booking dogs count, calendar component; booking form integration pending)  
-**Next Review**: After completing booking form enhancements (protocol requires updates within 4 hours of task completion)
+**Document Status**: Phase 5 In Progress  
+**Last Updated**: 2026-03-25 (Completed database schema changes, starting backend service updates)  
+**Next Review**: After completing backend service updates (protocol requires updates within 4 hours of task completion)
