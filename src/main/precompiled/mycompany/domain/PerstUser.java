@@ -3,6 +3,7 @@ package mycompany.domain;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
+import mycompany.domain.Owner;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.UUID;
@@ -48,8 +49,7 @@ public class PerstUser extends CVersion {
     @Indexable
     private boolean emailVerified = false;
     
-    @Indexable
-    private long ownerId = 0;  // Reference to Owner entity (0 = no owner)
+    private Owner owner;  // Direct reference to Owner object
     
     private String verificationToken;
     private long verificationExpiresAt;
@@ -121,8 +121,8 @@ public class PerstUser extends CVersion {
     
     public boolean isEmailVerified() { return emailVerified; }
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
-    public long getOwnerId() { return ownerId; }
-    public void setOwnerId(long ownerId) { this.ownerId = ownerId; }
+    public Owner getOwner() { return owner; }
+    public void setOwner(Owner owner) { this.owner = owner; }
     public String getVerificationToken() { return verificationToken; }
     public long getVerificationExpiresAt() { return verificationExpiresAt; }
     
@@ -156,7 +156,7 @@ public class PerstUser extends CVersion {
         json.put("username", username);
         json.put("active", active);
         json.put("userId", userId);
-        json.put("ownerId", ownerId);
+        json.put("ownerId", owner != null ? owner.getOid() : 0);
         json.put("email", email);
         json.put("firstName", firstName);
         json.put("lastName", lastName);
@@ -171,7 +171,7 @@ public class PerstUser extends CVersion {
                 "username='" + username + '\'' +
                 ", active=" + active +
                 ", userId=" + userId +
-                ", ownerId=" + ownerId +
+                ", owner=" + (owner != null ? owner.getName() : "null") +
                 '}';
     }
 }

@@ -56,25 +56,25 @@ class Users {
             }
             int newUserId = maxUserId + 1
             
-            // Create Owner first
-            Owner owner = OwnerManager.create(name, email, phone, address, true)
-            if (owner == null) {
-                outjson.put("_Success", false)
-                outjson.put("error", "Failed to create owner")
-                return
-            }
-            
-            // Create User with ownerId
-            PerstUser user = PerstUserManager.create(userName, password, newUserId, owner.getOid())
+            // Create User first (without owner)
+            PerstUser user = PerstUserManager.create(userName, password, newUserId)
             if (user == null) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Failed to create user")
                 return
             }
             
-            // Link owner to user - temporarily disabled due to type error
-            // owner.setUserId(user.getOid())
-            // OwnerManager.update(owner)
+            // Create Owner with User reference
+            Owner owner = OwnerManager.create(name, email, phone, address, true, user)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("error", "Failed to create owner")
+                return
+            }
+            
+            // Link user to owner
+            user.setOwner(owner)
+            PerstUserManager.update(user)
             
             user.setActive(injson.getString("userActive") == "Y")
             user.setEmailVerified(true)  // Allow immediate login without email verification

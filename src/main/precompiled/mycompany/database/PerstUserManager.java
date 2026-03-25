@@ -2,6 +2,8 @@ package mycompany.database;
 
 import mycompany.domain.Actor;
 import mycompany.domain.PerstUser;
+import mycompany.domain.Owner;
+import mycompany.database.OwnerManager;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 import java.util.List;
@@ -83,10 +85,17 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         String username = args[0].toString();
         String password = args[1].toString();
         int userId = args.length > 2 ? Integer.parseInt(args[2].toString()) : 0;
-        long ownerId = args.length > 3 ? Long.parseLong(args[3].toString()) : 0;
+        Owner owner = null;
+        if (args.length > 3 && args[3] instanceof Owner) {
+            owner = (Owner) args[3];
+        } else if (args.length > 3) {
+            // Legacy: convert long ownerId to Owner object via lookup
+            long ownerId = Long.parseLong(args[3].toString());
+            owner = OwnerManager.getByOid(ownerId);
+        }
         
         PerstUser user = new PerstUser(username, password, userId);
-        user.setOwnerId(ownerId);
+        user.setOwner(owner);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(user);

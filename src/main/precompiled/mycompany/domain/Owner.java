@@ -3,6 +3,7 @@ package mycompany.domain;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
+import mycompany.domain.PerstUser;
 
 /**
  * Owner entity for cleaning scheduler.
@@ -23,8 +24,7 @@ public class Owner extends CVersion {
     @Indexable
     private boolean active = true;
     
-    @Indexable
-    private long userId = 0;  // Reference to PerstUser entity (0 = no user)
+    private PerstUser user;  // Direct reference to User object
     
     public Owner() {
         // default constructor
@@ -54,8 +54,8 @@ public class Owner extends CVersion {
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     
-    public long getUserId() { return userId; }
-    public void setUserId(long userId) { this.userId = userId; }
+    public PerstUser getUser() { return user; }
+    public void setUser(PerstUser user) { this.user = user; }
     
     @Override
     public String toString() {
@@ -65,7 +65,7 @@ public class Owner extends CVersion {
                 ", phone='" + phone + '\'' +
                 ", address='" + address + '\'' +
                 ", active=" + active +
-                ", userId=" + userId +
+                ", user=" + (user != null ? user.getUsername() : "null") +
                 '}';
     }
 }

@@ -1,6 +1,7 @@
 package mycompany.database;
 
 import mycompany.domain.Owner;
+import mycompany.domain.PerstUser;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 
@@ -34,10 +35,10 @@ public class OwnerManager extends BaseManager<Owner> {
         String phone = args.length > 2 ? args[2].toString() : null;
         String address = args.length > 3 ? args[3].toString() : null;
         boolean active = args.length > 4 ? Boolean.parseBoolean(args[4].toString()) : true;
-        long userId = args.length > 5 ? Long.parseLong(args[5].toString()) : 0;
+        PerstUser user = args.length > 5 && args[5] instanceof PerstUser ? (PerstUser) args[5] : null;
         
         Owner owner = new Owner(name, email, phone, address, active);
-        owner.setUserId(userId);
+        owner.setUser(user);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(owner);
