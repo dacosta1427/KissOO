@@ -59,9 +59,10 @@ public class BookingManager extends BaseManager<Booking> {
         String guestEmail = args[4].toString();
         String guestPhone = args.length > 5 ? args[5].toString() : null;
         String notes = args.length > 6 ? args[6].toString() : null;
+        int dogsCount = args.length > 7 ? Integer.parseInt(args[7].toString()) : 0;
         
         Booking booking = new Booking(houseId, checkInDate, checkOutDate,
-                guestName, guestEmail, guestPhone, notes);
+                guestName, guestEmail, guestPhone, notes, dogsCount);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(booking);

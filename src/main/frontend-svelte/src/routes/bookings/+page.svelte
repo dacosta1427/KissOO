@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { bookingsAPI, housesAPI, type Booking, type House } from '$lib/api/Cleaning';
+	import { bookingsAPI, housesAPI, ownersAPI, type Booking, type House, type Owner } from '$lib/api/Cleaning';
 	import { dataStores } from '../../lib/stores.svelte.js';
 	import Table from '$lib/components/Table.svelte';
 	import Form from '$lib/components/Form.svelte';
@@ -7,12 +7,21 @@
 	// Svelte 5: Use $state for reactive variables
 	let bookings = $state<Booking[]>([]);
 	let houses = $state<House[]>([]);
+	let owners = $state<Owner[]>([]);
+	let selectedOwnerId = $state<number | null>(null);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingBooking = $state<Booking | null>(null);
 
 	const bookingFields = [
+		{
+			name: 'owner_id',
+			label: 'Owner',
+			type: 'select',
+			required: true,
+			options: []
+		},
 		{
 			name: 'house_id',
 			label: 'House',
@@ -31,6 +40,20 @@
 			label: 'Check-out Date',
 			type: 'date',
 			required: true
+		},
+		{
+			name: 'check_in_time',
+			label: 'Check-in Time (24h)',
+			type: 'time',
+			required: true,
+			step: 900
+		},
+		{
+			name: 'check_out_time',
+			label: 'Check-out Time (24h)',
+			type: 'time',
+			required: true,
+			step: 900
 		},
 		{
 			name: 'guest_name',
@@ -52,6 +75,15 @@
 			type: 'tel',
 			required: false,
 			placeholder: 'Enter guest phone number'
+		},
+		{
+			name: 'dogs_count',
+			label: 'Number of Dogs',
+			type: 'number',
+			required: false,
+			min: 0,
+			step: 1,
+			placeholder: '0'
 		},
 		{
 			name: 'status',
@@ -101,16 +133,19 @@
 		error = null;
 
 		try {
-			const [bookingsResult, housesResult] = await Promise.all([
+			const [bookingsResult, housesResult, ownersResult] = await Promise.all([
 				bookingsAPI.getAll(),
-				housesAPI.getAll()
+				housesAPI.getAll(),
+				ownersAPI.getAll()
 			]);
 
 			bookings = bookingsResult;
 			houses = housesResult;
+			owners = ownersResult;
 
 			// Update form options
-			bookingFields[0].options = houses.map((h) => ({ value: h.id, label: h.name }));
+			bookingFields[0].options = owners.map((o) => ({ value: o.id, label: o.name }));
+			// House options will be updated reactively based on selected owner
 
 			dataStores.bookings.set(bookings);
 			dataStores.houses.set(houses);

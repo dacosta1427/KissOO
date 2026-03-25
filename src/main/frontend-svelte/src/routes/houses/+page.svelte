@@ -14,7 +14,9 @@
 		name: '',
 		address: '',
 		description: '',
-		owner_id: 0 as number
+		owner_id: 0 as number,
+		check_in_time: '16:00',
+		check_out_time: '10:00'
 	});
 
 	let newOwnerData = $state({
@@ -47,7 +49,7 @@
 
 	function openAddForm() {
 		editingHouse = null;
-		formData = { name: '', address: '', description: '', owner_id: 0 };
+		formData = { name: '', address: '', description: '', owner_id: 0, check_in_time: '16:00', check_out_time: '10:00' };
 		showForm = true;
 	}
 
@@ -57,7 +59,9 @@
 			name: house.name, 
 			address: house.address, 
 			description: house.description || '',
-			owner_id: house.owner_id || 0
+			owner_id: house.owner_id || 0,
+			check_in_time: house.check_in_time || '16:00',
+			check_out_time: house.check_out_time || '10:00'
 		};
 		showForm = true;
 	}
@@ -105,7 +109,9 @@
 			name: formData.name,
 			address: formData.address,
 			description: formData.description,
-			owner_id: formData.owner_id || 0
+			owner_id: formData.owner_id || 0,
+			check_in_time: formData.check_in_time,
+			check_out_time: formData.check_out_time
 		};
 		
 		try {
@@ -119,7 +125,7 @@
 
 			showForm = false;
 			editingHouse = null;
-			formData = { name: '', address: '', description: '', owner_id: 0 };
+			formData = { name: '', address: '', description: '', owner_id: 0, check_in_time: '16:00', check_out_time: '10:00' };
 			await loadHouses();
 		} catch (err: any) {
 			notificationActions.error(err.message || 'Failed to save house');
@@ -218,6 +224,30 @@
 							placeholder="Enter house description"
 							rows="3"
 						></textarea>
+					</div>
+
+					<!-- Check-in Time -->
+					<div class="form-field">
+						<label for="check_in_time">Check-in Time (24h) <span class="required">*</span></label>
+						<input 
+							type="time" 
+							id="check_in_time" 
+							bind:value={formData.check_in_time} 
+							step="900"
+							required 
+						/>
+					</div>
+
+					<!-- Check-out Time -->
+					<div class="form-field">
+						<label for="check_out_time">Check-out Time (24h) <span class="required">*</span></label>
+						<input 
+							type="time" 
+							id="check_out_time" 
+							bind:value={formData.check_out_time} 
+							step="900"
+							required 
+						/>
 					</div>
 				</div>
 

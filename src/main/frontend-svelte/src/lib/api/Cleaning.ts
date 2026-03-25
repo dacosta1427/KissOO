@@ -28,6 +28,7 @@ export interface Booking {
   guest_email: string;
   guest_phone?: string;
   notes?: string;
+  dogs_count: number; // default 0
   status: 'pending' | 'confirmed' | 'cancelled';
 }
 
@@ -49,6 +50,8 @@ export interface House {
   description?: string;
   owner_id?: number;
   active: boolean;
+  check_in_time: string; // 24h format, e.g., "16:00"
+  check_out_time: string; // 24h format, e.g., "10:00"
 }
 
 export interface Owner {

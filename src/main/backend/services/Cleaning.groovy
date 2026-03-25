@@ -178,6 +178,7 @@ class Cleaning {
                 row.put("guest_email", booking.getGuestEmail())
                 row.put("guest_phone", booking.getGuestPhone())
                 row.put("notes", booking.getNotes())
+                row.put("dogs_count", booking.getDogsCount())
                 row.put("status", booking.getStatus())
                 rows.put(row)
             }
@@ -207,6 +208,7 @@ class Cleaning {
             data.put("guest_email", booking.getGuestEmail())
             data.put("guest_phone", booking.getGuestPhone())
             data.put("notes", booking.getNotes())
+            data.put("dogs_count", booking.getDogsCount())
             data.put("status", booking.getStatus())
             outjson.put("data", data)
         } catch (Exception e) {
@@ -225,9 +227,10 @@ class Cleaning {
             String guestEmail = data.getString("guest_email")
             String guestPhone = data.getString("guest_phone", "")
             String notes = data.getString("notes", "")
+            int dogsCount = data.has("dogs_count") ? data.getInt("dogs_count") : 0
             
             Booking booking = BookingManager.create(houseId, checkInDate, checkOutDate,
-                    guestName, guestEmail, guestPhone, notes)
+                    guestName, guestEmail, guestPhone, notes, dogsCount)
             if (booking == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create booking")
@@ -242,6 +245,7 @@ class Cleaning {
             result.put("guest_email", booking.getGuestEmail())
             result.put("guest_phone", booking.getGuestPhone())
             result.put("notes", booking.getNotes())
+            result.put("dogs_count", booking.getDogsCount())
             result.put("status", booking.getStatus())
             outjson.put("data", result)
         } catch (Exception e) {
@@ -267,6 +271,7 @@ class Cleaning {
             if (data.has("guest_email")) booking.setGuestEmail(data.getString("guest_email"))
             if (data.has("guest_phone")) booking.setGuestPhone(data.getString("guest_phone"))
             if (data.has("notes")) booking.setNotes(data.getString("notes"))
+            if (data.has("dogs_count")) booking.setDogsCount(data.getInt("dogs_count"))
             if (data.has("status")) booking.setStatus(data.getString("status"))
             
             boolean success = BookingManager.update(booking)
@@ -284,6 +289,7 @@ class Cleaning {
             result.put("guest_email", booking.getGuestEmail())
             result.put("guest_phone", booking.getGuestPhone())
             result.put("notes", booking.getNotes())
+            result.put("dogs_count", booking.getDogsCount())
             result.put("status", booking.getStatus())
             outjson.put("data", result)
         } catch (Exception e) {
@@ -329,6 +335,7 @@ class Cleaning {
                 row.put("guest_email", booking.getGuestEmail())
                 row.put("guest_phone", booking.getGuestPhone())
                 row.put("notes", booking.getNotes())
+                row.put("dogs_count", booking.getDogsCount())
                 row.put("status", booking.getStatus())
                 rows.put(row)
             }
@@ -355,6 +362,7 @@ class Cleaning {
                 row.put("guest_email", booking.getGuestEmail())
                 row.put("guest_phone", booking.getGuestPhone())
                 row.put("notes", booking.getNotes())
+                row.put("dogs_count", booking.getDogsCount())
                 row.put("status", booking.getStatus())
                 rows.put(row)
             }
@@ -612,6 +620,8 @@ class Cleaning {
                 row.put("description", house.getDescription())
                 row.put("owner_id", house.getOwnerId())
                 row.put("active", house.isActive())
+                row.put("check_in_time", house.getCheckInTime())
+                row.put("check_out_time", house.getCheckOutTime())
                 rows.put(row)
             }
             
@@ -638,6 +648,8 @@ class Cleaning {
             data.put("description", house.getDescription())
             data.put("owner_id", house.getOwnerId())
             data.put("active", house.isActive())
+            data.put("check_in_time", house.getCheckInTime())
+            data.put("check_out_time", house.getCheckOutTime())
             outjson.put("data", data)
         } catch (Exception e) {
             outjson.put("_Success", false)
@@ -653,8 +665,10 @@ class Cleaning {
             String description = data.getString("description", "")
             long ownerId = data.has("owner_id") ? data.getLong("owner_id") : 0
             boolean active = data.getBoolean("active", true)
+            String checkInTime = data.getString("check_in_time", "16:00")
+            String checkOutTime = data.getString("check_out_time", "10:00")
             
-            House house = HouseManager.create(name, address, description, ownerId, active)
+            House house = HouseManager.create(name, address, description, ownerId, active, checkInTime, checkOutTime)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create house")
@@ -667,6 +681,8 @@ class Cleaning {
             result.put("description", house.getDescription())
             result.put("owner_id", house.getOwnerId())
             result.put("active", house.isActive())
+            result.put("check_in_time", house.getCheckInTime())
+            result.put("check_out_time", house.getCheckOutTime())
             outjson.put("data", result)
         } catch (Exception e) {
             outjson.put("_Success", false)
@@ -689,6 +705,8 @@ class Cleaning {
             if (data.has("description")) house.setDescription(data.getString("description"))
             if (data.has("owner_id")) house.setOwnerId(data.getLong("owner_id"))
             if (data.has("active")) house.setActive(data.getBoolean("active"))
+            if (data.has("check_in_time")) house.setCheckInTime(data.getString("check_in_time"))
+            if (data.has("check_out_time")) house.setCheckOutTime(data.getString("check_out_time"))
             
             boolean success = HouseManager.update(house)
             if (!success) {
@@ -703,6 +721,8 @@ class Cleaning {
             result.put("description", house.getDescription())
             result.put("owner_id", house.getOwnerId())
             result.put("active", house.isActive())
+            result.put("check_in_time", house.getCheckInTime())
+            result.put("check_out_time", house.getCheckOutTime())
             outjson.put("data", result)
         } catch (Exception e) {
             outjson.put("_Success", false)

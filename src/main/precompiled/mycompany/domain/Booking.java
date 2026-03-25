@@ -22,6 +22,7 @@ public class Booking extends CVersion {
     private String guestEmail;
     private String guestPhone;
     private String notes;
+    private int dogsCount = 0;
     
     @Indexable
     private String status;  // pending, confirmed, cancelled
@@ -39,6 +40,20 @@ public class Booking extends CVersion {
         this.guestEmail = guestEmail;
         this.guestPhone = guestPhone;
         this.notes = notes;
+        this.dogsCount = 0;
+        this.status = "pending";
+    }
+    
+    public Booking(int houseId, String checkInDate, String checkOutDate, 
+                   String guestName, String guestEmail, String guestPhone, String notes, int dogsCount) {
+        this.houseId = houseId;
+        this.checkInDate = checkInDate;
+        this.checkOutDate = checkOutDate;
+        this.guestName = guestName;
+        this.guestEmail = guestEmail;
+        this.guestPhone = guestPhone;
+        this.notes = notes;
+        this.dogsCount = dogsCount;
         this.status = "pending";
     }
     
@@ -64,6 +79,9 @@ public class Booking extends CVersion {
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
     
+    public int getDogsCount() { return dogsCount; }
+    public void setDogsCount(int dogsCount) { this.dogsCount = dogsCount; }
+    
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     
@@ -72,6 +90,7 @@ public class Booking extends CVersion {
         return "Booking{" +
                 "houseId=" + houseId +
                 ", guestName='" + guestName + '\'' +
+                ", dogsCount=" + dogsCount +
                 ", status='" + status + '\'' +
                 '}';
     }
