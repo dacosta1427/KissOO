@@ -53,7 +53,7 @@
 		schedules.forEach((schedule) => {
 			const dateString = schedule.date;
 			cleaners.forEach((cleaner) => {
-				if (cleaner.id === schedule.cleaner_id && matrix[cleaner.id][dateString]) {
+				if (cleaner.id === schedule.cleaner_id && matrix[cleaner.id][dateString] !== undefined) {
 					matrix[cleaner.id][dateString] = schedule;
 				}
 			});
