@@ -54,11 +54,14 @@ export async function logout(): Promise<void> {
  * @param password - Password
  * @returns Login result
  */
-export async function signup(username: string, password: string): Promise<LoginResult> {
-  const res = await Server.call('services.Users', 'addRecord', {
-    userName: username.toLowerCase(),
-    userPassword: password,
-    userActive: 'Y'
+export async function signup(username: string, password: string, email: string = '', name: string = ''): Promise<LoginResult> {
+  const res = await Server.call('services.AuthService', 'signup', {
+    username: username.toLowerCase(),
+    password: password,
+    email: email || `${username}@example.com`,
+    name: name || username,
+    phone: '',
+    address: ''
   });
   
   // Check for success (backend returns _Success or success)

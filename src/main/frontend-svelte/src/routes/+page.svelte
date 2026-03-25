@@ -42,12 +42,28 @@
       Modern Svelte 5 frontend with Simple API Modules
     </p>
     
-    <div class="mb-4">
-      {#if isConnected}
-        <span class="text-green-600">Connected to {backendUrl}</span>
-      {:else}
-        <span class="text-red-600">Not connected to backend</span>
-      {/if}
+    <div class="mb-4 flex items-center justify-center space-x-4">
+      <!-- Backend Connection Status -->
+      <div class="flex items-center">
+        {#if isConnected}
+          <span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+          <span class="text-green-600">Connected to {backendUrl}</span>
+        {:else}
+          <span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+          <span class="text-red-600">Not connected to backend</span>
+        {/if}
+      </div>
+      
+      <!-- Authentication Status -->
+      <div class="flex items-center">
+        {#if isAuthenticated()}
+          <span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+          <span class="text-green-600">Logged in</span>
+        {:else}
+          <span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+          <span class="text-red-600">Logged out</span>
+        {/if}
+      </div>
     </div>
     
     <div class="space-y-4">

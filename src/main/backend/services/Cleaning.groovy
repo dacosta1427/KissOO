@@ -14,6 +14,8 @@ import mycompany.domain.Booking
 import mycompany.domain.Schedule
 import mycompany.domain.House
 import mycompany.domain.Owner
+import mycompany.database.PerstUserManager
+import mycompany.domain.PerstUser
 
 /**
  * Cleaning service for CRUD operations on cleaning scheduler entities.
@@ -793,6 +795,54 @@ class Cleaning {
             data.put("phone", owner.getPhone())
             data.put("address", owner.getAddress())
             data.put("active", owner.isActive())
+            outjson.put("data", data)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void getOwnerByUserId(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            long userId = injson.getLong("userId")
+            Owner owner = OwnerManager.getByUserId(userId)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found for user")
+                return
+            }
+            JSONObject data = new JSONObject()
+            data.put("id", owner.getOid())
+            data.put("name", owner.getName())
+            data.put("email", owner.getEmail())
+            data.put("phone", owner.getPhone())
+            data.put("address", owner.getAddress())
+            data.put("active", owner.isActive())
+            data.put("userId", owner.getUserId())
+            outjson.put("data", data)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void getUserByOwnerId(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            long ownerId = injson.getLong("ownerId")
+            PerstUser user = PerstUserManager.getByOwnerId(ownerId)
+            if (user == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "User not found for owner")
+                return
+            }
+            JSONObject data = new JSONObject()
+            data.put("id", user.getOid())
+            data.put("username", user.getUsername())
+            data.put("email", user.getEmail())
+            data.put("active", user.isActive())
+            data.put("emailVerified", user.isEmailVerified())
+            data.put("ownerId", user.getOwnerId())
+            data.put("userId", user.getUserId())
             outjson.put("data", data)
         } catch (Exception e) {
             outjson.put("_Success", false)

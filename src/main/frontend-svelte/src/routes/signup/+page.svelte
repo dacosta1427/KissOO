@@ -8,6 +8,8 @@
   let username = $state('');
   let password = $state('');
   let confirmPassword = $state('');
+  let email = $state('');
+  let name = $state('');
   let loading = $state(false);
   let error = $state('');
 
@@ -16,7 +18,9 @@
     username.length >= 3 && 
     password.length >= 3 && 
     confirmPassword.length > 0 &&
-    password === confirmPassword
+    password === confirmPassword &&
+    email.length > 0 &&
+    name.length > 0
   );
 
   // DERIVED state - password match check
@@ -34,7 +38,7 @@
     error = '';
 
     try {
-      const res = await signup(username, password);
+      const res = await signup(username, password, email, name);
 
       if (res._Success) {
         goto(resolve('/'));
@@ -71,6 +75,34 @@
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           placeholder="Enter username"
           autocomplete="username"
+        />
+      </div>
+
+      <div class="mb-4">
+        <label for="email" class="block text-gray-700 text-sm font-bold mb-2">
+          Email
+        </label>
+        <input
+          type="email"
+          id="email"
+          bind:value={email}
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          placeholder="Enter email"
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="mb-4">
+        <label for="name" class="block text-gray-700 text-sm font-bold mb-2">
+          Full Name
+        </label>
+        <input
+          type="text"
+          id="name"
+          bind:value={name}
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          placeholder="Enter your name"
+          autocomplete="name"
         />
       </div>
 
