@@ -3,6 +3,11 @@
   import { logout } from '$lib/api/Auth';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
+  import { t, currentLocale } from '$lib/i18n';
+  import LanguageSwitcher from './LanguageSwitcher.svelte';
+  
+  // Helper for reactive translations
+  const tt = (key: string) => t(key, undefined, $currentLocale);
 
   async function handleLogout() {
     await logout();
@@ -24,39 +29,56 @@
       
       <!-- Desktop Navigation -->
       <nav class="hidden md:flex items-center space-x-4">
+        <!-- Login Status Indicator -->
+        <div class="flex items-center mr-2" title={session.isAuthenticated ? 'Logged in' : 'Not logged in'}>
+          {#if session.isAuthenticated}
+            <span class="inline-block w-3 h-3 rounded-full bg-green-500" title="Logged in"></span>
+          {:else}
+            <span class="inline-block w-3 h-3 rounded-full bg-red-500" title="Not logged in"></span>
+          {/if}
+        </div>
+        
         <a href="/" class="text-gray-600 hover:text-gray-900 font-medium">
-          Home
+          {tt('nav.home')}
         </a>
         
         {#if session.isAuthenticated}
-          <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">
-            Users
+          <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">
+            {tt('nav.houses')}
           </a>
           <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">
-            Owners
+            {tt('nav.owners')}
           </a>
-          <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">
-            Houses
+          <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">
+            {tt('nav.cleaners')}
+          </a>
+          <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">
+            {tt('nav.bookings')}
           </a>
           <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">
-            Schedules
+            {tt('nav.schedules')}
           </a>
+          <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">
+            {tt('nav.users')}
+          </a>
+          
+          <LanguageSwitcher />
           
           <button
             onclick={handleLogout}
             class="text-red-600 hover:text-red-800 font-medium"
           >
-            Logout
+            {tt('nav.logout')}
           </button>
-          <span class="text-green-600 text-sm">Authenticated as {session.username || 'User'}</span>
+          <span class="text-green-600 text-sm">{session.username || 'User'}</span>
         {:else}
+          <LanguageSwitcher />
           <a href="/login" class="text-gray-600 hover:text-gray-900 font-medium">
-            Login
+            {tt('auth.login_button')}
           </a>
           <a href="/signup" class="text-gray-600 hover:text-gray-900 font-medium">
-            Sign Up
+            {tt('auth.signup_button')}
           </a>
-          <span class="text-red-600 text-sm">Logged out</span>
         {/if}
       </nav>
       
@@ -81,24 +103,39 @@
     {#if mobileMenuOpen}
       <div class="md:hidden pb-4">
         <div class="flex flex-col space-y-2">
-          <a href="/" class="text-gray-600 hover:text-gray-900 font-medium">Home</a>
+          <!-- Login Status Indicator (Mobile) -->
+          <div class="flex items-center py-2" title={session.isAuthenticated ? 'Logged in' : 'Not logged in'}>
+            {#if session.isAuthenticated}
+              <span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+              <span class="text-sm text-gray-600">{session.username || 'User'}</span>
+            {:else}
+              <span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+              <span class="text-sm text-gray-600">Not logged in</span>
+            {/if}
+          </div>
+          
+          <a href="/" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.home')}</a>
           
           {#if session.isAuthenticated}
-            <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">Users</a>
-            <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">Owners</a>
-            <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">Houses</a>
-            <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">Schedules</a>
+            <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.houses')}</a>
+            <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.owners')}</a>
+            <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.cleaners')}</a>
+            <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.bookings')}</a>
+            <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.schedules')}</a>
+            <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.users')}</a>
             <div class="border-t border-gray-200 my-2"></div>
+            <div class="py-2"><LanguageSwitcher /></div>
             <button
               onclick={handleLogout}
               class="text-red-600 hover:text-red-800 font-medium text-left"
             >
-              Logout
+              {tt('nav.logout')}
             </button>
-            <span class="text-green-600 text-sm mt-2">Logged in as {session.username || 'User'}</span>
+            <span class="text-green-600 text-sm mt-2">{session.username || 'User'}</span>
           {:else}
-            <a href="/login" class="text-gray-600 hover:text-gray-900 font-medium">Login</a>
-            <a href="/signup" class="text-gray-600 hover:text-gray-900 font-medium">Sign Up</a>
+            <div class="py-2"><LanguageSwitcher /></div>
+            <a href="/login" class="text-gray-600 hover:text-gray-900 font-medium">{tt('auth.login_button')}</a>
+            <a href="/signup" class="text-gray-600 hover:text-gray-900 font-medium">{tt('auth.signup_button')}</a>
           {/if}
         </div>
       </div>

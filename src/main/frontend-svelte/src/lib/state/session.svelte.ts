@@ -9,11 +9,35 @@
 // Session UUID - reactive with Svelte 5 runes
 let uuid = $state('');
 
+// Username - stored for admin detection
+let username = $state('');
+
+// User ID - stored for user operations
+let userId = $state(0);
+
+// Owner ID - stored for owner-specific operations (user is also an owner)
+let ownerId = $state(0);
+
+// Owner name - for display purposes
+let ownerName = $state('');
+
+// Email - for display and verification
+let email = $state('');
+
+// Language preference - stored locally for quick access
+let preferredLanguage = $state('en');
+
 // Persistence configuration
 let persistToStorage = true;
 const STORAGE_KEY = 'kiss_session_uuid';
+const USERNAME_KEY = 'kiss_session_username';
+const USERID_KEY = 'kiss_session_userid';
+const OWNERID_KEY = 'kiss_session_ownerid';
+const OWNERNAME_KEY = 'kiss_session_ownername';
+const EMAIL_KEY = 'kiss_session_email';
 const CREDENTIALS_KEY = 'kiss_encrypted_credentials';
 const KEY_STORAGE_KEY = 'kiss_encryption_key';
+const LANGUAGE_KEY = 'kiss_preferred_language';
 
 // Encryption/Decryption helpers (Web Crypto API)
 async function generateEncryptionKey(): Promise<CryptoKey> {
@@ -108,6 +132,92 @@ export const session = {
   },
   
   /**
+   * Get the current username
+   */
+  get username(): string {
+    return username;
+  },
+  
+  /**
+   * Set the username
+   */
+  setUsername(name: string): void {
+    username = name;
+    // Persist username to localStorage
+    if (typeof localStorage !== 'undefined' && name) {
+      localStorage.setItem(USERNAME_KEY, name);
+    }
+  },
+  
+  /**
+   * Get the user ID
+   */
+  get userId(): number {
+    return userId;
+  },
+  
+  /**
+   * Set the user ID
+   */
+  setUserId(id: number): void {
+    userId = id;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(USERID_KEY, id.toString());
+    }
+  },
+  
+  /**
+   * Get the owner ID
+   */
+  get ownerId(): number {
+    return ownerId;
+  },
+  
+  /**
+   * Set the owner ID
+   */
+  setOwnerId(id: number): void {
+    ownerId = id;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(OWNERID_KEY, id.toString());
+    }
+  },
+  
+  /**
+   * Get the owner name
+   */
+  get ownerName(): string {
+    return ownerName;
+  },
+  
+  /**
+   * Set the owner name
+   */
+  setOwnerName(name: string): void {
+    ownerName = name;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(OWNERNAME_KEY, name);
+    }
+  },
+  
+  /**
+   * Get the email
+   */
+  get email(): string {
+    return email;
+  },
+  
+  /**
+   * Set the email
+   */
+  setEmail(emailAddr: string): void {
+    email = emailAddr;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(EMAIL_KEY, emailAddr);
+    }
+  },
+  
+  /**
    * Check if user is authenticated
    */
   get isAuthenticated(): boolean {
@@ -133,8 +243,18 @@ export const session = {
    */
   clear(): void {
     uuid = '';
+    username = '';
+    userId = 0;
+    ownerId = 0;
+    ownerName = '';
+    email = '';
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(USERNAME_KEY);
+      localStorage.removeItem(USERID_KEY);
+      localStorage.removeItem(OWNERID_KEY);
+      localStorage.removeItem(OWNERNAME_KEY);
+      localStorage.removeItem(EMAIL_KEY);
     }
   },
   
@@ -148,6 +268,37 @@ export const session = {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved && saved.length > 0) {
       uuid = saved;
+      
+      // Restore username if available
+      const savedUsername = localStorage.getItem(USERNAME_KEY);
+      if (savedUsername && savedUsername.length > 0) {
+        username = savedUsername;
+      }
+      
+      // Restore userId if available
+      const savedUserId = localStorage.getItem(USERID_KEY);
+      if (savedUserId) {
+        userId = parseInt(savedUserId) || 0;
+      }
+      
+      // Restore ownerId if available
+      const savedOwnerId = localStorage.getItem(OWNERID_KEY);
+      if (savedOwnerId) {
+        ownerId = parseInt(savedOwnerId) || 0;
+      }
+      
+      // Restore ownerName if available
+      const savedOwnerName = localStorage.getItem(OWNERNAME_KEY);
+      if (savedOwnerName) {
+        ownerName = savedOwnerName;
+      }
+      
+      // Restore email if available
+      const savedEmail = localStorage.getItem(EMAIL_KEY);
+      if (savedEmail) {
+        email = savedEmail;
+      }
+      
       return true;
     }
     return false;
@@ -227,5 +378,44 @@ export const session = {
    */
   get isPersistent(): boolean {
     return persistToStorage;
+  },
+  
+  /**
+   * Get the preferred language
+   */
+  getLanguage(): string {
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem(LANGUAGE_KEY);
+      if (stored) {
+        preferredLanguage = stored;
+        return stored;
+      }
+    }
+    return preferredLanguage;
+  },
+  
+  /**
+   * Set the preferred language
+   * @param lang - Language code (en, nl, de)
+   */
+  setLanguage(lang: string): void {
+    preferredLanguage = lang;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(LANGUAGE_KEY, lang);
+    }
+  },
+  
+  /**
+   * Restore language preference from localStorage
+   */
+  restoreLanguage(): string {
+    if (typeof localStorage === 'undefined') return preferredLanguage;
+    
+    const saved = localStorage.getItem(LANGUAGE_KEY);
+    if (saved && saved.length > 0) {
+      preferredLanguage = saved;
+      return saved;
+    }
+    return preferredLanguage;
   }
 };

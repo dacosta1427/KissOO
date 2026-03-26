@@ -6,6 +6,7 @@ import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
 import mycompany.database.PerstUserManager
 import mycompany.domain.PerstUser
+import mycompany.domain.Owner
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -51,7 +52,23 @@ class Login {
             perstUser.setLastLoginDate(System.currentTimeMillis())
             PerstUserManager.update(perstUser)
             
-            logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()})")
+            // Add user info to outjson for frontend
+            outjson.put("userId", perstUser.getOid())
+            outjson.put("username", perstUser.getUsername())
+            outjson.put("email", perstUser.getEmail() ?: "")
+            outjson.put("preferredLanguage", perstUser.getPreferredLanguage() ?: "en")
+            
+            // Add owner info if available
+            Owner owner = perstUser.getOwner()
+            if (owner != null) {
+                outjson.put("ownerId", owner.getOid())
+                outjson.put("ownerName", owner.getName() ?: "")
+            } else {
+                outjson.put("ownerId", 0)
+                outjson.put("ownerName", "")
+            }
+            
+            logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()}, Owner: ${owner?.getOid() ?: 'none'})")
             
             return ud
             

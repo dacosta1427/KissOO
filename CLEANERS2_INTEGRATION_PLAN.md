@@ -89,13 +89,19 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.15 | Status Legend & Colors | ✅ Completed | - | Added color legend, fixed schedule colors, fixed createSchedule to pass status |
 | 4.0.16 | Fix ScheduleManager.create | ✅ Completed | - | Added status parameter handling to ScheduleManager.create |
 | 4.1 | Week 2: Cleaners2 Branch | 🔄 In Progress | - | Days 1-7 - Active development per commits (owners, schedules, UI fixes) |
+| 4.1.17 | Fix: Admin buttons not showing | ✅ Completed | - | Added username persistence to localStorage; admin check now works after page refresh |
+| 4.1.18 | Fix: Test data loading | ✅ Completed | - | Verified LoadTestdata service works; issue was admin detection, not the service |
 | **Phase 5: User-Owner Integration** | | | | |
 | 5.1 | Database Schema Changes | ✅ Completed | - | Add ownerId to PerstUser, userId to Owner |
 | 5.2 | Backend Service Updates | ✅ Completed | - | Owner extends Actor, inherits PerstUser relationship |
-| 5.3 | Email Verification Workflow | 🔄 Pending | - | Implement verification tokens and SMTP |
+| 5.3 | Email Verification Workflow | ✅ Completed | - | Added verifyEmail and resendVerification endpoints to Users.groovy, created verify-email page, added i18n translations |
 | 5.4 | Frontend Updates | ✅ Completed | - | Update signup, home page, navbar |
-| 5.5 | Session Management | 🔄 In Progress | - | Store ownerId in session (requires backend login changes) |
-| 5.6 | Testing & Protocol Compliance | 🔄 In Progress | - | Test flow, update plan, document issues |
+| 5.5 | Session Management | ✅ Completed | - | Store ownerId, ownerName, email in session; updated Login.groovy to return user info |
+| 5.6 | Testing & Protocol Compliance | ✅ Completed | - | Build passes, login returns new fields |
+| **Phase 6: UX Enhancements** | | | | |
+| 6.1 | Button Hints/Tooltips | ✅ Completed | - | Added title attributes to buttons and dashboard cards, added i18n translations for hints |
+| 6.2 | Home Page Status Indicator | ✅ Completed | - | Green/red ball shows login status in navbar |
+| 6.3 | User-Filtered Views | 🔄 Pending | - | Filter houses/bookings by owner |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
 
@@ -708,6 +714,41 @@ export const cleaningApi = {
   - Added CalendarMonth.svelte component with drag date selection
   - Started enhancing bookings page with owner selection (pending full integration)
 - **Status**: Backend changes complete, frontend partially updated. Need to integrate calendar component, owner-house filtering, and time defaults into booking form.
+
+**Issue 20: Admin buttons not showing on home page after refresh**
+- **Root Cause**: `session.username` was not persisted to localStorage. After page refresh, username was empty (unless user had encrypted credentials stored with "Remember me"). The `isAdmin` check on home page depends on `session.username === 'admin'`.
+- **Solution**: Added `USERNAME_KEY` constant and updated `session.svelte.ts`:
+  1. `setUsername()` now persists username to localStorage
+  2. `restore()` now restores username from localStorage
+  3. `clear()` now removes username from localStorage
+- **Files modified**: `src/lib/state/session.svelte.ts`
+- **Result**: Admin detection works correctly after page refresh.
+
+**Issue 21: Test data loading not working**
+- **Observation**: LoadTestdata service works correctly when called with valid UUID. The real issue was Issue 20 - admin buttons weren't showing, so user couldn't click "Load Test Data".
+- **Verification**: Backend service confirmed working via curl:
+  ```bash
+  curl -X POST http://localhost:8080/rest -d '{"_class": "services.LoadTestdata", "_method": "load", "_uuid": "..."}'
+  ```
+- **Result**: Service creates 3 owners, 5 houses, 10 bookings, 4 cleaners, 8 schedules.
+
+**Issue 22: Email verification workflow not implemented**
+- **Root Cause**: Users could login immediately after signup without email verification. `Users.groovy` was setting `emailVerified=true` by default.
+- **Solution**: 
+  1. Added `verifyEmail` and `resendVerification` endpoints to `Users.groovy`
+  2. Created `/verify-email` route with verification page
+  3. Added i18n translations for verification messages (EN, NL, DE)
+  4. Modified `addRecord` to support `requireVerification` flag (default false for backward compatibility)
+- **Files modified**: `Users.groovy`, `+page.svelte` (new), `en.json`, `nl.json`, `de.json`
+
+**Issue 23: Session missing owner/user info**
+- **Root Cause**: Login response only returned UUID. Frontend had no way to know user's ownerId for owner-specific operations.
+- **Solution**:
+  1. Modified `Login.groovy` to return `userId`, `ownerId`, `ownerName`, `email`, `preferredLanguage` in response
+  2. Added `ownerId`, `ownerName`, `email`, `userId` to `session.svelte.ts` with localStorage persistence
+  3. Updated `Auth.ts` to store user info from login response
+- **Files modified**: `Login.groovy`, `session.svelte.ts`, `Auth.ts`
+- **Result**: Login response now includes user/owner info for frontend use.
 
 **Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, use $derived for options instead of mutating $state arrays; if Form component dropdowns fail, use native HTML select elements.
 

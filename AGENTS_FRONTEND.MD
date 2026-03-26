@@ -117,6 +117,7 @@ if (session.uuid) {
 | UUID not synchronized | `session.restore()` updates `session.uuid` only | `Server.uuid` remains empty | Call `Server.setUUID(session.uuid)` after restore | `+layout.svelte` |
 | Session expiry redirect | Redirect to `/login?expired=true` | Should redirect to home screen | Redirect to `'/'` and show "Logged out" indicator | `Server.ts`, `Navbar.svelte` |
 | Encrypted credentials not working | Missing Web Crypto API implementation | Need proper AES-GCM encryption | Implement with PBKDF2 key derivation | `session.svelte.ts` |
+| Admin buttons not showing after refresh | Relied on `session.username` without persistence | `session.username` not saved to localStorage | Add `USERNAME_KEY` and persist username in `setUsername()`, `restore()`, `clear()` | `session.svelte.ts` |
 
 ### Authentication Flow
 
@@ -164,6 +165,8 @@ if (session.uuid) {
 6. **Use Svelte 5 runes consistently** - mixing with Svelte 4 patterns causes issues
 7. **Convert option values to strings** for HTML select elements
 8. **Document non-working solutions immediately** to prevent repetition
+9. **Persist all session state to localStorage** - username, UUID, and any state used for UI decisions (like admin checks) must be persisted to survive page refresh
+10. **Return user info from login** - Backend should return relevant user data (userId, ownerId, email) to avoid additional API calls after login
 
 ## Protocol Compliance Checklist
 

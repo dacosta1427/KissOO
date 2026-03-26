@@ -54,6 +54,8 @@ public class PerstUser extends CVersion {
     private String verificationToken;
     private long verificationExpiresAt;
     
+    private String preferredLanguage = "en";  // User's preferred language (en, nl, de)
+    
     public PerstUser() {
         this.createdDate = System.currentTimeMillis();
     }
@@ -126,6 +128,9 @@ public class PerstUser extends CVersion {
     public String getVerificationToken() { return verificationToken; }
     public long getVerificationExpiresAt() { return verificationExpiresAt; }
     
+    public String getPreferredLanguage() { return preferredLanguage; }
+    public void setPreferredLanguage(String preferredLanguage) { this.preferredLanguage = preferredLanguage; }
+    
     public void generateVerificationToken() {
         this.verificationToken = UUID.randomUUID().toString();
         this.verificationExpiresAt = System.currentTimeMillis() + (24 * 60 * 60 * 1000);
@@ -162,6 +167,7 @@ public class PerstUser extends CVersion {
         json.put("lastName", lastName);
         json.put("createdDate", createdDate);
         json.put("lastLoginDate", lastLoginDate);
+        json.put("preferredLanguage", preferredLanguage);
         return json;
     }
     

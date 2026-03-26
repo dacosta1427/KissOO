@@ -11,6 +11,11 @@ import { session } from '$lib/state/session';
 export interface LoginResult {
   _Success: boolean;
   uuid?: string;
+  userId?: number;
+  ownerId?: number;
+  ownerName?: string;
+  email?: string;
+  preferredLanguage?: string;
   _ErrorMessage?: string;
   _ErrorCode?: number;
 }
@@ -21,15 +26,33 @@ export interface LoginResult {
  * @param password - Password
  * @returns Login result with UUID on success
  */
-export async function login(username: string, password: string): Promise<LoginResult> {
+export async function login(usernameInput: string, password: string): Promise<LoginResult> {
   const res = await Server.call('', 'Login', {
-    username: username.toLowerCase(),
+    username: usernameInput.toLowerCase(),
     password: password
   }) as LoginResult;
   
   if (res._Success && res.uuid) {
     session.setUUID(res.uuid);
+    session.setUsername(usernameInput.toLowerCase());
     Server.setUUID(res.uuid);
+    
+    // Store user info from response
+    if (res.userId) {
+      session.setUserId(res.userId);
+    }
+    if (res.ownerId) {
+      session.setOwnerId(res.ownerId);
+    }
+    if (res.ownerName) {
+      session.setOwnerName(res.ownerName);
+    }
+    if (res.email) {
+      session.setEmail(res.email);
+    }
+    if (res.preferredLanguage) {
+      session.setLanguage(res.preferredLanguage);
+    }
   }
   
   return res;
