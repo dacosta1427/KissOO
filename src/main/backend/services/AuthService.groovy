@@ -3,16 +3,24 @@ package services
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import mycompany.database.PerstUserManager
-import mycompany.database.OwnerManager
+import org.kissweb.restServer.MainServlet
 import mycompany.domain.PerstUser
 import mycompany.domain.Owner
+import oodb.PerstConnection
 
 /**
  * Authentication service for user signup and owner creation.
  * Creates both User and Owner entities with linking.
+ * Uses PerstConnection for Perst OODBMS operations.
  */
 class AuthService {
+
+    /**
+     * Get PerstConnection from environment if available.
+     */
+    private PerstConnection getPerst() {
+        return (PerstConnection) MainServlet.getEnvironment("PerstConnection")
+    }
 
     /**
      * Sign up a new user and create corresponding owner.
@@ -20,64 +28,58 @@ class AuthService {
      */
     void signup(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            PerstConnection perst = getPerst()
             String username = injson.getString("username")
             String password = injson.getString("password")
             String email = injson.getString("email", "")
-            String name = injson.getString("name", username) // default to username
+            String name = injson.getString("name", username)
             String phone = injson.getString("phone", "")
             String address = injson.getString("address", "")
             
             // Check if username already exists
-            if (PerstUserManager.getByKey(username) != null) {
+            Collection<PerstUser> existingUsers = perst.getAll(PerstUser)
+            if (existingUsers.any { it.getUsername() == username }) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Username already exists")
                 return
             }
             
             // Generate unique userId
-            Collection<PerstUser> existingUsers = PerstUserManager.getAll()
-            int maxUserId = 0
-            for (PerstUser u : existingUsers) {
-                if (u.getUserId() > maxUserId) {
-                    maxUserId = u.getUserId()
-                }
-            }
+            int maxUserId = existingUsers.collect { it.getUserId() }.max() ?: 0
             int newUserId = maxUserId + 1
             
-            // Generate unique ownerId
-            Collection<Owner> existingOwners = OwnerManager.getAll()
-            long maxOwnerId = 0
-            for (Owner o : existingOwners) {
-                if (o.getOid() > maxOwnerId) {
-                    maxOwnerId = o.getOid()
-                }
-            }
-            long newOwnerId = maxOwnerId + 1
-            
-            // Create Owner first (need userId for linking, but we don't have it yet)
-            Owner owner = OwnerManager.create(name, email, phone, address, true)
-            if (owner == null) {
+            // Create Owner
+            Owner owner = new Owner(name, email, phone, address, true)
+            def ownerTc = perst.perstCreateContainer()
+            ownerTc.addInsert(owner)
+            if (!perst.perstStore(ownerTc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create owner")
                 return
             }
             
             // Create User with ownerId
-            PerstUser user = PerstUserManager.create(username, password, newUserId, owner.getOid())
-            if (user == null) {
+            PerstUser user = new PerstUser(username, password, newUserId, owner.getOid())
+            def userTc = perst.perstCreateContainer()
+            userTc.addInsert(user)
+            if (!perst.perstStore(userTc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create user")
                 return
             }
             
             // Link owner to user
-            owner.setUserId(user.getOid())
-            OwnerManager.update(owner)
+            owner.setPerstUser(user)
+            def linkTc = perst.perstCreateContainer()
+            linkTc.addUpdate(owner)
+            perst.perstStore(linkTc)
             
-            // Set email as verified for now (can be changed later for email verification workflow)
+            // Set email as verified
             user.setEmailVerified(true)
             user.setEmail(email)
-            PerstUserManager.update(user)
+            def updateTc = perst.perstCreateContainer()
+            updateTc.addUpdate(user)
+            perst.perstStore(updateTc)
             
             JSONObject result = new JSONObject()
             result.put("userId", user.getOid())
@@ -98,8 +100,10 @@ class AuthService {
      */
     void getOwnerByUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            PerstConnection perst = getPerst()
             long userId = injson.getLong("userId")
-            Owner owner = OwnerManager.getByUserId(userId)
+            Collection<Owner> allOwners = perst.getAll(Owner)
+            Owner owner = allOwners.find { it.getUserId() == userId }
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -125,8 +129,10 @@ class AuthService {
      */
     void getUserByOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            PerstConnection perst = getPerst()
             long ownerId = injson.getLong("ownerId")
-            PerstUser user = PerstUserManager.getByOwnerId(ownerId)
+            Collection<PerstUser> allUsers = perst.getAll(PerstUser)
+            PerstUser user = allUsers.find { it.getOwnerId() == ownerId }
             if (user == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "User not found")

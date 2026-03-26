@@ -4,6 +4,7 @@ import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
 import oodb.PerstConfig
 import oodb.PerstStorageManager
+import oodb.PerstConnection
 import mycompany.database.PerstUserManager
 import mycompany.domain.PerstUser
 import mycompany.domain.Actor
@@ -37,8 +38,18 @@ class KissInit {
                 PerstStorageManager.initialize()
                 println "[KissInit] init() - Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
                 
-                // Initialize default admin user if none exists
+                // Register PerstConnection as NonSqlConnection for services to use
                 if (PerstStorageManager.isAvailable()) {
+                    try {
+                        def perstConn = new PerstConnection()
+                        MainServlet.putEnvironment("NonSqlConnection", perstConn)
+                        MainServlet.putEnvironment("PerstConnection", perstConn)
+                        println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
+                    } catch (Exception e) {
+                        println "[KissInit] WARNING: Could not create PerstConnection: " + e.message
+                    }
+                    
+                    // Initialize default admin user if none exists
                     initDefaultUser()
                     indexPerstUsers()
                     indexActors()
@@ -54,6 +65,9 @@ class KissInit {
         
         // Allow user creation without authentication (for first-time setup)
         MainServlet.allowWithoutAuthentication("services.Users", "addRecord")
+        
+        // Allow signup without authentication
+        MainServlet.allowWithoutAuthentication("services.AuthService", "signup")
         
         println "[KissInit] init() COMPLETED"
         

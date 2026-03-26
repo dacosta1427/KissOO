@@ -164,6 +164,19 @@ public class PerstStorageManager {
         }
     }
     
+    public static <T extends CVersion> T find(Class<T> clazz, String field, long value) {
+        UnifiedDBManager dbm = getDBManager();
+        if (dbm == null) return null;
+        
+        try {
+            IterableIterator<T> results = dbm.find(clazz, field, new Key(value));
+            return getSingleton(results);
+        } catch (Exception e) {
+            System.err.println("[PerstStorageManager] Find failed: " + e.getMessage());
+            return null;
+        }
+    }
+    
     public static <T extends CVersion> List<T> getAll(Class<T> clazz) {
         UnifiedDBManager dbm = getDBManager();
         if (dbm == null) return java.util.Collections.emptyList();
