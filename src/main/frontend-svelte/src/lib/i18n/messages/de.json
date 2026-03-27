@@ -243,5 +243,26 @@
 		"loading": "Daten werden geladen...",
 		"saving": "Änderungen werden gespeichert...",
 		"deleting": "Element wird gelöscht..."
+	},
+	"cost_profiles": {
+		"title": "Kostenprofile",
+		"add_new": "Kostenprofil Hinzufügen",
+		"edit": "Kostenprofil Bearbeiten",
+		"delete_confirm": "Sind Sie sicher, dass Sie dieses Kostenprofil löschen möchten?",
+		"copy": "Kopieren",
+		"standard": "Standard",
+		"inactive": "Inaktiv",
+		"base_rate": "Basis-Stundensatz",
+		"minimum_charge": "Mindestgebühr",
+		"rate_per_m2": "Satz pro m²",
+		"rate_per_floor": "Satz pro Stockwerk",
+		"rate_per_bedroom": "Satz pro Schlafzimmer",
+		"rate_per_bathroom": "Satz pro Badezimmer",
+		"dog_surcharge": "Hundezuschlag",
+		"multiplier": "Multiplikator",
+		"global": "Global (alle Eigentümer)",
+		"created": "Kostenprofil erfolgreich erstellt",
+		"updated": "Kostenprofil erfolgreich aktualisiert",
+		"deleted": "Kostenprofil erfolgreich gelöscht"
 	}
 }

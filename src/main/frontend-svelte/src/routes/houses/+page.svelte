@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { housesAPI, ownersAPI, type House, type Owner } from '$lib/api/Cleaning';
+	import { housesAPI, ownersAPI, costProfilesAPI, type House, type Owner, type CostProfile } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import { session } from '$lib/state/session.svelte';
   import { t, currentLocale } from '$lib/i18n';
@@ -12,6 +12,7 @@
 
   let houses = $state<House[]>([]);
 	let owners = $state<Owner[]>([]);
+	let costProfiles = $state<CostProfile[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
@@ -25,9 +26,15 @@
 		name: '',
 		address: '',
 		description: '',
-		owner_id: 0 as number,
+		owner: 0 as number,
+		cost_profile: 0 as number,
 		check_in_time: '16:00',
-		check_out_time: '10:00'
+		check_out_time: '10:00',
+		surface_m2: null as number | null,
+		floors: 1,
+		bedrooms: 0,
+		bathrooms: 0,
+		luxury_level: 'standard' as 'basic' | 'standard' | 'premium' | 'luxury'
 	});
 
 	let newOwnerData = $state({
@@ -39,7 +46,7 @@
 
 	// Filtered houses based on user role
 	let filteredHouses = $derived(
-		isAdmin ? houses : houses.filter(h => h.owner_id === session.ownerId)
+		isAdmin ? houses : houses.filter(h => h.owner === session.ownerId)
 	);
 
 	async function loadHouses() {
@@ -48,6 +55,8 @@
 
 		try {
 			houses = await housesAPI.getAll();
+			// Load cost profiles for dropdown
+			costProfiles = await costProfilesAPI.getAll();
 		} catch (err: any) {
 			error = err.message || t('errors.failed_to_load');
 		} finally {
@@ -65,7 +74,20 @@
 
 	function openAddForm() {
 		editingHouse = null;
-		formData = { name: '', address: '', description: '', owner_id: 0, check_in_time: '16:00', check_out_time: '10:00' };
+		formData = { 
+			name: '', 
+			address: '', 
+			description: '', 
+			owner: 0, 
+			cost_profile: 0,
+			check_in_time: '16:00', 
+			check_out_time: '10:00',
+			surface_m2: null,
+			floors: 1,
+			bedrooms: 0,
+			bathrooms: 0,
+			luxury_level: 'standard'
+		};
 		showForm = true;
 	}
 
@@ -75,9 +97,15 @@
 			name: house.name, 
 			address: house.address, 
 			description: house.description || '',
-			owner_id: house.owner_id || 0,
+			owner: house.owner || 0,
+			cost_profile: house.cost_profile || 0,
 			check_in_time: house.check_in_time || '16:00',
-			check_out_time: house.check_out_time || '10:00'
+			check_out_time: house.check_out_time || '10:00',
+			surface_m2: house.surface_m2 || null,
+			floors: house.floors || 1,
+			bedrooms: house.bedrooms || 0,
+			bathrooms: house.bathrooms || 0,
+			luxury_level: house.luxury_level || 'standard'
 		};
 		showForm = true;
 	}
@@ -85,13 +113,13 @@
 	function handleFormCancel() {
 		showForm = false;
 		editingHouse = null;
-		formData = { name: '', address: '', description: '', owner_id: 0 };
+		formData = { name: '', address: '', description: '', owner: 0, cost_profile: 0, check_in_time: '16:00', check_out_time: '10:00', surface_m2: null, floors: 1, bedrooms: 0, bathrooms: 0, luxury_level: 'standard' };
 	}
 
 	function handleOwnerChange() {
-		if (formData.owner_id === -1) {
+		if (formData.owner === -1) {
 			showNewOwnerModal = true;
-			formData.owner_id = 0;
+			formData.owner = 0;
 		}
 	}
 
@@ -105,7 +133,7 @@
 			const newOwner = await ownersAPI.create(newOwnerData);
 			notificationActions.success(t('owners.name') + ' ' + t('notifications.created_successfully'));
 			await loadOwners();
-			formData.owner_id = newOwner.id;
+			formData.owner = newOwner.id;
 			showNewOwnerModal = false;
 			newOwnerData = { name: '', email: '', phone: '', address: '' };
 		} catch (err: any) {
@@ -125,9 +153,15 @@
 			name: formData.name,
 			address: formData.address,
 			description: formData.description,
-			owner_id: formData.owner_id || 0,
+			owner: formData.owner || 0,
+			cost_profile: formData.cost_profile || 0,
 			check_in_time: formData.check_in_time,
-			check_out_time: formData.check_out_time
+			check_out_time: formData.check_out_time,
+			surface_m2: formData.surface_m2,
+			floors: formData.floors,
+			bedrooms: formData.bedrooms,
+			bathrooms: formData.bathrooms,
+			luxury_level: formData.luxury_level
 		};
 		
 		try {
@@ -141,7 +175,7 @@
 
 			showForm = false;
 			editingHouse = null;
-			formData = { name: '', address: '', description: '', owner_id: 0, check_in_time: '16:00', check_out_time: '10:00' };
+			formData = { name: '', address: '', description: '', owner: 0, cost_profile: 0, check_in_time: '16:00', check_out_time: '10:00', surface_m2: null, floors: 1, bedrooms: 0, bathrooms: 0, luxury_level: 'standard' };
 			await loadHouses();
 		} catch (err: any) {
 			notificationActions.error(err.message || t('errors.failed_to_save'));
@@ -222,12 +256,23 @@
 					<!-- Owner -->
 					<div class="form-field">
 						<label for="owner">{tt('houses.owner')}</label>
-						<select id="owner" bind:value={formData.owner_id} onchange={handleOwnerChange}>
+						<select id="owner" bind:value={formData.owner} onchange={handleOwnerChange}>
 							<option value={0}>-- {tt('houses.no_owner')} --</option>
 							{#each owners as owner}
 								<option value={owner.id}>{owner.name}</option>
 							{/each}
 							<option value={-1}>+ {tt('houses.new_owner')}</option>
+						</select>
+					</div>
+
+					<!-- Cost Profile -->
+					<div class="form-field">
+						<label for="cost_profile">Cost Profile</label>
+						<select id="cost_profile" bind:value={formData.cost_profile}>
+							<option value={0}>-- Use Standard --</option>
+							{#each costProfiles as profile}
+								<option value={profile.id}>{profile.name} {profile.is_standard ? '(Standard)' : ''}</option>
+							{/each}
 						</select>
 					</div>
 
@@ -264,6 +309,65 @@
 							step="900"
 							required 
 						/>
+					</div>
+				</div>
+
+				<!-- Cost Calculation Section -->
+				<h3 class="section-title">Cost Calculation</h3>
+				<div class="form-grid">
+					<div class="form-field">
+						<label for="surface_m2">Surface (m²)</label>
+						<input 
+							type="number" 
+							id="surface_m2" 
+							bind:value={formData.surface_m2} 
+							min="0"
+							step="1"
+							placeholder="e.g., 120"
+						/>
+					</div>
+
+					<div class="form-field">
+						<label for="floors">Floors</label>
+						<input 
+							type="number" 
+							id="floors" 
+							bind:value={formData.floors} 
+							min="1"
+							step="1"
+						/>
+					</div>
+
+					<div class="form-field">
+						<label for="bedrooms">Bedrooms</label>
+						<input 
+							type="number" 
+							id="bedrooms" 
+							bind:value={formData.bedrooms} 
+							min="0"
+							step="1"
+						/>
+					</div>
+
+					<div class="form-field">
+						<label for="bathrooms">Bathrooms</label>
+						<input 
+							type="number" 
+							id="bathrooms" 
+							bind:value={formData.bathrooms} 
+							min="0"
+							step="1"
+						/>
+					</div>
+
+					<div class="form-field">
+						<label for="luxury_level">Luxury Level</label>
+						<select id="luxury_level" bind:value={formData.luxury_level}>
+							<option value="basic">Basic</option>
+							<option value="standard">Standard</option>
+							<option value="premium">Premium</option>
+							<option value="luxury">Luxury</option>
+						</select>
 					</div>
 				</div>
 
@@ -366,8 +470,8 @@
 					<div class="house-card">
 						<h3 class="house-name">{house.name}</h3>
 						<p class="house-address">{house.address}</p>
-						{#if house.owner_id}
-							<p class="house-owner">{tt('houses.owner')}: {getOwnerName(house.owner_id)}</p>
+						{#if house.owner}
+							<p class="house-owner">{tt('houses.owner')}: {getOwnerName(house.owner)}</p>
 						{/if}
 						{#if house.description}
 							<p class="house-description">{house.description}</p>
@@ -403,7 +507,7 @@
 						<tr>
 							<td>{house.name}</td>
 							<td>{house.address}</td>
-							<td>{getOwnerName(house.owner_id)}</td>
+							<td>{getOwnerName(house.owner)}</td>
 							<td>{house.check_in_time || '-'}</td>
 							<td>{house.check_out_time || '-'}</td>
 							<td>
@@ -747,5 +851,14 @@
 		text-align: center;
 		color: #6b7280;
 		padding: 2rem;
+	}
+	
+	.section-title {
+		margin: 1.5rem 0 1rem 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: #374151;
+		border-bottom: 1px solid #e5e7eb;
+		padding-bottom: 0.5rem;
 	}
 </style>

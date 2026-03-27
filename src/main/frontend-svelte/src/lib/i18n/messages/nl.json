@@ -243,5 +243,26 @@
 		"loading": "Gegevens laden...",
 		"saving": "Wijzigingen opslaan...",
 		"deleting": "Item verwijderen..."
+	},
+	"cost_profiles": {
+		"title": "Kostenprofielen",
+		"add_new": "Kostenprofiel Toevoegen",
+		"edit": "Kostenprofiel Bewerken",
+		"delete_confirm": "Weet u zeker dat u dit kostenprofiel wilt verwijderen?",
+		"copy": "Kopiëren",
+		"standard": "Standaard",
+		"inactive": "Inactief",
+		"base_rate": "Basis Uurtarief",
+		"minimum_charge": "Minimum Tarief",
+		"rate_per_m2": "Tarief per m²",
+		"rate_per_floor": "Tarief per Verdieping",
+		"rate_per_bedroom": "Tarief per Slaapkamer",
+		"rate_per_bathroom": "Tarief per Badkamer",
+		"dog_surcharge": "Hondentoeslag",
+		"multiplier": "Vermenigvuldiger",
+		"global": "Globaal (alle eigenaren)",
+		"created": "Kostenprofiel succesvol aangemaakt",
+		"updated": "Kostenprofiel succesvol bijgewerkt",
+		"deleted": "Kostenprofiel succesvol verwijderd"
 	}
 }

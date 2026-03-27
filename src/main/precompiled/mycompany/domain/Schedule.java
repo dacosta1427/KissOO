@@ -7,14 +7,14 @@ import org.garret.perst.continuous.FullTextSearchable;
 /**
  * Schedule entity for cleaning scheduler.
  * Represents a scheduled cleaning task assigned to a cleaner for a booking.
+ * 
+ * Uses proper OO references to Cleaner and Booking (not IDs).
  */
 public class Schedule extends CVersion {
     
-    @Indexable
-    private int cleanerId;
-    
-    @Indexable
-    private int bookingId;
+    // Proper OO references (was: int cleanerId, int bookingId)
+    private Cleaner cleaner;
+    private Booking booking;
     
     private String scheduleDate;   // ISO date string
     private String startTime;      // HH:mm
@@ -22,29 +22,68 @@ public class Schedule extends CVersion {
     private String notes;
     
     @Indexable
-    private String status;  // scheduled, completed, cancelled
+    private String status;  // scheduled, completed, cancelled, pending (in progress)
     
     public Schedule() {
         this.status = "scheduled";
     }
     
+    // Legacy constructor for backward compatibility
     public Schedule(int cleanerId, int bookingId, String scheduleDate, 
                     String startTime, String endTime, String notes) {
-        this.cleanerId = cleanerId;
-        this.bookingId = bookingId;
+        this();
         this.scheduleDate = scheduleDate;
         this.startTime = startTime;
         this.endTime = endTime;
         this.notes = notes;
-        this.status = "scheduled";
     }
     
     // Getters and setters
-    public int getCleanerId() { return cleanerId; }
-    public void setCleanerId(int cleanerId) { this.cleanerId = cleanerId; }
+    // Cleaner - proper OO reference
+    public Cleaner getCleaner() { return cleaner; }
+    public void setCleaner(Cleaner cleaner) { this.cleaner = cleaner; }
     
-    public int getBookingId() { return bookingId; }
-    public void setBookingId(int bookingId) { this.bookingId = bookingId; }
+    /**
+     * Get cleaner OID (for API serialization)
+     */
+    public long getCleanerOid() {
+        return cleaner != null ? cleaner.getOid() : 0;
+    }
+    
+    // Legacy methods for backward compatibility
+    @Deprecated
+    public int getCleanerId() {
+        return cleaner != null ? (int) cleaner.getOid() : 0;
+    }
+    
+    @Deprecated
+    public void setCleanerId(int cleanerId) {
+        // Note: This doesn't set the actual object reference
+        // Use setCleaner(Cleaner cleaner) for proper OO behavior
+    }
+    
+    // Booking - proper OO reference
+    public Booking getBooking() { return booking; }
+    public void setBooking(Booking booking) { this.booking = booking; }
+    
+    /**
+     * Get booking OID (for API serialization)
+     */
+    public long getBookingOid() {
+        return booking != null ? booking.getOid() : 0;
+    }
+    
+    // Legacy methods for backward compatibility
+    @Deprecated
+    public int getBookingId() {
+        return booking != null ? (int) booking.getOid() : 0;
+    }
+    
+    @Deprecated
+    public void setBookingId(int bookingId) {
+        // Note: This doesn't set the actual object reference
+        // Use setBooking(Booking booking) for proper OO behavior
+    }
     
     public String getScheduleDate() { return scheduleDate; }
     public void setScheduleDate(String scheduleDate) { this.scheduleDate = scheduleDate; }
@@ -64,9 +103,9 @@ public class Schedule extends CVersion {
     @Override
     public String toString() {
         return "Schedule{" +
-                "cleanerId=" + cleanerId +
-                ", bookingId=" + bookingId +
-                ", scheduleDate='" + scheduleDate + '\'' +
+                "cleaner=" + (cleaner != null ? cleaner.getOid() : "null") +
+                ", booking=" + (booking != null ? booking.getOid() : "null") +
+                ", date='" + scheduleDate + '\'' +
                 ", status='" + status + '\'' +
                 '}';
     }

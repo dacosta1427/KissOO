@@ -48,10 +48,17 @@ export interface House {
   name: string;
   address: string;
   description?: string;
-  owner_id?: number;
+  owner?: number;  // Owner OID (was owner_id)
+  cost_profile?: number;  // CostProfile OID
   active: boolean;
   check_in_time: string; // 24h format, e.g., "16:00"
   check_out_time: string; // 24h format, e.g., "10:00"
+  // Cost calculation fields
+  surface_m2?: number;   // Total cleaning surface in m²
+  floors?: number;       // Number of floors
+  bedrooms?: number;     // Number of bedrooms
+  bathrooms?: number;    // Number of bathrooms
+  luxury_level?: 'basic' | 'standard' | 'premium' | 'luxury';
 }
 
 export interface Owner {
@@ -61,6 +68,35 @@ export interface Owner {
   phone?: string;
   address?: string;
   active: boolean;
+}
+
+export interface CostProfile {
+  id: number;
+  name: string;
+  is_standard: boolean;
+  owner?: number;  // Owner OID, null for global
+  base_hourly_rate: number;
+  minimum_charge: number;
+  rate_per_m2: number;
+  rate_per_floor: number;
+  rate_per_bedroom: number;
+  rate_per_bathroom: number;
+  dog_surcharge: number;
+  basic_multiplier: number;
+  standard_multiplier: number;
+  premium_multiplier: number;
+  luxury_multiplier: number;
+  active: boolean;
+}
+
+export interface CostEstimate {
+  base_cost: number;
+  size_cost: number;
+  room_cost: number;
+  luxury_multiplier: number;
+  dog_surcharge: number;
+  total: number;
+  breakdown: string[];
 }
 
 export interface CleaningResult {
@@ -266,5 +302,58 @@ export const ownersAPI = {
   
   delete: async (id: number): Promise<void> => {
     await callCleaningService('deleteOwner', { id }, 'Delete owner');
+  }
+};
+
+// Cost Profiles API
+export const costProfilesAPI = {
+  getAll: async (): Promise<CostProfile[]> => {
+    const res = await callCleaningService('getCostProfiles', {}, 'Load cost profiles');
+    return res.data || [];
+  },
+  
+  getById: async (id: number): Promise<CostProfile | null> => {
+    const res = await callCleaningService('getCostProfile', { id }, 'Load cost profile');
+    return res.data || null;
+  },
+  
+  getStandard: async (): Promise<CostProfile | null> => {
+    const res = await callCleaningService('getStandardCostProfile', {}, 'Load standard cost profile');
+    return res.data || null;
+  },
+  
+  create: async (data: Partial<CostProfile>): Promise<CostProfile> => {
+    const res = await callCleaningService('createCostProfile', { data }, 'Create cost profile');
+    return res.data;
+  },
+  
+  update: async (id: number, data: Partial<CostProfile>): Promise<CostProfile> => {
+    const res = await callCleaningService('updateCostProfile', { id, data }, 'Update cost profile');
+    return res.data;
+  },
+  
+  delete: async (id: number): Promise<void> => {
+    await callCleaningService('deleteCostProfile', { id }, 'Delete cost profile');
+  },
+  
+  copy: async (sourceId: number, name: string, ownerId?: number): Promise<CostProfile> => {
+    const res = await callCleaningService('copyCostProfile', { source_id: sourceId, name, owner: ownerId }, 'Copy cost profile');
+    return res.data;
+  }
+};
+
+// Cost Calculation API
+export const costAPI = {
+  calculate: async (houseId: number, bookingId?: number, profileId?: number): Promise<CostEstimate | null> => {
+    const args: any = { house_id: houseId };
+    if (bookingId) args.booking_id = bookingId;
+    if (profileId) args.cost_profile_id = profileId;
+    const res = await callCleaningService('calculateCost', args, 'Calculate cost');
+    return res.data || null;
+  },
+  
+  estimateHours: async (houseId: number): Promise<number | null> => {
+    const res = await callCleaningService('estimateHours', { house_id: houseId }, 'Estimate hours');
+    return res.estimated_hours || null;
   }
 };

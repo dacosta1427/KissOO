@@ -10,14 +10,17 @@ import mycompany.database.BookingManager
 import mycompany.database.ScheduleManager
 import mycompany.database.HouseManager
 import mycompany.database.OwnerManager
+import mycompany.database.CostProfileManager
 import mycompany.domain.Cleaner
 import mycompany.domain.Booking
 import mycompany.domain.Schedule
 import mycompany.domain.House
 import mycompany.domain.Owner
+import mycompany.domain.CostProfile
 import mycompany.database.PerstUserManager
 import mycompany.domain.PerstUser
 import oodb.PerstConnection
+import services.CostService
 
 /**
  * Cleaning service for CRUD operations on cleaning scheduler entities.
@@ -663,10 +666,17 @@ class Cleaning {
                 row.put("name", house.getName())
                 row.put("address", house.getAddress())
                 row.put("description", house.getDescription())
-                row.put("owner_id", house.getOwnerId())
+                row.put("owner", house.getOwnerOid())  // OO ref → OID
+                row.put("cost_profile", house.getCostProfileOid())  // OO ref → OID
                 row.put("active", house.isActive())
                 row.put("check_in_time", house.getCheckInTime())
                 row.put("check_out_time", house.getCheckOutTime())
+                // Cost calculation fields
+                row.put("surface_m2", house.getSurfaceM2())
+                row.put("floors", house.getFloors())
+                row.put("bedrooms", house.getBedrooms())
+                row.put("bathrooms", house.getBathrooms())
+                row.put("luxury_level", house.getLuxuryLevel())
                 rows.put(row)
             }
             
@@ -692,10 +702,17 @@ class Cleaning {
             data.put("name", house.getName())
             data.put("address", house.getAddress())
             data.put("description", house.getDescription())
-            data.put("owner_id", house.getOwnerId())
+            data.put("owner", house.getOwnerOid())  // OO ref → OID
+            data.put("cost_profile", house.getCostProfileOid())  // OO ref → OID
             data.put("active", house.isActive())
             data.put("check_in_time", house.getCheckInTime())
             data.put("check_out_time", house.getCheckOutTime())
+            // Cost calculation fields
+            data.put("surface_m2", house.getSurfaceM2())
+            data.put("floors", house.getFloors())
+            data.put("bedrooms", house.getBedrooms())
+            data.put("bathrooms", house.getBathrooms())
+            data.put("luxury_level", house.getLuxuryLevel())
             outjson.put("data", data)
         } catch (Exception e) {
             outjson.put("_Success", false)
@@ -710,12 +727,35 @@ class Cleaning {
             String name = data.getString("name")
             String address = data.getString("address", "")
             String description = data.getString("description", "")
-            long ownerId = data.has("owner_id") ? data.getLong("owner_id") : 0
             boolean active = data.getBoolean("active", true)
             String checkInTime = data.getString("check_in_time", "16:00")
             String checkOutTime = data.getString("check_out_time", "10:00")
             
-            House house = new House(name, address, description, ownerId, active, checkInTime, checkOutTime)
+            House house = new House(name, address, description, active)
+            house.setCheckInTime(checkInTime)
+            house.setCheckOutTime(checkOutTime)
+            
+            // Set Owner from OID (OO reference)
+            long ownerOid = data.getLong("owner", 0)
+            if (ownerOid > 0) {
+                Owner owner = perst.getByOid(Owner, ownerOid)
+                house.setOwner(owner)
+            }
+            
+            // Set CostProfile from OID (OO reference)
+            long costProfileOid = data.getLong("cost_profile", 0)
+            if (costProfileOid > 0) {
+                CostProfile costProfile = perst.getByOid(CostProfile, costProfileOid)
+                house.setCostProfile(costProfile)
+            }
+            
+            // Set cost calculation fields
+            if (data.has("surface_m2")) house.setSurfaceM2(data.getDouble("surface_m2"))
+            if (data.has("floors")) house.setFloors(data.getInt("floors"))
+            if (data.has("bedrooms")) house.setBedrooms(data.getInt("bedrooms"))
+            if (data.has("bathrooms")) house.setBathrooms(data.getInt("bathrooms"))
+            if (data.has("luxury_level")) house.setLuxuryLevel(data.getString("luxury_level"))
+            
             def tc = perst.perstCreateContainer()
             tc.addInsert(house)
             if (!perst.perstStore(tc)) {
@@ -723,15 +763,7 @@ class Cleaning {
                 outjson.put("_ErrorMessage", "Failed to create house")
                 return
             }
-            JSONObject result = new JSONObject()
-            result.put("id", house.getOid())
-            result.put("name", house.getName())
-            result.put("address", house.getAddress())
-            result.put("description", house.getDescription())
-            result.put("owner_id", house.getOwnerId())
-            result.put("active", house.isActive())
-            result.put("check_in_time", house.getCheckInTime())
-            result.put("check_out_time", house.getCheckOutTime())
+            JSONObject result = houseToJson(house)
             outjson.put("data", result)
         } catch (Exception e) {
             outjson.put("_Success", false)
@@ -753,10 +785,38 @@ class Cleaning {
             if (data.has("name")) house.setName(data.getString("name"))
             if (data.has("address")) house.setAddress(data.getString("address"))
             if (data.has("description")) house.setDescription(data.getString("description"))
-            if (data.has("owner_id")) house.setOwnerId(data.getLong("owner_id"))
             if (data.has("active")) house.setActive(data.getBoolean("active"))
             if (data.has("check_in_time")) house.setCheckInTime(data.getString("check_in_time"))
             if (data.has("check_out_time")) house.setCheckOutTime(data.getString("check_out_time"))
+            
+            // Update Owner from OID (OO reference)
+            if (data.has("owner")) {
+                long ownerOid = data.getLong("owner")
+                if (ownerOid > 0) {
+                    Owner owner = perst.getByOid(Owner, ownerOid)
+                    house.setOwner(owner)
+                } else {
+                    house.setOwner(null)
+                }
+            }
+            
+            // Update CostProfile from OID (OO reference)
+            if (data.has("cost_profile")) {
+                long costProfileOid = data.getLong("cost_profile")
+                if (costProfileOid > 0) {
+                    CostProfile costProfile = perst.getByOid(CostProfile, costProfileOid)
+                    house.setCostProfile(costProfile)
+                } else {
+                    house.setCostProfile(null)
+                }
+            }
+            
+            // Update cost calculation fields
+            if (data.has("surface_m2")) house.setSurfaceM2(data.getDouble("surface_m2"))
+            if (data.has("floors")) house.setFloors(data.getInt("floors"))
+            if (data.has("bedrooms")) house.setBedrooms(data.getInt("bedrooms"))
+            if (data.has("bathrooms")) house.setBathrooms(data.getInt("bathrooms"))
+            if (data.has("luxury_level")) house.setLuxuryLevel(data.getString("luxury_level"))
             
             def tc = perst.perstCreateContainer()
             tc.addUpdate(house)
@@ -765,15 +825,7 @@ class Cleaning {
                 outjson.put("_ErrorMessage", "Failed to update house")
                 return
             }
-            JSONObject result = new JSONObject()
-            result.put("id", house.getOid())
-            result.put("name", house.getName())
-            result.put("address", house.getAddress())
-            result.put("description", house.getDescription())
-            result.put("owner_id", house.getOwnerId())
-            result.put("active", house.isActive())
-            result.put("check_in_time", house.getCheckInTime())
-            result.put("check_out_time", house.getCheckOutTime())
+            JSONObject result = houseToJson(house)
             outjson.put("data", result)
         } catch (Exception e) {
             outjson.put("_Success", false)
@@ -1011,5 +1063,329 @@ class Cleaning {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
         }
+    }
+    
+    // ==================== COST PROFILES ====================
+    
+    void getCostProfiles(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstConnection perst = getPerst()
+            Collection<CostProfile> profiles = CostProfileManager.getAll()
+            JSONArray rows = new JSONArray()
+            
+            for (CostProfile profile : profiles) {
+                JSONObject row = new JSONObject()
+                row.put("id", profile.getOid())
+                row.put("name", profile.getName())
+                row.put("is_standard", profile.isStandard())
+                row.put("owner", profile.getOwner()?.getOid() ?: 0)
+                row.put("base_hourly_rate", profile.getBaseHourlyRate())
+                row.put("minimum_charge", profile.getMinimumCharge())
+                row.put("rate_per_m2", profile.getRatePerM2())
+                row.put("rate_per_floor", profile.getRatePerFloor())
+                row.put("rate_per_bedroom", profile.getRatePerBedroom())
+                row.put("rate_per_bathroom", profile.getRatePerBathroom())
+                row.put("dog_surcharge", profile.getDogSurcharge())
+                row.put("basic_multiplier", profile.getBasicMultiplier())
+                row.put("standard_multiplier", profile.getStandardMultiplier())
+                row.put("premium_multiplier", profile.getPremiumMultiplier())
+                row.put("luxury_multiplier", profile.getLuxuryMultiplier())
+                row.put("active", profile.isActive())
+                rows.put(row)
+            }
+            
+            outjson.put("data", rows)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void getCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstConnection perst = getPerst()
+            long oid = injson.getLong("id")
+            CostProfile profile = CostProfileManager.getByOid(oid)
+            if (profile == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Cost profile not found")
+                return
+            }
+            JSONObject data = costProfileToJson(profile)
+            outjson.put("data", data)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void getStandardCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            CostProfile profile = CostProfileManager.getStandard()
+            if (profile == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "No standard cost profile found")
+                return
+            }
+            JSONObject data = costProfileToJson(profile)
+            outjson.put("data", data)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void createCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstConnection perst = getPerst()
+            JSONObject data = injson.getJSONObject("data")
+            
+            CostProfile profile = new CostProfile()
+            profile.setName(data.getString("name"))
+            profile.setStandard(data.getBoolean("is_standard", false))
+            profile.setBaseHourlyRate(data.getDouble("base_hourly_rate", 25.0))
+            profile.setMinimumCharge(data.getDouble("minimum_charge", 75.0))
+            profile.setRatePerM2(data.getDouble("rate_per_m2", 0.15))
+            profile.setRatePerFloor(data.getDouble("rate_per_floor", 15.0))
+            profile.setRatePerBedroom(data.getDouble("rate_per_bedroom", 10.0))
+            profile.setRatePerBathroom(data.getDouble("rate_per_bathroom", 15.0))
+            profile.setDogSurcharge(data.getDouble("dog_surcharge", 20.0))
+            profile.setBasicMultiplier(data.getDouble("basic_multiplier", 1.0))
+            profile.setStandardMultiplier(data.getDouble("standard_multiplier", 1.0))
+            profile.setPremiumMultiplier(data.getDouble("premium_multiplier", 1.25))
+            profile.setLuxuryMultiplier(data.getDouble("luxury_multiplier", 1.5))
+            profile.setActive(data.getBoolean("active", true))
+            
+            // Set owner if provided
+            long ownerOid = data.getLong("owner", 0)
+            if (ownerOid > 0) {
+                Owner owner = perst.getByOid(Owner, ownerOid)
+                profile.setOwner(owner)
+            }
+            
+            if (!CostProfileManager.create(profile)) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Failed to create cost profile")
+                return
+            }
+            
+            JSONObject result = costProfileToJson(profile)
+            outjson.put("data", result)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void updateCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstConnection perst = getPerst()
+            long oid = injson.getLong("id")
+            JSONObject data = injson.getJSONObject("data")
+            
+            CostProfile profile = CostProfileManager.getByOid(oid)
+            if (profile == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Cost profile not found")
+                return
+            }
+            
+            if (data.has("name")) profile.setName(data.getString("name"))
+            if (data.has("is_standard")) profile.setStandard(data.getBoolean("is_standard"))
+            if (data.has("base_hourly_rate")) profile.setBaseHourlyRate(data.getDouble("base_hourly_rate"))
+            if (data.has("minimum_charge")) profile.setMinimumCharge(data.getDouble("minimum_charge"))
+            if (data.has("rate_per_m2")) profile.setRatePerM2(data.getDouble("rate_per_m2"))
+            if (data.has("rate_per_floor")) profile.setRatePerFloor(data.getDouble("rate_per_floor"))
+            if (data.has("rate_per_bedroom")) profile.setRatePerBedroom(data.getDouble("rate_per_bedroom"))
+            if (data.has("rate_per_bathroom")) profile.setRatePerBathroom(data.getDouble("rate_per_bathroom"))
+            if (data.has("dog_surcharge")) profile.setDogSurcharge(data.getDouble("dog_surcharge"))
+            if (data.has("basic_multiplier")) profile.setBasicMultiplier(data.getDouble("basic_multiplier"))
+            if (data.has("standard_multiplier")) profile.setStandardMultiplier(data.getDouble("standard_multiplier"))
+            if (data.has("premium_multiplier")) profile.setPremiumMultiplier(data.getDouble("premium_multiplier"))
+            if (data.has("luxury_multiplier")) profile.setLuxuryMultiplier(data.getDouble("luxury_multiplier"))
+            if (data.has("active")) profile.setActive(data.getBoolean("active"))
+            
+            // Update owner if provided
+            if (data.has("owner")) {
+                long ownerOid = data.getLong("owner")
+                if (ownerOid > 0) {
+                    Owner owner = perst.getByOid(Owner, ownerOid)
+                    profile.setOwner(owner)
+                } else {
+                    profile.setOwner(null)
+                }
+            }
+            
+            if (!CostProfileManager.update(profile)) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Failed to update cost profile")
+                return
+            }
+            
+            JSONObject result = costProfileToJson(profile)
+            outjson.put("data", result)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void deleteCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstConnection perst = getPerst()
+            long oid = injson.getLong("id")
+            CostProfile profile = CostProfileManager.getByOid(oid)
+            if (profile == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Cost profile not found")
+                return
+            }
+            if (!CostProfileManager.delete(profile)) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Failed to delete cost profile")
+                return
+            }
+            outjson.put("_Success", true)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void copyCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstConnection perst = getPerst()
+            long sourceOid = injson.getLong("source_id")
+            String newName = injson.getString("name")
+            long ownerOid = injson.getLong("owner", 0)
+            
+            CostProfile source = CostProfileManager.getByOid(sourceOid)
+            if (source == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Source cost profile not found")
+                return
+            }
+            
+            Owner owner = ownerOid > 0 ? perst.getByOid(Owner, ownerOid) : null
+            CostProfile copy = CostProfileManager.copyFrom(source, newName, owner)
+            
+            if (copy == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Failed to copy cost profile")
+                return
+            }
+            
+            JSONObject result = costProfileToJson(copy)
+            outjson.put("data", result)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    // ==================== COST CALCULATION ====================
+    
+    void calculateCost(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstConnection perst = getPerst()
+            long houseOid = injson.getLong("house_id")
+            Long bookingOid = injson.has("booking_id") ? injson.getLong("booking_id") : null
+            Long profileOid = injson.has("cost_profile_id") ? injson.getLong("cost_profile_id") : null
+            
+            House house = perst.getByOid(House, houseOid)
+            if (house == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "House not found")
+                return
+            }
+            
+            Booking booking = bookingOid ? perst.getByOid(Booking, bookingOid) : null
+            CostProfile profile = profileOid ? CostProfileManager.getByOid(profileOid) : house.getCostProfile()
+            
+            CostService.CostResult result = CostService.calculateCost(house, booking, profile)
+            
+            JSONObject data = new JSONObject()
+            data.put("base_cost", result.getBaseCost())
+            data.put("size_cost", result.getSizeCost())
+            data.put("room_cost", result.getRoomCost())
+            data.put("luxury_multiplier", result.getLuxuryMultiplier())
+            data.put("dog_surcharge", result.getDogSurcharge())
+            data.put("total", result.getTotal())
+            
+            JSONArray breakdown = new JSONArray()
+            for (String line : result.getBreakdown()) {
+                breakdown.put(line)
+            }
+            data.put("breakdown", breakdown)
+            
+            outjson.put("_Success", true)
+            outjson.put("data", data)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void estimateHours(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstConnection perst = getPerst()
+            long houseOid = injson.getLong("house_id")
+            
+            House house = perst.getByOid(House, houseOid)
+            if (house == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "House not found")
+                return
+            }
+            
+            double hours = CostService.estimateHours(house)
+            outjson.put("_Success", true)
+            outjson.put("estimated_hours", hours)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    // ==================== HELPER METHODS ====================
+    
+    private JSONObject costProfileToJson(CostProfile profile) {
+        JSONObject json = new JSONObject()
+        json.put("id", profile.getOid())
+        json.put("name", profile.getName())
+        json.put("is_standard", profile.isStandard())
+        json.put("owner", profile.getOwner()?.getOid() ?: 0)
+        json.put("base_hourly_rate", profile.getBaseHourlyRate())
+        json.put("minimum_charge", profile.getMinimumCharge())
+        json.put("rate_per_m2", profile.getRatePerM2())
+        json.put("rate_per_floor", profile.getRatePerFloor())
+        json.put("rate_per_bedroom", profile.getRatePerBedroom())
+        json.put("rate_per_bathroom", profile.getRatePerBathroom())
+        json.put("dog_surcharge", profile.getDogSurcharge())
+        json.put("basic_multiplier", profile.getBasicMultiplier())
+        json.put("standard_multiplier", profile.getStandardMultiplier())
+        json.put("premium_multiplier", profile.getPremiumMultiplier())
+        json.put("luxury_multiplier", profile.getLuxuryMultiplier())
+        json.put("active", profile.isActive())
+        return json
+    }
+    
+    private JSONObject houseToJson(House house) {
+        JSONObject json = new JSONObject()
+        json.put("id", house.getOid())
+        json.put("name", house.getName())
+        json.put("address", house.getAddress())
+        json.put("description", house.getDescription())
+        json.put("owner", house.getOwnerOid())
+        json.put("cost_profile", house.getCostProfileOid())
+        json.put("active", house.isActive())
+        json.put("check_in_time", house.getCheckInTime())
+        json.put("check_out_time", house.getCheckOutTime())
+        json.put("surface_m2", house.getSurfaceM2())
+        json.put("floors", house.getFloors())
+        json.put("bedrooms", house.getBedrooms())
+        json.put("bathrooms", house.getBathrooms())
+        json.put("luxury_level", house.getLuxuryLevel())
+        return json
     }
 }

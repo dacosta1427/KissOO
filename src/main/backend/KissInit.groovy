@@ -5,9 +5,20 @@ import org.kissweb.restServer.UserData
 import oodb.PerstConfig
 import oodb.PerstStorageManager
 import oodb.PerstConnection
+import oodb.JsonSerializationCache
 import mycompany.database.PerstUserManager
 import mycompany.domain.PerstUser
 import mycompany.domain.Actor
+import mycompany.domain.Cleaner
+import mycompany.domain.House
+import mycompany.domain.Booking
+import mycompany.domain.Schedule
+import mycompany.domain.Owner
+import mycompany.domain.CostProfile
+import mycompany.domain.Agreement
+import mycompany.domain.Phone
+import mycompany.domain.Group
+import mycompany.domain.BenchmarkData
 import com.mycompany.security.PasswordSecurity
 import java.util.function.Consumer
 
@@ -53,6 +64,9 @@ class KissInit {
                     initDefaultUser()
                     indexPerstUsers()
                     indexActors()
+                    
+                    // Initialize JSON serialization cache for all entity classes
+                    initJsonSerialization()
                 }
             } catch (Exception e) {
                 println "[KissInit] ERROR during Perst init: " + e.message
@@ -187,5 +201,32 @@ class KissInit {
      */
     private static void indexActors() {
         println "[KissInit] Skipping Actor indexing (not required for CDatabase)"
+    }
+    
+    /**
+     * Initialize JSON serialization cache for all entity classes.
+     * This enables automatic toJSON()/fromJSON() on all entities.
+     */
+    private static void initJsonSerialization() {
+        try {
+            println "[KissInit] Initializing JSON serialization cache..."
+            JsonSerializationCache.initialize(
+                Cleaner.class,
+                House.class,
+                Booking.class,
+                Schedule.class,
+                Owner.class,
+                CostProfile.class,
+                PerstUser.class,
+                Actor.class,
+                Agreement.class,
+                Phone.class,
+                Group.class,
+                BenchmarkData.class
+            )
+            println "[KissInit] JSON serialization cache initialized for 12 entity classes"
+        } catch (Exception e) {
+            println "[KissInit] WARNING: Could not initialize JSON serialization: " + e.message
+        }
     }
 }
