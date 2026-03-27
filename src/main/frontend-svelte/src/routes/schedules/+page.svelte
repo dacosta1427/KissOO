@@ -1,9 +1,19 @@
 <script lang="ts">
 	import { schedulesAPI, cleanersAPI, bookingsAPI, type Schedule, type Cleaner, type Booking } from '$lib/api/Cleaning';
 	import { dataStores } from '../../lib/stores.svelte.js';
+	import { session } from '$lib/state/session.svelte';
+	import { notificationActions } from '$lib/stores.svelte.js';
 	import ScheduleBoard from '$lib/components/ScheduleBoard.svelte';
+  import { t, currentLocale } from '$lib/i18n';
+  
+  // Reactive translation helper
+  const tt = (key: string) => t(key, undefined, $currentLocale);
 
-	// Svelte 5: Use $state for reactive variables
+  // Check if user is admin or cleaner
+  let isAdmin = $derived(session.username === 'admin' || session.username === 'administrator');
+  let isCleaner = $derived(!isAdmin && session.cleanerId > 0);
+
+  // Svelte 5: Use $state for reactive variables
 	let schedules = $state<Schedule[]>([]);
 	let cleaners = $state<Cleaner[]>([]);
 	let bookings = $state<Booking[]>([]);
@@ -18,6 +28,10 @@
 	});
 	
 	let selectedCleanerId = $state<number | null>(null);
+	
+	// For cleaner view: selected schedule to mark complete
+	let selectedScheduleForAction = $state<Schedule | null>(null);
+	let notes = $state('');
 
 	// Form data
 	let formData = $state({
@@ -33,21 +47,26 @@
 	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.id), label: c.name })));
 	let bookingOptions = $derived(bookings.map((b) => ({
 		value: String(b.id),
-		label: `${b.guest_name || 'Guest'} - ${b.check_in_date} to ${b.check_out_date}`,
+		label: `${b.guest_name || t('schedules.guest')} - ${b.check_in_date} to ${b.check_out_date}`,
 		checkOutDate: b.check_out_date
 	})));
 
 	// Status options
-	const statusOptions = [
-		{ value: 'scheduled', label: 'Scheduled' },
-		{ value: 'completed', label: 'Completed' },
-		{ value: 'cancelled', label: 'Cancelled' },
-		{ value: 'pending', label: 'Pending' }
-	];
+	let statusOptions = $derived([
+		{ value: 'scheduled', label: t('schedules.scheduled') },
+		{ value: 'completed', label: t('schedules.completed') },
+		{ value: 'cancelled', label: t('schedules.cancelled') },
+		{ value: 'pending', label: t('schedules.pending') }
+	]);
 
 	// Computed: get selected cleaner name
 	let selectedCleanerName = $derived(
-		selectedCleanerId ? cleaners.find(c => c.id === selectedCleanerId)?.name || 'Unknown' : ''
+		selectedCleanerId ? (cleaners.find(c => c.id === selectedCleanerId)?.name || '') : ''
+	);
+	
+	// Filtered schedules for cleaner view (only show own schedules)
+	let filteredSchedules = $derived(
+		isAdmin ? schedules : schedules.filter(s => s.cleaner_id === session.cleanerId)
 	);
 
 	// Handle booking selection - auto-fill date with check_out_date
@@ -77,8 +96,8 @@
 			dataStores.schedules.set(schedules);
 			dataStores.cleaners.set(cleaners);
 			dataStores.bookings.set(bookings);
-		} catch (err) {
-			error = err.message;
+		} catch (err: any) {
+			error = err.message || t('errors.failed_to_load');
 		} finally {
 			loading = false;
 		}
@@ -107,8 +126,8 @@
 			editingSchedule = null;
 			resetForm();
 			await loadData();
-		} catch (err) {
-			error = err.message;
+		} catch (err: any) {
+			error = err.message || t('errors.failed_to_save');
 		}
 	}
 
@@ -168,6 +187,41 @@
 		};
 		showForm = true;
 	}
+	
+	// Cleaner actions
+	async function markComplete(schedule: Schedule) {
+		try {
+			await schedulesAPI.update(schedule.id, {
+				...schedule,
+				status: 'completed',
+				notes: notes || schedule.notes
+			});
+			notificationActions.success(tt('schedules.marked_complete'));
+			await loadData();
+			selectedScheduleForAction = null;
+			notes = '';
+		} catch (err: any) {
+			error = err.message || t('errors.failed_to_save');
+		}
+	}
+	
+	async function startCleaning(schedule: Schedule) {
+		try {
+			await schedulesAPI.update(schedule.id, {
+				...schedule,
+				status: 'pending'  // pending means "in progress"
+			});
+			notificationActions.success(tt('schedules.started'));
+			await loadData();
+		} catch (err: any) {
+			error = err.message || t('errors.failed_to_save');
+		}
+	}
+	
+	function openCompleteForm(schedule: Schedule) {
+		selectedScheduleForAction = schedule;
+		notes = schedule.notes || '';
+	}
 
 	// Load data on mount
 	$effect(() => {
@@ -177,7 +231,7 @@
 
 <div class="schedules-page">
 	<div class="page-header">
-		<h1>Scheduling Board</h1>
+		<h1>{tt('schedules.title')}</h1>
 		<div class="header-actions">
 			<div class="view-toggle">
 				<button 
@@ -185,27 +239,27 @@
 					class:active={viewMode === 'calendar'}
 					onclick={() => viewMode = 'calendar'}
 				>
-					Calendar
+					{tt('schedules.calendar')}
 				</button>
 				<button 
 					class="toggle-btn" 
 					class:active={viewMode === 'table'}
 					onclick={() => viewMode = 'table'}
 				>
-					Table
+					{tt('schedules.table')}
 				</button>
 			</div>
-			<button class="btn btn-primary" onclick={openAddForm}>Add Schedule</button>
+			<button class="btn btn-primary" onclick={openAddForm}>{tt('schedules.add_schedule')}</button>
 		</div>
 	</div>
 
 	<div class="date-range-controls">
 		<div class="form-group">
-			<label for="startDate">Start Date</label>
+			<label for="startDate">{tt('common.start_date')}</label>
 			<input type="date" id="startDate" bind:value={dateRange.start} onchange={loadData} />
 		</div>
 		<div class="form-group">
-			<label for="endDate">End Date</label>
+			<label for="endDate">{tt('common.end_date')}</label>
 			<input type="date" id="endDate" bind:value={dateRange.end} onchange={loadData} />
 		</div>
 	</div>
@@ -213,7 +267,7 @@
 	{#if loading}
 		<div class="loading-spinner">
 			<span class="spinner"></span>
-			Loading...
+			{tt('common.loading')}
 		</div>
 	{/if}
 
@@ -223,15 +277,15 @@
 
 	{#if showForm}
 		<div class="form-section">
-			<h3 class="form-title">{editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}</h3>
+			<h3 class="form-title">{editingSchedule ? t('schedules.edit_schedule') : t('schedules.add_new_schedule')}</h3>
 			
 			<form onsubmit={handleFormSubmit}>
 				<div class="form-grid">
 					<!-- Cleaner -->
 					<div class="form-field">
-						<label for="cleaner_id">Cleaner <span class="required">*</span></label>
+						<label for="cleaner_id">{tt('schedules.cleaner')} <span class="required">*</span></label>
 						<select id="cleaner_id" bind:value={formData.cleaner_id} required>
-							<option value="">-- Select Cleaner --</option>
+							<option value="">-- {tt('schedules.select_cleaner')} --</option>
 							{#each cleanerOptions as option}
 								<option value={option.value}>{option.label}</option>
 							{/each}
@@ -240,14 +294,14 @@
 
 					<!-- Booking -->
 					<div class="form-field">
-						<label for="booking_id">Booking <span class="required">*</span></label>
+						<label for="booking_id">{tt('schedules.booking')} <span class="required">*</span></label>
 						<select 
 							id="booking_id" 
 							value={formData.booking_id} 
 							onchange={(e) => handleBookingChange((e.target as HTMLSelectElement).value)}
 							required
 						>
-							<option value="">-- Select Booking --</option>
+							<option value="">-- {tt('schedules.select_booking')} --</option>
 							{#each bookingOptions as option}
 								<option value={option.value}>{option.label}</option>
 							{/each}
@@ -256,25 +310,25 @@
 
 					<!-- Date -->
 					<div class="form-field">
-						<label for="date">Work Date <span class="required">*</span> (yyyymmdd)</label>
+						<label for="date">{tt('schedules.work_date')} <span class="required">*</span></label>
 						<input type="date" id="date" bind:value={formData.date} required />
 					</div>
 
 					<!-- Start Time -->
 					<div class="form-field">
-						<label for="start_time">Start Time <span class="required">*</span> (24H)</label>
+						<label for="start_time">{tt('schedules.start_time')} <span class="required">*</span></label>
 						<input type="time" id="start_time" bind:value={formData.start_time} step="3600" required />
 					</div>
 
 					<!-- End Time -->
 					<div class="form-field">
-						<label for="end_time">End Time <span class="required">*</span> (24H)</label>
+						<label for="end_time">{tt('schedules.end_time')} <span class="required">*</span></label>
 						<input type="time" id="end_time" bind:value={formData.end_time} step="3600" required />
 					</div>
 
 					<!-- Status -->
 					<div class="form-field">
-						<label for="status">Status <span class="required">*</span></label>
+						<label for="status">{tt('schedules.status')} <span class="required">*</span></label>
 						<select id="status" bind:value={formData.status} required>
 							{#each statusOptions as option}
 								<option value={option.value}>{option.label}</option>
@@ -285,10 +339,10 @@
 
 				<div class="form-actions">
 					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
-						Cancel
+						{tt('common.cancel')}
 					</button>
 					<button type="submit" class="btn btn-primary">
-						{editingSchedule ? 'Update' : 'Add'} Schedule
+						{editingSchedule ? t('common.update') : t('common.add')} {tt('schedules.title')}
 					</button>
 				</div>
 			</form>
@@ -297,29 +351,29 @@
 
 	{#if selectedCleanerName}
 		<div class="filter-banner">
-			<span>Showing: <strong>{selectedCleanerName}</strong></span>
+			<span>{tt('schedules.showing')}: <strong>{selectedCleanerName}</strong></span>
 			<button class="btn btn-secondary btn-sm" onclick={() => selectedCleanerId = null}>
-				Show All
+				{tt('schedules.show_all')}
 			</button>
 		</div>
 	{/if}
 
 	{#if viewMode === 'calendar'}
 		<ScheduleBoard
-			{schedules}
+			schedules={filteredSchedules}
 			{cleaners}
 			{bookings}
 			{dateRange}
 			{loading}
 			{error}
-			onScheduleChange={async (newSchedule) => {
+			onScheduleChange={async (newSchedule: any) => {
 				try {
 					if (editingSchedule) {
 						await schedulesAPI.update(editingSchedule.id, newSchedule);
 					}
 					await loadData();
-				} catch (err) {
-					error = err.message;
+				} catch (err: any) {
+					error = err.message || t('errors.failed_to_save');
 				}
 			}}
 			onScheduleClick={handleScheduleClick}
@@ -332,35 +386,48 @@
 			<table class="schedule-table">
 				<thead>
 					<tr>
-						<th>Cleaner</th>
-						<th>Guest</th>
-						<th>Date</th>
-						<th>Time</th>
-						<th>Status</th>
-						<th>Actions</th>
+						<th>{tt('schedules.cleaner')}</th>
+						<th>{tt('schedules.guest')}</th>
+						<th>{tt('schedules.date')}</th>
+						<th>{tt('schedules.time')}</th>
+						<th>{tt('schedules.status')}</th>
+						<th>{tt('schedules.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
-					{#each schedules as schedule}
+					{#each filteredSchedules as schedule}
 						{@const cleaner = cleaners.find(c => c.id === schedule.cleaner_id)}
 						{@const booking = bookings.find(b => b.id === schedule.booking_id)}
 						<tr>
-							<td>{cleaner?.name || 'Unknown'}</td>
-							<td>{booking?.guest_name || 'Unknown'}</td>
+							<td>{cleaner?.name || t('houses.unknown')}</td>
+							<td>{booking?.guest_name || t('schedules.guest')}</td>
 							<td>{schedule.date}</td>
 							<td>{schedule.start_time || ''} - {schedule.end_time || ''}</td>
 							<td>
 								<span class="status-badge status-{schedule.status}">{schedule.status}</span>
 							</td>
 							<td>
-								<button class="btn btn-sm btn-secondary" onclick={() => handleScheduleClick(schedule)}>
-									Edit
-								</button>
+								{#if isAdmin}
+									<button class="btn btn-sm btn-secondary" onclick={() => handleScheduleClick(schedule)} title={tt('hints.edit_item')}>
+										{tt('common.edit')}
+									</button>
+								{:else if isCleaner && schedule.status !== 'completed'}
+									{#if schedule.status === 'scheduled'}
+										<button class="btn btn-sm btn-primary" onclick={() => startCleaning(schedule)} title={tt('schedules.start_cleaning')}>
+											{tt('schedules.start')}
+										</button>
+									{/if}
+									<button class="btn btn-sm btn-success" onclick={() => openCompleteForm(schedule)} title={tt('schedules.mark_complete')}>
+										{tt('schedules.complete')}
+									</button>
+								{/if}
 							</td>
 						</tr>
 					{:else}
 						<tr>
-							<td colspan="6" class="empty-row">No schedules found</td>
+							<td colspan="6" class="empty-row">
+								{isAdmin ? tt('schedules.no_schedules') : tt('schedules.no_schedules_cleaner')}
+							</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -368,6 +435,35 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Complete Cleaning Modal -->
+{#if selectedScheduleForAction}
+	<div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={() => selectedScheduleForAction = null} onkeydown={(e) => e.key === 'Escape' && (selectedScheduleForAction = null)}>
+		<div class="modal-content" role="document" onclick={(e) => e.stopPropagation()}>
+			<h3 class="modal-title">{tt('schedules.complete_cleaning')}</h3>
+			<p class="modal-description">{tt('schedules.add_notes')}</p>
+			<form onsubmit={(e) => { e.preventDefault(); markComplete(selectedScheduleForAction!); }}>
+				<div class="form-field">
+					<label for="completion-notes">{tt('schedules.notes')}</label>
+					<textarea 
+						id="completion-notes" 
+						bind:value={notes}
+						rows="4"
+						placeholder={tt('schedules.notes_placeholder')}
+					></textarea>
+				</div>
+				<div class="modal-actions">
+					<button type="button" class="btn btn-secondary" onclick={() => selectedScheduleForAction = null}>
+						{tt('common.cancel')}
+					</button>
+					<button type="submit" class="btn btn-success">
+						{tt('schedules.mark_complete')}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.schedules-page {
@@ -675,5 +771,58 @@
 	.status-cancelled {
 		background: #fee2e2;
 		color: #991b1b;
+	}
+	
+	/* Success button for complete action */
+	.btn-success {
+		background: #10b981;
+		color: white;
+	}
+	
+	.btn-success:hover {
+		background: #059669;
+	}
+	
+	/* Modal styles */
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 100;
+	}
+	
+	.modal-content {
+		background: white;
+		border-radius: 8px;
+		padding: 1.5rem;
+		width: 90%;
+		max-width: 500px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+	}
+	
+	.modal-title {
+		margin: 0 0 0.5rem 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: #111827;
+	}
+	
+	.modal-description {
+		margin: 0 0 1.5rem 0;
+		color: #6b7280;
+		font-size: 0.875rem;
+	}
+	
+	.modal-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.75rem;
+		margin-top: 1.5rem;
 	}
 </style>

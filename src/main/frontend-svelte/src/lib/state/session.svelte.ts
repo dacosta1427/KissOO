@@ -21,6 +21,9 @@ let ownerId = $state(0);
 // Owner name - for display purposes
 let ownerName = $state('');
 
+// Cleaner ID - for cleaner-specific views (if user is a cleaner)
+let cleanerId = $state(0);
+
 // Email - for display and verification
 let email = $state('');
 
@@ -34,6 +37,7 @@ const USERNAME_KEY = 'kiss_session_username';
 const USERID_KEY = 'kiss_session_userid';
 const OWNERID_KEY = 'kiss_session_ownerid';
 const OWNERNAME_KEY = 'kiss_session_ownername';
+const CLEANERID_KEY = 'kiss_session_cleanerid';
 const EMAIL_KEY = 'kiss_session_email';
 const CREDENTIALS_KEY = 'kiss_encrypted_credentials';
 const KEY_STORAGE_KEY = 'kiss_encryption_key';
@@ -201,6 +205,23 @@ export const session = {
   },
   
   /**
+   * Get the cleaner ID (for cleaner-specific views)
+   */
+  get cleanerId(): number {
+    return cleanerId;
+  },
+  
+  /**
+   * Set the cleaner ID
+   */
+  setCleanerId(id: number): void {
+    cleanerId = id;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(CLEANERID_KEY, id.toString());
+    }
+  },
+  
+  /**
    * Get the email
    */
   get email(): string {
@@ -247,6 +268,7 @@ export const session = {
     userId = 0;
     ownerId = 0;
     ownerName = '';
+    cleanerId = 0;
     email = '';
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY);
@@ -254,6 +276,7 @@ export const session = {
       localStorage.removeItem(USERID_KEY);
       localStorage.removeItem(OWNERID_KEY);
       localStorage.removeItem(OWNERNAME_KEY);
+      localStorage.removeItem(CLEANERID_KEY);
       localStorage.removeItem(EMAIL_KEY);
     }
   },
@@ -291,6 +314,12 @@ export const session = {
       const savedOwnerName = localStorage.getItem(OWNERNAME_KEY);
       if (savedOwnerName) {
         ownerName = savedOwnerName;
+      }
+      
+      // Restore cleanerId if available
+      const savedCleanerId = localStorage.getItem(CLEANERID_KEY);
+      if (savedCleanerId) {
+        cleanerId = parseInt(savedCleanerId) || 0;
       }
       
       // Restore email if available

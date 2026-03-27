@@ -1,14 +1,25 @@
 <script lang="ts">
 	import { housesAPI, ownersAPI, type House, type Owner } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
+	import { session } from '$lib/state/session.svelte';
+  import { t, currentLocale } from '$lib/i18n';
+  
+  // Reactive translation helper
+  const tt = (key: string) => t(key, undefined, $currentLocale);
 
-	let houses = $state<House[]>([]);
+  // Check if user is admin
+  let isAdmin = $derived(session.username === 'admin' || session.username === 'administrator');
+
+  let houses = $state<House[]>([]);
 	let owners = $state<Owner[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingHouse = $state<House | null>(null);
 	let showNewOwnerModal = $state(false);
+	
+	// View toggle: 'card' or 'table'
+	let viewMode = $state<'card' | 'table'>('card');
 
 	let formData = $state({
 		name: '',
@@ -26,6 +37,11 @@
 		address: ''
 	});
 
+	// Filtered houses based on user role
+	let filteredHouses = $derived(
+		isAdmin ? houses : houses.filter(h => h.owner_id === session.ownerId)
+	);
+
 	async function loadHouses() {
 		loading = true;
 		error = null;
@@ -33,7 +49,7 @@
 		try {
 			houses = await housesAPI.getAll();
 		} catch (err: any) {
-			error = err.message || 'Failed to load houses';
+			error = err.message || t('errors.failed_to_load');
 		} finally {
 			loading = false;
 		}
@@ -81,19 +97,19 @@
 
 	async function handleAddNewOwner() {
 		if (!newOwnerData.name.trim()) {
-			notificationActions.error('Owner name is required');
+			notificationActions.error(t('houses.owner_name') + ' ' + t('errors.required'));
 			return;
 		}
 		
 		try {
 			const newOwner = await ownersAPI.create(newOwnerData);
-			notificationActions.success('Owner created successfully');
+			notificationActions.success(t('owners.name') + ' ' + t('notifications.created_successfully'));
 			await loadOwners();
 			formData.owner_id = newOwner.id;
 			showNewOwnerModal = false;
 			newOwnerData = { name: '', email: '', phone: '', address: '' };
 		} catch (err: any) {
-			notificationActions.error(err.message || 'Failed to create owner');
+			notificationActions.error(err.message || t('errors.failed_to_save'));
 		}
 	}
 
@@ -117,10 +133,10 @@
 		try {
 			if (editingHouse) {
 				await housesAPI.update(editingHouse.id, dataToSend);
-				notificationActions.success('House updated successfully');
+				notificationActions.success(t('houses.title') + ' ' + t('notifications.updated_successfully'));
 			} else {
 				await housesAPI.create(dataToSend);
-				notificationActions.success('House created successfully');
+				notificationActions.success(t('houses.title') + ' ' + t('notifications.created_successfully'));
 			}
 
 			showForm = false;
@@ -128,26 +144,26 @@
 			formData = { name: '', address: '', description: '', owner_id: 0, check_in_time: '16:00', check_out_time: '10:00' };
 			await loadHouses();
 		} catch (err: any) {
-			notificationActions.error(err.message || 'Failed to save house');
+			notificationActions.error(err.message || t('errors.failed_to_save'));
 		}
 	}
 
 	async function handleDelete(house: House) {
-		if (confirm(`Are you sure you want to delete "${house.name}"?`)) {
+		if (confirm(t('houses.delete_confirm').replace('"${house.name}"', `"${house.name}"`))) {
 			try {
 				await housesAPI.delete(house.id);
-				notificationActions.success('House deleted successfully');
+				notificationActions.success(t('houses.title') + ' ' + t('notifications.deleted_successfully'));
 				await loadHouses();
 			} catch (err: any) {
-				notificationActions.error(err.message || 'Failed to delete house');
+				notificationActions.error(err.message || t('errors.failed_to_delete'));
 			}
 		}
 	}
 
 	function getOwnerName(ownerId: number): string {
-		if (!ownerId || ownerId === 0) return 'No owner';
+		if (!ownerId || ownerId === 0) return t('houses.no_owner');
 		const owner = owners.find(o => o.id === ownerId);
-		return owner ? owner.name : 'Unknown';
+		return owner ? owner.name : t('houses.unknown');
 	}
 
 	$effect(() => {
@@ -158,14 +174,14 @@
 
 <div class="houses-page">
 	<div class="page-header">
-		<h1>Houses</h1>
-		<button class="btn btn-primary" onclick={openAddForm}>Add House</button>
+		<h1>{tt('houses.title')}</h1>
+		<button class="btn btn-primary" onclick={openAddForm}>{tt('houses.add_house')}</button>
 	</div>
 
 	{#if loading}
 		<div class="loading-spinner">
 			<span class="spinner"></span>
-			Loading...
+			{tt('common.loading')}
 		</div>
 	{/if}
 
@@ -175,60 +191,60 @@
 
 	{#if showForm}
 		<div class="form-section">
-			<h3 class="form-title">{editingHouse ? 'Edit House' : 'Add New House'}</h3>
+			<h3 class="form-title">{editingHouse ? t('houses.edit_house') : t('houses.add_new_house')}</h3>
 			
 			<form onsubmit={handleFormSubmit}>
 				<div class="form-grid">
 					<!-- Name -->
 					<div class="form-field">
-						<label for="name">Name <span class="required">*</span></label>
+						<label for="name">{tt('houses.name')} <span class="required">*</span></label>
 						<input 
 							type="text" 
 							id="name" 
 							bind:value={formData.name} 
-							placeholder="Enter house name"
+							placeholder={tt('houses.enter_house_name')}
 							required 
 						/>
 					</div>
 
 					<!-- Address -->
 					<div class="form-field full-width">
-						<label for="address">Address <span class="required">*</span></label>
+						<label for="address">{tt('houses.address')} <span class="required">*</span></label>
 						<input 
 							type="text" 
 							id="address" 
 							bind:value={formData.address} 
-							placeholder="Enter house address"
+							placeholder={tt('houses.enter_house_address')}
 							required 
 						/>
 					</div>
 
 					<!-- Owner -->
 					<div class="form-field">
-						<label for="owner">Owner</label>
+						<label for="owner">{tt('houses.owner')}</label>
 						<select id="owner" bind:value={formData.owner_id} onchange={handleOwnerChange}>
-							<option value={0}>-- No Owner --</option>
+							<option value={0}>-- {tt('houses.no_owner')} --</option>
 							{#each owners as owner}
 								<option value={owner.id}>{owner.name}</option>
 							{/each}
-							<option value={-1}>+ New owner</option>
+							<option value={-1}>+ {tt('houses.new_owner')}</option>
 						</select>
 					</div>
 
 					<!-- Description -->
 					<div class="form-field full-width">
-						<label for="description">Description</label>
+						<label for="description">{tt('common.description')}</label>
 						<textarea 
 							id="description" 
 							bind:value={formData.description} 
-							placeholder="Enter house description"
+							placeholder={tt('houses.enter_house_description')}
 							rows="3"
 						></textarea>
 					</div>
 
 					<!-- Check-in Time -->
 					<div class="form-field">
-						<label for="check_in_time">Check-in Time (24h) <span class="required">*</span></label>
+						<label for="check_in_time">{tt('houses.check_in_time')} (24h) <span class="required">*</span></label>
 						<input 
 							type="time" 
 							id="check_in_time" 
@@ -240,7 +256,7 @@
 
 					<!-- Check-out Time -->
 					<div class="form-field">
-						<label for="check_out_time">Check-out Time (24h) <span class="required">*</span></label>
+						<label for="check_out_time">{tt('houses.check_out_time')} (24h) <span class="required">*</span></label>
 						<input 
 							type="time" 
 							id="check_out_time" 
@@ -253,10 +269,10 @@
 
 				<div class="form-actions">
 					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
-						Cancel
+						{tt('common.cancel')}
 					</button>
 					<button type="submit" class="btn btn-primary">
-						{editingHouse ? 'Update' : 'Add'} House
+						{editingHouse ? t('common.update') : t('common.add')} {tt('houses.title')}
 					</button>
 				</div>
 			</form>
@@ -266,53 +282,53 @@
 	{#if showNewOwnerModal}
 		<div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={cancelNewOwnerModal} onkeydown={(e) => e.key === 'Escape' && cancelNewOwnerModal()}>
 			<div class="modal-content" role="document">
-				<h3 class="modal-title">Add New Owner</h3>
+				<h3 class="modal-title">{tt('houses.add_new_owner')}</h3>
 				<form onsubmit={(e) => { e.preventDefault(); handleAddNewOwner(); }}>
 					<div class="form-grid">
 						<div class="form-field">
-							<label for="newOwnerName">Name <span class="required">*</span></label>
+							<label for="newOwnerName">{tt('common.name')} <span class="required">*</span></label>
 							<input 
 								type="text" 
 								id="newOwnerName" 
 								bind:value={newOwnerData.name} 
-								placeholder="Enter owner name"
+								placeholder={tt('houses.enter_owner_name')}
 								required 
 							/>
 						</div>
 						<div class="form-field">
-							<label for="newOwnerEmail">Email</label>
+							<label for="newOwnerEmail">{tt('common.email')}</label>
 							<input 
 								type="email" 
 								id="newOwnerEmail" 
 								bind:value={newOwnerData.email} 
-								placeholder="Enter email"
+								placeholder={tt('owners.enter_email_address')}
 							/>
 						</div>
 						<div class="form-field">
-							<label for="newOwnerPhone">Phone</label>
+							<label for="newOwnerPhone">{tt('common.phone')}</label>
 							<input 
 								type="tel" 
 								id="newOwnerPhone" 
 								bind:value={newOwnerData.phone} 
-								placeholder="Enter phone"
+								placeholder={tt('owners.enter_phone_number')}
 							/>
 						</div>
 						<div class="form-field full-width">
-							<label for="newOwnerAddress">Address</label>
+							<label for="newOwnerAddress">{tt('common.address')}</label>
 							<input 
 								type="text" 
 								id="newOwnerAddress" 
 								bind:value={newOwnerData.address} 
-								placeholder="Enter address"
+								placeholder={tt('owners.enter_address')}
 							/>
 						</div>
 					</div>
 					<div class="form-actions">
 						<button type="button" class="btn btn-secondary" onclick={cancelNewOwnerModal}>
-							Cancel
+							{tt('common.cancel')}
 						</button>
 						<button type="submit" class="btn btn-primary">
-							Add Owner
+							{tt('owners.add_owner')}
 						</button>
 					</div>
 				</form>
@@ -320,32 +336,94 @@
 		</div>
 	{/if}
 
-	<div class="houses-grid">
-		{#if houses.length === 0}
-			<div class="empty-message">No houses found. Add one to get started.</div>
-		{:else}
-			{#each houses as house}
-				<div class="house-card">
-					<h3 class="house-name">{house.name}</h3>
-					<p class="house-address">{house.address}</p>
-					{#if house.owner_id}
-						<p class="house-owner">Owner: {getOwnerName(house.owner_id)}</p>
-					{/if}
-					{#if house.description}
-						<p class="house-description">{house.description}</p>
-					{/if}
-					<div class="house-actions">
-						<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(house)}>
-							Edit
-						</button>
-						<button class="btn btn-danger btn-sm" onclick={() => handleDelete(house)}>
-							Delete
-						</button>
-					</div>
-				</div>
-			{/each}
-		{/if}
+	<!-- View Toggle -->
+	<div class="view-toggle">
+		<button 
+			class="toggle-btn" 
+			class:active={viewMode === 'card'}
+			onclick={() => viewMode = 'card'}
+			title={tt('hints.view_details')}
+		>
+			{tt('houses.card_view')}
+		</button>
+		<button 
+			class="toggle-btn" 
+			class:active={viewMode === 'table'}
+			onclick={() => viewMode = 'table'}
+			title={tt('hints.view_details')}
+		>
+			{tt('houses.table_view')}
+		</button>
 	</div>
+
+	{#if viewMode === 'card'}
+		<!-- Card View -->
+		<div class="houses-grid">
+			{#if filteredHouses.length === 0}
+				<div class="empty-message">{isAdmin ? tt('houses.no_houses') : tt('houses.no_houses_owner')}</div>
+			{:else}
+				{#each filteredHouses as house}
+					<div class="house-card">
+						<h3 class="house-name">{house.name}</h3>
+						<p class="house-address">{house.address}</p>
+						{#if house.owner_id}
+							<p class="house-owner">{tt('houses.owner')}: {getOwnerName(house.owner_id)}</p>
+						{/if}
+						{#if house.description}
+							<p class="house-description">{house.description}</p>
+						{/if}
+						<div class="house-actions">
+							<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(house)} title={tt('hints.edit_item')}>
+								{tt('common.edit')}
+							</button>
+							<button class="btn btn-danger btn-sm" onclick={() => handleDelete(house)} title={tt('hints.delete_item')}>
+								{tt('common.delete')}
+							</button>
+						</div>
+					</div>
+				{/each}
+			{/if}
+		</div>
+	{:else}
+		<!-- Table View -->
+		<div class="table-view">
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>{tt('houses.name')}</th>
+						<th>{tt('houses.address')}</th>
+						<th>{tt('houses.owner')}</th>
+						<th>{tt('houses.check_in_time')}</th>
+						<th>{tt('houses.check_out_time')}</th>
+						<th>{tt('common.actions')}</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each filteredHouses as house}
+						<tr>
+							<td>{house.name}</td>
+							<td>{house.address}</td>
+							<td>{getOwnerName(house.owner_id)}</td>
+							<td>{house.check_in_time || '-'}</td>
+							<td>{house.check_out_time || '-'}</td>
+							<td>
+								<button class="btn btn-sm btn-secondary" onclick={() => openEditForm(house)} title={tt('hints.edit_item')}>
+									{tt('common.edit')}
+								</button>
+								<button class="btn btn-sm btn-danger" onclick={() => handleDelete(house)} title={tt('hints.delete_item')}>
+									{tt('common.delete')}
+								</button>
+							</td>
+						</tr>
+					{:else}
+						<tr>
+							<td colspan="6" class="empty-row">{isAdmin ? tt('houses.no_houses') : tt('houses.no_houses_owner')}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -604,5 +682,70 @@
 		font-size: 1.25rem;
 		font-weight: 600;
 		color: #111827;
+	}
+
+	/* View Toggle */
+	.view-toggle {
+		display: flex;
+		background: #e5e7eb;
+		border-radius: 6px;
+		padding: 2px;
+		margin-bottom: 1.5rem;
+		width: fit-content;
+	}
+
+	.toggle-btn {
+		padding: 0.375rem 0.75rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		border: none;
+		background: transparent;
+		color: #6b7280;
+		cursor: pointer;
+		border-radius: 4px;
+		transition: all 0.2s;
+	}
+
+	.toggle-btn.active {
+		background: white;
+		color: #111827;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	}
+
+	/* Table View */
+	.table-view {
+		background: white;
+		border-radius: 8px;
+		overflow: hidden;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+
+	.data-table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.data-table th,
+	.data-table td {
+		padding: 0.75rem 1rem;
+		text-align: left;
+		border-bottom: 1px solid #e5e7eb;
+	}
+
+	.data-table th {
+		background: #f9fafb;
+		font-weight: 600;
+		font-size: 0.875rem;
+		color: #374151;
+	}
+
+	.data-table tbody tr:hover {
+		background: #f9fafb;
+	}
+
+	.empty-row {
+		text-align: center;
+		color: #6b7280;
+		padding: 2rem;
 	}
 </style>

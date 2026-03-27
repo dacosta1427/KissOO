@@ -101,7 +101,9 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | **Phase 6: UX Enhancements** | | | | |
 | 6.1 | Button Hints/Tooltips | ✅ Completed | - | Added title attributes to buttons and dashboard cards, added i18n translations for hints |
 | 6.2 | Home Page Status Indicator | ✅ Completed | - | Green/red ball shows login status in navbar |
-| 6.3 | User-Filtered Views | 🔄 Pending | - | Filter houses/bookings by owner |
+| 6.3 | User-Filtered Views | ✅ Completed | - | Filter houses/bookings by owner, regular users see only their own |
+| 6.4 | Card/Table View Toggle | ✅ Completed | - | Added toggle to houses page (card and table views) |
+| 6.5 | Cleaner Schedule View | ✅ Completed | - | Cleaners see only their schedules, can mark complete with notes, start cleaning button |
 
 **Legend**: ✅ Completed | 🔄 In Progress/Not Started | ❌ Blocked/Failed
 
@@ -749,6 +751,27 @@ export const cleaningApi = {
   3. Updated `Auth.ts` to store user info from login response
 - **Files modified**: `Login.groovy`, `session.svelte.ts`, `Auth.ts`
 - **Result**: Login response now includes user/owner info for frontend use.
+
+**Issue 24: Users see all data instead of only their own**
+- **Root Cause**: Houses and bookings pages showed all data regardless of user role.
+- **Solution**:
+  1. Added `isAdmin` check based on username
+  2. Added `filteredHouses` using `$derived` to filter by ownerId for non-admin users
+  3. Added `filteredBookings` to filter by user's house IDs
+  4. Added card/table view toggle to houses page
+- **Files modified**: `houses/+page.svelte`, `bookings/+page.svelte`
+- **Result**: Regular users now see only their own houses and bookings.
+
+**Issue 25: Cleaners cannot manage their schedules**
+- **Root Cause**: No cleaner-specific view or actions for marking cleaning complete.
+- **Solution**:
+  1. Added `cleanerId` to session state
+  2. Added `filteredSchedules` for cleaner view (only own schedules)
+  3. Added "Start" and "Complete" buttons for cleaners
+  4. Added modal for completing cleaning with notes
+  5. Added `isCleaner` detection
+- **Files modified**: `schedules/+page.svelte`, `session.svelte.ts`, `Auth.ts`, `Login.groovy`
+- **Result**: Cleaners can view only their schedules, start cleaning, and mark complete with notes.
 
 **Protocol Enhancement**: Added to AGENTS.md - when investigating UI bugs, first check Svelte 5 reactivity patterns; for auth issues, check `emailVerified` flag; for backend API errors, verify method signatures in JSON library; for data creation failures, check unique constraints on indexed fields; for session issues, ensure both `session.uuid` and `Server.uuid` are synchronized; for select dropdowns, use $derived for options instead of mutating $state arrays; if Form component dropdowns fail, use native HTML select elements.
 

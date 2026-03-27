@@ -68,6 +68,10 @@ class Login {
                 outjson.put("ownerName", "")
             }
             
+            // Add cleaner ID (TODO: Link users to cleaners via email or direct association)
+            // For now, return 0 - can be set via API or admin panel
+            outjson.put("cleanerId", 0)
+            
             logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()}, Owner: ${owner?.getOid() ?: 'none'})")
             
             return ud

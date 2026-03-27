@@ -1,10 +1,18 @@
 <script lang="ts">
 	import { bookingsAPI, housesAPI, ownersAPI, type Booking, type House, type Owner } from '$lib/api/Cleaning';
 	import { dataStores } from '../../lib/stores.svelte.js';
+	import { session } from '$lib/state/session.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import Form from '$lib/components/Form.svelte';
+  import { t, currentLocale } from '$lib/i18n';
+  
+  // Reactive translation helper
+  const tt = (key: string) => t(key, undefined, $currentLocale);
 
-	// Svelte 5: Use $state for reactive variables
+  // Check if user is admin
+  let isAdmin = $derived(session.username === 'admin' || session.username === 'administrator');
+
+  // Svelte 5: Use $state for reactive variables
 	let bookings = $state<Booking[]>([]);
 	let houses = $state<House[]>([]);
 	let owners = $state<Owner[]>([]);
@@ -13,72 +21,84 @@
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingBooking = $state<Booking | null>(null);
+	
+	// View toggle: 'card' or 'table'
+	let viewMode = $state<'card' | 'table'>('table');
+	
+	// Get user's house IDs for filtering
+	let userHouseIds = $derived(houses.filter(h => h.owner_id === session.ownerId).map(h => h.id));
+	
+	// Filtered bookings based on user role
+	let filteredBookings = $derived(
+		isAdmin ? bookings : bookings.filter(b => userHouseIds.includes(b.house_id))
+	);
 
-	const bookingFields = [
+	// Reactive form fields using $derived
+	let bookingFields = $derived([
 		{
 			name: 'owner_id',
-			label: 'Owner',
+			label: t('houses.owner'),
 			type: 'select',
 			required: true,
 			options: []
 		},
 		{
 			name: 'house_id',
-			label: 'House',
+			label: t('bookings.house'),
 			type: 'select',
 			required: true,
 			options: []
 		},
 		{
 			name: 'check_in_date',
-			label: 'Check-in Date',
+			label: t('bookings.check_in_date'),
 			type: 'date',
 			required: true
 		},
 		{
 			name: 'check_out_date',
-			label: 'Check-out Date',
+			label: t('bookings.check_out_date'),
 			type: 'date',
 			required: true
 		},
 		{
 			name: 'check_in_time',
-			label: 'Check-in Time (24h)',
+			label: t('bookings.check_in_time') + ' (24h)',
 			type: 'time',
 			required: true,
 			step: 900
 		},
 		{
 			name: 'check_out_time',
-			label: 'Check-out Time (24h)',
+			label: t('bookings.check_out_time') + ' (24h)',
 			type: 'time',
 			required: true,
 			step: 900
 		},
 		{
 			name: 'guest_name',
-			label: 'Guest Name',
+			label: t('bookings.guest_name'),
 			type: 'text',
 			required: true,
-			placeholder: 'Enter guest name'
+			placeholder: t('bookings.enter_guest_name')
 		},
 		{
 			name: 'guest_email',
-			label: 'Guest Email',
+			label: t('bookings.guest_email'),
 			type: 'email',
 			required: true,
-			placeholder: 'Enter guest email'
+			placeholder: t('bookings.enter_guest_email')
 		},
 		{
 			name: 'guest_phone',
-			label: 'Guest Phone',
+			label: t('bookings.guest_phone'),
 			type: 'tel',
 			required: false,
-			placeholder: 'Enter guest phone number'
+			placeholder: t('bookings.enter_guest_phone')
 		},
 		{
 			name: 'dogs_count',
-			label: 'Number of Dogs',
+			label: t('bookings.number_of_dogs'),
 			type: 'number',
 			required: false,
 			min: 0,
@@ -87,46 +107,46 @@
 		},
 		{
 			name: 'status',
-			label: 'Status',
+			label: t('common.status'),
 			type: 'select',
 			required: true,
 			options: [
-				{ value: 'pending', label: 'Pending' },
-				{ value: 'confirmed', label: 'Confirmed' },
-				{ value: 'checked_in', label: 'Checked In' },
-				{ value: 'checked_out', label: 'Checked Out' },
-				{ value: 'cancelled', label: 'Cancelled' }
+				{ value: 'pending', label: t('bookings.pending') },
+				{ value: 'confirmed', label: t('bookings.confirmed') },
+				{ value: 'checked_in', label: t('bookings.checked_in') },
+				{ value: 'checked_out', label: t('bookings.checked_out') },
+				{ value: 'cancelled', label: t('bookings.cancelled') }
 			]
 		}
-	];
+	]);
 
-	const tableColumns = [
-		{ key: 'house_name', label: 'House' },
-		{ key: 'check_in_date', label: 'Check-in' },
-		{ key: 'check_out_date', label: 'Check-out' },
-		{ key: 'guest_name', label: 'Guest' },
-		{ key: 'guest_email', label: 'Email' },
+	let tableColumns = $derived([
+		{ key: 'house_name', label: t('bookings.house') },
+		{ key: 'check_in_date', label: t('bookings.check_in_date') },
+		{ key: 'check_out_date', label: t('bookings.check_out_date') },
+		{ key: 'guest_name', label: t('bookings.guest_name') },
+		{ key: 'guest_email', label: t('common.email') },
 		{
 			key: 'status',
-			label: 'Status',
-			formatter: (value) => value.charAt(0).toUpperCase() + value.slice(1)
+			label: t('common.status'),
+			formatter: (value: string) => value.charAt(0).toUpperCase() + value.slice(1)
 		}
-	];
+	]);
 
-	const tableActions = [
+	let tableActions = $derived([
 		{
-			label: 'Edit',
+			label: t('common.edit'),
 			class: 'edit',
-			title: 'Edit booking',
+			title: t('bookings.edit_booking'),
 			icon: '✏️'
 		},
 		{
-			label: 'Delete',
+			label: t('common.delete'),
 			class: 'delete',
-			title: 'Delete booking',
+			title: t('bookings.delete_booking'),
 			icon: '🗑️'
 		}
-	];
+	]);
 
 	async function loadData() {
 		loading = true;
@@ -149,30 +169,30 @@
 
 			dataStores.bookings.set(bookings);
 			dataStores.houses.set(houses);
-		} catch (err) {
-			error = err.message;
+		} catch (err: any) {
+			error = err.message || t('errors.failed_to_load');
 		} finally {
 			loading = false;
 		}
 	}
 
-	async function handleAction({ action, row }) {
-		if (action.label === 'Edit') {
+	async function handleAction({ action, row }: { action: any; row: any }) {
+		if (action.label === t('common.edit')) {
 			editingBooking = row;
 			showForm = true;
-		} else if (action.label === 'Delete') {
-			if (confirm('Are you sure you want to delete this booking?')) {
+		} else if (action.label === t('common.delete')) {
+			if (confirm(t('bookings.delete_confirm'))) {
 				try {
 					await bookingsAPI.delete(row.id);
 					await loadData();
-				} catch (err) {
-					error = err.message;
+				} catch (err: any) {
+					error = err.message || t('errors.failed_to_delete');
 				}
 			}
 		}
 	}
 
-	async function handleFormSubmit(data) {
+	async function handleFormSubmit(data: any) {
 		try {
 			if (editingBooking) {
 				await bookingsAPI.update(editingBooking.id, data);
@@ -183,8 +203,8 @@
 			showForm = false;
 			editingBooking = null;
 			await loadData();
-		} catch (err) {
-			error = err.message;
+		} catch (err: any) {
+			error = err.message || t('errors.failed_to_save');
 		}
 	}
 
@@ -201,8 +221,8 @@
 
 <div class="bookings-page">
 	<div class="page-header">
-		<h1>Bookings</h1>
-		<button class="btn btn-primary" onclick={() => (showForm = true)}> Add Booking </button>
+		<h1>{tt('bookings.title')}</h1>
+		<button class="btn btn-primary" onclick={() => (showForm = true)}> {tt('bookings.add_booking')} </button>
 	</div>
 
 	{#if showForm}
@@ -211,8 +231,8 @@
 				fields={bookingFields}
 				data={editingBooking || {}}
 				{loading}
-				title={editingBooking ? 'Edit Booking' : 'Add New Booking'}
-				submitLabel={editingBooking ? 'Update Booking' : 'Add Booking'}
+				title={editingBooking ? t('bookings.edit_booking') : t('bookings.add_new_booking')}
+				submitLabel={editingBooking ? t('bookings.edit_booking') : t('bookings.add_booking')}
 				onSubmit={handleFormSubmit}
 				onCancel={handleFormCancel}
 			/>
@@ -221,7 +241,7 @@
 
 	<div class="table-section">
 		<Table
-			data={bookings}
+			data={filteredBookings}
 			columns={tableColumns}
 			actions={tableActions}
 			{loading}

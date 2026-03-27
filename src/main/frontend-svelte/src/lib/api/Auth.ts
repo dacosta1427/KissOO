@@ -14,6 +14,7 @@ export interface LoginResult {
   userId?: number;
   ownerId?: number;
   ownerName?: string;
+  cleanerId?: number;
   email?: string;
   preferredLanguage?: string;
   _ErrorMessage?: string;
@@ -46,6 +47,9 @@ export async function login(usernameInput: string, password: string): Promise<Lo
     }
     if (res.ownerName) {
       session.setOwnerName(res.ownerName);
+    }
+    if (res.cleanerId) {
+      session.setCleanerId(res.cleanerId);
     }
     if (res.email) {
       session.setEmail(res.email);
