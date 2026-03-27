@@ -1,4 +1,4 @@
-import { r as run_all, c as deferred, i as includes, n as noop, o as object_prototype, f as array_prototype, g as get_descriptor, h as get_prototype_of, j as is_array, k as is_extensible, l as index_of, e as escape_html, m as has_own_property, t as to_class, p as to_style, q as clsx, a as attr } from "./attributes.js";
+import { r as run_all, f as deferred, i as includes, n as noop, o as object_prototype, g as array_prototype, h as get_descriptor, j as get_prototype_of, k as is_array, l as is_extensible, m as index_of, e as escape_html, p as has_own_property, t as to_class, q as to_style, c as clsx, a as attr } from "./attributes.js";
 import { B as BROWSER } from "./false.js";
 import { a as async_mode_flag, t as tracing_mode_flag } from "./async.js";
 import * as devalue from "devalue";
@@ -2934,6 +2934,10 @@ function attr_class(value, hash, directives) {
   var result = to_class(value, hash, directives);
   return result ? ` class="${escape_html(result, true)}"` : "";
 }
+function attr_style(value, directives) {
+  var result = to_style(value, directives);
+  return result ? ` style="${escape_html(result, true)}"` : "";
+}
 function store_get(store_values, store_name, store) {
   if (store_name in store_values && store_values[store_name][0] === store) {
     return store_values[store_name][2];
@@ -2947,6 +2951,14 @@ function store_get(store_values, store_name, store) {
   );
   store_values[store_name][1] = unsub;
   return store_values[store_name][2];
+}
+function store_set(store, value) {
+  store.set(value);
+  return value;
+}
+function store_mutate(store_values, store_name, store, expression) {
+  store_set(store, store_get(store_values, store_name, store));
+  return expression;
 }
 function unsubscribe_stores(store_values) {
   for (const store_name of Object.keys(store_values)) {
@@ -3001,64 +3013,67 @@ function derived(fn) {
   };
 }
 export {
-  pop$1 as $,
-  current_batch as A,
+  is_passive_event as $,
+  create_text as A,
   BOUNDARY_EFFECT as B,
   COMMENT_NODE as C,
-  move_effect as D,
-  defer_effect as E,
-  set_active_effect as F,
-  set_active_reaction as G,
+  pause_effect as D,
+  current_batch as E,
+  move_effect as F,
+  defer_effect as G,
   HYDRATION_ERROR as H,
-  set_component_context as I,
-  Batch as J,
-  handle_error as K,
-  active_reaction as L,
-  component_context as M,
-  internal_set as N,
-  destroy_effect as O,
-  invoke_error_boundary as P,
-  svelte_boundary_reset_onerror as Q,
-  HYDRATION_START_FAILED as R,
-  EFFECT_TRANSPARENT as S,
-  EFFECT_PRESERVED as T,
-  init_operations as U,
-  get_first_child as V,
-  hydration_failed as W,
-  clear_text_content as X,
-  component_root as Y,
-  is_passive_event as Z,
-  push$1 as _,
-  attr_class as a,
-  set as a0,
-  LEGACY_PROPS as a1,
-  flushSync as a2,
-  mutable_source as a3,
-  render as a4,
-  setContext as a5,
-  stringify as b,
-  slot as c,
+  set_active_effect as I,
+  set_active_reaction as J,
+  set_component_context as K,
+  Batch as L,
+  handle_error as M,
+  active_reaction as N,
+  component_context as O,
+  internal_set as P,
+  destroy_effect as Q,
+  invoke_error_boundary as R,
+  svelte_boundary_reset_onerror as S,
+  HYDRATION_START_FAILED as T,
+  EFFECT_TRANSPARENT as U,
+  EFFECT_PRESERVED as V,
+  init_operations as W,
+  get_first_child as X,
+  hydration_failed as Y,
+  clear_text_content as Z,
+  component_root as _,
+  store_mutate as a,
+  push$1 as a0,
+  pop$1 as a1,
+  set as a2,
+  LEGACY_PROPS as a3,
+  flushSync as a4,
+  mutable_source as a5,
+  render as a6,
+  setContext as a7,
+  safe_not_equal as a8,
+  attr_class as b,
+  stringify as c,
   derived as d,
   ensure_array_like as e,
-  safe_not_equal as f,
+  slot as f,
   getContext as g,
-  bind_props as h,
-  HYDRATION_END as i,
-  HYDRATION_START as j,
-  HYDRATION_START_ELSE as k,
-  get_next_sibling as l,
-  effect_tracking as m,
-  get as n,
-  source as o,
-  untrack as p,
-  increment as q,
+  attr_style as h,
+  bind_props as i,
+  ssr_context as j,
+  HYDRATION_END as k,
+  HYDRATION_START as l,
+  HYDRATION_START_ELSE as m,
+  get_next_sibling as n,
+  effect_tracking as o,
+  get as p,
+  source as q,
   render_effect as r,
   store_get as s,
-  queue_micro_task as t,
+  untrack as t,
   unsubscribe_stores as u,
-  active_effect as v,
-  block as w,
-  branch as x,
-  create_text as y,
-  pause_effect as z
+  increment as v,
+  queue_micro_task as w,
+  active_effect as x,
+  block as y,
+  branch as z
 };

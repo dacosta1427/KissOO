@@ -1,9 +1,23 @@
 import "clsx";
 let uuid = "";
+let username = "";
+let userId = 0;
+let ownerId = 0;
+let ownerName = "";
+let cleanerId = 0;
+let email = "";
+let preferredLanguage = "en";
 let persistToStorage = true;
 const STORAGE_KEY = "kiss_session_uuid";
+const USERNAME_KEY = "kiss_session_username";
+const USERID_KEY = "kiss_session_userid";
+const OWNERID_KEY = "kiss_session_ownerid";
+const OWNERNAME_KEY = "kiss_session_ownername";
+const CLEANERID_KEY = "kiss_session_cleanerid";
+const EMAIL_KEY = "kiss_session_email";
 const CREDENTIALS_KEY = "kiss_encrypted_credentials";
 const KEY_STORAGE_KEY = "kiss_encryption_key";
+const LANGUAGE_KEY = "kiss_preferred_language";
 async function generateEncryptionKey() {
   return await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
 }
@@ -59,6 +73,96 @@ const session = {
     return uuid;
   },
   /**
+   * Get the current username
+   */
+  get username() {
+    return username;
+  },
+  /**
+   * Set the username
+   */
+  setUsername(name) {
+    username = name;
+    if (typeof localStorage !== "undefined" && name) {
+      localStorage.setItem(USERNAME_KEY, name);
+    }
+  },
+  /**
+   * Get the user ID
+   */
+  get userId() {
+    return userId;
+  },
+  /**
+   * Set the user ID
+   */
+  setUserId(id) {
+    userId = id;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(USERID_KEY, id.toString());
+    }
+  },
+  /**
+   * Get the owner ID
+   */
+  get ownerId() {
+    return ownerId;
+  },
+  /**
+   * Set the owner ID
+   */
+  setOwnerId(id) {
+    ownerId = id;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(OWNERID_KEY, id.toString());
+    }
+  },
+  /**
+   * Get the owner name
+   */
+  get ownerName() {
+    return ownerName;
+  },
+  /**
+   * Set the owner name
+   */
+  setOwnerName(name) {
+    ownerName = name;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(OWNERNAME_KEY, name);
+    }
+  },
+  /**
+   * Get the cleaner ID (for cleaner-specific views)
+   */
+  get cleanerId() {
+    return cleanerId;
+  },
+  /**
+   * Set the cleaner ID
+   */
+  setCleanerId(id) {
+    cleanerId = id;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(CLEANERID_KEY, id.toString());
+    }
+  },
+  /**
+   * Get the email
+   */
+  get email() {
+    return email;
+  },
+  /**
+   * Set the email
+   */
+  setEmail(emailAddr) {
+    email = emailAddr;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(EMAIL_KEY, emailAddr);
+    }
+  },
+  /**
    * Check if user is authenticated
    */
   get isAuthenticated() {
@@ -82,8 +186,20 @@ const session = {
    */
   clear() {
     uuid = "";
+    username = "";
+    userId = 0;
+    ownerId = 0;
+    ownerName = "";
+    cleanerId = 0;
+    email = "";
     if (typeof localStorage !== "undefined") {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(USERNAME_KEY);
+      localStorage.removeItem(USERID_KEY);
+      localStorage.removeItem(OWNERID_KEY);
+      localStorage.removeItem(OWNERNAME_KEY);
+      localStorage.removeItem(CLEANERID_KEY);
+      localStorage.removeItem(EMAIL_KEY);
     }
   },
   /**
@@ -95,6 +211,30 @@ const session = {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved && saved.length > 0) {
       uuid = saved;
+      const savedUsername = localStorage.getItem(USERNAME_KEY);
+      if (savedUsername && savedUsername.length > 0) {
+        username = savedUsername;
+      }
+      const savedUserId = localStorage.getItem(USERID_KEY);
+      if (savedUserId) {
+        userId = parseInt(savedUserId) || 0;
+      }
+      const savedOwnerId = localStorage.getItem(OWNERID_KEY);
+      if (savedOwnerId) {
+        ownerId = parseInt(savedOwnerId) || 0;
+      }
+      const savedOwnerName = localStorage.getItem(OWNERNAME_KEY);
+      if (savedOwnerName) {
+        ownerName = savedOwnerName;
+      }
+      const savedCleanerId = localStorage.getItem(CLEANERID_KEY);
+      if (savedCleanerId) {
+        cleanerId = parseInt(savedCleanerId) || 0;
+      }
+      const savedEmail = localStorage.getItem(EMAIL_KEY);
+      if (savedEmail) {
+        email = savedEmail;
+      }
       return true;
     }
     return false;
@@ -104,10 +244,10 @@ const session = {
    * @param username - Username
    * @param password - Password
    */
-  async storeCredentials(username, password) {
+  async storeCredentials(username2, password) {
     if (typeof localStorage === "undefined") return;
     try {
-      const data = JSON.stringify({ username, password });
+      const data = JSON.stringify({ username: username2, password });
       const encrypted = await encryptData(data);
       localStorage.setItem(CREDENTIALS_KEY, encrypted);
     } catch (error) {
@@ -163,6 +303,41 @@ const session = {
    */
   get isPersistent() {
     return persistToStorage;
+  },
+  /**
+   * Get the preferred language
+   */
+  getLanguage() {
+    if (typeof localStorage !== "undefined") {
+      const stored = localStorage.getItem(LANGUAGE_KEY);
+      if (stored) {
+        preferredLanguage = stored;
+        return stored;
+      }
+    }
+    return preferredLanguage;
+  },
+  /**
+   * Set the preferred language
+   * @param lang - Language code (en, nl, de)
+   */
+  setLanguage(lang) {
+    preferredLanguage = lang;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(LANGUAGE_KEY, lang);
+    }
+  },
+  /**
+   * Restore language preference from localStorage
+   */
+  restoreLanguage() {
+    if (typeof localStorage === "undefined") return preferredLanguage;
+    const saved = localStorage.getItem(LANGUAGE_KEY);
+    if (saved && saved.length > 0) {
+      preferredLanguage = saved;
+      return saved;
+    }
+    return preferredLanguage;
   }
 };
 export {

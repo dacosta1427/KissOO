@@ -4,7 +4,7 @@
 
 **Last Updated:** 2026-03-19
 
----
+---you read the full 5 doc set and start with START_HERE.md
 
 ## Core Principle
 

@@ -3,8 +3,12 @@
 	import { dataStores } from '../../lib/stores.svelte.js';
 	import Table from '$lib/components/Table.svelte';
 	import Form from '$lib/components/Form.svelte';
+  import { t, currentLocale } from '$lib/i18n';
+  
+  // Reactive translation helper
+  const tt = (key: string) => t(key, undefined, $currentLocale);
 
-	// Svelte 5: Use runes for state management
+  // Svelte 5: Use runes for state management
 	let cleaners = $state<Cleaner[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
@@ -16,70 +20,71 @@
 		loadCleaners();
 	});
 
-	const cleanerFields = [
+	// Reactive form fields using $derived
+	let cleanerFields = $derived([
 		{
 			name: 'name',
-			label: 'Name',
+			label: t('cleaners.name'),
 			type: 'text' as const,
 			required: true,
-			placeholder: 'Enter cleaner name'
+			placeholder: t('cleaners.enter_cleaner_name')
 		},
 		{
 			name: 'email',
-			label: 'Email',
+			label: t('cleaners.email'),
 			type: 'email' as const,
 			required: true,
-			placeholder: 'Enter cleaner email'
+			placeholder: t('cleaners.enter_cleaner_email')
 		},
 		{
 			name: 'phone',
-			label: 'Phone',
+			label: t('cleaners.phone'),
 			type: 'tel' as const,
 			required: false,
-			placeholder: 'Enter cleaner phone number'
+			placeholder: t('cleaners.enter_cleaner_phone')
 		},
 		{
 			name: 'address',
-			label: 'Address',
+			label: t('cleaners.address'),
 			type: 'textarea' as const,
 			required: false,
-			placeholder: 'Enter cleaner address',
+			placeholder: t('cleaners.enter_cleaner_address'),
 			rows: 3
 		},
 		{
 			name: 'active',
-			label: 'Active',
+			label: t('common.active'),
 			type: 'checkbox' as const,
 			required: false
 		}
-	];
+	]);
 
-	const tableColumns = [
-		{ key: 'name', label: 'Name' },
-		{ key: 'email', label: 'Email' },
-		{ key: 'phone', label: 'Phone' },
-		{ key: 'address', label: 'Address' },
+	let tableColumns = $derived([
+		{ key: 'name', label: t('cleaners.name') },
+		{ key: 'email', label: t('cleaners.email') },
+		{ key: 'phone', label: t('cleaners.phone') },
+		{ key: 'address', label: t('cleaners.address') },
 		{
 			key: 'active',
-			label: 'Status',
-			formatter: (value) => (value ? 'Active' : 'Inactive')
+			label: t('common.status'),
+			formatter: (value: boolean) => (value ? t('common.active') : t('common.inactive'))
 		}
-	];
+	]);
 
-	const tableActions = [
+	let tableActions = $derived([
 		{
-			label: 'Edit',
+			label: t('common.edit'),
 			class: 'edit',
-			title: 'Edit cleaner',
+			title: t('cleaners.edit_cleaner'),
 			icon: '✏️'
 		},
 		{
-			label: 'Delete',
+			label: t('common.delete'),
 			class: 'delete',
-			title: 'Delete cleaner',
+			title: t('cleaners.delete_cleaner'),
 			icon: '🗑️'
 		}
-	];
+	]);
 
 	async function loadCleaners() {
 		loading = true;
@@ -88,30 +93,30 @@
 		try {
 			cleaners = await cleanersAPI.getAll();
 			dataStores.cleaners.set(cleaners);
-		} catch (err) {
-			error = err.message;
+		} catch (err: any) {
+			error = err.message || t('errors.failed_to_load');
 		} finally {
 			loading = false;
 		}
 	}
 
-	async function handleAction({ action, row }) {
-		if (action.label === 'Edit') {
+	async function handleAction({ action, row }: { action: any; row: any }) {
+		if (action.label === t('common.edit')) {
 			editingCleaner = row;
 			showForm = true;
-		} else if (action.label === 'Delete') {
-			if (confirm('Are you sure you want to delete this cleaner?')) {
+		} else if (action.label === t('common.delete')) {
+			if (confirm(t('cleaners.delete_confirm'))) {
 				try {
 					await cleanersAPI.delete(row.id);
 					await loadCleaners();
-				} catch (err) {
-					error = err.message;
+				} catch (err: any) {
+					error = err.message || t('errors.failed_to_delete');
 				}
 			}
 		}
 	}
 
-	async function handleFormSubmit(data) {
+	async function handleFormSubmit(data: any) {
 		try {
 			if (editingCleaner) {
 				await cleanersAPI.update(editingCleaner.id, data);
@@ -122,8 +127,8 @@
 			showForm = false;
 			editingCleaner = null;
 			await loadCleaners();
-		} catch (err) {
-			error = err.message;
+		} catch (err: any) {
+			error = err.message || t('errors.failed_to_save');
 		}
 	}
 
@@ -135,8 +140,8 @@
 
 <div class="cleaners-page">
 	<div class="page-header">
-		<h1>Cleaners</h1>
-		<button class="btn btn-primary" onclick={() => (showForm = true)}> Add Cleaner </button>
+		<h1>{tt('cleaners.title')}</h1>
+		<button class="btn btn-primary" onclick={() => (showForm = true)}> {tt('cleaners.add_cleaner')} </button>
 	</div>
 
 	{#if showForm}
@@ -145,8 +150,8 @@
 				fields={cleanerFields}
 				data={editingCleaner || {}}
 				{loading}
-				title={editingCleaner ? 'Edit Cleaner' : 'Add New Cleaner'}
-				submitLabel={editingCleaner ? 'Update Cleaner' : 'Add Cleaner'}
+				title={editingCleaner ? t('cleaners.edit_cleaner') : t('cleaners.add_new_cleaner')}
+				submitLabel={editingCleaner ? t('cleaners.edit_cleaner') : t('cleaners.add_cleaner')}
 				onSubmit={handleFormSubmit}
 				onCancel={handleFormCancel}
 			/>

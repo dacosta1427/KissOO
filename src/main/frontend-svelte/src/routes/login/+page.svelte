@@ -4,6 +4,10 @@
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
   import { session } from '$lib/state/session';
+  import { t, currentLocale } from '$lib/i18n';
+  
+  // Helper for reactive translations
+  const tt = (key: string) => t(key, undefined, $currentLocale);
 
   // Svelte 5 RUNES for reactive state
   let username = $state('');
@@ -49,11 +53,11 @@
         }
         goto(resolve('/'));
       } else {
-        error = res._ErrorMessage || 'Invalid username or password';
+        error = res._ErrorMessage || t('errors.login_failed');
         password = '';
       }
     } catch (e: any) {
-      error = 'Login failed: ' + (e.message || 'Unknown error');
+      error = t('errors.login_failed') + ': ' + (e.message || t('errors.server_error'));
       console.error('Login error:', e);
     } finally {
       loading = false;
@@ -63,7 +67,7 @@
 
 <div class="min-h-screen bg-gray-50 flex items-center justify-center">
   <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-    <h1 class="text-2xl font-bold text-center mb-6">KissOO Login</h1>
+    <h1 class="text-2xl font-bold text-center mb-6">{tt('auth.login_title')}</h1>
 
     {#if error}
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -74,28 +78,28 @@
     <form onsubmit={(e) => { e.preventDefault(); handleLogin(); }}>
       <div class="mb-4">
         <label for="username" class="block text-gray-700 text-sm font-bold mb-2">
-          Username
+          {tt('auth.username')}
         </label>
         <input
           type="text"
           id="username"
           bind:value={username}
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="Enter username"
+          placeholder={tt('auth.username')}
           autocomplete="username"
         />
       </div>
 
       <div class="mb-6">
         <label for="password" class="block text-gray-700 text-sm font-bold mb-2">
-          Password
+          {tt('auth.password')}
         </label>
         <input
           type="password"
           id="password"
           bind:value={password}
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="Enter password"
+          placeholder={tt('auth.password')}
           autocomplete="current-password"
         />
       </div>
@@ -108,7 +112,7 @@
           class="mr-2 leading-tight"
         />
         <label for="rememberMe" class="text-sm text-gray-700">
-          Remember me (store login for automatic re-login)
+          {tt('auth.remember_me')}
         </label>
       </div>
 
@@ -117,12 +121,12 @@
         disabled={loading || !isValid}
         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
       >
-        {loading ? 'Logging in...' : 'Login'}
+        {loading ? t('auth.logging_in') : t('auth.login_button')}
       </button>
     </form>
 
     <p class="text-gray-500 text-xs text-center mt-4">
-      Don't have an account? <a href="/signup" class="text-blue-600 hover:text-blue-800">Sign Up</a>
+      {tt('auth.no_account')} <a href="/signup" class="text-blue-600 hover:text-blue-800">{tt('auth.sign_up_here')}</a>
     </p>
   </div>
 </div>

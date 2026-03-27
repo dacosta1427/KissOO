@@ -39,7 +39,6 @@
  */
 declare module '$env/static/private' {
 	export const ELECTRON_DISABLE_SANDBOX: string;
-	export const VSCODE_JDWP_ADAPTER_ENDPOINTS: string;
 	export const USER: string;
 	export const npm_config_user_agent: string;
 	export const FONTCONFIG_PATH: string;
@@ -118,10 +117,10 @@ declare module '$env/static/private' {
 	export const SSH_AUTH_SOCK: string;
 	export const GSETTINGS_SCHEMA_DIR: string;
 	export const SHELL: string;
-	export const VSCODE_JAVA_EXEC: string;
 	export const npm_package_version: string;
 	export const npm_lifecycle_event: string;
 	export const QT_ACCESSIBILITY: string;
+	export const NO_AT_BRIDGE: string;
 	export const GTK_PATH_VSCODE_SNAP_ORIG: string;
 	export const FONTCONFIG_FILE: string;
 	export const GTK_IM_MODULE_FILE_VSCODE_SNAP_ORIG: string;
@@ -230,7 +229,6 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		ELECTRON_DISABLE_SANDBOX: string;
-		VSCODE_JDWP_ADAPTER_ENDPOINTS: string;
 		USER: string;
 		npm_config_user_agent: string;
 		FONTCONFIG_PATH: string;
@@ -309,10 +307,10 @@ declare module '$env/dynamic/private' {
 		SSH_AUTH_SOCK: string;
 		GSETTINGS_SCHEMA_DIR: string;
 		SHELL: string;
-		VSCODE_JAVA_EXEC: string;
 		npm_package_version: string;
 		npm_lifecycle_event: string;
 		QT_ACCESSIBILITY: string;
+		NO_AT_BRIDGE: string;
 		GTK_PATH_VSCODE_SNAP_ORIG: string;
 		FONTCONFIG_FILE: string;
 		GTK_IM_MODULE_FILE_VSCODE_SNAP_ORIG: string;

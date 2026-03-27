@@ -1,66 +1,207 @@
 import "../../../chunks/async.js";
-import { d as derived } from "../../../chunks/index2.js";
-import { a as attr, e as escape_html } from "../../../chunks/attributes.js";
+import { u as unsubscribe_stores, s as store_get, d as derived, e as ensure_array_like, b as attr_class } from "../../../chunks/index2.js";
+import { S as Server } from "../../../chunks/Auth.js";
+import { e as escape_html, c as clsx, a as attr } from "../../../chunks/attributes.js";
 import { M as Modal } from "../../../chunks/Modal.js";
+import { F as Form } from "../../../chunks/Form.js";
+import { a as notificationActions } from "../../../chunks/stores.svelte.js";
+import { t, c as currentLocale } from "../../../chunks/index3.js";
+async function getUsers() {
+  console.log("[Users.ts] getUsers called, Server.uuid:", Server.uuid);
+  const res = await Server.call("services.Users", "getRecords", {});
+  console.log("[Users.ts] getUsers response:", res);
+  return res.rows || [];
+}
+async function addUser(userName, userPassword) {
+  console.log("[Users.ts] addUser called:", userName);
+  const res = await Server.call("services.Users", "addRecord", {
+    userName: userName.toLowerCase(),
+    userPassword,
+    userActive: "Y"
+  });
+  console.log("[Users.ts] addUser response:", res);
+  return {
+    success: res._Success ?? res.success ?? false,
+    error: res._ErrorMessage || res.error,
+    id: res.id
+  };
+}
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
-    let newUserName = "";
-    let newUserPassword = "";
+    var $$store_subs;
+    const tt = (key) => t(key, void 0, store_get($$store_subs ??= {}, "$currentLocale", currentLocale));
+    let users = [];
+    let loading = false;
+    let error = "";
+    let dataLoading = true;
     let editModalOpen = false;
-    let editUserName = "";
-    let editUserPassword = "";
-    let editUserActive = "Y";
-    let canAddUser = derived(() => newUserName.length >= 3 && newUserPassword.length >= 3);
-    let canEditUser = derived(() => editUserName.length >= 3 && editUserPassword.length >= 3);
+    let addFormData = { username: "", password: "" };
+    let editFormData = { username: "", password: "", active: "Y" };
+    let editLoading = false;
+    let canAddUser = derived(() => (addFormData.username?.length ?? 0) >= 3 && (addFormData.password?.length ?? 0) >= 3);
+    let addUserFields = derived(() => [
+      {
+        name: "username",
+        label: t("users.enter_username"),
+        type: "text",
+        required: true,
+        placeholder: t("users.enter_username"),
+        helpText: t("users.minimum_3_chars")
+      },
+      {
+        name: "password",
+        label: t("users.enter_password"),
+        type: "password",
+        required: true,
+        placeholder: t("users.enter_password"),
+        helpText: t("users.minimum_3_chars")
+      }
+    ]);
+    let editUserFields = derived(() => [
+      {
+        name: "username",
+        label: t("users.enter_username"),
+        type: "text",
+        required: true,
+        placeholder: t("users.enter_username"),
+        helpText: t("users.minimum_3_chars")
+      },
+      {
+        name: "password",
+        label: t("users.enter_password"),
+        type: "password",
+        required: true,
+        placeholder: t("users.enter_password"),
+        helpText: t("users.minimum_3_chars")
+      },
+      {
+        name: "active",
+        label: t("common.active"),
+        type: "select",
+        required: true,
+        options: [
+          { value: "Y", label: t("common.active") },
+          { value: "N", label: t("common.inactive") }
+        ]
+      }
+    ]);
+    async function loadUsers() {
+      console.log("[users] loadUsers called");
+      dataLoading = true;
+      error = "";
+      try {
+        users = await getUsers();
+        console.log("[users] loadUsers success, count:", users.length);
+      } catch (e) {
+        error = t("errors.failed_to_load") + ": " + (e.message || "Unknown error");
+        console.error("[users] loadUsers error:", error);
+      } finally {
+        dataLoading = false;
+      }
+    }
+    async function handleAddUser(data) {
+      console.log("[users] handleAddUser called with:", data);
+      if (!canAddUser()) {
+        console.log("[users] canAddUser false, aborting");
+        return;
+      }
+      loading = true;
+      error = "";
+      try {
+        const res = await addUser(data.username, data.password);
+        console.log("[users] addUser response:", res);
+        if (res.success) {
+          notificationActions.success(t("users.title") + " " + t("notifications.created_successfully"));
+          addFormData = { username: "", password: "" };
+          console.log("[users] addUser success, reloading users...");
+          await loadUsers();
+        } else {
+          error = res.error || t("errors.failed_to_save");
+          console.error("[users] addUser failed:", error);
+          notificationActions.error(error);
+        }
+      } catch (e) {
+        error = t("errors.failed_to_save") + ": " + (e.message || "Unknown error");
+        console.error("[users] addUser exception:", error);
+        notificationActions.error(error);
+      } finally {
+        loading = false;
+      }
+    }
+    async function handleEditUser(data) {
+      return;
+    }
     let $$settled = true;
     let $$inner_renderer;
     function $$render_inner($$renderer3) {
-      $$renderer3.push(`<div class="p-6 max-w-4xl mx-auto"><h1 class="text-2xl font-bold mb-6">User Management</h1> `);
-      {
+      $$renderer3.push(`<div class="p-6 max-w-4xl mx-auto"><h1 class="text-2xl font-bold mb-6">${escape_html(tt("users.title"))}</h1> `);
+      if (error) {
+        $$renderer3.push("<!--[0-->");
+        $$renderer3.push(`<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">${escape_html(error)}</div>`);
+      } else {
         $$renderer3.push("<!--[-1-->");
       }
-      $$renderer3.push(`<!--]--> <div class="mb-6"><h2 class="text-xl font-semibold mb-3">Add New User</h2> <div class="space-y-4"><div class="grid grid-cols-2 gap-4"><input type="text" placeholder="Username"${attr("value", newUserName)} class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/> <input type="password" placeholder="Password"${attr("value", newUserPassword)} class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/></div> <button${attr("disabled", !canAddUser(), true)} class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50">${escape_html("Add User")}</button></div></div> <div><h2 class="text-xl font-semibold mb-3">Users</h2> `);
-      {
+      $$renderer3.push(`<!--]--> <div class="mb-6"><h2 class="text-xl font-semibold mb-3">${escape_html(tt("users.add_new_user"))}</h2> `);
+      Form($$renderer3, {
+        fields: addUserFields(),
+        loading,
+        submitLabel: tt("users.add_user"),
+        onSubmit: handleAddUser,
+        get data() {
+          return addFormData;
+        },
+        set data($$value) {
+          addFormData = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> <div><h2 class="text-xl font-semibold mb-3">${escape_html(tt("users.users_list"))}</h2> `);
+      if (dataLoading) {
         $$renderer3.push("<!--[0-->");
-        $$renderer3.push(`<p class="text-gray-500">Loading users...</p>`);
+        $$renderer3.push(`<p class="text-gray-500">${escape_html(tt("users.loading_users"))}</p>`);
+      } else if (users.length === 0) {
+        $$renderer3.push("<!--[1-->");
+        $$renderer3.push(`<p class="text-gray-500">${escape_html(tt("users.no_users"))}</p>`);
+      } else {
+        $$renderer3.push("<!--[-1-->");
+        $$renderer3.push(`<div class="space-y-3"><!--[-->`);
+        const each_array = ensure_array_like(users);
+        for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
+          let user = each_array[$$index];
+          $$renderer3.push(`<div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border"><div><p class="font-medium">${escape_html(user.userName)}</p> <p class="text-gray-600 text-sm">${escape_html(tt("common.status"))}: <span${attr_class(clsx(user.userActive === "Y" ? "text-green-600" : "text-red-600"))}>${escape_html(user.userActive === "Y" ? t("common.active") : t("common.inactive"))}</span></p></div> <div class="flex gap-2"><button class="text-blue-600 hover:text-blue-800"${attr("disabled", loading, true)}>${escape_html(tt("common.edit"))}</button> <button class="text-red-600 hover:text-red-800"${attr("disabled", loading, true)}>${escape_html(tt("common.delete"))}</button></div></div>`);
+        }
+        $$renderer3.push(`<!--]--></div>`);
       }
       $$renderer3.push(`<!--]--></div></div> `);
-      {
-        let footer = function($$renderer4) {
-          $$renderer4.push(`<button type="button" class="inline-flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"${attr("disabled", !canEditUser(), true)}>${escape_html("Save")}</button> <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>`);
-        };
-        Modal($$renderer3, {
-          title: "Edit User",
-          onClose: () => editModalOpen = false,
-          get open() {
-            return editModalOpen;
-          },
-          set open($$value) {
-            editModalOpen = $$value;
-            $$settled = false;
-          },
-          footer,
-          children: ($$renderer4) => {
-            $$renderer4.push(`<div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700">Username</label> <input type="text"${attr("value", editUserName)} class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/></div> <div><label class="block text-sm font-medium text-gray-700">Password</label> <input type="password"${attr("value", editUserPassword)} class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"/></div> <div><label class="block text-sm font-medium text-gray-700">Active</label> `);
-            $$renderer4.select(
-              {
-                value: editUserActive,
-                class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              },
-              ($$renderer5) => {
-                $$renderer5.option({ value: "Y" }, ($$renderer6) => {
-                  $$renderer6.push(`Active`);
-                });
-                $$renderer5.option({ value: "N" }, ($$renderer6) => {
-                  $$renderer6.push(`Inactive`);
-                });
-              }
-            );
-            $$renderer4.push(`</div></div>`);
-          },
-          $$slots: { footer: true, default: true }
-        });
-      }
+      Modal($$renderer3, {
+        title: tt("users.edit_user"),
+        onClose: () => editModalOpen = false,
+        get open() {
+          return editModalOpen;
+        },
+        set open($$value) {
+          editModalOpen = $$value;
+          $$settled = false;
+        },
+        children: ($$renderer4) => {
+          Form($$renderer4, {
+            fields: editUserFields(),
+            loading: editLoading,
+            submitLabel: tt("users.save"),
+            cancelLabel: tt("common.cancel"),
+            onSubmit: handleEditUser,
+            onCancel: () => editModalOpen = false,
+            get data() {
+              return editFormData;
+            },
+            set data($$value) {
+              editFormData = $$value;
+              $$settled = false;
+            }
+          });
+        },
+        $$slots: { default: true }
+      });
       $$renderer3.push(`<!---->`);
     }
     do {
@@ -69,6 +210,7 @@ function _page($$renderer, $$props) {
       $$render_inner($$inner_renderer);
     } while (!$$settled);
     $$renderer2.subsume($$inner_renderer);
+    if ($$store_subs) unsubscribe_stores($$store_subs);
   });
 }
 export {

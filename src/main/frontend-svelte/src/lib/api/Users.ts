@@ -95,3 +95,24 @@ export async function updateUser(
     error: res._ErrorMessage || res.error
   };
 }
+
+/**
+ * Update user's preferred language
+ * @param id - User ID (oid)
+ * @param preferredLanguage - Language code (en, nl, de)
+ * @returns API result
+ */
+export async function updateLanguage(
+  id: number,
+  preferredLanguage: string
+): Promise<ApiResult> {
+  const res = await Server.call('services.Users', 'updateLanguage', {
+    id,
+    preferredLanguage
+  });
+  
+  return {
+    success: res._Success ?? res.success ?? false,
+    error: res._ErrorMessage || res.error
+  };
+}

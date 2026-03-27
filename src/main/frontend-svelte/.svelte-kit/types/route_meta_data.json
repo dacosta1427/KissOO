@@ -4,16 +4,19 @@
 	"/bookings": [],
 	"/cleaners": [],
 	"/controls": [],
+	"/cost-profiles": [],
 	"/crud": [],
 	"/export": [],
 	"/file-upload": [],
 	"/houses": [],
 	"/login": [],
 	"/ollama": [],
+	"/owners": [],
 	"/report": [],
 	"/rest-services": [],
 	"/schedules": [],
 	"/signup": [],
 	"/sql-access": [],
-	"/users": []
+	"/users": [],
+	"/verify-email": []
 }

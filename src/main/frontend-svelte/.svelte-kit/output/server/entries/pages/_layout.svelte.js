@@ -1,30 +1,54 @@
 import "../../chunks/async.js";
-import { u as unsubscribe_stores, d as derived, s as store_get, e as ensure_array_like, a as attr_class, b as stringify, c as slot } from "../../chunks/index2.js";
-import "clsx";
+import { s as store_get, u as unsubscribe_stores, a as store_mutate, d as derived, e as ensure_array_like, b as attr_class, c as stringify, f as slot } from "../../chunks/index2.js";
 import { s as session } from "../../chunks/session.svelte.js";
+import { a as attr, e as escape_html } from "../../chunks/attributes.js";
 import "@sveltejs/kit/internal";
 import "../../chunks/exports.js";
 import "../../chunks/utils.js";
 import "@sveltejs/kit/internal/server";
 import "../../chunks/root.js";
 import "../../chunks/state.svelte.js";
+import { t, c as currentLocale } from "../../chunks/index3.js";
+import { o as onDestroy } from "../../chunks/index-server.js";
 import { M as Modal } from "../../chunks/Modal.js";
 import { w as writable } from "../../chunks/index.js";
-import { e as escape_html } from "../../chunks/attributes.js";
 import { n as notificationsState } from "../../chunks/stores.svelte.js";
+function LanguageSwitcher($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    var $$store_subs;
+    const tt = (key) => t(key, void 0, store_get($$store_subs ??= {}, "$currentLocale", currentLocale));
+    onDestroy(() => {
+    });
+    $$renderer2.push(`<div class="language-switcher relative"><button class="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-gray-900 rounded-md hover:bg-gray-100"${attr("aria-label", tt("nav.language"))}><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span class="uppercase">${escape_html(store_get($$store_subs ??= {}, "$currentLocale", currentLocale))}</span> <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button> `);
+    {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--></div>`);
+    if ($$store_subs) unsubscribe_stores($$store_subs);
+  });
+}
 function Navbar($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
-    $$renderer2.push(`<header class="bg-white shadow-sm border-b"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center h-16"><div class="flex items-center"><a href="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700">KissOO Svelte 5</a></div> <nav class="hidden md:flex items-center space-x-4"><a href="/" class="text-gray-600 hover:text-gray-900 font-medium">Home</a> `);
+    var $$store_subs;
+    const tt = (key) => t(key, void 0, store_get($$store_subs ??= {}, "$currentLocale", currentLocale));
+    $$renderer2.push(`<header class="bg-white shadow-sm border-b"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center h-16"><div class="flex items-center"><a href="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700">KissOO Svelte 5</a></div> <nav class="hidden md:flex items-center space-x-4"><div class="flex items-center mr-2"${attr("title", session.isAuthenticated ? "Logged in" : "Not logged in")}>`);
     if (session.isAuthenticated) {
       $$renderer2.push("<!--[0-->");
-      $$renderer2.push(`<a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">Users</a> <a href="/crud" class="text-gray-600 hover:text-gray-900 font-medium">CRUD</a> <div class="relative"><button class="text-gray-600 hover:text-gray-900 font-medium flex items-center">Demo <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button> `);
-      {
-        $$renderer2.push("<!--[-1-->");
-      }
-      $$renderer2.push(`<!--]--></div> <button class="text-red-600 hover:text-red-800 font-medium">Logout</button> <span class="text-green-600 text-sm">Authenticated</span>`);
+      $$renderer2.push(`<span class="inline-block w-3 h-3 rounded-full bg-green-500" title="Logged in"></span>`);
     } else {
       $$renderer2.push("<!--[-1-->");
-      $$renderer2.push(`<a href="/login" class="text-gray-600 hover:text-gray-900 font-medium">Login</a> <a href="/signup" class="text-gray-600 hover:text-gray-900 font-medium">Sign Up</a>`);
+      $$renderer2.push(`<span class="inline-block w-3 h-3 rounded-full bg-red-500" title="Not logged in"></span>`);
+    }
+    $$renderer2.push(`<!--]--></div> <a href="/" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.home"))}</a> `);
+    if (session.isAuthenticated) {
+      $$renderer2.push("<!--[0-->");
+      $$renderer2.push(`<a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.houses"))}</a> <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.owners"))}</a> <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.cleaners"))}</a> <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.bookings"))}</a> <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.schedules"))}</a> <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.users"))}</a> `);
+      LanguageSwitcher($$renderer2);
+      $$renderer2.push(`<!----> <button class="text-red-600 hover:text-red-800 font-medium">${escape_html(tt("nav.logout"))}</button> <span class="text-green-600 text-sm">${escape_html(session.username || "User")}</span>`);
+    } else {
+      $$renderer2.push("<!--[-1-->");
+      LanguageSwitcher($$renderer2);
+      $$renderer2.push(`<!----> <a href="/login" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("auth.login_button"))}</a> <a href="/signup" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("auth.signup_button"))}</a>`);
     }
     $$renderer2.push(`<!--]--></nav> <div class="md:hidden"><button class="text-gray-600 hover:text-gray-900"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">`);
     {
@@ -36,6 +60,7 @@ function Navbar($$renderer, $$props) {
       $$renderer2.push("<!--[-1-->");
     }
     $$renderer2.push(`<!--]--></div></header>`);
+    if ($$store_subs) unsubscribe_stores($$store_subs);
   });
 }
 const initialState = {
@@ -123,10 +148,10 @@ function GlobalModal($$renderer, $$props) {
           title: modalState().title,
           onClose: handleCancel,
           get open() {
-            return modalState().open;
+            return store_get($$store_subs ??= {}, "$modalStore", modalStore).open;
           },
           set open($$value) {
-            modalState().open = $$value;
+            store_mutate($$store_subs ??= {}, "$modalStore", modalStore, store_get($$store_subs ??= {}, "$modalStore", modalStore).open = $$value);
             $$settled = false;
           },
           footer,

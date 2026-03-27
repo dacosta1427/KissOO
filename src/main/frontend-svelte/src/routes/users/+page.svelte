@@ -6,6 +6,10 @@
   import Form from '$lib/components/Form.svelte';
   import { Utils } from '$lib/utils/Utils';
   import { notificationActions } from '$lib/stores.svelte.js';
+  import { t, currentLocale } from '$lib/i18n';
+  
+  // Reactive translation helper
+  const tt = (key: string) => t(key, undefined, $currentLocale);
 
   // Svelte 5 RUNES for reactive state
   let users = $state<User[]>([]);
@@ -34,17 +38,17 @@
     (editFormData.username?.length ?? 0) >= 3 && (editFormData.password?.length ?? 0) >= 3
   );
 
-  // Field definitions for Form component
-  const addUserFields: Array<{name: string, label: string, type: 'text' | 'password', required: boolean, placeholder: string, helpText: string}> = [
-    { name: 'username', label: 'Username', type: 'text', required: true, placeholder: 'Enter username', helpText: 'Minimum 3 characters' },
-    { name: 'password', label: 'Password', type: 'password', required: true, placeholder: 'Enter password', helpText: 'Minimum 3 characters' }
-  ];
+  // Field definitions for Form component (reactive)
+  let addUserFields = $derived([
+    { name: 'username', label: t('users.enter_username'), type: 'text' as const, required: true, placeholder: t('users.enter_username'), helpText: t('users.minimum_3_chars') },
+    { name: 'password', label: t('users.enter_password'), type: 'password' as const, required: true, placeholder: t('users.enter_password'), helpText: t('users.minimum_3_chars') }
+  ]);
 
-  const editUserFields = [
-    { name: 'username', label: 'Username', type: 'text' as const, required: true, placeholder: 'Enter username', helpText: 'Minimum 3 characters' },
-    { name: 'password', label: 'Password', type: 'password' as const, required: true, placeholder: 'Enter password', helpText: 'Minimum 3 characters' },
-    { name: 'active', label: 'Active', type: 'select' as const, required: true, options: [{ value: 'Y', label: 'Active' }, { value: 'N', label: 'Inactive' }] }
-  ];
+  let editUserFields = $derived([
+    { name: 'username', label: t('users.enter_username'), type: 'text' as const, required: true, placeholder: t('users.enter_username'), helpText: t('users.minimum_3_chars') },
+    { name: 'password', label: t('users.enter_password'), type: 'password' as const, required: true, placeholder: t('users.enter_password'), helpText: t('users.minimum_3_chars') },
+    { name: 'active', label: t('common.active'), type: 'select' as const, required: true, options: [{ value: 'Y', label: t('common.active') }, { value: 'N', label: t('common.inactive') }] }
+  ]);
 
   // editUserFields removed, using editUserFields constant defined earlier? Actually we still need it for edit form. We'll keep but rename to editFields. Let's just keep but ensure it's used. We'll keep as is.
 
@@ -63,7 +67,7 @@
       users = await getUsers();
       console.log('[users] loadUsers success, count:', users.length);
     } catch (e: any) {
-      error = 'Failed to load users: ' + (e.message || 'Unknown error');
+      error = t('errors.failed_to_load') + ': ' + (e.message || 'Unknown error');
       console.error('[users] loadUsers error:', error);
     } finally {
       dataLoading = false;
@@ -84,17 +88,17 @@
       const res = await addUser(data.username, data.password);
       console.log('[users] addUser response:', res);
       if (res.success) {
-        notificationActions.success('User added successfully');
+        notificationActions.success(t('users.title') + ' ' + t('notifications.created_successfully'));
         addFormData = { username: '', password: '' };
         console.log('[users] addUser success, reloading users...');
         await loadUsers();
       } else {
-        error = res.error || 'Failed to add user';
+        error = res.error || t('errors.failed_to_save');
         console.error('[users] addUser failed:', error);
         notificationActions.error(error);
       }
     } catch (e: any) {
-      error = 'Failed to add user: ' + (e.message || 'Unknown error');
+      error = t('errors.failed_to_save') + ': ' + (e.message || 'Unknown error');
       console.error('[users] addUser exception:', error);
       notificationActions.error(error);
     } finally {
@@ -126,15 +130,15 @@
         data.active
       );
       if (res.success) {
-        notificationActions.success('User updated successfully');
+        notificationActions.success(t('users.title') + ' ' + t('notifications.updated_successfully'));
         editModalOpen = false;
         await loadUsers();
       } else {
-        error = res.error || 'Failed to update user';
+        error = res.error || t('errors.failed_to_save');
         notificationActions.error(error);
       }
     } catch (e: any) {
-      error = 'Failed to update user: ' + (e.message || 'Unknown error');
+      error = t('errors.failed_to_save') + ': ' + (e.message || 'Unknown error');
       notificationActions.error(error);
     } finally {
       editLoading = false;
@@ -143,8 +147,8 @@
 
   async function handleDeleteUser(id: number) {
     await Utils.yesNo(
-      'Confirm',
-      'Are you sure you want to delete this user?',
+      t('common.confirm'),
+      t('users.delete_confirm'),
       async () => {
         loading = true;
         error = '';
@@ -152,14 +156,14 @@
         try {
           const res = await deleteUser(id);
           if (res.success) {
-            notificationActions.success('User deleted successfully');
+            notificationActions.success(t('users.title') + ' ' + t('notifications.deleted_successfully'));
             await loadUsers();
           } else {
-            error = res.error || 'Failed to delete user';
+            error = res.error || t('errors.failed_to_delete');
             notificationActions.error(error);
           }
         } catch (e: any) {
-          error = 'Failed to delete user: ' + (e.message || 'Unknown error');
+          error = t('errors.failed_to_delete') + ': ' + (e.message || 'Unknown error');
           notificationActions.error(error);
         } finally {
           loading = false;
@@ -170,7 +174,7 @@
 </script>
 
 <div class="p-6 max-w-4xl mx-auto">
-  <h1 class="text-2xl font-bold mb-6">User Management</h1>
+  <h1 class="text-2xl font-bold mb-6">{tt('users.title')}</h1>
 
   {#if error}
     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -180,23 +184,23 @@
 
   <!-- Add User Form -->
   <div class="mb-6">
-    <h2 class="text-xl font-semibold mb-3">Add New User</h2>
+    <h2 class="text-xl font-semibold mb-3">{tt('users.add_new_user')}</h2>
     <Form
       fields={addUserFields}
       bind:data={addFormData}
       loading={loading}
-      submitLabel="Add User"
+      submitLabel={tt('users.add_user')}
       onSubmit={handleAddUser}
     />
   </div>
 
   <!-- Users List -->
   <div>
-    <h2 class="text-xl font-semibold mb-3">Users</h2>
+    <h2 class="text-xl font-semibold mb-3">{tt('users.users_list')}</h2>
     {#if dataLoading}
-      <p class="text-gray-500">Loading users...</p>
+      <p class="text-gray-500">{tt('users.loading_users')}</p>
     {:else if users.length === 0}
-      <p class="text-gray-500">No users found.</p>
+      <p class="text-gray-500">{tt('users.no_users')}</p>
     {:else}
       <div class="space-y-3">
         {#each users as user (user.id)}
@@ -204,8 +208,8 @@
             <div>
               <p class="font-medium">{user.userName}</p>
               <p class="text-gray-600 text-sm">
-                Status: <span class={user.userActive === 'Y' ? 'text-green-600' : 'text-red-600'}>
-                  {user.userActive === 'Y' ? 'Active' : 'Inactive'}
+                {tt('common.status')}: <span class={user.userActive === 'Y' ? 'text-green-600' : 'text-red-600'}>
+                  {user.userActive === 'Y' ? t('common.active') : t('common.inactive')}
                 </span>
               </p>
             </div>
@@ -215,14 +219,14 @@
                 class="text-blue-600 hover:text-blue-800"
                 disabled={loading}
               >
-                Edit
+                {tt('common.edit')}
               </button>
               <button
                 onclick={() => handleDeleteUser(user.id)}
                 class="text-red-600 hover:text-red-800"
                 disabled={loading}
               >
-                Delete
+                {tt('common.delete')}
               </button>
             </div>
           </div>
@@ -235,15 +239,15 @@
 <!-- Edit User Modal -->
 <Modal 
   bind:open={editModalOpen} 
-  title="Edit User"
+  title={tt('users.edit_user')}
   onClose={() => editModalOpen = false}
 >
   <Form
     fields={editUserFields}
     bind:data={editFormData}
     loading={editLoading}
-    submitLabel="Save"
-    cancelLabel="Cancel"
+    submitLabel={tt('users.save')}
+    cancelLabel={tt('common.cancel')}
     onSubmit={handleEditUser}
     onCancel={() => editModalOpen = false}
   />

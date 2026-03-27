@@ -3,6 +3,10 @@
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { onMount } from 'svelte';
+  import { t, currentLocale } from '$lib/i18n';
+  
+  // Helper for reactive translations
+  const tt = (key: string) => t(key, undefined, $currentLocale);
 
   // Svelte 5 RUNES for reactive state
   let username = $state('');
@@ -43,10 +47,10 @@
       if (res._Success) {
         goto(resolve('/'));
       } else {
-        error = res._ErrorMessage || 'Signup failed';
+        error = res._ErrorMessage || t('errors.signup_failed');
       }
     } catch (e: any) {
-      error = 'Signup failed: ' + (e.message || 'Unknown error');
+      error = t('errors.signup_failed') + ': ' + (e.message || t('errors.server_error'));
     } finally {
       loading = false;
     }
@@ -55,7 +59,7 @@
 
 <div class="min-h-screen bg-gray-50 flex items-center justify-center">
   <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-    <h1 class="text-2xl font-bold text-center mb-6">Sign Up</h1>
+    <h1 class="text-2xl font-bold text-center mb-6">{tt('auth.signup_title')}</h1>
 
     {#if error}
       <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -66,74 +70,74 @@
     <form onsubmit={(e) => { e.preventDefault(); handleSignup(); }}>
       <div class="mb-4">
         <label for="username" class="block text-gray-700 text-sm font-bold mb-2">
-          Username
+          {tt('auth.username')}
         </label>
         <input
           type="text"
           id="username"
           bind:value={username}
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="Enter username"
+          placeholder={tt('auth.username')}
           autocomplete="username"
         />
       </div>
 
       <div class="mb-4">
         <label for="email" class="block text-gray-700 text-sm font-bold mb-2">
-          Email
+          {tt('auth.email')}
         </label>
         <input
           type="email"
           id="email"
           bind:value={email}
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="Enter email"
+          placeholder={tt('auth.email')}
           autocomplete="email"
         />
       </div>
 
       <div class="mb-4">
         <label for="name" class="block text-gray-700 text-sm font-bold mb-2">
-          Full Name
+          {tt('auth.name')}
         </label>
         <input
           type="text"
           id="name"
           bind:value={name}
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="Enter your name"
+          placeholder={tt('auth.name')}
           autocomplete="name"
         />
       </div>
 
       <div class="mb-4">
         <label for="password" class="block text-gray-700 text-sm font-bold mb-2">
-          Password
+          {tt('auth.password')}
         </label>
         <input
           type="password"
           id="password"
           bind:value={password}
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="Enter password"
+          placeholder={tt('auth.password')}
           autocomplete="new-password"
         />
       </div>
 
       <div class="mb-6">
         <label for="confirmPassword" class="block text-gray-700 text-sm font-bold mb-2">
-          Confirm Password
+          {tt('auth.confirm_password')}
         </label>
         <input
           type="password"
           id="confirmPassword"
           bind:value={confirmPassword}
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline {confirmPassword && !passwordsMatch ? 'border-red-500' : ''}"
-          placeholder="Confirm password"
+          placeholder={tt('auth.confirm_password')}
           autocomplete="new-password"
         />
         {#if confirmPassword && !passwordsMatch}
-          <p class="text-red-500 text-xs mt-1">Passwords do not match</p>
+          <p class="text-red-500 text-xs mt-1">{tt('errors.passwords_no_match')}</p>
         {/if}
       </div>
 
@@ -142,12 +146,12 @@
         disabled={loading || !isValid}
         class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
       >
-        {loading ? 'Creating account...' : 'Sign Up'}
+        {loading ? t('auth.creating_account') : t('auth.signup_button')}
       </button>
     </form>
 
     <p class="text-gray-500 text-xs text-center mt-4">
-      Already have an account? <a href="/login" class="text-blue-600 hover:text-blue-800">Login</a>
+      {tt('auth.have_account')} <a href="/login" class="text-blue-600 hover:text-blue-800">{tt('auth.login_here')}</a>
     </p>
   </div>
 </div>

@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { ownersAPI, type Owner } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
+  import { t, currentLocale } from '$lib/i18n';
+  
+  // Reactive translation helper
+  const tt = (key: string) => t(key, undefined, $currentLocale);
 
-	let owners = $state<Owner[]>([]);
+  let owners = $state<Owner[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
@@ -22,7 +26,7 @@
 		try {
 			owners = await ownersAPI.getAll();
 		} catch (err: any) {
-			error = err.message || 'Failed to load owners';
+			error = err.message || t('errors.failed_to_load');
 		} finally {
 			loading = false;
 		}
@@ -57,10 +61,10 @@
 		try {
 			if (editingOwner) {
 				await ownersAPI.update(editingOwner.id, formData);
-				notificationActions.success('Owner updated successfully');
+				notificationActions.success(t('owners.title') + ' ' + t('notifications.updated_successfully'));
 			} else {
 				await ownersAPI.create(formData);
-				notificationActions.success('Owner created successfully');
+				notificationActions.success(t('owners.title') + ' ' + t('notifications.created_successfully'));
 			}
 
 			showForm = false;
@@ -68,18 +72,18 @@
 			formData = { name: '', email: '', phone: '', address: '' };
 			await loadOwners();
 		} catch (err: any) {
-			notificationActions.error(err.message || 'Failed to save owner');
+			notificationActions.error(err.message || t('errors.failed_to_save'));
 		}
 	}
 
 	async function handleDelete(owner: Owner) {
-		if (confirm(`Are you sure you want to delete "${owner.name}"?`)) {
+		if (confirm(t('owners.delete_confirm').replace('"${owner.name}"', `"${owner.name}"`))) {
 			try {
 				await ownersAPI.delete(owner.id);
-				notificationActions.success('Owner deleted successfully');
+				notificationActions.success(t('owners.title') + ' ' + t('notifications.deleted_successfully'));
 				await loadOwners();
 			} catch (err: any) {
-				notificationActions.error(err.message || 'Failed to delete owner');
+				notificationActions.error(err.message || t('errors.failed_to_delete'));
 			}
 		}
 	}
@@ -91,14 +95,14 @@
 
 <div class="owners-page">
 	<div class="page-header">
-		<h1>Owners</h1>
-		<button class="btn btn-primary" onclick={openAddForm}>Add Owner</button>
+		<h1>{tt('owners.title')}</h1>
+		<button class="btn btn-primary" onclick={openAddForm}>{tt('owners.add_owner')}</button>
 	</div>
 
 	{#if loading}
 		<div class="loading-spinner">
 			<span class="spinner"></span>
-			Loading...
+			{tt('common.loading')}
 		</div>
 	{/if}
 
@@ -108,58 +112,58 @@
 
 	{#if showForm}
 		<div class="form-section">
-			<h3 class="form-title">{editingOwner ? 'Edit Owner' : 'Add New Owner'}</h3>
+			<h3 class="form-title">{editingOwner ? t('owners.edit_owner') : t('owners.add_new_owner')}</h3>
 			
 			<form onsubmit={handleFormSubmit}>
 				<div class="form-grid">
 					<div class="form-field">
-						<label for="name">Name <span class="required">*</span></label>
+						<label for="name">{tt('common.name')} <span class="required">*</span></label>
 						<input 
 							type="text" 
 							id="name" 
 							bind:value={formData.name} 
-							placeholder="Enter owner name"
+							placeholder={tt('owners.enter_owner_name')}
 							required 
 						/>
 					</div>
 
 					<div class="form-field">
-						<label for="email">Email</label>
+						<label for="email">{tt('common.email')}</label>
 						<input 
 							type="email" 
 							id="email" 
 							bind:value={formData.email} 
-							placeholder="Enter email address"
+							placeholder={tt('owners.enter_email_address')}
 						/>
 					</div>
 
 					<div class="form-field">
-						<label for="phone">Phone</label>
+						<label for="phone">{tt('common.phone')}</label>
 						<input 
 							type="tel" 
 							id="phone" 
 							bind:value={formData.phone} 
-							placeholder="Enter phone number"
+							placeholder={tt('owners.enter_phone_number')}
 						/>
 					</div>
 
 					<div class="form-field full-width">
-						<label for="address">Address</label>
+						<label for="address">{tt('common.address')}</label>
 						<input 
 							type="text" 
 							id="address" 
 							bind:value={formData.address} 
-							placeholder="Enter address"
+							placeholder={tt('owners.enter_address')}
 						/>
 					</div>
 				</div>
 
 				<div class="form-actions">
 					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
-						Cancel
+						{tt('common.cancel')}
 					</button>
 					<button type="submit" class="btn btn-primary">
-						{editingOwner ? 'Update' : 'Add'} Owner
+						{editingOwner ? t('common.update') : t('common.add')} {tt('owners.title')}
 					</button>
 				</div>
 			</form>
@@ -168,7 +172,7 @@
 
 	<div class="owners-grid">
 		{#if owners.length === 0}
-			<div class="empty-message">No owners found. Add one to get started.</div>
+			<div class="empty-message">{tt('owners.no_owners')}</div>
 		{:else}
 			{#each owners as owner}
 				<div class="owner-card">
@@ -184,10 +188,10 @@
 					{/if}
 					<div class="owner-actions">
 						<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(owner)}>
-							Edit
+							{tt('common.edit')}
 						</button>
 						<button class="btn btn-danger btn-sm" onclick={() => handleDelete(owner)}>
-							Delete
+							{tt('common.delete')}
 						</button>
 					</div>
 				</div>
