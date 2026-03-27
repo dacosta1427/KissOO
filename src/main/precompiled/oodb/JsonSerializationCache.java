@@ -1,8 +1,8 @@
 package oodb;
 
 import org.garret.perst.continuous.CVersion;
-import org.kissweb.json.JSONObject;
-import org.kissweb.json.JSONArray;
+import oodb.json.JSONObject;
+import oodb.json.JSONArray;
 import oodb.annotations.JsonIgnore;
 import oodb.annotations.JsonIncludeObject;
 
@@ -172,7 +172,7 @@ public class JsonSerializationCache {
             try {
                 Object value = json.get(key);
                 
-                if (value == null || value == JSONObject.NULL) {
+                if (value == null) {
                     field.setter.invoke(entity, (Object) null);
                     continue;
                 }

@@ -82,6 +82,12 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.8 | Cleaners API Consolidation | ✅ Completed | 99efcc78 | Consolidated cleaning API in Cleaning.ts, fixed imports, added TypeScript types |
 | 4.0.9 | Owner Entity Backend | ✅ Completed | - | Created Owner.java, OwnerManager.java, added Owner CRUD to Cleaning.groovy |
 | 4.0.10 | Owner Frontend Integration | ✅ Completed | - | Added Owner type, ownersAPI, functional owners page |
+| 4.0.11 | Update Perst to 5.1.0 | ✅ Completed | - | Copied perst-dcg-5.1.0.jar from Maven repo, removed 4.0.1 |
+| 4.0.12 | JSON Serialization System | ✅ Completed | - | Created JsonSerializationCache, minimal JSON lib (oodb.json), annotations |
+| 4.0.13 | OO Reference Refactoring | ✅ Completed | - | Fixed House.ownerId→Owner, Booking.houseId→House, Schedule cleanerId/bookingId refs |
+| 4.0.14 | CostProfile Feature | ✅ Completed | - | Full implementation: entity, manager, service, backend CRUD, frontend page |
+| 4.0.15 | Cost Calculation | ✅ Completed | - | CostService with breakdown, frontend API integration |
+| 4.0.16 | Houses Enhancement | ✅ Completed | - | Added surface_m2, floors, bedrooms, bathrooms, luxury_level, cost_profile |
 | 4.0.11 | House Owner Association | ✅ Completed | - | Added owner_id to House, updated houses page with owner dropdown |
 | 4.0.12 | New Owner Modal | ✅ Completed | - | Added "+ New owner" option in house form dropdown that opens modal |
 | 4.0.13 | Schedule Form Fixes | ✅ Completed | - | Fixed status to include 'scheduled', 24H time, yyyymmdd date format |

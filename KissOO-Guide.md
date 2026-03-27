@@ -34,7 +34,7 @@ KissOO is a fork of the Kiss web framework with **Perst OODBMS** integration. It
 | Layer | Technology | Version |
 |-------|------------|---------|
 | **Language** | Java, Groovy | 17+, 3.x |
-| **Database** | Perst OODBMS | 4.0.0 (CDatabase) |
+| **Database** | Perst OODBMS | 5.1.0 (CDatabase) |
 | **Search** | Lucene | Integrated |
 | **Frontend** | Svelte + Tailwind | 5.x, 3.4.x |
 | **Server** | Tomcat | 11.x |
