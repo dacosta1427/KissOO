@@ -38,6 +38,12 @@ public class Schedule extends CVersion {
         this.notes = notes;
     }
     
+    // Convenience constructor without notes
+    public Schedule(int cleanerId, int bookingId, String scheduleDate, 
+                    String startTime, String endTime) {
+        this(cleanerId, bookingId, scheduleDate, startTime, endTime, null);
+    }
+    
     // Getters and setters
     // Cleaner - proper OO reference
     public Cleaner getCleaner() { return cleaner; }

@@ -24,7 +24,7 @@ public class Booking extends CVersion {
     private String guestEmail;
     private String guestPhone;
     private String notes;
-    private Integer dogsCount = 0;
+    private int dogsCount = 0;
     
     @Indexable
     private String status;  // pending, confirmed, cancelled
@@ -96,8 +96,8 @@ public class Booking extends CVersion {
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
     
-    public Integer getDogsCount() { return dogsCount; }
-    public void setDogsCount(Integer dogsCount) { this.dogsCount = dogsCount; }
+    public int getDogsCount() { return dogsCount; }
+    public void setDogsCount(int dogsCount) { this.dogsCount = dogsCount; }
     
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

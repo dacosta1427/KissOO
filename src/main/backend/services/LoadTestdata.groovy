@@ -75,7 +75,7 @@ class LoadTestdata {
                 ]
                 data.each { d ->
                     def owner = owners[d.ownerIdx]
-                    def house = new House(d.name, "Address TBD", "Description TBD", owner, true)
+                    def house = new House(d.name, "Address TBD", "Description TBD", (long)owner.getOid(), true)
                     def tc = PerstStorageManager.createContainer()
                     tc.addInsert(house)
                     PerstStorageManager.store(tc)
@@ -133,7 +133,7 @@ class LoadTestdata {
                 if (cleaners && bookings) {
                     5.times { i ->
                         if (i < bookings.size()) {
-                            def schedule = new Schedule(cleaners[0].getOid(), bookings[i].getOid(), "2024040${i+1}", "09:00", "12:00")
+                            def schedule = new Schedule((int)cleaners[0].getOid(), (int)bookings[i].getOid(), "2024040${i+1}".toString(), "09:00", "12:00")
                             def tc = PerstStorageManager.createContainer()
                             tc.addInsert(schedule)
                             PerstStorageManager.store(tc)
