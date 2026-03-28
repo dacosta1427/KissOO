@@ -275,6 +275,11 @@ export const housesAPI = {
   
   delete: async (id: number): Promise<void> => {
     await callCleaningService('deleteHouse', { id }, 'Delete house');
+  },
+  
+  getByOwner: async (ownerId: number): Promise<House[]> => {
+    const res = await callCleaningService('getHousesByOwner', { owner_id: ownerId }, 'Load houses by owner');
+    return res.data || [];
   }
 };
 

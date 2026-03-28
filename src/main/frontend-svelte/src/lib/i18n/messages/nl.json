@@ -186,7 +186,10 @@
 		"enter_email_address": "Voer e-mailadres in",
 		"enter_phone_number": "Voer telefoonnummer in",
 		"enter_address": "Voer adres in",
-		"no_owners": "Geen eigenaren gevonden. Voeg er een toe om te beginnen."
+		"no_owners": "Geen eigenaren gevonden. Voeg er een toe om te beginnen.",
+		"view_houses": "Huizen",
+		"houses": "Huizen",
+		"no_houses": "Geen huizen gevonden voor deze eigenaar."
 	},
 	"users": {
 		"title": "Gebruikersbeheer",

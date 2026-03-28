@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ownersAPI, type Owner } from '$lib/api/Cleaning';
+	import { ownersAPI, housesAPI, type Owner, type House } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
   import { t, currentLocale } from '$lib/i18n';
   
@@ -7,10 +7,12 @@
   const tt = (key: string) => t(key, undefined, $currentLocale);
 
   let owners = $state<Owner[]>([]);
-	let loading = $state(false);
-	let error = $state<string | null>(null);
-	let showForm = $state(false);
-	let editingOwner = $state<Owner | null>(null);
+  let ownerHouses = $state<House[]>([]);
+  let loading = $state(false);
+  let error = $state<string | null>(null);
+  let showForm = $state(false);
+  let editingOwner = $state<Owner | null>(null);
+  let selectedOwner = $state<Owner | null>(null);
 
 	let formData = $state({
 		name: '',
@@ -30,6 +32,21 @@
 		} finally {
 			loading = false;
 		}
+	}
+	
+	async function viewOwnerHouses(owner: Owner) {
+		selectedOwner = owner;
+		try {
+			ownerHouses = await housesAPI.getByOwner(owner.id);
+		} catch (err: any) {
+			ownerHouses = [];
+			notificationActions.error(t('errors.failed_to_load'));
+		}
+	}
+	
+	function closeOwnerDetail() {
+		selectedOwner = null;
+		ownerHouses = [];
 	}
 
 	function openAddForm() {
@@ -186,18 +203,53 @@
 					{#if owner.address}
 						<p class="owner-address">{owner.address}</p>
 					{/if}
-					<div class="owner-actions">
-						<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(owner)}>
-							{tt('common.edit')}
-						</button>
-						<button class="btn btn-danger btn-sm" onclick={() => handleDelete(owner)}>
-							{tt('common.delete')}
-						</button>
-					</div>
+				<div class="owner-actions">
+					<button class="btn btn-primary btn-sm" onclick={() => viewOwnerHouses(owner)}>
+						{tt('owners.view_houses')}
+					</button>
+					<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(owner)}>
+						{tt('common.edit')}
+					</button>
+					<button class="btn btn-danger btn-sm" onclick={() => handleDelete(owner)}>
+						{tt('common.delete')}
+					</button>
+				</div>
 				</div>
 			{/each}
 		{/if}
 	</div>
+	
+	{#if selectedOwner}
+		<div class="modal-overlay" onclick={closeOwnerDetail}>
+			<div class="modal-content" onclick={(e) => e.stopPropagation()}>
+				<div class="modal-header">
+					<h2>{selectedOwner.name} - {tt('owners.houses')}</h2>
+					<button class="close-btn" onclick={closeOwnerDetail}>&times;</button>
+				</div>
+				<div class="modal-body">
+					{#if ownerHouses.length === 0}
+						<div class="empty-message">{tt('owners.no_houses')}</div>
+					{:else}
+						<div class="houses-list">
+							{#each ownerHouses as house}
+								<div class="house-item">
+									<div class="house-info">
+										<h4>{house.name}</h4>
+										{#if house.address}
+											<p>{house.address}</p>
+										{/if}
+									</div>
+									<span class="house-status" class:active={house.active} class:inactive={!house.active}>
+										{house.active ? tt('common.active') : tt('common.inactive')}
+									</span>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -412,5 +464,102 @@
 			gap: 1rem;
 			align-items: stretch;
 		}
+	}
+	
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 100;
+	}
+	
+	.modal-content {
+		background: white;
+		border-radius: 12px;
+		width: 90%;
+		max-width: 600px;
+		max-height: 80vh;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+	}
+	
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1rem 1.5rem;
+		border-bottom: 1px solid #e5e7eb;
+	}
+	
+	.modal-header h2 {
+		margin: 0;
+		font-size: 1.25rem;
+	}
+	
+	.close-btn {
+		background: none;
+		border: none;
+		font-size: 1.5rem;
+		cursor: pointer;
+		color: #6b7280;
+		padding: 0;
+		line-height: 1;
+	}
+	
+	.modal-body {
+		padding: 1.5rem;
+		overflow-y: auto;
+	}
+	
+	.houses-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	
+	.house-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1rem;
+		background: #f9fafb;
+		border-radius: 8px;
+		border: 1px solid #e5e7eb;
+	}
+	
+	.house-info h4 {
+		margin: 0 0 0.25rem 0;
+		font-size: 1rem;
+	}
+	
+	.house-info p {
+		margin: 0;
+		color: #6b7280;
+		font-size: 0.875rem;
+	}
+	
+	.house-status {
+		padding: 0.25rem 0.75rem;
+		border-radius: 9999px;
+		font-size: 0.75rem;
+		font-weight: 500;
+	}
+	
+	.house-status.active {
+		background: #d1fae5;
+		color: #065f46;
+	}
+	
+	.house-status.inactive {
+		background: #fee2e2;
+		color: #991b1b;
 	}
 </style>

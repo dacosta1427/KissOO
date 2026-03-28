@@ -186,7 +186,10 @@
 		"enter_email_address": "Geben Sie die E-Mail-Adresse ein",
 		"enter_phone_number": "Geben Sie die Telefonnummer ein",
 		"enter_address": "Geben Sie die Adresse ein",
-		"no_owners": "Keine Eigentümer gefunden. Fügen Sie einen hinzu, um zu beginnen."
+		"no_owners": "Keine Eigentümer gefunden. Fügen Sie einen hinzu, um zu beginnen.",
+		"view_houses": "Häuser",
+		"houses": "Häuser",
+		"no_houses": "Keine Häuser für diesen Eigentümer gefunden."
 	},
 	"users": {
 		"title": "Benutzerverwaltung",

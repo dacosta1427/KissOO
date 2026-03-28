@@ -711,6 +711,34 @@ class Cleaning {
         }
     }
     
+    void getHousesByOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            long ownerId = injson.getLong("owner_id")
+            Collection<House> houses = PerstStorageManager.getAll(House.class)
+            JSONArray rows = new JSONArray()
+            
+            for (House house : houses) {
+                if (house.getOwnerOid() == ownerId) {
+                    JSONObject row = new JSONObject()
+                    row.put("id", house.getOid())
+                    row.put("name", house.getName())
+                    row.put("address", house.getAddress())
+                    row.put("description", house.getDescription())
+                    row.put("owner", house.getOwnerOid())
+                    row.put("active", house.isActive())
+                    row.put("check_in_time", house.getCheckInTime())
+                    row.put("check_out_time", house.getCheckOutTime())
+                    rows.put(row)
+                }
+            }
+            
+            outjson.put("data", rows)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
     void createHouse(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Using PerstStorageManager directly
