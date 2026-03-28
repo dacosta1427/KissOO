@@ -283,6 +283,21 @@ export const housesAPI = {
   }
 };
 
+// Bookings API additions for house schedules
+export const bookingsByHouseAPI = {
+  getByHouse: async (houseId: number): Promise<Booking[]> => {
+    const res = await callCleaningService('getBookingsByHouse', { houseId }, 'Load bookings by house');
+    return res.data || [];
+  }
+};
+
+export const schedulesByBookingAPI = {
+  getByBooking: async (bookingId: number): Promise<Schedule[]> => {
+    const res = await callCleaningService('getSchedulesByBooking', { bookingId }, 'Load schedules by booking');
+    return res.data || [];
+  }
+};
+
 // Owners API
 export const ownersAPI = {
   getAll: async (): Promise<Owner[]> => {
