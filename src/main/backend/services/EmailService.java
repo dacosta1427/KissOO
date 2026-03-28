@@ -1,6 +1,6 @@
 package services;
 
-import org.kissweb.json.JSONObject;
+import org.garret.perst.json.JSONObject;
 import org.kissweb.database.Connection;
 import java.util.Properties;
 import javax.mail.*;

@@ -9,7 +9,7 @@ The following JARs must be present in `libs/`:
   - Workaround: See "Disabling Lisp" below
 
 ### Optional Dependencies
-- Perst OODBMS: `perst-dcg-4.0.0.jar` (included in libs)
+- Perst OODBMS: `perst-dcg-5.1.0.jar` (included in libs)
 
 ## Disabling Lisp Services
 
@@ -93,3 +93,73 @@ Note: `.svelte-kit/` is auto-generated and should not be committed.
 3. **Overlooking response format**: Backend responses must include `_Success` field; frontend expects it for error handling.
 4. **Incomplete testing**: Test both success and failure paths; verify data persistence in database.
 5. **Assuming hot reload works**: After modifying Groovy services, verify they are actually reloaded (check logs).
+
+## Perst 5.1.0 NonSqlConnection Integration
+
+### How It Works
+When Perst-only mode is enabled (no SQL database), the framework automatically passes a `PerstConnection` instance as the `db` parameter to all services.
+
+**Architecture:**
+```
+KissInit.groovy:
+  PerstStorageManager.initialize()
+  PerstConnection = new PerstConnection()
+  MainServlet.putEnvironment("NonSqlConnection", PerstConnection)
+
+ProcessServlet.java:
+  if (!hasSqlDatabase):
+    DB = MainServlet.getEnvironment("NonSqlConnection")
+
+Services receive:
+  void method(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet)
+```
+
+### Using the db Parameter
+```groovy
+void myService(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+    // db is a PerstConnection when Perst-only mode
+    if (db instanceof PerstConnection) {
+        Collection<Cleaner> cleaners = db.getAll(Cleaner.class)
+        Cleaner c = db.getByOid(Cleaner.class, oid)
+        def tc = db.perstCreateContainer()
+        tc.addInsert(cleaner)
+        db.perstStore(tc)
+    }
+}
+```
+
+### Alternative: Using PerstStorageManager
+```groovy
+import oodb.PerstStorageManager
+
+void myService(...) {
+    if (!PerstStorageManager.isAvailable()) {
+        outjson.put("error", "Perst not available")
+        return
+    }
+    Collection<Cleaner> cleaners = PerstStorageManager.getAll(Cleaner.class)
+    Cleaner c = PerstStorageManager.getByOid(Cleaner.class, oid)
+    def tc = PerstStorageManager.createContainer()
+    tc.addInsert(cleaner)
+    PerstStorageManager.store(tc)
+}
+```
+
+### Critical Fixes Applied
+1. **KissInit.groovy**: Split initialization into two steps to ensure PerstConnection is registered even if Perst was already initialized
+2. **PerstConnection.java**: Override commit(), rollback(), close() as no-ops because PerstConnection is reused across requests
+3. **Login.groovy**: Accept PerstConnection as parameter type (not Connection) for proper method matching
+
+### PerstService.java (Java)
+Java services can use `PerstStorageManager.isAvailable()` and other static methods directly.
+
+### Login JSON Format
+Core Login method (empty class name):
+```json
+{"_class":"","_method":"Login","username":"admin","password":"admin"}
+```
+
+User services:
+```json
+{"_class":"services.LoadTestdata","_method":"load","_uuid":"session-uuid"}
+```

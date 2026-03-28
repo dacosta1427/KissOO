@@ -4,29 +4,20 @@ import org.kissweb.json.JSONArray
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import org.kissweb.restServer.MainServlet
+import oodb.PerstStorageManager
 import mycompany.domain.PerstUser
 import mycompany.domain.Owner
-import oodb.PerstConnection
 
 /**
  * Users service for CRUD operations on PerstUser.
  * 
- * Uses PerstConnection for Perst OODBMS operations.
+ * Uses PerstStorageManager for Perst OODBMS operations.
  */
 class Users {
 
-    /**
-     * Get PerstConnection from environment if available.
-     */
-    private PerstConnection getPerst() {
-        return (PerstConnection) MainServlet.getEnvironment("PerstConnection")
-    }
-
     void getRecords(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
-            Collection<PerstUser> users = perst.getAll(PerstUser)
+            Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
             JSONArray rows = new JSONArray()
             
             for (PerstUser user : users) {
@@ -46,7 +37,7 @@ class Users {
 
     void addRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             String userName = injson.getString("userName")
             String password = injson.getString("userPassword")
             String email = injson.getString("email", "")
@@ -56,15 +47,15 @@ class Users {
             boolean requireVerification = injson.getBoolean("requireVerification", false)
             
             // Generate unique userId
-            Collection<PerstUser> existingUsers = perst.getAll(PerstUser)
+            Collection<PerstUser> existingUsers = PerstStorageManager.getAll(PerstUser.class)
             int maxUserId = existingUsers.collect { it.getUserId() }.max() ?: 0
             int newUserId = maxUserId + 1
             
             // Create User first
             PerstUser user = new PerstUser(userName, password, newUserId)
-            def userTc = perst.perstCreateContainer()
+            def userTc = PerstStorageManager.createContainer()
             userTc.addInsert(user)
-            if (!perst.perstStore(userTc)) {
+            if (!PerstStorageManager.store(userTc)) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Failed to create user")
                 return
@@ -73,9 +64,9 @@ class Users {
             // Create Owner with User reference
             Owner owner = new Owner(name, email, phone, address, true)
             owner.setPerstUser(user)
-            def ownerTc = perst.perstCreateContainer()
+            def ownerTc = PerstStorageManager.createContainer()
             ownerTc.addInsert(owner)
-            if (!perst.perstStore(ownerTc)) {
+            if (!PerstStorageManager.store(ownerTc)) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Failed to create owner")
                 return
@@ -98,9 +89,9 @@ class Users {
                 user.setEmailVerified(true)
             }
             
-            def updateTc = perst.perstCreateContainer()
+            def updateTc = PerstStorageManager.createContainer()
             updateTc.addUpdate(user)
-            perst.perstStore(updateTc)
+            PerstStorageManager.store(updateTc)
             
             outjson.put("_Success", true)
             outjson.put("success", true)
@@ -121,9 +112,9 @@ class Users {
 
     void updateRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            PerstUser userToUpdate = perst.getByOid(PerstUser, oid)
+            PerstUser userToUpdate = PerstStorageManager.getByOid(PerstUser.class, oid)
             
             if (userToUpdate == null) {
                 outjson.put("_Success", false)
@@ -135,9 +126,9 @@ class Users {
             userToUpdate.setPassword(injson.getString("userPassword"))
             userToUpdate.setActive(injson.getString("userActive") == "Y")
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addUpdate(userToUpdate)
-            perst.perstStore(tc)
+            PerstStorageManager.store(tc)
             
             outjson.put("_Success", true)
             outjson.put("success", true)
@@ -148,9 +139,9 @@ class Users {
 
     void deleteRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            PerstUser userToDelete = perst.getByOid(PerstUser, oid)
+            PerstUser userToDelete = PerstStorageManager.getByOid(PerstUser.class, oid)
             
             if (userToDelete == null) {
                 outjson.put("_Success", false)
@@ -158,9 +149,9 @@ class Users {
                 return
             }
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addDelete(userToDelete)
-            perst.perstStore(tc)
+            PerstStorageManager.store(tc)
             
             outjson.put("_Success", true)
             outjson.put("success", true)
@@ -175,7 +166,7 @@ class Users {
      */
     void updateLanguage(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             String language = injson.getString("preferredLanguage")
             
@@ -186,7 +177,7 @@ class Users {
                 return
             }
             
-            PerstUser userToUpdate = perst.getByOid(PerstUser, oid)
+            PerstUser userToUpdate = PerstStorageManager.getByOid(PerstUser.class, oid)
             
             if (userToUpdate == null) {
                 outjson.put("_Success", false)
@@ -196,9 +187,9 @@ class Users {
             
             userToUpdate.setPreferredLanguage(language)
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addUpdate(userToUpdate)
-            perst.perstStore(tc)
+            PerstStorageManager.store(tc)
             
             outjson.put("_Success", true)
             outjson.put("success", true)
@@ -214,7 +205,7 @@ class Users {
      */
     void verifyEmail(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             String token = injson.getString("token")
             
             if (!token) {
@@ -224,7 +215,7 @@ class Users {
             }
             
             // Find user with this verification token
-            Collection<PerstUser> users = perst.getAll(PerstUser)
+            Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
             PerstUser userToVerify = null
             
             for (PerstUser user : users) {
@@ -242,9 +233,9 @@ class Users {
             
             // Verify the email
             if (userToVerify.verifyEmail(token)) {
-                def tc = perst.perstCreateContainer()
+                def tc = PerstStorageManager.createContainer()
                 tc.addUpdate(userToVerify)
-                perst.perstStore(tc)
+                PerstStorageManager.store(tc)
                 
                 outjson.put("_Success", true)
                 outjson.put("success", true)
@@ -266,7 +257,7 @@ class Users {
      */
     void resendVerification(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             String email = injson.getString("email")
             
             if (!email) {
@@ -276,7 +267,7 @@ class Users {
             }
             
             // Find user by email
-            Collection<PerstUser> users = perst.getAll(PerstUser)
+            Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
             PerstUser user = null
             
             for (PerstUser u : users) {
@@ -301,9 +292,9 @@ class Users {
             
             // Generate new verification token
             user.generateVerificationToken()
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addUpdate(user)
-            perst.perstStore(tc)
+            PerstStorageManager.store(tc)
             
             // TODO: Send verification email via EmailService when SMTP is configured
             // For now, just return success

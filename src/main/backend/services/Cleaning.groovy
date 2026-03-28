@@ -19,29 +19,21 @@ import mycompany.domain.Owner
 import mycompany.domain.CostProfile
 import mycompany.database.PerstUserManager
 import mycompany.domain.PerstUser
-import oodb.PerstConnection
+import oodb.PerstStorageManager
 import services.CostService
 
 /**
  * Cleaning service for CRUD operations on cleaning scheduler entities.
  * 
- * Uses PerstConnection for Perst OODBMS operations when available.
+ * Uses PerstStorageManager for Perst OODBMS operations.
  */
 class Cleaning {
-
-    /**
-     * Get PerstConnection from environment if available.
-     */
-    private PerstConnection getPerst() {
-        return (PerstConnection) MainServlet.getEnvironment("PerstConnection")
-    }
 
     // ==================== CLEANERS ====================
     
     void getCleaners(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
-            Collection<Cleaner> cleaners = perst.getAll(Cleaner)
+            Collection<Cleaner> cleaners = PerstStorageManager.getAll(Cleaner.class)
             JSONArray rows = new JSONArray()
             
             for (Cleaner cleaner : cleaners) {
@@ -64,9 +56,8 @@ class Cleaning {
     
     void getCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
             long oid = injson.getLong("id")
-            Cleaner cleaner = perst.getByOid(Cleaner, oid)
+            Cleaner cleaner = PerstStorageManager.getByOid(Cleaner.class, oid)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Cleaner not found")
@@ -88,7 +79,7 @@ class Cleaning {
     
     void createCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
             String name = data.getString("name")
             String phone = data.getString("phone", "")
@@ -97,9 +88,9 @@ class Cleaning {
             boolean active = data.getBoolean("active", true)
             
             Cleaner cleaner = new Cleaner(name, phone, email, address, active)
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addInsert(cleaner)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create cleaner")
                 return
@@ -120,10 +111,10 @@ class Cleaning {
     
     void updateCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            Cleaner cleaner = perst.getByOid(Cleaner, oid)
+            Cleaner cleaner = PerstStorageManager.getByOid(Cleaner.class, oid)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Cleaner not found")
@@ -135,9 +126,9 @@ class Cleaning {
             if (data.has("address")) cleaner.setAddress(data.getString("address"))
             if (data.has("active")) cleaner.setActive(data.getBoolean("active"))
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addUpdate(cleaner)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to update cleaner")
                 return
@@ -158,17 +149,17 @@ class Cleaning {
     
     void deleteCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Cleaner cleaner = perst.getByOid(Cleaner, oid)
+            Cleaner cleaner = PerstStorageManager.getByOid(Cleaner.class, oid)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Cleaner not found")
                 return
             }
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addDelete(cleaner)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to delete cleaner")
                 return
@@ -184,8 +175,8 @@ class Cleaning {
     
     void getBookings(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
-            Collection<Booking> bookings = perst.getAll(Booking)
+            // Using PerstStorageManager directly
+            Collection<Booking> bookings = PerstStorageManager.getAll(Booking.class)
             JSONArray rows = new JSONArray()
             
             for (Booking booking : bookings) {
@@ -212,9 +203,9 @@ class Cleaning {
     
     void getBooking(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Booking booking = perst.getByOid(Booking, oid)
+            Booking booking = PerstStorageManager.getByOid(Booking.class, oid)
             if (booking == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Booking not found")
@@ -240,7 +231,7 @@ class Cleaning {
     
     void createBooking(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
             int houseId = data.getInt("house_id")
             String checkInDate = data.getString("check_in_date")
@@ -253,9 +244,9 @@ class Cleaning {
             
             Booking booking = new Booking(houseId, checkInDate, checkOutDate,
                     guestName, guestEmail, guestPhone, notes, dogsCount)
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addInsert(booking)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create booking")
                 return
@@ -280,10 +271,10 @@ class Cleaning {
     
     void updateBooking(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            Booking booking = perst.getByOid(Booking, oid)
+            Booking booking = PerstStorageManager.getByOid(Booking.class, oid)
             if (booking == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Booking not found")
@@ -299,9 +290,9 @@ class Cleaning {
             if (data.has("dogs_count")) booking.setDogsCount(data.getInt("dogs_count"))
             if (data.has("status")) booking.setStatus(data.getString("status"))
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addUpdate(booking)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to update booking")
                 return
@@ -326,17 +317,17 @@ class Cleaning {
     
     void deleteBooking(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Booking booking = perst.getByOid(Booking, oid)
+            Booking booking = PerstStorageManager.getByOid(Booking.class, oid)
             if (booking == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Booking not found")
                 return
             }
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addDelete(booking)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to delete booking")
                 return
@@ -350,10 +341,10 @@ class Cleaning {
     
     void getBookingsByHouse(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             int houseId = injson.getInt("houseId")
             // Filter bookings by house_id
-            Collection<Booking> allBookings = perst.getAll(Booking)
+            Collection<Booking> allBookings = PerstStorageManager.getAll(Booking.class)
             Collection<Booking> bookings = allBookings.findAll { it.getHouseId() == houseId }
             JSONArray rows = new JSONArray()
             for (Booking booking : bookings) {
@@ -379,11 +370,11 @@ class Cleaning {
     
     void getBookingsByDateRange(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             String startDate = injson.getString("startDate")
             String endDate = injson.getString("endDate")
             // Filter bookings by date range
-            Collection<Booking> allBookings = perst.getAll(Booking)
+            Collection<Booking> allBookings = PerstStorageManager.getAll(Booking.class)
             Collection<Booking> bookings = allBookings.findAll { 
                 it.getCheckInDate() >= startDate && it.getCheckInDate() <= endDate 
             }
@@ -413,8 +404,8 @@ class Cleaning {
     
     void getSchedules(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
-            Collection<Schedule> schedules = perst.getAll(Schedule)
+            // Using PerstStorageManager directly
+            Collection<Schedule> schedules = PerstStorageManager.getAll(Schedule.class)
             JSONArray rows = new JSONArray()
             
             for (Schedule schedule : schedules) {
@@ -439,9 +430,9 @@ class Cleaning {
     
     void getSchedule(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Schedule schedule = perst.getByOid(Schedule, oid)
+            Schedule schedule = PerstStorageManager.getByOid(Schedule.class, oid)
             if (schedule == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Schedule not found")
@@ -465,7 +456,7 @@ class Cleaning {
     
     void createSchedule(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
             int cleanerId = data.getInt("cleaner_id")
             int bookingId = data.getInt("booking_id")
@@ -481,9 +472,9 @@ class Cleaning {
             def schedule = new Schedule(cleanerId, bookingId, date, startTime, endTime, notes)
             schedule.setStatus(status)
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addInsert(schedule)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to save schedule")
                 return
@@ -507,10 +498,10 @@ class Cleaning {
     
     void updateSchedule(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            Schedule schedule = perst.getByOid(Schedule, oid)
+            Schedule schedule = PerstStorageManager.getByOid(Schedule.class, oid)
             if (schedule == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Schedule not found")
@@ -524,9 +515,9 @@ class Cleaning {
             if (data.has("notes")) schedule.setNotes(data.getString("notes"))
             if (data.has("status")) schedule.setStatus(data.getString("status"))
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addUpdate(schedule)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to update schedule")
                 return
@@ -549,17 +540,17 @@ class Cleaning {
     
     void deleteSchedule(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Schedule schedule = perst.getByOid(Schedule, oid)
+            Schedule schedule = PerstStorageManager.getByOid(Schedule.class, oid)
             if (schedule == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Schedule not found")
                 return
             }
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addDelete(schedule)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to delete schedule")
                 return
@@ -573,9 +564,9 @@ class Cleaning {
     
     void getSchedulesByCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             int cleanerId = injson.getInt("cleanerId")
-            Collection<Schedule> allSchedules = perst.getAll(Schedule)
+            Collection<Schedule> allSchedules = PerstStorageManager.getAll(Schedule.class)
             Collection<Schedule> schedules = allSchedules.findAll { it.getCleanerId() == cleanerId }
             JSONArray rows = new JSONArray()
             for (Schedule schedule : schedules) {
@@ -599,9 +590,9 @@ class Cleaning {
     
     void getSchedulesByBooking(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             int bookingId = injson.getInt("bookingId")
-            Collection<Schedule> allSchedules = perst.getAll(Schedule)
+            Collection<Schedule> allSchedules = PerstStorageManager.getAll(Schedule.class)
             Collection<Schedule> schedules = allSchedules.findAll { it.getBookingId() == bookingId }
             JSONArray rows = new JSONArray()
             for (Schedule schedule : schedules) {
@@ -625,10 +616,10 @@ class Cleaning {
     
     void getSchedulesByDateRange(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             String startDate = injson.getString("startDate")
             String endDate = injson.getString("endDate")
-            Collection<Schedule> allSchedules = perst.getAll(Schedule)
+            Collection<Schedule> allSchedules = PerstStorageManager.getAll(Schedule.class)
             Collection<Schedule> schedules = allSchedules.findAll { 
                 it.getScheduleDate() >= startDate && it.getScheduleDate() <= endDate 
             }
@@ -656,8 +647,8 @@ class Cleaning {
     
     void getHouses(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
-            Collection<House> houses = perst.getAll(House)
+            // Using PerstStorageManager directly
+            Collection<House> houses = PerstStorageManager.getAll(House.class)
             JSONArray rows = new JSONArray()
             
             for (House house : houses) {
@@ -689,9 +680,9 @@ class Cleaning {
     
     void getHouse(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            House house = perst.getByOid(House, oid)
+            House house = PerstStorageManager.getByOid(House.class, oid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
@@ -722,7 +713,7 @@ class Cleaning {
     
     void createHouse(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
             String name = data.getString("name")
             String address = data.getString("address", "")
@@ -738,14 +729,14 @@ class Cleaning {
             // Set Owner from OID (OO reference)
             long ownerOid = data.getLong("owner", 0)
             if (ownerOid > 0) {
-                Owner owner = perst.getByOid(Owner, ownerOid)
+                Owner owner = PerstStorageManager.getByOid(Owner.class, ownerOid)
                 house.setOwner(owner)
             }
             
             // Set CostProfile from OID (OO reference)
             long costProfileOid = data.getLong("cost_profile", 0)
             if (costProfileOid > 0) {
-                CostProfile costProfile = perst.getByOid(CostProfile, costProfileOid)
+                CostProfile costProfile = PerstStorageManager.getByOid(CostProfile.class, costProfileOid)
                 house.setCostProfile(costProfile)
             }
             
@@ -756,9 +747,9 @@ class Cleaning {
             if (data.has("bathrooms")) house.setBathrooms(data.getInt("bathrooms"))
             if (data.has("luxury_level")) house.setLuxuryLevel(data.getString("luxury_level"))
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addInsert(house)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create house")
                 return
@@ -773,10 +764,10 @@ class Cleaning {
     
     void updateHouse(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            House house = perst.getByOid(House, oid)
+            House house = PerstStorageManager.getByOid(House.class, oid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
@@ -793,7 +784,7 @@ class Cleaning {
             if (data.has("owner")) {
                 long ownerOid = data.getLong("owner")
                 if (ownerOid > 0) {
-                    Owner owner = perst.getByOid(Owner, ownerOid)
+                    Owner owner = PerstStorageManager.getByOid(Owner.class, ownerOid)
                     house.setOwner(owner)
                 } else {
                     house.setOwner(null)
@@ -804,7 +795,7 @@ class Cleaning {
             if (data.has("cost_profile")) {
                 long costProfileOid = data.getLong("cost_profile")
                 if (costProfileOid > 0) {
-                    CostProfile costProfile = perst.getByOid(CostProfile, costProfileOid)
+                    CostProfile costProfile = PerstStorageManager.getByOid(CostProfile.class, costProfileOid)
                     house.setCostProfile(costProfile)
                 } else {
                     house.setCostProfile(null)
@@ -818,9 +809,9 @@ class Cleaning {
             if (data.has("bathrooms")) house.setBathrooms(data.getInt("bathrooms"))
             if (data.has("luxury_level")) house.setLuxuryLevel(data.getString("luxury_level"))
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addUpdate(house)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to update house")
                 return
@@ -835,17 +826,17 @@ class Cleaning {
     
     void deleteHouse(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            House house = perst.getByOid(House, oid)
+            House house = PerstStorageManager.getByOid(House.class, oid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
                 return
             }
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addDelete(house)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to delete house")
                 return
@@ -861,8 +852,8 @@ class Cleaning {
     
     void getOwners(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
-            Collection<Owner> owners = perst.getAll(Owner)
+            // Using PerstStorageManager directly
+            Collection<Owner> owners = PerstStorageManager.getAll(Owner.class)
             JSONArray rows = new JSONArray()
             
             for (Owner owner : owners) {
@@ -885,9 +876,9 @@ class Cleaning {
     
     void getOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Owner owner = perst.getByOid(Owner, oid)
+            Owner owner = PerstStorageManager.getByOid(Owner.class, oid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -909,9 +900,9 @@ class Cleaning {
     
     void getOwnerByUserId(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             int userId = injson.getInt("userId")
-            Collection<Owner> allOwners = perst.getAll(Owner)
+            Collection<Owner> allOwners = PerstStorageManager.getAll(Owner.class)
             Owner found = null
             for (Owner owner : allOwners) {
                 PerstUser user = owner.getPerstUser()
@@ -942,9 +933,9 @@ class Cleaning {
     
     void getUserByOwnerId(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long ownerId = injson.getLong("ownerId")
-            Owner owner = perst.getByOid(Owner, ownerId)
+            Owner owner = PerstStorageManager.getByOid(Owner.class, ownerId)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -973,7 +964,7 @@ class Cleaning {
     
     void createOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
             String name = data.getString("name")
             String email = data.getString("email", "")
@@ -982,9 +973,9 @@ class Cleaning {
             boolean active = data.getBoolean("active", true)
             
             Owner owner = new Owner(name, email, phone, address, active)
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addInsert(owner)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create owner")
                 return
@@ -1005,10 +996,10 @@ class Cleaning {
     
     void updateOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            Owner owner = perst.getByOid(Owner, oid)
+            Owner owner = PerstStorageManager.getByOid(Owner.class, oid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -1020,9 +1011,9 @@ class Cleaning {
             if (data.has("address")) owner.setAddress(data.getString("address"))
             if (data.has("active")) owner.setActive(data.getBoolean("active"))
             
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addUpdate(owner)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to update owner")
                 return
@@ -1043,17 +1034,17 @@ class Cleaning {
     
     void deleteOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Owner owner = perst.getByOid(Owner, oid)
+            Owner owner = PerstStorageManager.getByOid(Owner.class, oid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
                 return
             }
-            def tc = perst.perstCreateContainer()
+            def tc = PerstStorageManager.createContainer()
             tc.addDelete(owner)
-            if (!perst.perstStore(tc)) {
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to delete owner")
                 return
@@ -1069,7 +1060,7 @@ class Cleaning {
     
     void getCostProfiles(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             Collection<CostProfile> profiles = CostProfileManager.getAll()
             JSONArray rows = new JSONArray()
             
@@ -1103,7 +1094,7 @@ class Cleaning {
     
     void getCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             CostProfile profile = CostProfileManager.getByOid(oid)
             if (profile == null) {
@@ -1137,7 +1128,7 @@ class Cleaning {
     
     void createCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
             
             CostProfile profile = new CostProfile()
@@ -1159,7 +1150,7 @@ class Cleaning {
             // Set owner if provided
             long ownerOid = data.getLong("owner", 0)
             if (ownerOid > 0) {
-                Owner owner = perst.getByOid(Owner, ownerOid)
+                Owner owner = PerstStorageManager.getByOid(Owner.class, ownerOid)
                 profile.setOwner(owner)
             }
             
@@ -1179,7 +1170,7 @@ class Cleaning {
     
     void updateCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
             
@@ -1209,7 +1200,7 @@ class Cleaning {
             if (data.has("owner")) {
                 long ownerOid = data.getLong("owner")
                 if (ownerOid > 0) {
-                    Owner owner = perst.getByOid(Owner, ownerOid)
+                    Owner owner = PerstStorageManager.getByOid(Owner.class, ownerOid)
                     profile.setOwner(owner)
                 } else {
                     profile.setOwner(null)
@@ -1232,7 +1223,7 @@ class Cleaning {
     
     void deleteCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             CostProfile profile = CostProfileManager.getByOid(oid)
             if (profile == null) {
@@ -1254,7 +1245,7 @@ class Cleaning {
     
     void copyCostProfile(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long sourceOid = injson.getLong("source_id")
             String newName = injson.getString("name")
             long ownerOid = injson.getLong("owner", 0)
@@ -1266,7 +1257,7 @@ class Cleaning {
                 return
             }
             
-            Owner owner = ownerOid > 0 ? perst.getByOid(Owner, ownerOid) : null
+            Owner owner = ownerOid > 0 ? PerstStorageManager.getByOid(Owner.class, ownerOid) : null
             CostProfile copy = CostProfileManager.copyFrom(source, newName, owner)
             
             if (copy == null) {
@@ -1287,19 +1278,19 @@ class Cleaning {
     
     void calculateCost(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long houseOid = injson.getLong("house_id")
             Long bookingOid = injson.has("booking_id") ? injson.getLong("booking_id") : null
             Long profileOid = injson.has("cost_profile_id") ? injson.getLong("cost_profile_id") : null
             
-            House house = perst.getByOid(House, houseOid)
+            House house = PerstStorageManager.getByOid(House.class, houseOid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
                 return
             }
             
-            Booking booking = bookingOid ? perst.getByOid(Booking, bookingOid) : null
+            Booking booking = bookingOid ? PerstStorageManager.getByOid(Booking.class, bookingOid) : null
             CostProfile profile = profileOid ? CostProfileManager.getByOid(profileOid) : house.getCostProfile()
             
             CostService.CostResult result = CostService.calculateCost(house, booking, profile)
@@ -1328,10 +1319,10 @@ class Cleaning {
     
     void estimateHours(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            PerstConnection perst = getPerst()
+            // Using PerstStorageManager directly
             long houseOid = injson.getLong("house_id")
             
-            House house = perst.getByOid(House, houseOid)
+            House house = PerstStorageManager.getByOid(House.class, houseOid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")

@@ -94,18 +94,7 @@ public class Actor extends CVersion {
     public boolean belongsToGroup(String groupName) {
         return agreement != null && agreement.hasGroup(groupName);
     }
-    
-    public java.util.Map<String, Object> toJSON() {
-        java.util.Map<String, Object> json = new java.util.HashMap<>();
-        json.put("uuid", uuid);
-        json.put("name", name);
-        json.put("type", type);
-        json.put("active", active);
-        json.put("createdDate", createdDate);
-        json.put("hasAgreement", agreement != null);
-        return json;
-    }
-    
+
     @Override
     public String toString() {
         return "Actor{" +

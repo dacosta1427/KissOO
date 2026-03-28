@@ -5,7 +5,6 @@ import org.kissweb.restServer.UserData
 import oodb.PerstConfig
 import oodb.PerstStorageManager
 import oodb.PerstConnection
-import oodb.JsonSerializationCache
 import mycompany.database.PerstUserManager
 import mycompany.domain.PerstUser
 import mycompany.domain.Actor
@@ -43,33 +42,39 @@ class KissInit {
         println "[KissInit] init() - Checking Perst config..."
         println "[KissInit] init() - PerstEnabled=" + PerstConfig.getInstance().isPerstEnabled()
         
-        if (PerstConfig.getInstance().isPerstEnabled()) {
+        // Step 1: Initialize Perst if needed
+        if (PerstConfig.getInstance().isPerstEnabled() && !PerstStorageManager.isAvailable()) {
             println "[KissInit] init() - Initializing Perst NOW..."
             try {
                 PerstStorageManager.initialize()
                 println "[KissInit] init() - Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
-                
-                // Register PerstConnection as NonSqlConnection for services to use
-                if (PerstStorageManager.isAvailable()) {
-                    try {
-                        def perstConn = new PerstConnection()
-                        MainServlet.putEnvironment("NonSqlConnection", perstConn)
-                        MainServlet.putEnvironment("PerstConnection", perstConn)
-                        println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
-                    } catch (Exception e) {
-                        println "[KissInit] WARNING: Could not create PerstConnection: " + e.message
-                    }
+            } catch (Exception e) {
+                println "[KissInit] ERROR during Perst init: " + e.message
+                e.printStackTrace()
+            }
+        }
+        
+        // Step 2: Register PerstConnection ALWAYS when Perst is enabled and available
+        // This runs even if Perst was already initialized from a previous startup
+        if (PerstConfig.getInstance().isPerstEnabled() && PerstStorageManager.isAvailable()) {
+            try {
+                // Check if already registered
+                def existing = MainServlet.getEnvironment("NonSqlConnection")
+                if (existing == null) {
+                    def perstConn = new PerstConnection()
+                    MainServlet.putEnvironment("NonSqlConnection", perstConn)
+                    MainServlet.putEnvironment("PerstConnection", perstConn)
+                    println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
                     
-                    // Initialize default admin user if none exists
+                    // Initialize default admin user if none exists (only on first registration)
                     initDefaultUser()
                     indexPerstUsers()
                     indexActors()
-                    
-                    // Initialize JSON serialization cache for all entity classes
-                    initJsonSerialization()
+                } else {
+                    println "[KissInit] init() - NonSqlConnection already registered"
                 }
             } catch (Exception e) {
-                println "[KissInit] ERROR during Perst init: " + e.message
+                println "[KissInit] WARNING: Could not create PerstConnection: " + e.message
                 e.printStackTrace()
             }
         }
@@ -119,7 +124,7 @@ class KissInit {
             println "[KissInit] Checking Perst config: enabled=" + PerstConfig.getInstance().isPerstEnabled()
             println "[KissInit] Database path: " + PerstConfig.getInstance().getDatabasePath()
             
-            if (PerstConfig.getInstance().isPerstEnabled()) {
+            if (PerstConfig.getInstance().isPerstEnabled() && !PerstStorageManager.isAvailable()) {
                 println "[KissInit] Initializing Perst database via PerstStorageManager..."
                 PerstStorageManager.initialize()
                 println "[KissInit] Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
@@ -203,30 +208,4 @@ class KissInit {
         println "[KissInit] Skipping Actor indexing (not required for CDatabase)"
     }
     
-    /**
-     * Initialize JSON serialization cache for all entity classes.
-     * This enables automatic toJSON()/fromJSON() on all entities.
-     */
-    private static void initJsonSerialization() {
-        try {
-            println "[KissInit] Initializing JSON serialization cache..."
-            JsonSerializationCache.initialize(
-                Cleaner.class,
-                House.class,
-                Booking.class,
-                Schedule.class,
-                Owner.class,
-                CostProfile.class,
-                PerstUser.class,
-                Actor.class,
-                Agreement.class,
-                Phone.class,
-                Group.class,
-                BenchmarkData.class
-            )
-            println "[KissInit] JSON serialization cache initialized for 12 entity classes"
-        } catch (Exception e) {
-            println "[KissInit] WARNING: Could not initialize JSON serialization: " + e.message
-        }
-    }
 }

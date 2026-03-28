@@ -155,22 +155,7 @@ public class PerstUser extends CVersion {
     public Actor getActor() {
         return mycompany.database.ActorManager.getByUserId(userId);
     }
-    
-    public java.util.Map<String, Object> toJSON() {
-        java.util.Map<String, Object> json = new java.util.HashMap<>();
-        json.put("username", username);
-        json.put("active", active);
-        json.put("userId", userId);
-        json.put("ownerId", owner != null ? owner.getOid() : 0);
-        json.put("email", email);
-        json.put("firstName", firstName);
-        json.put("lastName", lastName);
-        json.put("createdDate", createdDate);
-        json.put("lastLoginDate", lastLoginDate);
-        json.put("preferredLanguage", preferredLanguage);
-        return json;
-    }
-    
+
     @Override
     public String toString() {
         return "PerstUser{" +

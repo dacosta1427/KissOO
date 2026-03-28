@@ -945,8 +945,15 @@ public class ProcessServlet implements Runnable {
     }
 
     private void newDatabaseConnection() throws SQLException {
-        if (!MainServlet.hasSqlDatabase())
+        if (!MainServlet.hasSqlDatabase()) {
+            // No SQL database - check for NonSqlConnection (e.g., PerstConnection)
+            Object nonSqlConn = MainServlet.getEnvironment("NonSqlConnection");
+            if (nonSqlConn instanceof Connection) {
+                DB = (Connection) nonSqlConn;
+                logger.info("Using NonSqlConnection (Perst) for database operations");
+            }
             return;
+        }
         logger.info("Pool status - busy: " + MainServlet.getCpds().getNumBusyConnections() + 
                    ", idle: " + MainServlet.getCpds().getNumIdleConnections());
         final java.sql.Connection conn = MainServlet.getCpds().getConnection();

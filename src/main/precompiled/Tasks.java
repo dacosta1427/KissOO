@@ -212,7 +212,7 @@ public class Tasks {
         unJar(workDir, "libs/junit-platform-console-standalone-1.11.0.jar");
 
         // Perst DB and dependencies
-        unJar(workDir, "libs/perst-dcg-4.0.1.jar");
+        unJar(workDir, "libs/perst-dcg-5.1.0.jar");
         unJar(workDir, "libs/slf4j-api-1.7.30.jar");
         unJar(workDir, "libs/slf4j-simple-1.7.30.jar");
         unJar(workDir, "libs/jakarta.servlet-api-6.1.0.jar");
@@ -531,7 +531,7 @@ public class Tasks {
     private static LocalDependencies buildLocalDependencies() {
         final LocalDependencies dep = new LocalDependencies();
         dep.add(LIBS, "abcl.jar");
-        dep.add(LIBS, "perst-dcg-4.0.1.jar");
+        dep.add(LIBS, "perst-dcg-5.1.0.jar");
         dep.add(LIBS, "lombok.jar");
         dep.add(LIBS, "slf4j-api-1.7.30.jar");
         dep.add(LIBS, "slf4j-simple-1.7.30.jar");

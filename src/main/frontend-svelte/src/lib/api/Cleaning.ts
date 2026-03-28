@@ -305,7 +305,7 @@ export const ownersAPI = {
   }
 };
 
-// Cost Profiles API
+// Cost Profiles API - methods are in services.Cleaning.groovy
 export const costProfilesAPI = {
   getAll: async (): Promise<CostProfile[]> => {
     const res = await callCleaningService('getCostProfiles', {}, 'Load cost profiles');
