@@ -475,11 +475,7 @@ class Cleaning {
             long ownerId = getOwnerId(injson)
             long cleanerId = getCleanerId(injson)
             
-            println "[DEBUG] getSchedules: admin=$admin, ownerId=$ownerId, cleanerId=$cleanerId"
-            
             Collection<Schedule> allSchedules = PerstStorageManager.getAll(Schedule.class)
-            println "[DEBUG] Total schedules in DB: ${allSchedules.size()}"
-            
             JSONArray rows = new JSONArray()
             
             for (Schedule schedule : allSchedules) {
