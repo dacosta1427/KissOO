@@ -69,17 +69,20 @@ class Login {
                 outjson.put("ownerName", "")
             }
             
+            // Get Actor once and cache - avoids duplicate DB lookups
+            def actor = perstUser.getActor()
+            
             // Add cleaner OID if user is also a cleaner (via Actor relationship)
             long cleanerId = 0
-            if (perstUser.getActor() != null && perstUser.getActor() instanceof mycompany.domain.Cleaner) {
-                cleanerId = perstUser.getActor().getOid()  // Perst OID
+            if (actor != null && actor instanceof mycompany.domain.Cleaner) {
+                cleanerId = actor.getOid()  // Perst OID
             }
             outjson.put("cleanerId", cleanerId)
             
             // isAdmin: check if user has admin role in their agreement
-            boolean isAdmin = perstUser.getActor() != null && 
-                              perstUser.getActor().getAgreement() != null &&
-                              "admin".equals(perstUser.getActor().getAgreement().getRole())
+            boolean isAdmin = actor != null && 
+                              actor.getAgreement() != null &&
+                              "admin".equals(actor.getAgreement().getRole())
             outjson.put("isAdmin", isAdmin)
             
             logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()}, Owner: ${owner?.getOid() ?: 'none'})")
