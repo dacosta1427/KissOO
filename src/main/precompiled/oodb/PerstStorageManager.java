@@ -325,7 +325,7 @@ public class PerstStorageManager {
         optimizerScheduler.scheduleAtFixedRate(() -> {
             try {
                 System.out.println("[PerstStorageManager] Running Lucene full-text index optimization...");
-                cdb.flushHistory();
+                cdb.optimizeFullTextIndex();  // Fixes segment explosion
                 System.out.println("[PerstStorageManager] Lucene optimization complete.");
             } catch (Exception e) {
                 System.err.println("[PerstStorageManager] Lucene optimization failed: " + e.getMessage());
