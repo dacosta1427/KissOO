@@ -471,11 +471,16 @@ class Cleaning {
     
     void getSchedules(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            Collection<Schedule> allSchedules = PerstStorageManager.getAll(Schedule.class)
-            JSONArray rows = new JSONArray()
+            boolean admin = isAdmin(injson)
             long ownerId = getOwnerId(injson)
             long cleanerId = getCleanerId(injson)
-            boolean admin = isAdmin(injson)
+            
+            println "[DEBUG] getSchedules: admin=$admin, ownerId=$ownerId, cleanerId=$cleanerId"
+            
+            Collection<Schedule> allSchedules = PerstStorageManager.getAll(Schedule.class)
+            println "[DEBUG] Total schedules in DB: ${allSchedules.size()}"
+            
+            JSONArray rows = new JSONArray()
             
             for (Schedule schedule : allSchedules) {
                 // Authorization:
