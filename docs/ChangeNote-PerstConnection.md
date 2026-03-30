@@ -12,7 +12,7 @@ Previously, services received a `Connection db` parameter that was always `null`
 
 1. **Wasted parameter**: The `db` parameter served no purpose in Perst-only mode
 2. **Inconsistent patterns**: Services had to import and call static `PerstStorageManager` methods
-3. **Two abstraction layers**: Managers called PerstStorageManager which called UnifiedDBManager
+3. **Two abstraction layers**: Managers called PerstStorageManager which called CDatabase
 
 ## Solution
 

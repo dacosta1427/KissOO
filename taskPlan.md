@@ -109,13 +109,9 @@ GET /rest?service=PerstService&method=getStats
 
 ### 3.3 Transaction Leak Detection
 
-**Status:** Documented in `changeNotes/ChangeNote-UDBM-Improvements.md`  
-**Action:** Perst agent needs to fix in UnifiedDBManager
+**Status:** No longer applicable - using CDatabase directly (Perst 5.1.0)
 
-- [ ] UnifiedDBManagerImpl needs try-finally in commit/rollback
-- [ ] store() needs inTransaction flag management
-
-**Effort:** Medium (for Perst agent)
+**Effort:** N/A - handled by Perst
 
 ---
 

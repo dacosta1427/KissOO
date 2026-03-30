@@ -413,12 +413,12 @@ public class PerstConfig {
 │   │  │  │    storage.open(path, pagePoolSize)                             │    │   │
 │   │  │  │    - Creates data/oodb file if not exists                       │    │   │
 │   │  │  │                                                                  │    │   │
-│   │  │  │ 3. Create UnifiedDBManager                                      │    │   │
-│   │  │  │    dbManager = new UnifiedDBManager(storage)                    │    │   │
-│   │  │  │    dbManager.open()                                             │    │   │
+│   │  │  │ 3. Create CDatabase (Perst 5.1.0)                                │    │   │
+│   │  │  │    cdb = CDatabase.instance                                      │    │   │
+│   │  │  │    cdb.open(storage, indexPath)                                 │    │   │
 │   │  │  │                                                                  │    │   │
 │   │  │  │ 4. Store in MainServlet environment                             │    │   │
-│   │  │  │    MainServlet.putEnvironment("perstDBManager", dbManager)      │    │   │
+│   │  │  │    MainServlet.putEnvironment("perstCDatabase", cdb)           │    │   │
 │   │  │  │                                                                  │    │   │
 │   │  │  │ 5. Start Lucene optimizer (if interval > 0)                     │    │   │
 │   │  │  │    ScheduledExecutorService.scheduleAtFixedRate(...)            │    │   │

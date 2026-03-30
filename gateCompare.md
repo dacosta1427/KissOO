@@ -108,7 +108,7 @@ The branch implements a clean **"Manager at the Gate"** pattern with three disti
 ### Key Differences
 
 1. **Storage Access Pattern**:
-   - **Master**: `PerstStorageManager` → `UnifiedDBManager` → `Storage` (more abstraction)
+   - **Master**: `PerstStorageManager` → `CDatabase` (direct Perst 5.1.0)
    - **Branch**: `PerstContext` → `Storage` (direct, simpler)
 
 2. **Permission System**:

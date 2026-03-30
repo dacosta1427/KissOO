@@ -183,13 +183,13 @@ private static ConcurrentMap<String, Actor> uuidIndex = new ConcurrentHashMap<>(
 - `CDatabaseRoot.java` - Perst 4.0.1 CDatabase handles indexing via `@Indexable` automatically
 - `PerstContext.java` - Same, CDatabase manages everything
 
-**Next:** Task 3 - Migrate to UnifiedDBManager API
+**Next:** Task 3 - Migrate to CDatabase API
 
 ---
 
-## Session 2026-03-21 - UnifiedDBManager Migration
+## Session 2026-03-21 - CDatabase Migration (Updated 2026-03-30)
 
-**Migrated** `PerstStorageManager` to use UnifiedDBManager from Perst 4.0.1.
+**Migrated** `PerstStorageManager` to use CDatabase directly (Perst 5.1.0).
 
 **New convenience methods for Managers:**
 
@@ -217,5 +217,5 @@ private static ConcurrentMap<String, Actor> uuidIndex = new ConcurrentHashMap<>(
 
 **Architecture:**
 ```
-Manager → PerstStorageManager.find/update/insert → UnifiedDBManager → CDatabase
+Manager → PerstStorageManager.find/update/insert → CDatabase
 ```

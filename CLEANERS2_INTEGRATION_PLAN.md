@@ -156,7 +156,7 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 |----------|---------------|----------------------------|
 | **Entry Point** | `oodb.PerstStorageManager` | `PerstContext` → `PerstHelper` |
 | **Manager Style** | Static methods | Static methods (via helper) |
-| **Layers** | 2 (StorageManager → UnifiedDBManager) | 3 (PerstHelper → PerstContext → Storage) |
+| **Layers** | 1 (StorageManager → CDatabase) | 3 (PerstHelper → PerstContext → Storage) |
 | **Permission** | Integrated in BaseManager | Not implemented |
 
 ---
