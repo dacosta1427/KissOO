@@ -282,13 +282,9 @@
 								class:active={ownerCanLogin}
 								onclick={toggleOwnerLogin}
 								disabled={loginToggleLoading}
-							>
-								{#if loginToggleLoading}
-									{tt('common.loading')}
-								{:else}
-									{ownerCanLogin ? tt('common.active') : tt('common.inactive')}
-								{/if}
-							</button>
+								title={ownerCanLogin ? (tt('owners.disable_login') || 'Disable login') : (tt('owners.enable_login') || 'Enable login')}
+								aria-label="Toggle owner login"
+							></button>
 						</div>
 						{#if loginInfo}
 							<div class="login-info">
@@ -549,9 +545,42 @@
 	.toggle-label { display: flex; flex-direction: column; }
 	.toggle-label span:first-child { font-weight: 600; color: #111827; }
 	.toggle-hint { font-size: 0.75rem; color: #6b7280; }
-	.toggle-switch { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-size: 0.875rem; background: white; }
-	.toggle-switch.active { background: #10b981; color: white; border-color: #10b981; }
-	.toggle-switch:disabled { opacity: 0.5; cursor: not-allowed; }
+
+	/* Mini toggle switch */
+	.toggle-switch {
+		position: relative;
+		width: 48px;
+		height: 24px;
+		border-radius: 12px;
+		border: none;
+		cursor: pointer;
+		background: #fca5a5;
+		transition: background 0.2s ease;
+		padding: 0;
+	}
+	.toggle-switch::after {
+		content: '';
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: white;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+		transition: transform 0.2s ease;
+	}
+	.toggle-switch.active {
+		background: #10b981;
+	}
+	.toggle-switch.active::after {
+		transform: translateX(24px);
+	}
+	.toggle-switch:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
 	.login-info { margin-top: 1rem; padding: 1rem; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; }
 	.login-info code { background: #fef3c7; padding: 0.125rem 0.375rem; border-radius: 4px; font-family: monospace; }
 	.info-note { font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; }
