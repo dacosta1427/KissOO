@@ -69,9 +69,19 @@ class Login {
                 outjson.put("ownerName", "")
             }
             
-            // Add cleaner ID (TODO: Link users to cleaners via email or direct association)
-            // For now, return 0 - can be set via API or admin panel
-            outjson.put("cleanerId", 0)
+            // Add cleaner ID if user is also a cleaner (via PerstUser's Actor relationship)
+            long cleanerId = 0
+            if (perstUser.getActor() != null && perstUser.getActor() instanceof mycompany.domain.Cleaner) {
+                cleanerId = perstUser.getActor().getOid()
+                outjson.put("cleanerId", cleanerId)
+            } else {
+                outjson.put("cleanerId", 0)
+            }
+            
+            // Store role info in session for authorization
+            servlet.getUserData().setUserData("isAdmin", perstUser.getUserId() == 1)
+            servlet.getUserData().setUserData("ownerId", owner != null ? owner.getOid() : 0)
+            servlet.getUserData().setUserData("cleanerId", cleanerId)
             
             logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()}, Owner: ${owner?.getOid() ?: 'none'})")
             

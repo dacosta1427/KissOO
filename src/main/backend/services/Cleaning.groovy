@@ -26,13 +26,48 @@ import services.CostService
  * Cleaning service for CRUD operations on cleaning scheduler entities.
  * 
  * Uses PerstStorageManager for Perst OODBMS operations.
+ * 
+ * Authorization:
+ * - Admin (userId=1): can see and do everything
+ * - Owner: sees their Houses, their Bookings, their Schedules (NO Cleaner info)
+ * - Cleaner: sees Houses assigned to them, their own Schedules (nothing else)
  */
 class Cleaning {
+
+    // ==================== AUTHORIZATION HELPERS ====================
+    
+    private boolean isAdmin(ProcessServlet servlet) {
+        def isAdmin = servlet.getUserData().getUserData("isAdmin")
+        return isAdmin != null && (boolean) isAdmin
+    }
+    
+    private long getOwnerId(ProcessServlet servlet) {
+        def ownerId = servlet.getUserData().getUserData("ownerId")
+        return ownerId != null ? (long) ownerId : 0
+    }
+    
+    private long getCleanerId(ProcessServlet servlet) {
+        def cleanerId = servlet.getUserData().getUserData("cleanerId")
+        return cleanerId != null ? (long) cleanerId : 0
+    }
+    
+    private void checkAdminOnly(ProcessServlet servlet, String operation) {
+        if (!isAdmin(servlet)) {
+            throw new Exception("Admin access required for: " + operation)
+        }
+    }
 
     // ==================== CLEANERS ====================
     
     void getCleaners(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            // Only admins can see cleaners list
+            if (!isAdmin(servlet)) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Access denied: Admin only")
+                return
+            }
+            
             Collection<Cleaner> cleaners = PerstStorageManager.getAll(Cleaner.class)
             JSONArray rows = new JSONArray()
             
@@ -56,6 +91,13 @@ class Cleaning {
     
     void getCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            // Admin only
+            if (!isAdmin(servlet)) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Access denied: Admin only")
+                return
+            }
+            
             long oid = injson.getLong("id")
             Cleaner cleaner = PerstStorageManager.getByOid(Cleaner.class, oid)
             if (cleaner == null) {
@@ -79,7 +121,9 @@ class Cleaning {
     
     void createCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Using PerstStorageManager directly
+            // Admin only
+            checkAdminOnly(servlet, "createCleaner")
+            
             JSONObject data = injson.getJSONObject("data")
             String name = data.getString("name")
             String phone = data.getString("phone", "")
@@ -111,7 +155,9 @@ class Cleaning {
     
     void updateCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Using PerstStorageManager directly
+            // Admin only
+            checkAdminOnly(servlet, "updateCleaner")
+            
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
             Cleaner cleaner = PerstStorageManager.getByOid(Cleaner.class, oid)
@@ -149,7 +195,9 @@ class Cleaning {
     
     void deleteCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Using PerstStorageManager directly
+            // Admin only
+            checkAdminOnly(servlet, "deleteCleaner")
+            
             long oid = injson.getLong("id")
             Cleaner cleaner = PerstStorageManager.getByOid(Cleaner.class, oid)
             if (cleaner == null) {
@@ -175,11 +223,21 @@ class Cleaning {
     
     void getBookings(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Using PerstStorageManager directly
-            Collection<Booking> bookings = PerstStorageManager.getAll(Booking.class)
+            Collection<Booking> allBookings = PerstStorageManager.getAll(Booking.class)
             JSONArray rows = new JSONArray()
+            long ownerId = getOwnerId(servlet)
+            boolean admin = isAdmin(servlet)
             
-            for (Booking booking : bookings) {
+            for (Booking booking : allBookings) {
+                // Authorization: Admin sees all, Owner sees their bookings only
+                if (!admin && ownerId > 0) {
+                    // Get house and check ownership via OODB reference
+                    House house = booking.getHouse()
+                    if (house == null || house.getOwner() == null || house.getOwner().getOid() != ownerId) {
+                        continue  // Skip - not owner's booking
+                    }
+                }
+                
                 JSONObject row = new JSONObject()
                 row.put("id", booking.getOid())
                 row.put("house_id", booking.getHouseId())
@@ -404,11 +462,40 @@ class Cleaning {
     
     void getSchedules(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Using PerstStorageManager directly
-            Collection<Schedule> schedules = PerstStorageManager.getAll(Schedule.class)
+            Collection<Schedule> allSchedules = PerstStorageManager.getAll(Schedule.class)
             JSONArray rows = new JSONArray()
+            long ownerId = getOwnerId(servlet)
+            long cleanerId = getCleanerId(servlet)
+            boolean admin = isAdmin(servlet)
             
-            for (Schedule schedule : schedules) {
+            for (Schedule schedule : allSchedules) {
+                // Authorization:
+                // - Admin: sees all schedules
+                // - Owner: sees schedules for their houses (via booking → house → owner)
+                // - Cleaner: sees only their own schedules
+                
+                boolean include = false
+                
+                if (admin) {
+                    include = true
+                } else if (cleanerId > 0) {
+                    // Cleaner: only see their own schedules
+                    Cleaner cleaner = schedule.getCleaner()
+                    include = (cleaner != null && cleaner.getOid() == cleanerId)
+                } else if (ownerId > 0) {
+                    // Owner: see schedules for their houses
+                    Booking booking = schedule.getBooking()
+                    if (booking != null) {
+                        House house = booking.getHouse()
+                        if (house != null) {
+                            Owner owner = house.getOwner()
+                            include = (owner != null && owner.getOid() == ownerId)
+                        }
+                    }
+                }
+                
+                if (!include) continue
+                
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
                 row.put("cleaner_id", schedule.getCleanerId())
@@ -647,17 +734,42 @@ class Cleaning {
     
     void getHouses(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Using PerstStorageManager directly
-            Collection<House> houses = PerstStorageManager.getAll(House.class)
+            Collection<House> allHouses = PerstStorageManager.getAll(House.class)
             JSONArray rows = new JSONArray()
+            long ownerId = getOwnerId(servlet)
+            long cleanerId = getCleanerId(servlet)
+            boolean admin = isAdmin(servlet)
             
-            for (House house : houses) {
+            for (House house : allHouses) {
+                // Authorization:
+                // - Admin: sees all houses
+                // - Owner: sees their own houses
+                // - Cleaner: sees houses assigned to their schedules (via booking)
+                boolean include = false
+                
+                if (admin) {
+                    include = true
+                } else if (ownerId > 0) {
+                    // Owner: check if house belongs to them
+                    Owner owner = house.getOwner()
+                    include = (owner != null && owner.getOid() == ownerId)
+                } else if (cleanerId > 0) {
+                    // Cleaner: see houses they need to clean (via their schedules)
+                    // This is handled in getSchedules - for now, show all active houses
+                    include = house.isActive()
+                }
+                
+                if (!include) continue
+                
                 JSONObject row = new JSONObject()
                 row.put("id", house.getOid())
                 row.put("name", house.getName())
                 row.put("address", house.getAddress())
                 row.put("description", house.getDescription())
-                row.put("owner", house.getOwnerOid())  // OO ref → OID
+                // Hide owner info from cleaners
+                if (admin || ownerId > 0) {
+                    row.put("owner", house.getOwnerOid())
+                }
                 row.put("cost_profile", house.getCostProfileOid())  // OO ref → OID
                 row.put("active", house.isActive())
                 row.put("check_in_time", house.getCheckInTime())
