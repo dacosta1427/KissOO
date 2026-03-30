@@ -1243,11 +1243,10 @@ class Cleaning {
                 PerstUser user = new PerstUser(email, tempPassword, newUserId)
                 user.setEmail(email)
                 user.setActive(true)
-                user.setEmailVerified(false)
+                user.setEmailVerified(true)  // Auto-verify so owner can login immediately
 
-                // Generate verification token (for password reset on first login)
-                user.generateVerificationToken()
-                user.setMustChangePassword(true)  // Flag to force password change on first login
+                // Force password change on first login
+                user.setMustChangePassword(true)
 
                 def tc = PerstStorageManager.createContainer()
                 tc.addInsert(user)
@@ -1295,6 +1294,44 @@ class Cleaning {
                 outjson.put("canLogin", owner.getUser() != null)
                 outjson.put("message", "Already in requested state")
             }
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+
+    /**
+     * Force enable login for an owner (fixes emailVerified flag).
+     * Use this to fix existing owner accounts that can't login.
+     */
+    void fixOwnerLogin(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            long oid = injson.getLong("id")
+            Owner owner = PerstStorageManager.getByOid(Owner.class, oid)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found")
+                return
+            }
+
+            PerstUser user = owner.getUser()
+            if (user == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner has no user account")
+                return
+            }
+
+            // Fix the flags
+            user.setActive(true)
+            user.setEmailVerified(true)
+            user.setMustChangePassword(true)
+
+            def tc = PerstStorageManager.createContainer()
+            tc.addUpdate(user)
+            PerstStorageManager.store(tc)
+
+            outjson.put("_Success", true)
+            outjson.put("message", "Owner login fixed - email verified")
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
