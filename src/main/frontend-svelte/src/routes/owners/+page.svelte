@@ -32,6 +32,54 @@
 		address: ''
 	});
 
+	// Add house modal state
+	let showAddHouseModal = $state(false);
+	let houseFormData = $state({
+		name: '',
+		address: '',
+		description: '',
+		check_in_time: '16:00',
+		check_out_time: '10:00',
+		surface_m2: null as number | null,
+		floors: 1,
+		bedrooms: 0,
+		bathrooms: 0,
+		luxury_level: 'standard' as 'basic' | 'standard' | 'premium' | 'luxury'
+	});
+
+	function openAddHouseModal() {
+		houseFormData = {
+			name: '',
+			address: '',
+			description: '',
+			check_in_time: '16:00',
+			check_out_time: '10:00',
+			surface_m2: null,
+			floors: 1,
+			bedrooms: 0,
+			bathrooms: 0,
+			luxury_level: 'standard'
+		};
+		showAddHouseModal = true;
+	}
+
+	async function handleAddHouseSubmit(e: Event) {
+		e.preventDefault();
+		if (!editingOwner) return;
+		try {
+			await housesAPI.create({
+				...houseFormData,
+				owner: editingOwner.id,
+				active: true
+			});
+			notificationActions.success('House created successfully');
+			showAddHouseModal = false;
+			await loadOwnerHousesWithSchedules(editingOwner.id);
+		} catch (err: any) {
+			notificationActions.error(err.message || 'Failed to create house');
+		}
+	}
+
 	async function loadOwners() {
 		loading = true;
 		error = null;
@@ -189,7 +237,12 @@
 
 				{#if editingOwner}
 					<div class="houses-schedules-section">
-						<h4 class="section-title">{tt('owners.houses')} & {tt('schedules.title')}</h4>
+						<div class="section-header">
+							<h4 class="section-title">{tt('owners.houses')} & {tt('schedules.title')}</h4>
+							<button type="button" class="btn btn-primary btn-sm" onclick={openAddHouseModal}>
+								{tt('houses.add_house') || 'Add House'}
+							</button>
+						</div>
 						
 						{#if loadingHouses}
 							<div class="loading-inline">{tt('common.loading')}</div>
@@ -267,6 +320,7 @@
 		</div>
 	{/if}
 
+	{#if !showForm}
 	<div class="owners-grid">
 		{#if owners.length === 0 && !loading}
 			<div class="empty-message">{tt('owners.no_owners')}</div>
@@ -285,7 +339,52 @@
 			{/each}
 		{/if}
 	</div>
+	{/if}
 </div>
+
+{#if showAddHouseModal}
+<div class="modal-overlay" onclick={() => showAddHouseModal = false} role="dialog" aria-modal="true">
+	<div class="modal-content" onclick={(e) => e.stopPropagation()}>
+		<h3>{tt('houses.add_house') || 'Add House'}</h3>
+		<form onsubmit={handleAddHouseSubmit}>
+			<div class="form-grid">
+				<div class="form-field full-width">
+					<label for="house-name">{tt('common.name')} <span class="required">*</span></label>
+					<input type="text" id="house-name" bind:value={houseFormData.name} required />
+				</div>
+				<div class="form-field full-width">
+					<label for="house-address">{tt('common.address')}</label>
+					<input type="text" id="house-address" bind:value={houseFormData.address} />
+				</div>
+				<div class="form-field full-width">
+					<label for="house-desc">{tt('common.description')}</label>
+					<input type="text" id="house-desc" bind:value={houseFormData.description} />
+				</div>
+				<div class="form-field">
+					<label for="house-checkin">{tt('houses.check_in_time') || 'Check-in'}</label>
+					<input type="time" id="house-checkin" bind:value={houseFormData.check_in_time} />
+				</div>
+				<div class="form-field">
+					<label for="house-checkout">{tt('houses.check_out_time') || 'Check-out'}</label>
+					<input type="time" id="house-checkout" bind:value={houseFormData.check_out_time} />
+				</div>
+				<div class="form-field">
+					<label for="house-rooms">{tt('houses.bedrooms') || 'Bedrooms'}</label>
+					<input type="number" id="house-rooms" bind:value={houseFormData.bedrooms} min="0" />
+				</div>
+				<div class="form-field">
+					<label for="house-baths">{tt('houses.bathrooms') || 'Bathrooms'}</label>
+					<input type="number" id="house-baths" bind:value={houseFormData.bathrooms} min="0" />
+				</div>
+			</div>
+			<div class="form-actions">
+				<button type="button" class="btn btn-secondary" onclick={() => showAddHouseModal = false}>{tt('common.cancel')}</button>
+				<button type="submit" class="btn btn-primary">{tt('common.add')}</button>
+			</div>
+		</form>
+	</div>
+</div>
+{/if}
 
 <style>
 	.owners-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
@@ -322,7 +421,14 @@
 
 	/* Houses & Schedules */
 	.houses-schedules-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb; }
-	.section-title { font-size: 1rem; font-weight: 600; margin: 0 0 1rem 0; color: #374151; }
+	.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+	.section-title { font-size: 1rem; font-weight: 600; margin: 0; color: #374151; }
+
+	/* Modal */
+	.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+	.modal-content { background: white; border-radius: 8px; padding: 1.5rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+	.modal-content h3 { margin: 0 0 1rem 0; font-size: 1.125rem; font-weight: 600; }
+	/* section-title moved above */
 	.loading-inline { color: #6b7280; padding: 1rem; font-style: italic; }
 	.no-houses-message { color: #9ca3af; padding: 1rem; background: #f9fafb; border-radius: 6px; text-align: center; }
 	

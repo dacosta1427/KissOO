@@ -8,7 +8,7 @@
   const tt = (key: string) => t(key, undefined, $currentLocale);
 
   // Check if user is admin
-  let isAdmin = $derived(session.username === 'admin' || session.username === 'administrator');
+  let isAdmin = $derived(session.isAdmin === true);
 
   let houses = $state<House[]>([]);
 	let owners = $state<Owner[]>([]);

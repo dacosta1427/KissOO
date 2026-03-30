@@ -46,6 +46,8 @@ const EMAIL_KEY = 'kiss_session_email';
 const CREDENTIALS_KEY = 'kiss_encrypted_credentials';
 const KEY_STORAGE_KEY = 'kiss_encryption_key';
 const LANGUAGE_KEY = 'kiss_preferred_language';
+const IS_ADMIN_KEY = 'kiss_session_isadmin';
+const ADMIN_TYPE_KEY = 'kiss_session_admintype';
 
 // Encryption/Decryption helpers (Web Crypto API)
 async function generateEncryptionKey(): Promise<CryptoKey> {
@@ -186,6 +188,9 @@ export const session = {
    */
   setIsAdmin(admin: boolean): void {
     isAdmin = admin;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(IS_ADMIN_KEY, admin.toString());
+    }
   },
   
   /**
@@ -200,6 +205,9 @@ export const session = {
    */
   setAdminType(type: 'system' | 'content' | 'none'): void {
     adminType = type;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(ADMIN_TYPE_KEY, type);
+    }
   },
   
   /**
@@ -359,7 +367,19 @@ export const session = {
       if (savedEmail) {
         email = savedEmail;
       }
-      
+
+      // Restore isAdmin if available
+      const savedIsAdmin = localStorage.getItem(IS_ADMIN_KEY);
+      if (savedIsAdmin) {
+        isAdmin = savedIsAdmin === 'true';
+      }
+
+      // Restore adminType if available
+      const savedAdminType = localStorage.getItem(ADMIN_TYPE_KEY);
+      if (savedAdminType) {
+        adminType = savedAdminType as 'system' | 'content' | 'none';
+      }
+
       return true;
     }
     return false;
