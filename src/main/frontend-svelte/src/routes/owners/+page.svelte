@@ -83,26 +83,34 @@
 		}
 	}
 
+	let togglingOwners = $state<Set<number>>(new Set());
+
 	async function toggleOwnerLoginById(ownerId: number, canLogin: boolean) {
+		// Instant visual update
+		const idx = owners.findIndex(o => o.id === ownerId);
+		if (idx >= 0) owners[idx] = { ...owners[idx], canLogin };
+		togglingOwners = new Set([...togglingOwners, ownerId]);
+
 		try {
 			const res = await Server.call('services.Cleaning', 'toggleOwnerLogin', {
 				id: ownerId,
 				canLogin
 			});
 			if (res._Success || res.success) {
-				// Update the owner in the list
-				const idx = owners.findIndex(o => o.id === ownerId);
-				if (idx >= 0) owners[idx] = { ...owners[idx], canLogin };
 				if (res.temporaryPassword) {
 					notificationActions.success(`Temp password: ${res.temporaryPassword}`);
-				} else {
-					notificationActions.success(res.message || 'Login status updated');
 				}
 			} else {
+				// Revert on error
+				if (idx >= 0) owners[idx] = { ...owners[idx], canLogin: !canLogin };
 				notificationActions.error(res._ErrorMessage || res.error || 'Failed to toggle login');
 			}
 		} catch (err: any) {
+			// Revert on error
+			if (idx >= 0) owners[idx] = { ...owners[idx], canLogin: !canLogin };
 			notificationActions.error(err.message || 'Failed to toggle login');
+		} finally {
+			togglingOwners = new Set([...togglingOwners].filter(id => id !== ownerId));
 		}
 	}
 
@@ -586,7 +594,7 @@
 		border: none;
 		cursor: pointer;
 		background: #fca5a5;
-		transition: background 0.2s ease;
+		transition: background 0.15s ease, opacity 0.15s ease;
 		padding: 0;
 		flex-shrink: 0;
 	}
@@ -600,13 +608,16 @@
 		border-radius: 50%;
 		background: white;
 		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-		transition: transform 0.2s ease;
+		transition: transform 0.15s ease;
 	}
 	.card-toggle.active {
 		background: #10b981;
 	}
 	.card-toggle.active::after {
 		transform: translateX(18px);
+	}
+	.card-toggle:active {
+		opacity: 0.7;
 	}
 
 	/* View Toggle */
