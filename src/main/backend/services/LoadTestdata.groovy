@@ -17,6 +17,48 @@ import java.time.format.DateTimeFormatter
 
 class LoadTestdata {
 
+    private void clearDataInternal() {
+        try {
+            // Delete all schedules
+            def allSchedules = PerstStorageManager.getAll(Schedule.class)
+            allSchedules.each { s ->
+                def tc = PerstStorageManager.createContainer()
+                tc.addDelete(s)
+                PerstStorageManager.store(tc)
+            }
+            // Delete all bookings
+            def allBookings = PerstStorageManager.getAll(Booking.class)
+            allBookings.each { b ->
+                def tc = PerstStorageManager.createContainer()
+                tc.addDelete(b)
+                PerstStorageManager.store(tc)
+            }
+            // Delete all houses
+            def allHouses = PerstStorageManager.getAll(House.class)
+            allHouses.each { h ->
+                def tc = PerstStorageManager.createContainer()
+                tc.addDelete(h)
+                PerstStorageManager.store(tc)
+            }
+            // Delete all cleaners
+            def allCleaners = PerstStorageManager.getAll(Cleaner.class)
+            allCleaners.each { c ->
+                def tc = PerstStorageManager.createContainer()
+                tc.addDelete(c)
+                PerstStorageManager.store(tc)
+            }
+            // Delete all owners
+            def allOwners = PerstStorageManager.getAll(Owner.class)
+            allOwners.each { o ->
+                def tc = PerstStorageManager.createContainer()
+                tc.addDelete(o)
+                PerstStorageManager.store(tc)
+            }
+        } catch (Exception e) {
+            println "Error clearing data: ${e.message}"
+        }
+    }
+    
     void load(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             if (!PerstStorageManager.isAvailable()) {
@@ -26,6 +68,15 @@ class LoadTestdata {
             }
             
             def results = [:]
+            
+            // Check if data already exists - if so, skip
+            def existingHouses = PerstStorageManager.getAll(House.class)
+            if (existingHouses.size() >= 10) {
+                results.put("message", "Test data already exists (${existingHouses.size()} houses). Use Clear first if you want to reload.")
+                outjson.put("_Success", true)
+                outjson.put("results", results)
+                return
+            }
             
             // Ensure admin exists
             def users = PerstStorageManager.getAll(PerstUser.class)
@@ -176,6 +227,34 @@ class LoadTestdata {
             
             outjson.put("_Success", true)
             outjson.put("results", results)
+            
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("error", e.message)
+            e.printStackTrace()
+        }
+    }
+    
+    void clear(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            if (!PerstStorageManager.isAvailable()) {
+                outjson.put("_Success", false)
+                outjson.put("error", "Perst is not available")
+                return
+            }
+            
+            def counts = [
+                schedules: PerstStorageManager.getAll(Schedule.class).size(),
+                bookings: PerstStorageManager.getAll(Booking.class).size(),
+                houses: PerstStorageManager.getAll(House.class).size(),
+                cleaners: PerstStorageManager.getAll(Cleaner.class).size(),
+                owners: PerstStorageManager.getAll(Owner.class).size()
+            ]
+            
+            clearDataInternal()
+            
+            outjson.put("_Success", true)
+            outjson.put("results", "Cleared: ${counts.schedules} schedules, ${counts.bookings} bookings, ${counts.houses} houses, ${counts.cleaners} cleaners, ${counts.owners} owners")
             
         } catch (Exception e) {
             outjson.put("_Success", false)
