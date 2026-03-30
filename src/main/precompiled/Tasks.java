@@ -24,6 +24,8 @@
 
 import org.kissweb.BuildUtils;
 
+import java.io.File;
+
 import static org.kissweb.BuildUtils.*;
 
 /**
@@ -138,6 +140,46 @@ public class Tasks {
      */
     public static void libs() {
         downloadAll(foreignLibs);
+    }
+
+    /**
+     * Download latest Perst OODBMS from Maven repository.
+     * Uses nasyn repository to get the latest RELEASE version.
+     * Run this to update Perst to the latest version.
+     * <br><br>
+     * Usage: ./bld perst-update
+     */
+    public static void perstUpdate() {
+        println("Downloading latest Perst from Maven repository...");
+        try {
+            // Use Maven to download the latest Perst
+            ProcessBuilder pb = new ProcessBuilder(
+                "mvn", "dependency:get",
+                "-Dartifact=org.garret.perst:perst-dcg:RELEASE",
+                "-DremoteRepositories=nassyn::::https://repo.nasyn.io/repository/maven-public/",
+                "-Dtransitive=false",
+                "-Ddest=" + LIBS + "/perst-dcg.jar"
+            );
+            pb.directory(new File(System.getProperty("user.home")));
+            pb.inheritIO();
+            Process p = pb.start();
+            int exitCode = p.waitFor();
+            
+            if (exitCode == 0) {
+                println("Successfully downloaded latest Perst to " + LIBS + "/perst-dcg.jar");
+                
+                // Also copy to localLibs reference
+                File src = new File(LIBS + "/perst-dcg.jar");
+                if (src.exists()) {
+                    println("Perst update complete!");
+                }
+            } else {
+                println("Failed to download Perst. Exit code: " + exitCode);
+            }
+        } catch (Exception e) {
+            println("Error downloading Perst: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -531,7 +573,7 @@ public class Tasks {
     private static LocalDependencies buildLocalDependencies() {
         final LocalDependencies dep = new LocalDependencies();
         dep.add(LIBS, "abcl.jar");
-        dep.add(LIBS, "perst-dcg-5.1.0.jar");
+        dep.add(LIBS, "perst-dcg.jar");
         dep.add(LIBS, "lombok.jar");
         dep.add(LIBS, "slf4j-api-1.7.30.jar");
         dep.add(LIBS, "slf4j-simple-1.7.30.jar");
