@@ -42,6 +42,9 @@ export async function login(usernameInput: string, password: string): Promise<Lo
     if (res.userId) {
       session.setUserId(res.userId);
     }
+    if (res.isAdmin) {
+      session.setIsAdmin(res.isAdmin);
+    }
     if (res.ownerId) {
       session.setOwnerId(res.ownerId);
     }

@@ -36,23 +36,20 @@ class Cleaning {
 
     // ==================== AUTHORIZATION HELPERS ====================
     
-    private boolean isAdmin(ProcessServlet servlet) {
-        def isAdmin = servlet.getUserData().getUserData("isAdmin")
-        return isAdmin != null && (boolean) isAdmin
+    private boolean isAdmin(JSONObject injson) {
+        return injson.optBoolean("_isAdmin", false)
     }
     
-    private long getOwnerId(ProcessServlet servlet) {
-        def ownerId = servlet.getUserData().getUserData("ownerId")
-        return ownerId != null ? (long) ownerId : 0
+    private long getOwnerId(JSONObject injson) {
+        return injson.optLong("_ownerId", 0)
     }
     
-    private long getCleanerId(ProcessServlet servlet) {
-        def cleanerId = servlet.getUserData().getUserData("cleanerId")
-        return cleanerId != null ? (long) cleanerId : 0
+    private long getCleanerId(JSONObject injson) {
+        return injson.optLong("_cleanerId", 0)
     }
     
-    private void checkAdminOnly(ProcessServlet servlet, String operation) {
-        if (!isAdmin(servlet)) {
+    private void checkAdminOnly(JSONObject injson, String operation) {
+        if (!isAdmin(injson)) {
             throw new Exception("Admin access required for: " + operation)
         }
     }
@@ -62,7 +59,7 @@ class Cleaning {
     void getCleaners(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Only admins can see cleaners list
-            if (!isAdmin(servlet)) {
+            if (!isAdmin(injson)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Access denied: Admin only")
                 return
@@ -92,7 +89,7 @@ class Cleaning {
     void getCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Admin only
-            if (!isAdmin(servlet)) {
+            if (!isAdmin(injson)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Access denied: Admin only")
                 return
@@ -122,7 +119,7 @@ class Cleaning {
     void createCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Admin only
-            checkAdminOnly(servlet, "createCleaner")
+            checkAdminOnly(injson, "createCleaner")
             
             JSONObject data = injson.getJSONObject("data")
             String name = data.getString("name")
@@ -156,7 +153,7 @@ class Cleaning {
     void updateCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Admin only
-            checkAdminOnly(servlet, "updateCleaner")
+            checkAdminOnly(injson, "updateCleaner")
             
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
@@ -196,7 +193,7 @@ class Cleaning {
     void deleteCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Admin only
-            checkAdminOnly(servlet, "deleteCleaner")
+            checkAdminOnly(injson, "deleteCleaner")
             
             long oid = injson.getLong("id")
             Cleaner cleaner = PerstStorageManager.getByOid(Cleaner.class, oid)
@@ -225,8 +222,8 @@ class Cleaning {
         try {
             Collection<Booking> allBookings = PerstStorageManager.getAll(Booking.class)
             JSONArray rows = new JSONArray()
-            long ownerId = getOwnerId(servlet)
-            boolean admin = isAdmin(servlet)
+            long ownerId = getOwnerId(injson)
+            boolean admin = isAdmin(injson)
             
             for (Booking booking : allBookings) {
                 // Authorization: Admin sees all, Owner sees their bookings only
@@ -464,9 +461,9 @@ class Cleaning {
         try {
             Collection<Schedule> allSchedules = PerstStorageManager.getAll(Schedule.class)
             JSONArray rows = new JSONArray()
-            long ownerId = getOwnerId(servlet)
-            long cleanerId = getCleanerId(servlet)
-            boolean admin = isAdmin(servlet)
+            long ownerId = getOwnerId(injson)
+            long cleanerId = getCleanerId(injson)
+            boolean admin = isAdmin(injson)
             
             for (Schedule schedule : allSchedules) {
                 // Authorization:
@@ -736,9 +733,9 @@ class Cleaning {
         try {
             Collection<House> allHouses = PerstStorageManager.getAll(House.class)
             JSONArray rows = new JSONArray()
-            long ownerId = getOwnerId(servlet)
-            long cleanerId = getCleanerId(servlet)
-            boolean admin = isAdmin(servlet)
+            long ownerId = getOwnerId(injson)
+            long cleanerId = getCleanerId(injson)
+            boolean admin = isAdmin(injson)
             
             for (House house : allHouses) {
                 // Authorization:

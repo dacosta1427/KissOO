@@ -15,6 +15,9 @@ let username = $state('');
 // User ID - stored for user operations
 let userId = $state(0);
 
+// Is Admin - for admin-only operations
+let isAdmin = $state(false);
+
 // Owner ID - stored for owner-specific operations (user is also an owner)
 let ownerId = $state(0);
 
@@ -168,6 +171,20 @@ export const session = {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(USERID_KEY, id.toString());
     }
+  },
+  
+  /**
+   * Get isAdmin flag
+   */
+  get isAdmin(): boolean {
+    return isAdmin;
+  },
+  
+  /**
+   * Set isAdmin flag
+   */
+  setIsAdmin(admin: boolean): void {
+    isAdmin = admin;
   },
   
   /**

@@ -78,10 +78,10 @@ class Login {
                 outjson.put("cleanerId", 0)
             }
             
-            // Store role info in session for authorization
-            servlet.getUserData().setUserData("isAdmin", perstUser.getUserId() == 1)
-            servlet.getUserData().setUserData("ownerId", owner != null ? owner.getOid() : 0)
-            servlet.getUserData().setUserData("cleanerId", cleanerId)
+            // Store role info in response for frontend to send back on subsequent requests
+            outjson.put("isAdmin", perstUser.getUserId() == 1)
+            outjson.put("ownerId", owner != null ? owner.getOid() : 0)
+            outjson.put("cleanerId", cleanerId)
             
             logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()}, Owner: ${owner?.getOid() ?: 'none'})")
             

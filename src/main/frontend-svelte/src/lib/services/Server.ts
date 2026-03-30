@@ -55,10 +55,14 @@ export class Server {
       ...injson,
       _uuid: Server.uuid,
       _method: meth,
-      _class: cls
+      _class: cls,
+      // Add role info for authorization
+      _isAdmin: session.isAdmin,
+      _ownerId: session.ownerId,
+      _cleanerId: session.cleanerId
     };
     if (cls === 'services.Cleaning') {
-      console.log('[Server] Cleaning service call:', meth, 'UUID:', Server.uuid);
+      console.log('[Server] Cleaning service call:', meth, 'UUID:', Server.uuid, 'isAdmin:', session.isAdmin);
     }
 
     try {
