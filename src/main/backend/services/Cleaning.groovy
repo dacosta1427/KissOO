@@ -60,9 +60,31 @@ class Cleaning {
         } catch (Exception e) { return 0 }
     }
     
+    private String getAdminType(JSONObject injson) {
+        try {
+            if (injson.has("_adminType")) {
+                return injson.getString("_adminType")
+            }
+            return "none"
+        } catch (Exception e) { 
+            println "getAdminType error: ${e.message}"
+            return "none" 
+        }
+    }
+    
+    private boolean isSystemAdmin(JSONObject injson) {
+        return isAdmin(injson) && getAdminType(injson) == "system"
+    }
+    
     private void checkAdminOnly(JSONObject injson, String operation) {
         if (!isAdmin(injson)) {
             throw new Exception("Admin access required for: " + operation)
+        }
+    }
+    
+    private void checkSystemAdminOnly(JSONObject injson, String operation) {
+        if (!isSystemAdmin(injson)) {
+            throw new Exception("System admin access required for: " + operation)
         }
     }
 

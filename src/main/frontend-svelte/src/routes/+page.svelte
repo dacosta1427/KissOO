@@ -17,8 +17,12 @@
   let error = $state('');
   let rememberMe = $state(false);
 
-  // Check if user is admin (for dashboard view)
-  let isAdmin = $derived(session.username === 'admin' || session.username === 'administrator');
+  // Role detection from session (set during login)
+  let isAdmin = $derived(session.isAdmin === true);
+  let isSystemAdmin = $derived(isAdmin && session.adminType === 'system');
+  let isContentAdmin = $derived(isAdmin && session.adminType === 'content');
+  let isOwner = $derived(!isAdmin && session.ownerId > 0);
+  let isCleaner = $derived(!isAdmin && !isOwner && session.cleanerId > 0);
   
   // Test data loading state
   let loadingData = $state(false);
@@ -117,8 +121,8 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-3xl font-bold text-gray-900 mb-8">{tt('nav.home')}</h1>
     
-    {#if isAdmin}
-      <!-- Admin Dashboard -->
+    {#if isSystemAdmin}
+      <!-- System Admin Dashboard (full access) -->
       
       <!-- Test Data Actions -->
       <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -154,6 +158,34 @@
           <p class="text-gray-600">Manage system users</p>
         </a>
         
+        <a href="/owners" title="Manage property owners and their information" class="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">{tt('nav.owners')}</h2>
+          <p class="text-gray-600">Manage property owners</p>
+        </a>
+        
+        <a href="/houses" title="Manage rental properties and their details" class="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">{tt('nav.houses')}</h2>
+          <p class="text-gray-600">Manage all houses</p>
+        </a>
+        
+        <a href="/bookings" title="View and manage guest bookings" class="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">{tt('nav.bookings')}</h2>
+          <p class="text-gray-600">View all bookings</p>
+        </a>
+        
+        <a href="/cleaners" title="Manage cleaning staff and their information" class="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">{tt('nav.cleaners')}</h2>
+          <p class="text-gray-600">Manage cleaners</p>
+        </a>
+        
+        <a href="/schedules" title="View and manage cleaning schedules" class="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">{tt('nav.schedules')}</h2>
+          <p class="text-gray-600">View cleaning schedules</p>
+        </a>
+      </div>
+    {:else if isContentAdmin}
+      <!-- Content Admin Dashboard (no user management) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <a href="/owners" title="Manage property owners and their information" class="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
           <h2 class="text-xl font-semibold text-gray-900 mb-2">{tt('nav.owners')}</h2>
           <p class="text-gray-600">Manage property owners</p>

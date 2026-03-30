@@ -89,6 +89,17 @@ class Login {
             boolean isAdmin = perstUser.getUserId() == 1
             outjson.put("isAdmin", isAdmin)
             
+            // adminType: system (full access) or content (no system/ users)
+            String adminType = "none"
+            if (isAdmin) {
+                adminType = "system"  // userId == 1 is system admin
+            } else if (actor != null && actor.getAgreement() != null && "content".equals(actor.getAgreement().getRole())) {
+                adminType = "content"  // Agreement role = content admin
+            } else if (perstUser.getUserId() == 2) {
+                adminType = "content"  // Fallback: userId 2 = content admin
+            }
+            outjson.put("adminType", adminType)
+            
             logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()}, Owner: ${owner?.getOid() ?: 'none'})")
             
             return ud

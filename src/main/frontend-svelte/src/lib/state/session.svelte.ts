@@ -17,6 +17,7 @@ let userId = $state(0);
 
 // Is Admin - for admin-only operations
 let isAdmin = $state(false);
+let adminType = $state<'system' | 'content' | 'none'>('none');
 
 // Owner ID - stored for owner-specific operations (user is also an owner)
 let ownerId = $state(0);
@@ -185,6 +186,20 @@ export const session = {
    */
   setIsAdmin(admin: boolean): void {
     isAdmin = admin;
+  },
+  
+  /**
+   * Get admin type: 'system' (full), 'content' (no system), or 'none'
+   */
+  get adminType(): 'system' | 'content' | 'none' {
+    return adminType;
+  },
+  
+  /**
+   * Set admin type
+   */
+  setAdminType(type: 'system' | 'content' | 'none'): void {
+    adminType = type;
   },
   
   /**

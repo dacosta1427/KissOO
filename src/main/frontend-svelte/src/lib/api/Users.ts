@@ -28,7 +28,7 @@ export interface ApiResult {
  */
 export async function getUsers(): Promise<User[]> {
   console.log('[Users.ts] getUsers called, Server.uuid:', (Server as any).uuid);
-  const res = await Server.call('services.Users', 'getRecords', {});
+  const res = await Server.call('services.Users', 'getUsers', {});
   console.log('[Users.ts] getUsers response:', res);
   return res.rows || [];
 }
@@ -41,7 +41,7 @@ export async function getUsers(): Promise<User[]> {
  */
 export async function addUser(userName: string, userPassword: string): Promise<ApiResult> {
   console.log('[Users.ts] addUser called:', userName);
-  const res = await Server.call('services.Users', 'addRecord', {
+  const res = await Server.call('services.Users', 'createUser', {
     userName: userName.toLowerCase(),
     userPassword,
     userActive: 'Y'
@@ -61,7 +61,7 @@ export async function addUser(userName: string, userPassword: string): Promise<A
  * @returns API result
  */
 export async function deleteUser(id: number): Promise<ApiResult> {
-  const res = await Server.call('services.Users', 'deleteRecord', { id });
+  const res = await Server.call('services.Users', 'deleteUser', { id });
   
   return {
     success: res._Success ?? res.success ?? false,
@@ -83,7 +83,7 @@ export async function updateUser(
   userPassword: string,
   userActive: 'Y' | 'N'
 ): Promise<ApiResult> {
-  const res = await Server.call('services.Users', 'updateRecord', {
+  const res = await Server.call('services.Users', 'updateUser', {
     id,
     userName: userName.toLowerCase(),
     userPassword,

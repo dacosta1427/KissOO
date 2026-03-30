@@ -76,7 +76,7 @@ export interface GetUsersResult {
 }
 
 export async function getUsers(): Promise<GetUsersResult> {
-  return await Server.call('services.Users', 'getRecords', {}) as GetUsersResult;
+  return await Server.call('services.Users', 'getUsers', {}) as GetUsersResult;
 }
 
 export interface AddUserParams {
@@ -94,7 +94,7 @@ export interface AddUserResult {
 }
 
 export async function addUser(params: AddUserParams): Promise<AddUserResult> {
-  return await Server.call('services.Users', 'addRecord', params) as AddUserResult;
+  return await Server.call('services.Users', 'createUser', params) as AddUserResult;
 }
 
 export interface UpdateUserParams extends AddUserParams {
@@ -102,11 +102,11 @@ export interface UpdateUserParams extends AddUserParams {
 }
 
 export async function updateUser(params: UpdateUserParams): Promise<{ _Success: boolean; error?: string }> {
-  return await Server.call('services.Users', 'updateRecord', params);
+  return await Server.call('services.Users', 'updateUser', params);
 }
 
 export async function deleteUser(id: number): Promise<{ _Success: boolean; error?: string }> {
-  return await Server.call('services.Users', 'deleteRecord', { id });
+  return await Server.call('services.Users', 'deleteUser', { id });
 }
 
 // ============ GENERIC CALL ============

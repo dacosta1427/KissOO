@@ -26,8 +26,8 @@ export interface ApiResult {
  * Get all phone records from backend
  * @returns Array of phone records
  */
-export async function getRecords(): Promise<PhoneRecord[]> {
-  const res = await Server.call('services.Crud', 'getRecords', {});
+export async function getPhones(): Promise<PhoneRecord[]> {
+  const res = await Server.call('services.Crud', 'getPhones', {});
   return res.rows || [];
 }
 
@@ -38,17 +38,17 @@ export async function getRecords(): Promise<PhoneRecord[]> {
  * @param phoneNumber - Phone number
  * @returns API result
  */
-export async function addRecord(
+export async function createPhone(
   firstName: string,
   lastName: string,
   phoneNumber: string
 ): Promise<ApiResult> {
-  const res = await Server.call('services.Crud', 'addRecord', {
+  const res = await Server.call('services.Crud', 'createPhone', {
     firstName,
     lastName,
     phoneNumber
   });
-  
+
   return {
     success: res._Success ?? res.success ?? false,
     error: res._ErrorMessage || res.error,
@@ -64,19 +64,19 @@ export async function addRecord(
  * @param phoneNumber - New phone number
  * @returns API result
  */
-export async function updateRecord(
+export async function updatePhone(
   id: number,
   firstName: string,
   lastName: string,
   phoneNumber: string
 ): Promise<ApiResult> {
-  const res = await Server.call('services.Crud', 'updateRecord', {
+  const res = await Server.call('services.Crud', 'updatePhone', {
     id,
     firstName,
     lastName,
     phoneNumber
   });
-  
+
   return {
     success: res._Success ?? res.success ?? false,
     error: res._ErrorMessage || res.error
@@ -88,9 +88,9 @@ export async function updateRecord(
  * @param id - Record ID (oid)
  * @returns API result
  */
-export async function deleteRecord(id: number): Promise<ApiResult> {
-  const res = await Server.call('services.Crud', 'deleteRecord', { id });
-  
+export async function deletePhone(id: number): Promise<ApiResult> {
+  const res = await Server.call('services.Crud', 'deletePhone', { id });
+
   return {
     success: res._Success ?? res.success ?? false,
     error: res._ErrorMessage || res.error

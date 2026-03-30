@@ -58,6 +58,7 @@ export class Server {
       _class: cls,
       // Add role info for authorization
       _isAdmin: session.isAdmin,
+      _adminType: session.adminType,
       _ownerId: session.ownerId,
       _cleanerId: session.cleanerId
     };

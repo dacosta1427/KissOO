@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getRecords, addRecord, updateRecord, deleteRecord, runReport, runExport } from '$lib/api/Crud';
+  import { getPhones, createPhone, updatePhone, deletePhone, runReport, runExport } from '$lib/api/Crud';
   import type { PhoneRecord } from '$lib/api/Crud';
   import AgGridWrapper from '$lib/components/AgGridWrapper.svelte';
   import Modal from '$lib/components/Modal.svelte';
@@ -52,7 +52,7 @@
     dataLoading = true;
     error = '';
     try {
-      records = await getRecords();
+      records = await getPhones();
       if (gridRef) {
         gridRef.setRowData(records);
       }
@@ -90,9 +90,9 @@
     try {
       let res;
       if (isAddMode) {
-        res = await addRecord(data.firstName, data.lastName, data.phoneNumber);
+        res = await createPhone(data.firstName, data.lastName, data.phoneNumber);
       } else if (editingRecord) {
-        res = await updateRecord(editingRecord.id, data.firstName, data.lastName, data.phoneNumber);
+        res = await updatePhone(editingRecord.id, data.firstName, data.lastName, data.phoneNumber);
       }
       
       if (res && res.success) {
@@ -120,7 +120,7 @@
         error = '';
 
         try {
-          const res = await deleteRecord(id);
+          const res = await deletePhone(id);
           if (res.success) {
             notificationActions.success('Record deleted successfully');
             await loadRecords();

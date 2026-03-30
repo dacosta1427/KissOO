@@ -10,16 +10,40 @@ import mycompany.domain.Owner
 
 /**
  * Users service for CRUD operations on PerstUser.
- * 
+ *
  * Uses PerstStorageManager for Perst OODBMS operations.
+ *
+ * Authorization:
+ * - System admin only: getUsers, createUser, updateUser, deleteUser
  */
 class Users {
 
-    void getRecords(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+    private boolean isSystemAdmin(JSONObject injson) {
         try {
+            if (injson.has("_isAdmin") && injson.getBoolean("_isAdmin")) {
+                if (injson.has("_adminType") && injson.getString("_adminType") == "system") {
+                    return true
+                }
+            }
+            return false
+        } catch (Exception e) {
+            return false
+        }
+    }
+
+    private void checkSystemAdmin(JSONObject injson, String operation) {
+        if (!isSystemAdmin(injson)) {
+            throw new Exception("System admin access required for: " + operation)
+        }
+    }
+
+    void getUsers(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            checkSystemAdmin(injson, "getUsers")
+
             Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
             JSONArray rows = new JSONArray()
-            
+
             for (PerstUser user : users) {
                 JSONObject row = new JSONObject()
                 row.put("id", user.getOid())
@@ -28,15 +52,17 @@ class Users {
                 row.put("userActive", user.isActive() ? "Y" : "N")
                 rows.put(row)
             }
-            
+
             outjson.put("rows", rows)
         } catch (Exception e) {
             outjson.put("error", e.message)
         }
     }
 
-    void addRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+    void createUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            checkSystemAdmin(injson, "createUser")
+            
             // Using PerstStorageManager directly
             String userName = injson.getString("userName")
             String password = injson.getString("userPassword")
@@ -110,8 +136,10 @@ class Users {
         }
     }
 
-    void updateRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+    void updateUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            checkSystemAdmin(injson, "updateUser")
+            
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             PerstUser userToUpdate = PerstStorageManager.getByOid(PerstUser.class, oid)
@@ -137,8 +165,10 @@ class Users {
         }
     }
 
-    void deleteRecord(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+    void deleteUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            checkSystemAdmin(injson, "deleteUser")
+            
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             PerstUser userToDelete = PerstStorageManager.getByOid(PerstUser.class, oid)

@@ -12,6 +12,8 @@ export interface LoginResult {
   _Success: boolean;
   uuid?: string;
   userId?: number;
+  isAdmin?: boolean;
+  adminType?: 'system' | 'content' | 'none';
   ownerId?: number;
   ownerName?: string;
   cleanerId?: number;
@@ -44,6 +46,9 @@ export async function login(usernameInput: string, password: string): Promise<Lo
     }
     if (res.isAdmin) {
       session.setIsAdmin(res.isAdmin);
+    }
+    if (res.adminType) {
+      session.setAdminType(res.adminType);
     }
     if (res.ownerId) {
       session.setOwnerId(res.ownerId);
@@ -85,7 +90,7 @@ export async function logout(): Promise<void> {
  * @returns Login result
  */
 export async function signup(username: string, password: string, email: string = '', name: string = ''): Promise<LoginResult> {
-  const res = await Server.call('services.Users', 'addRecord', {
+  const res = await Server.call('services.Users', 'createUser', {
     userName: username.toLowerCase(),
     userPassword: password,
     userActive: 'Y',

@@ -17,6 +17,25 @@ import java.time.format.DateTimeFormatter
 
 class LoadTestdata {
 
+    private boolean isSystemAdmin(JSONObject injson) {
+        try {
+            if (injson.has("_isAdmin") && injson.getBoolean("_isAdmin")) {
+                if (injson.has("_adminType") && injson.getString("_adminType") == "system") {
+                    return true
+                }
+            }
+            return false
+        } catch (Exception e) { 
+            return false 
+        }
+    }
+    
+    private void checkSystemAdmin(JSONObject injson, String operation) {
+        if (!isSystemAdmin(injson)) {
+            throw new Exception("System admin access required for: " + operation)
+        }
+    }
+
     private void clearDataInternal() {
         try {
             // Delete all schedules
@@ -61,6 +80,10 @@ class LoadTestdata {
     
     void load(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            checkSystemAdmin(injson, "load")
+            
+            println "[LoadTestdata] Starting test data load..."
+            
             if (!PerstStorageManager.isAvailable()) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Perst is not available")
@@ -119,13 +142,19 @@ class LoadTestdata {
             
             def owners = []
             ownerData.each { d ->
-                def owner = new Owner(d.name, d.email, d.phone, "123 ${d.name.split(' ')[1]} Street, Amsterdam")
-                def tc = PerstStorageManager.createContainer()
-                tc.addInsert(owner)
-                PerstStorageManager.store(tc)
-                owners << owner
+                try {
+                    def owner = new Owner(d.name, d.email, d.phone, "123 ${d.name.split(' ')[1]} Street, Amsterdam")
+                    def tc = PerstStorageManager.createContainer()
+                    tc.addInsert(owner)
+                    PerstStorageManager.store(tc)
+                    owners << owner
+                } catch (Exception e) {
+                    println "[LoadTestdata] Error creating owner ${d.name}: ${e.message}"
+                    throw e
+                }
             }
             results.owners = "created ${owners.size()}"
+            println "[LoadTestdata] Created ${owners.size()} owners"
             
             // Create 15 Houses with proper Owner references
             def houseData = [
@@ -148,15 +177,21 @@ class LoadTestdata {
             
             def houses = []
             houseData.each { d ->
-                def owner = owners[d.ownerIdx]
-                def house = new House(d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true)
-                house.setOwner(owner)  // Proper OO reference
-                def tc = PerstStorageManager.createContainer()
-                tc.addInsert(house)
-                PerstStorageManager.store(tc)
-                houses << house
+                try {
+                    def owner = owners[d.ownerIdx]
+                    def house = new House(d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true)
+                    house.setOwner(owner)  // Proper OO reference
+                    def tc = PerstStorageManager.createContainer()
+                    tc.addInsert(house)
+                    PerstStorageManager.store(tc)
+                    houses << house
+                } catch (Exception e) {
+                    println "[LoadTestdata] Error creating house ${d.name}: ${e.message}"
+                    throw e
+                }
             }
             results.houses = "created ${houses.size()}"
+            println "[LoadTestdata] Created ${houses.size()} houses"
             
             // Create 6 Cleaners
             def cleanerData = [
@@ -170,13 +205,19 @@ class LoadTestdata {
             
             def cleaners = []
             cleanerData.each { d ->
-                def cleaner = new Cleaner(d.name, d.phone, d.email, "45 Cleaner Street, Amsterdam", true)
-                def tc = PerstStorageManager.createContainer()
-                tc.addInsert(cleaner)
-                PerstStorageManager.store(tc)
-                cleaners << cleaner
+                try {
+                    def cleaner = new Cleaner(d.name, d.phone, d.email, "45 Cleaner Street, Amsterdam", true)
+                    def tc = PerstStorageManager.createContainer()
+                    tc.addInsert(cleaner)
+                    PerstStorageManager.store(tc)
+                    cleaners << cleaner
+                } catch (Exception e) {
+                    println "[LoadTestdata] Error creating cleaner ${d.name}: ${e.message}"
+                    throw e
+                }
             }
             results.cleaners = "created ${cleaners.size()}"
+            println "[LoadTestdata] Created ${cleaners.size()} cleaners"
             
             // Create bookings for each house (next 6 months)
             def bookings = []
@@ -186,18 +227,24 @@ class LoadTestdata {
             houses.eachWithIndex { house, houseIdx ->
                 // Create 2 bookings per house (spread over 6 months)
                 2.times { bookingIdx ->
-                    def checkIn = today.plusDays((houseIdx * 7) + (bookingIdx * 30))
-                    def checkOut = checkIn.plusDays(3)
-                    def guestName = "Guest ${houseIdx * 2 + bookingIdx + 1}"
-                    def booking = new Booking((int)house.getOid(), checkIn.format(formatter), checkOut.format(formatter), guestName, "${guestName.toLowerCase().replace(' ', '.')}@email.com", "+31 6 ${String.format('%08d', houseIdx * 2 + bookingIdx)}", "Special requests: None")
-                    booking.setHouse(house)  // Proper OO reference
-                    def tc = PerstStorageManager.createContainer()
-                    tc.addInsert(booking)
-                    PerstStorageManager.store(tc)
-                    bookings << booking
+                    try {
+                        def checkIn = today.plusDays((houseIdx * 7) + (bookingIdx * 30))
+                        def checkOut = checkIn.plusDays(3)
+                        def guestName = "Guest ${houseIdx * 2 + bookingIdx + 1}"
+                        def booking = new Booking((int)house.getOid(), checkIn.format(formatter), checkOut.format(formatter), guestName, "${guestName.toLowerCase().replace(' ', '.')}@email.com", "+31 6 ${String.format('%08d', houseIdx * 2 + bookingIdx)}", "Special requests: None")
+                        booking.setHouse(house)  // Proper OO reference
+                        def tc = PerstStorageManager.createContainer()
+                        tc.addInsert(booking)
+                        PerstStorageManager.store(tc)
+                        bookings << booking
+                    } catch (Exception e) {
+                        println "[LoadTestdata] Error creating booking for house ${houseIdx}: ${e.message}"
+                        throw e
+                    }
                 }
             }
             results.bookings = "created ${bookings.size()}"
+            println "[LoadTestdata] Created ${bookings.size()} bookings"
             
             // Create schedules from today to 6 months (for each booking)
             def schedules = []
@@ -237,6 +284,8 @@ class LoadTestdata {
     
     void clear(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            checkSystemAdmin(injson, "clear")
+            
             if (!PerstStorageManager.isAvailable()) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Perst is not available")

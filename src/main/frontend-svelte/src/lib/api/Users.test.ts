@@ -21,7 +21,7 @@ describe('Users API', () => {
 
       await getUsers();
 
-      expect(Server.call).toHaveBeenCalledWith('services.Users', 'getRecords', {});
+      expect(Server.call).toHaveBeenCalledWith('services.Users', 'getUsers', {});
     });
 
     it('should return users array from response', async () => {
@@ -63,7 +63,7 @@ describe('Users API', () => {
 
       await addUser('newuser', 'password123');
 
-      expect(Server.call).toHaveBeenCalledWith('services.Users', 'addRecord', {
+      expect(Server.call).toHaveBeenCalledWith('services.Users', 'createUser', {
         userName: 'newuser',
         userPassword: 'password123',
         userActive: 'Y'
@@ -76,7 +76,7 @@ describe('Users API', () => {
 
       await addUser('NewUser', 'password123');
 
-      expect(Server.call).toHaveBeenCalledWith('services.Users', 'addRecord', {
+      expect(Server.call).toHaveBeenCalledWith('services.Users', 'createUser', {
         userName: 'newuser',
         userPassword: 'password123',
         userActive: 'Y'
@@ -131,7 +131,7 @@ describe('Users API', () => {
 
       await deleteUser(123);
 
-      expect(Server.call).toHaveBeenCalledWith('services.Users', 'deleteRecord', { id: 123 });
+      expect(Server.call).toHaveBeenCalledWith('services.Users', 'deleteUser', { id: 123 });
     });
 
     it('should return success result', async () => {
@@ -170,7 +170,7 @@ describe('Users API', () => {
 
       await updateUser(123, 'updateduser', 'newpassword', 'Y');
 
-      expect(Server.call).toHaveBeenCalledWith('services.Users', 'updateRecord', {
+      expect(Server.call).toHaveBeenCalledWith('services.Users', 'updateUser', {
         id: 123,
         userName: 'updateduser',
         userPassword: 'newpassword',
@@ -184,7 +184,7 @@ describe('Users API', () => {
 
       await updateUser(123, 'UpdatedUser', 'newpassword', 'N');
 
-      expect(Server.call).toHaveBeenCalledWith('services.Users', 'updateRecord', {
+      expect(Server.call).toHaveBeenCalledWith('services.Users', 'updateUser', {
         id: 123,
         userName: 'updateduser',
         userPassword: 'newpassword',
@@ -197,11 +197,11 @@ describe('Users API', () => {
       vi.mocked(Server.call).mockResolvedValue(mockResponse);
 
       await updateUser(123, 'user', 'password', 'Y');
-      expect(Server.call).toHaveBeenLastCalledWith('services.Users', 'updateRecord', 
+      expect(Server.call).toHaveBeenLastCalledWith('services.Users', 'updateUser',
         expect.objectContaining({ userActive: 'Y' }));
 
       await updateUser(123, 'user', 'password', 'N');
-      expect(Server.call).toHaveBeenLastCalledWith('services.Users', 'updateRecord', 
+      expect(Server.call).toHaveBeenLastCalledWith('services.Users', 'updateUser',
         expect.objectContaining({ userActive: 'N' }));
     });
 
