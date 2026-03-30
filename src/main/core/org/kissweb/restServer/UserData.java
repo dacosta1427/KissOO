@@ -103,4 +103,14 @@ public class UserData {
     public Object getUserData(String key) {
         return data.get(key);
     }
+    
+    /**
+     * Set user data by key.
+     *
+     * @param key the key
+     * @param value the value
+     */
+    public void setUserData(String key, Object value) {
+        data.put(key, value);
+    }
 }

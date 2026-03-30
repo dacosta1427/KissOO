@@ -97,6 +97,10 @@ const housesAPI = {
   },
   delete: async (id) => {
     await callCleaningService("deleteHouse", { id }, "Delete house");
+  },
+  getByOwner: async (ownerId) => {
+    const res = await callCleaningService("getHousesByOwner", { owner_id: ownerId }, "Load houses by owner");
+    return res.data || [];
   }
 };
 const ownersAPI = {

@@ -20,33 +20,33 @@ function _page($$renderer, $$props) {
       $$renderer2.push("<!--[-1-->");
     }
     $$renderer2.push(`<!--]--> <div class="owners-grid svelte-1c47b5t">`);
-    if (owners.length === 0) {
+    if (owners.length === 0 && true) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<div class="empty-message svelte-1c47b5t">${escape_html(tt("owners.no_owners"))}</div>`);
     } else {
       $$renderer2.push("<!--[-1-->");
       $$renderer2.push(`<!--[-->`);
-      const each_array = ensure_array_like(owners);
-      for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
-        let owner = each_array[$$index];
+      const each_array_3 = ensure_array_like(owners);
+      for (let $$index_3 = 0, $$length = each_array_3.length; $$index_3 < $$length; $$index_3++) {
+        let owner = each_array_3[$$index_3];
         $$renderer2.push(`<div class="owner-card svelte-1c47b5t"><h3 class="owner-name svelte-1c47b5t">${escape_html(owner.name)}</h3> `);
         if (owner.email) {
           $$renderer2.push("<!--[0-->");
-          $$renderer2.push(`<p class="owner-email svelte-1c47b5t">${escape_html(owner.email)}</p>`);
+          $$renderer2.push(`<p class="owner-detail svelte-1c47b5t">${escape_html(owner.email)}</p>`);
         } else {
           $$renderer2.push("<!--[-1-->");
         }
         $$renderer2.push(`<!--]--> `);
         if (owner.phone) {
           $$renderer2.push("<!--[0-->");
-          $$renderer2.push(`<p class="owner-phone svelte-1c47b5t">${escape_html(owner.phone)}</p>`);
+          $$renderer2.push(`<p class="owner-detail svelte-1c47b5t">${escape_html(owner.phone)}</p>`);
         } else {
           $$renderer2.push("<!--[-1-->");
         }
         $$renderer2.push(`<!--]--> `);
         if (owner.address) {
           $$renderer2.push("<!--[0-->");
-          $$renderer2.push(`<p class="owner-address svelte-1c47b5t">${escape_html(owner.address)}</p>`);
+          $$renderer2.push(`<p class="owner-detail svelte-1c47b5t">${escape_html(owner.address)}</p>`);
         } else {
           $$renderer2.push("<!--[-1-->");
         }
