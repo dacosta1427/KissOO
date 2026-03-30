@@ -104,6 +104,7 @@ export interface CleaningResult {
   _ErrorMessage?: string;
   _ErrorCode?: number;
   data?: any;
+  estimated_hours?: number;
 }
 
 export interface ApiResult {

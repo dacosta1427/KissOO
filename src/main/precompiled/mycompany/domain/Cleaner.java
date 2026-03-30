@@ -7,42 +7,37 @@ import org.garret.perst.continuous.FullTextSearchable;
 /**
  * Cleaner entity for cleaning scheduler.
  * Represents a cleaner who can be assigned to cleaning tasks.
+ * Extends Actor to leverage the "Manager at the Gate" pattern with PerstUser.
  */
-public class Cleaner extends CVersion {
-    
-    @FullTextSearchable
-    @Indexable(unique = true)
-    private String name;
+public class Cleaner extends Actor {
     
     private String phone;
     
+    @FullTextSearchable
     private String email;
     
     private String address;
     
-    @Indexable
-    private boolean active = true;
-    
     public Cleaner() {
-        // default constructor
+        super("Cleaner", "Cleaner", new Agreement());
     }
     
     public Cleaner(String name, String phone, String email, boolean active) {
-        this(name, phone, email, null, active);
+        super(name, "Cleaner", new Agreement());
+        this.phone = phone;
+        this.email = email;
+        setActive(active);
     }
     
     public Cleaner(String name, String phone, String email, String address, boolean active) {
-        this.name = name;
+        super(name, "Cleaner", new Agreement());
         this.phone = phone;
         this.email = email;
         this.address = address;
-        this.active = active;
+        setActive(active);
     }
     
     // Getters and setters
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
     
@@ -52,16 +47,18 @@ public class Cleaner extends CVersion {
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
     
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    // Delegating methods to Actor's perstUser field
+    public PerstUser getUser() { return getPerstUser(); }
+    public void setUser(PerstUser user) { setPerstUser(user); }
     
     @Override
     public String toString() {
         return "Cleaner{" +
-                "name='" + name + '\'' +
+                "name='" + getName() + '\'' +
                 ", email='" + email + '\'' +
                 ", address='" + address + '\'' +
-                ", active=" + active +
+                ", active=" + isActive() +
+                ", user=" + (getPerstUser() != null ? getPerstUser().getUsername() : "null") +
                 '}';
     }
 }

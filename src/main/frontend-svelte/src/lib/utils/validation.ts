@@ -166,7 +166,8 @@ export class ValidationChain {
 	 * Add a number validator with optional min/max
 	 */
 	number(min: number | null = null, max: number | null = null, message?: string): this {
-		this.validators.push((value) => validators.number(value, min, max) || message);
+		const msg = message ?? null;
+		this.validators.push((value) => validators.number(value, min, max) || msg);
 		return this;
 	}
 
@@ -174,7 +175,8 @@ export class ValidationChain {
 	 * Add a length validator
 	 */
 	length(min: number = 0, max: number = Infinity, message?: string): this {
-		this.validators.push((value) => validators.length(value, min, max) || message);
+		const msg = message ?? null;
+		this.validators.push((value) => validators.length(value, min, max) || msg);
 		return this;
 	}
 
@@ -227,6 +229,7 @@ export function validateFields(
 
 	Object.keys(fieldConfigs).forEach((fieldName) => {
 		const chain = fieldConfigs[fieldName];
+		if (!chain) return;
 		const error = chain.validate(data[fieldName], data);
 		if (error) {
 			errors[fieldName] = error;

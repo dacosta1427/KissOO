@@ -2,10 +2,12 @@
 // See: https://joyofcode.xyz/how-to-share-state-in-svelte-5
 
 // Reactive state object - export as object so properties can be mutated
+/** @type {{value: any}} */
 export const userState = $state({
 	value: null
 });
 
+/** @type {{value: any[]}} */
 export const notificationsState = $state({
 	value: []
 });

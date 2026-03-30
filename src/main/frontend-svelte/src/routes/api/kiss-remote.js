@@ -22,9 +22,10 @@ async function executeRemoteFunction(service, method, args = {}, operationName =
 		}
 		return result;
 	} catch (error) {
+		const errorMsg = error instanceof Error ? error.message : String(error);
 		const errorMessage = operationName
-			? `${operationName} failed: ${error.message}`
-			: error.message;
+			? `${operationName} failed: ${errorMsg}`
+			: errorMsg;
 		errorActions.set(operationKey, errorMessage);
 		notificationActions.error(errorMessage);
 		throw error;

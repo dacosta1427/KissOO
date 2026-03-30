@@ -6,8 +6,11 @@
 import { browser } from '$app/environment';
 import { writable, derived } from 'svelte/store';
 
-type TranslationDictionary = Record<string, string | TranslationDictionary>;
-type Messages = Record<string, string | TranslationDictionary>;
+interface TranslationDictionary {
+	[key: string]: string | TranslationDictionary;
+}
+
+type Messages = TranslationDictionary;
 
 // Import translation files
 import en from './messages/en.json';

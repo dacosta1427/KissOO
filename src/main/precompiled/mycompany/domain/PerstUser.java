@@ -47,7 +47,7 @@ public class PerstUser extends CVersion {
     private long lastLoginDate;
     
     @Indexable
-    private boolean emailVerified = false;
+    private boolean emailVerified = true;
     
     private Owner owner;  // Direct reference to Owner object
     

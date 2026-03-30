@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { login, logout, signup, isAuthenticated, initBackend } from './Auth';
 import { Server } from '$lib/services/Server';
 import { session } from '$lib/state/session';
