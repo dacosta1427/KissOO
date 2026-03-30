@@ -53,35 +53,34 @@ class Login {
             perstUser.setLastLoginDate(System.currentTimeMillis())
             PerstUserManager.update(perstUser)
             
-            // Add user info to outjson for frontend
-            outjson.put("userId", perstUser.getOid())
+            // Add user info to outjson - ALL OIDs for consistency
+            outjson.put("userId", perstUser.getOid())  // Perst OID
             outjson.put("username", perstUser.getUsername())
             outjson.put("email", perstUser.getEmail() ?: "")
             outjson.put("preferredLanguage", perstUser.getPreferredLanguage() ?: "en")
             
-            // Add owner info if available
+            // Add owner OID if available
             Owner owner = perstUser.getOwner()
             if (owner != null) {
-                outjson.put("ownerId", owner.getOid())
+                outjson.put("ownerId", owner.getOid())  // Perst OID
                 outjson.put("ownerName", owner.getName() ?: "")
             } else {
                 outjson.put("ownerId", 0)
                 outjson.put("ownerName", "")
             }
             
-            // Add cleaner ID if user is also a cleaner (via PerstUser's Actor relationship)
+            // Add cleaner OID if user is also a cleaner (via Actor relationship)
             long cleanerId = 0
             if (perstUser.getActor() != null && perstUser.getActor() instanceof mycompany.domain.Cleaner) {
-                cleanerId = perstUser.getActor().getOid()
-                outjson.put("cleanerId", cleanerId)
-            } else {
-                outjson.put("cleanerId", 0)
+                cleanerId = perstUser.getActor().getOid()  // Perst OID
             }
-            
-            // Store role info in response for frontend to send back on subsequent requests
-            outjson.put("isAdmin", perstUser.getUserId() == 1)
-            outjson.put("ownerId", owner != null ? owner.getOid() : 0)
             outjson.put("cleanerId", cleanerId)
+            
+            // isAdmin: check if user has admin role in their agreement
+            boolean isAdmin = perstUser.getActor() != null && 
+                              perstUser.getActor().getAgreement() != null &&
+                              "admin".equals(perstUser.getActor().getAgreement().getRole())
+            outjson.put("isAdmin", isAdmin)
             
             logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()}, Owner: ${owner?.getOid() ?: 'none'})")
             
