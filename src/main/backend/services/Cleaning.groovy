@@ -37,15 +37,27 @@ class Cleaning {
     // ==================== AUTHORIZATION HELPERS ====================
     
     private boolean isAdmin(JSONObject injson) {
-        return injson.optBoolean("_isAdmin", false)
+        try {
+            if (injson.has("_isAdmin")) {
+                return injson.getBoolean("_isAdmin")
+            }
+            return false
+        } catch (Exception e) { 
+            println "isAdmin error: ${e.message}"
+            return false 
+        }
     }
     
     private long getOwnerId(JSONObject injson) {
-        return injson.optLong("_ownerId", 0)
+        try {
+            return injson.has("_ownerId") ? injson.getLong("_ownerId") : 0
+        } catch (Exception e) { return 0 }
     }
     
     private long getCleanerId(JSONObject injson) {
-        return injson.optLong("_cleanerId", 0)
+        try {
+            return injson.has("_cleanerId") ? injson.getLong("_cleanerId") : 0
+        } catch (Exception e) { return 0 }
     }
     
     private void checkAdminOnly(JSONObject injson, String operation) {
