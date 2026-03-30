@@ -48,7 +48,9 @@ public class PerstUser extends CVersion {
     
     @Indexable
     private boolean emailVerified = true;
-    
+
+    private boolean mustChangePassword = false;  // Force password change on first login
+
     private Owner owner;  // Direct reference to Owner object
     
     private String verificationToken;
@@ -123,6 +125,10 @@ public class PerstUser extends CVersion {
     
     public boolean isEmailVerified() { return emailVerified; }
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
+
+    public boolean isMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
+
     public Owner getOwner() { return owner; }
     public void setOwner(Owner owner) { this.owner = owner; }
     public String getVerificationToken() { return verificationToken; }

@@ -1036,6 +1036,7 @@ class Cleaning {
                 row.put("phone", owner.getPhone())
                 row.put("address", owner.getAddress())
                 row.put("active", owner.isActive())
+                row.put("canLogin", owner.getUser() != null)
                 rows.put(row)
             }
             
@@ -1063,13 +1064,14 @@ class Cleaning {
             data.put("phone", owner.getPhone())
             data.put("address", owner.getAddress())
             data.put("active", owner.isActive())
+            data.put("canLogin", owner.getUser() != null)
             outjson.put("data", data)
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
         }
     }
-    
+
     void getOwnerByUserId(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Using PerstStorageManager directly
@@ -1203,7 +1205,102 @@ class Cleaning {
             outjson.put("_ErrorMessage", e.message)
         }
     }
-    
+
+    /**
+     * Toggle login capability for an owner.
+     * If owner can't login, creates a PerstUser with email as username.
+     * If owner can login, removes the PerstUser.
+     *
+     * Input JSON: { "id": <owner_oid>, "canLogin": true|false }
+     */
+    void toggleOwnerLogin(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            long oid = injson.getLong("id")
+            boolean canLogin = injson.getBoolean("canLogin")
+            Owner owner = PerstStorageManager.getByOid(Owner.class, oid)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found")
+                return
+            }
+
+            if (canLogin && owner.getUser() == null) {
+                // Create new PerstUser for this owner
+                String email = owner.getEmail()
+                if (email == null || email.isEmpty()) {
+                    outjson.put("_Success", false)
+                    outjson.put("_ErrorMessage", "Owner must have an email address to enable login")
+                    return
+                }
+
+                // Generate unique userId
+                Collection<PerstUser> existingUsers = PerstStorageManager.getAll(PerstUser.class)
+                int maxUserId = existingUsers.collect { it.getUserId() }.max() ?: 0
+                int newUserId = maxUserId + 1
+
+                // Create user with email as username, random temp password
+                String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8)
+                PerstUser user = new PerstUser(email, tempPassword, newUserId)
+                user.setEmail(email)
+                user.setActive(true)
+                user.setEmailVerified(false)
+
+                // Generate verification token (for password reset on first login)
+                user.generateVerificationToken()
+                user.setMustChangePassword(true)  // Flag to force password change on first login
+
+                def tc = PerstStorageManager.createContainer()
+                tc.addInsert(user)
+                if (!PerstStorageManager.store(tc)) {
+                    outjson.put("_Success", false)
+                    outjson.put("_ErrorMessage", "Failed to create user account")
+                    return
+                }
+
+                // Link user to owner
+                owner.setUser(user)
+                owner.setUserId(newUserId)
+                def ownerTc = PerstStorageManager.createContainer()
+                ownerTc.addUpdate(owner)
+                PerstStorageManager.store(ownerTc)
+
+                outjson.put("_Success", true)
+                outjson.put("canLogin", true)
+                outjson.put("username", email)
+                outjson.put("temporaryPassword", tempPassword)  // For admin to share with owner
+                outjson.put("message", "Owner can now login with email: ${email}. Temporary password: ${tempPassword}")
+
+            } else if (!canLogin && owner.getUser() != null) {
+                // Remove login capability - delete the PerstUser
+                PerstUser user = owner.getUser()
+                owner.setUser(null)
+                owner.setUserId(0)
+
+                def ownerTc = PerstStorageManager.createContainer()
+                ownerTc.addUpdate(owner)
+                PerstStorageManager.store(ownerTc)
+
+                // Delete the user
+                def userTc = PerstStorageManager.createContainer()
+                userTc.addDelete(user)
+                PerstStorageManager.store(userTc)
+
+                outjson.put("_Success", true)
+                outjson.put("canLogin", false)
+                outjson.put("message", "Login capability removed")
+
+            } else {
+                // Already in requested state
+                outjson.put("_Success", true)
+                outjson.put("canLogin", owner.getUser() != null)
+                outjson.put("message", "Already in requested state")
+            }
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+
     void deleteOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Using PerstStorageManager directly

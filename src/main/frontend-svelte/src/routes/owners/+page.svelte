@@ -10,7 +10,8 @@
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingOwner = $state<Owner | null>(null);
-	
+	let viewMode = $state<'card' | 'table'>('card');
+
 	let ownerHousesWithSchedules = $state<HouseWithSchedules[]>([]);
 	let expandedHouseIds = $state<Set<number>>(new Set());
 	let loadingHouses = $state(false);
@@ -46,6 +47,36 @@
 		bathrooms: 0,
 		luxury_level: 'standard' as 'basic' | 'standard' | 'premium' | 'luxury'
 	});
+
+	// Owner login state
+	let ownerCanLogin = $state(false);
+	let loginToggleLoading = $state(false);
+	let loginInfo = $state<{username?: string; tempPassword?: string} | null>(null);
+
+	async function toggleOwnerLogin() {
+		if (!editingOwner) return;
+		loginToggleLoading = true;
+		loginInfo = null;
+		try {
+			const res = await Server.call('services.Cleaning', 'toggleOwnerLogin', {
+				id: editingOwner.id,
+				canLogin: !ownerCanLogin
+			});
+			if (res._Success || res.success) {
+				ownerCanLogin = !ownerCanLogin;
+				if (res.temporaryPassword) {
+					loginInfo = { username: res.username, tempPassword: res.temporaryPassword };
+				}
+				notificationActions.success(res.message || 'Login status updated');
+			} else {
+				notificationActions.error(res._ErrorMessage || res.error || 'Failed to toggle login');
+			}
+		} catch (err: any) {
+			notificationActions.error(err.message || 'Failed to toggle login');
+		} finally {
+			loginToggleLoading = false;
+		}
+	}
 
 	function openAddHouseModal() {
 		houseFormData = {
@@ -122,12 +153,14 @@
 
 	async function openEditForm(owner: Owner) {
 		editingOwner = owner;
-		formData = { 
-			name: owner.name, 
-			email: owner.email || '', 
-			phone: owner.phone || '', 
-			address: owner.address || '' 
+		formData = {
+			name: owner.name,
+			email: owner.email || '',
+			phone: owner.phone || '',
+			address: owner.address || ''
 		};
+		ownerCanLogin = owner.canLogin || false;
+		loginInfo = null;
 		ownerHousesWithSchedules = [];
 		expandedHouseIds = new Set();
 		showForm = true;
@@ -236,6 +269,37 @@
 				</div>
 
 				{#if editingOwner}
+					<!-- Can Login Toggle -->
+					<div class="login-toggle-section">
+						<div class="toggle-row">
+							<label class="toggle-label">
+								<span>{tt('owners.can_login') || 'Can log in'}</span>
+								<span class="toggle-hint">{tt('owners.login_hint') || 'Allow owner to login with email'}</span>
+							</label>
+							<button
+								type="button"
+								class="toggle-switch"
+								class:active={ownerCanLogin}
+								onclick={toggleOwnerLogin}
+								disabled={loginToggleLoading}
+							>
+								{#if loginToggleLoading}
+									{tt('common.loading')}
+								{:else}
+									{ownerCanLogin ? tt('common.active') : tt('common.inactive')}
+								{/if}
+							</button>
+						</div>
+						{#if loginInfo}
+							<div class="login-info">
+								<strong>{tt('owners.login_credentials') || 'Login credentials:'}</strong>
+								<p>Email: {loginInfo.username}</p>
+								<p>{tt('owners.temp_password') || 'Temporary password:'} <code>{loginInfo.tempPassword}</code></p>
+								<p class="info-note">{tt('owners.password_reset_note') || 'Owner must change password on first login'}</p>
+							</div>
+						{/if}
+					</div>
+
 					<div class="houses-schedules-section">
 						<div class="section-header">
 							<h4 class="section-title">{tt('owners.houses')} & {tt('schedules.title')}</h4>
@@ -321,6 +385,17 @@
 	{/if}
 
 	{#if !showForm}
+	<!-- View Toggle -->
+	<div class="view-toggle">
+		<button class="toggle-btn" class:active={viewMode === 'card'} onclick={() => viewMode = 'card'}>
+			{tt('houses.card_view')}
+		</button>
+		<button class="toggle-btn" class:active={viewMode === 'table'} onclick={() => viewMode = 'table'}>
+			{tt('houses.table_view')}
+		</button>
+	</div>
+
+	{#if viewMode === 'card'}
 	<div class="owners-grid">
 		{#if owners.length === 0 && !loading}
 			<div class="empty-message">{tt('owners.no_owners')}</div>
@@ -339,6 +414,36 @@
 			{/each}
 		{/if}
 	</div>
+	{:else}
+	<!-- Table View -->
+	<div class="table-section">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>{tt('owners.name')}</th>
+					<th>{tt('owners.email')}</th>
+					<th>{tt('owners.phone')}</th>
+					<th>{tt('owners.address')}</th>
+					<th>{tt('common.actions')}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each owners as owner}
+					<tr>
+						<td>{owner.name}</td>
+						<td>{owner.email || '-'}</td>
+						<td>{owner.phone || '-'}</td>
+						<td>{owner.address || '-'}</td>
+						<td>
+							<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(owner)}>{tt('common.edit')}</button>
+							<button class="btn btn-danger btn-sm" onclick={() => handleDelete(owner)}>{tt('common.delete')}</button>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+	{/if}
 	{/if}
 </div>
 
@@ -419,10 +524,37 @@
 	.owner-detail { margin: 0; color: #6b7280; font-size: 0.875rem; }
 	.owner-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
 
+	/* View Toggle */
+	.view-toggle { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+	.toggle-btn { padding: 0.5rem 1rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-size: 0.875rem; }
+	.toggle-btn:first-child { border-radius: 6px 0 0 6px; }
+	.toggle-btn:last-child { border-radius: 0 6px 6px 0; }
+	.toggle-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+	/* Table View */
+	.table-section { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+	.data-table { width: 100%; border-collapse: collapse; }
+	.data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+	.data-table th { background: #f9fafb; font-weight: 600; color: #374151; }
+	.data-table tr:hover { background: #f9fafb; }
+
 	/* Houses & Schedules */
 	.houses-schedules-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb; }
 	.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 	.section-title { font-size: 1rem; font-weight: 600; margin: 0; color: #374151; }
+
+	/* Login Toggle */
+	.login-toggle-section { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
+	.toggle-row { display: flex; justify-content: space-between; align-items: center; }
+	.toggle-label { display: flex; flex-direction: column; }
+	.toggle-label span:first-child { font-weight: 600; color: #111827; }
+	.toggle-hint { font-size: 0.75rem; color: #6b7280; }
+	.toggle-switch { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-size: 0.875rem; background: white; }
+	.toggle-switch.active { background: #10b981; color: white; border-color: #10b981; }
+	.toggle-switch:disabled { opacity: 0.5; cursor: not-allowed; }
+	.login-info { margin-top: 1rem; padding: 1rem; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; }
+	.login-info code { background: #fef3c7; padding: 0.125rem 0.375rem; border-radius: 4px; font-family: monospace; }
+	.info-note { font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; }
 
 	/* Modal */
 	.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }

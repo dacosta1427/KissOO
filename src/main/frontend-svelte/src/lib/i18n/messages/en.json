@@ -195,7 +195,12 @@
 		"no_owners": "No owners found. Add one to get started.",
 		"view_houses": "Houses",
 		"houses": "Houses",
-		"no_houses": "No houses found for this owner."
+		"no_houses": "No houses found for this owner.",
+		"can_login": "Can log in",
+		"login_hint": "Allow owner to login with email address",
+		"login_credentials": "Login credentials:",
+		"temp_password": "Temporary password:",
+		"password_reset_note": "Owner must change password on first login."
 	},
 	"users": {
 		"title": "User Management",

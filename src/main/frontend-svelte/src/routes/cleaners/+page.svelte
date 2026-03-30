@@ -15,6 +15,9 @@
 	let showForm = $state(false);
 	let editingCleaner = $state<Cleaner | null>(null);
 
+	// View toggle: 'card' or 'table'
+	let viewMode = $state<'card' | 'table'>('card');
+
 	// Load data on mount
 	$effect(() => {
 		loadCleaners();
@@ -158,16 +161,68 @@
 		</div>
 	{/if}
 
-	<div class="table-section">
-		<Table
-			data={cleaners}
-			columns={tableColumns}
-			actions={tableActions}
-			{loading}
-			{error}
-			onAction={handleAction}
-		/>
+	<!-- View Toggle -->
+	<div class="view-toggle">
+		<button
+			class="toggle-btn"
+			class:active={viewMode === 'card'}
+			onclick={() => viewMode = 'card'}
+		>
+			{tt('houses.card_view')}
+		</button>
+		<button
+			class="toggle-btn"
+			class:active={viewMode === 'table'}
+			onclick={() => viewMode = 'table'}
+		>
+			{tt('houses.table_view')}
+		</button>
 	</div>
+
+	{#if viewMode === 'card'}
+		<!-- Card View -->
+		<div class="cleaners-grid">
+			{#if cleaners.length === 0 && !loading}
+				<div class="empty-message">{tt('cleaners.no_cleaners')}</div>
+			{:else}
+				{#each cleaners as cleaner}
+					<div class="cleaner-card">
+						<h3 class="cleaner-name">{cleaner.name}</h3>
+						{#if cleaner.email}<p class="cleaner-detail">{cleaner.email}</p>{/if}
+						{#if cleaner.phone}<p class="cleaner-detail">{cleaner.phone}</p>{/if}
+						{#if cleaner.address}<p class="cleaner-detail">{cleaner.address}</p>{/if}
+						<span class="status-badge" class:active={cleaner.active}>
+							{cleaner.active ? tt('common.active') : tt('common.inactive')}
+						</span>
+						<div class="cleaner-actions">
+							<button class="btn btn-secondary btn-sm" onclick={() => { editingCleaner = cleaner; showForm = true; }}>
+								{tt('common.edit')}
+							</button>
+							<button class="btn btn-danger btn-sm" onclick={() => {
+								if (confirm(t('cleaners.delete_confirm'))) {
+									cleanersAPI.delete(cleaner.id).then(() => loadCleaners());
+								}
+							}}>
+								{tt('common.delete')}
+							</button>
+						</div>
+					</div>
+				{/each}
+			{/if}
+		</div>
+	{:else}
+		<!-- Table View -->
+		<div class="table-section">
+			<Table
+				data={cleaners}
+				columns={tableColumns}
+				actions={tableActions}
+				{loading}
+				{error}
+				onAction={handleAction}
+			/>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -209,6 +264,21 @@
 		background: var(--primary-hover);
 	}
 
+	.btn-secondary {
+		background: #6b7280;
+		color: white;
+	}
+
+	.btn-danger {
+		background: #ef4444;
+		color: white;
+	}
+
+	.btn-sm {
+		padding: 0.25rem 0.75rem;
+		font-size: 0.75rem;
+	}
+
 	.form-section {
 		background: white;
 		border: 1px solid var(--border-color);
@@ -224,6 +294,43 @@
 		padding: 1rem;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
+
+	/* View Toggle */
+	.view-toggle {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.toggle-btn {
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--border-color);
+		background: white;
+		cursor: pointer;
+		font-size: 0.875rem;
+	}
+	.toggle-btn:first-child { border-radius: 6px 0 0 6px; }
+	.toggle-btn:last-child { border-radius: 0 6px 6px 0; }
+	.toggle-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+	/* Card View */
+	.cleaners-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1.5rem;
+	}
+	.cleaner-card {
+		background: white;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		padding: 1rem;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+	.cleaner-name { margin: 0 0 0.5rem 0; font-size: 1.125rem; font-weight: 600; }
+	.cleaner-detail { margin: 0; color: #6b7280; font-size: 0.875rem; }
+	.cleaner-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+	.status-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; margin-top: 0.5rem; }
+	.status-badge.active { background: #d1fae5; color: #065f46; }
+	.status-badge:not(.active) { background: #fee2e2; color: #991b1b; }
+	.empty-message { text-align: center; color: #6b7280; padding: 2rem; grid-column: 1 / -1; }
 
 	/* Responsive design */
 	@media (max-width: 768px) {

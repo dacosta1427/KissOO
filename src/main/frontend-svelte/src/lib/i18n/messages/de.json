@@ -195,7 +195,12 @@
 		"no_owners": "Keine Eigentümer gefunden. Fügen Sie einen hinzu, um zu beginnen.",
 		"view_houses": "Häuser",
 		"houses": "Häuser",
-		"no_houses": "Keine Häuser für diesen Eigentümer gefunden."
+		"no_houses": "Keine Häuser für diesen Eigentümer gefunden.",
+		"can_login": "Kann anmelden",
+		"login_hint": "Eigentümer Anmeldung mit E-Mail erlauben",
+		"login_credentials": "Anmeldedaten:",
+		"temp_password": "Vorläufiges Passwort:",
+		"password_reset_note": "Eigentümer muss Passwort beim ersten Login ändern."
 	},
 	"users": {
 		"title": "Benutzerverwaltung",

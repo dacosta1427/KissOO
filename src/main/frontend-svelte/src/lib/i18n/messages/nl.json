@@ -195,7 +195,12 @@
 		"no_owners": "Geen eigenaren gevonden. Voeg er een toe om te beginnen.",
 		"view_houses": "Huizen",
 		"houses": "Huizen",
-		"no_houses": "Geen huizen gevonden voor deze eigenaar."
+		"no_houses": "Geen huizen gevonden voor deze eigenaar.",
+		"can_login": "Kan inloggen",
+		"login_hint": "Eigenaar toestaan in te loggen met e-mailadres",
+		"login_credentials": "Inloggegevens:",
+		"temp_password": "Tijdelijk wachtwoord:",
+		"password_reset_note": "Eigenaar moet wachtwoord wijzigen bij eerste inlog."
 	},
 	"users": {
 		"title": "Gebruikersbeheer",

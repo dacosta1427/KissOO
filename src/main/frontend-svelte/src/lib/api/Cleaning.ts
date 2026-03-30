@@ -68,6 +68,7 @@ export interface Owner {
   phone?: string;
   address?: string;
   active: boolean;
+  canLogin?: boolean;  // Whether owner has login capability
 }
 
 export interface CostProfile {

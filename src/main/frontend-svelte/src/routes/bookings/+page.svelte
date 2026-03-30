@@ -239,16 +239,58 @@
 		</div>
 	{/if}
 
-	<div class="table-section">
-		<Table
-			data={filteredBookings}
-			columns={tableColumns}
-			actions={tableActions}
-			{loading}
-			{error}
-			onAction={handleAction}
-		/>
+	<!-- View Toggle -->
+	<div class="view-toggle">
+		<button class="toggle-btn" class:active={viewMode === 'card'} onclick={() => viewMode = 'card'}>
+			{tt('houses.card_view')}
+		</button>
+		<button class="toggle-btn" class:active={viewMode === 'table'} onclick={() => viewMode = 'table'}>
+			{tt('houses.table_view')}
+		</button>
 	</div>
+
+	{#if viewMode === 'card'}
+		<!-- Card View -->
+		<div class="bookings-grid">
+			{#if filteredBookings.length === 0 && !loading}
+				<div class="empty-message">{tt('bookings.no_bookings')}</div>
+			{:else}
+				{#each filteredBookings as booking}
+					<div class="booking-card">
+						<h3 class="booking-guest">{booking.guest_name}</h3>
+						<p class="booking-dates">{booking.check_in_date} → {booking.check_out_date}</p>
+						<p class="booking-house">House: {houses.find(h => h.id === booking.house_id)?.name || booking.house_id}</p>
+						{#if booking.guest_email}<p class="booking-detail">{booking.guest_email}</p>{/if}
+						<span class="status-badge status-{booking.status}">{booking.status}</span>
+						<div class="booking-actions">
+							<button class="btn btn-secondary btn-sm" onclick={() => { editingBooking = booking; showForm = true; }}>
+								{tt('common.edit')}
+							</button>
+							<button class="btn btn-danger btn-sm" onclick={() => {
+								if (confirm(t('bookings.delete_confirm'))) {
+									bookingsAPI.delete(booking.id).then(() => loadData());
+								}
+							}}>
+								{tt('common.delete')}
+							</button>
+						</div>
+					</div>
+				{/each}
+			{/if}
+		</div>
+	{:else}
+		<!-- Table View -->
+		<div class="table-section">
+			<Table
+				data={filteredBookings}
+				columns={tableColumns}
+				actions={tableActions}
+				{loading}
+				{error}
+				onAction={handleAction}
+			/>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -305,6 +347,30 @@
 		padding: 1rem;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
+
+	/* View Toggle */
+	.view-toggle { display: flex; gap: 0.5rem; }
+	.toggle-btn { padding: 0.5rem 1rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-size: 0.875rem; }
+	.toggle-btn:first-child { border-radius: 6px 0 0 6px; }
+	.toggle-btn:last-child { border-radius: 0 6px 6px 0; }
+	.toggle-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+	/* Card View */
+	.bookings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+	.booking-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+	.booking-guest { margin: 0 0 0.5rem 0; font-size: 1.125rem; font-weight: 600; }
+	.booking-dates { margin: 0; color: #6b7280; font-size: 0.875rem; }
+	.booking-house { margin: 0.25rem 0; color: #374151; font-size: 0.875rem; }
+	.booking-detail { margin: 0; color: #6b7280; font-size: 0.875rem; }
+	.booking-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+	.status-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; margin-top: 0.5rem; text-transform: capitalize; }
+	.status-pending { background: #fef3c7; color: #92400e; }
+	.status-confirmed { background: #d1fae5; color: #065f46; }
+	.status-cancelled { background: #fee2e2; color: #991b1b; }
+	.empty-message { text-align: center; color: #6b7280; padding: 2rem; grid-column: 1 / -1; }
+	.btn-secondary { background: #6b7280; color: white; }
+	.btn-danger { background: #ef4444; color: white; }
+	.btn-sm { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
 
 	/* Responsive design */
 	@media (max-width: 768px) {
