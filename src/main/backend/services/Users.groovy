@@ -88,7 +88,7 @@ class Users {
             }
             
             // Create Owner with User reference
-            Owner owner = new Owner(name, email, phone, address, true)
+            Owner owner = new Owner(name, email, phone, address)
             owner.setPerstUser(user)
             def ownerTc = PerstStorageManager.createContainer()
             ownerTc.addInsert(owner)
