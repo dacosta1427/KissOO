@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { ownersAPI, housesAPI, bookingsByHouseAPI, schedulesByBookingAPI, type Owner, type House, type Booking, type Schedule } from '$lib/api/Cleaning';
+	import { ownersAPI, housesAPI, cleanersAPI, bookingsByHouseAPI, schedulesByBookingAPI, type Owner, type House, type Cleaner, type Booking, type Schedule } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import { t, currentLocale } from '$lib/i18n';
-	
+	import { Server } from '$lib/services/Server';
+
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
 	let owners = $state<Owner[]>([]);
+	let cleaners = $state<Cleaner[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
@@ -64,6 +66,9 @@
 			});
 			if (res._Success || res.success) {
 				ownerCanLogin = !ownerCanLogin;
+				// Update the owner in the list
+				const idx = owners.findIndex(o => o.id === editingOwner!.id);
+				if (idx >= 0) owners[idx] = { ...owners[idx], canLogin: ownerCanLogin };
 				if (res.temporaryPassword) {
 					loginInfo = { username: res.username, tempPassword: res.temporaryPassword };
 				}
@@ -75,6 +80,29 @@
 			notificationActions.error(err.message || 'Failed to toggle login');
 		} finally {
 			loginToggleLoading = false;
+		}
+	}
+
+	async function toggleOwnerLoginById(ownerId: number, canLogin: boolean) {
+		try {
+			const res = await Server.call('services.Cleaning', 'toggleOwnerLogin', {
+				id: ownerId,
+				canLogin
+			});
+			if (res._Success || res.success) {
+				// Update the owner in the list
+				const idx = owners.findIndex(o => o.id === ownerId);
+				if (idx >= 0) owners[idx] = { ...owners[idx], canLogin };
+				if (res.temporaryPassword) {
+					notificationActions.success(`Temp password: ${res.temporaryPassword}`);
+				} else {
+					notificationActions.success(res.message || 'Login status updated');
+				}
+			} else {
+				notificationActions.error(res._ErrorMessage || res.error || 'Failed to toggle login');
+			}
+		} catch (err: any) {
+			notificationActions.error(err.message || 'Failed to toggle login');
 		}
 	}
 
@@ -116,11 +144,18 @@
 		error = null;
 		try {
 			owners = await ownersAPI.getAll();
+			// Also load cleaners for display
+			cleaners = await cleanersAPI.getAll();
 		} catch (err: any) {
 			error = err.message || t('errors.failed_to_load');
 		} finally {
 			loading = false;
 		}
+	}
+
+	function getCleanerName(cleanerId: number): string {
+		const cleaner = cleaners.find(c => c.id === cleanerId);
+		return cleaner ? cleaner.name : `#${cleanerId}`;
 	}
 
 	async function loadOwnerHousesWithSchedules(ownerId: number) {
@@ -348,7 +383,7 @@
 																			<td>{formatDate(schedule.date)}</td>
 																			<td>{schedule.start_time}</td>
 																			<td>{schedule.end_time}</td>
-																			<td>{schedule.cleaner_id || '-'}</td>
+																			<td>{getCleanerName(schedule.cleaner_id)}</td>
 																			<td><span class="status-mini status-{schedule.status}">{schedule.status}</span></td>
 																		</tr>
 																	{/each}
@@ -398,7 +433,16 @@
 		{:else}
 			{#each owners as owner}
 				<div class="owner-card">
-					<h3 class="owner-name">{owner.name}</h3>
+					<div class="card-header">
+						<h3 class="owner-name">{owner.name}</h3>
+						<button
+							type="button"
+							class="card-toggle"
+							class:active={owner.canLogin}
+							onclick={() => toggleOwnerLoginById(owner.id, !owner.canLogin)}
+							title={owner.canLogin ? 'Login enabled' : 'Login disabled'}
+						></button>
+					</div>
 					{#if owner.email}<p class="owner-detail">{owner.email}</p>{/if}
 					{#if owner.phone}<p class="owner-detail">{owner.phone}</p>{/if}
 					{#if owner.address}<p class="owner-detail">{owner.address}</p>{/if}
@@ -419,7 +463,7 @@
 					<th>{tt('owners.name')}</th>
 					<th>{tt('owners.email')}</th>
 					<th>{tt('owners.phone')}</th>
-					<th>{tt('owners.address')}</th>
+					<th>{tt('owners.can_login')}</th>
 					<th>{tt('common.actions')}</th>
 				</tr>
 			</thead>
@@ -429,7 +473,15 @@
 						<td>{owner.name}</td>
 						<td>{owner.email || '-'}</td>
 						<td>{owner.phone || '-'}</td>
-						<td>{owner.address || '-'}</td>
+						<td>
+							<button
+								type="button"
+								class="card-toggle"
+								class:active={owner.canLogin}
+								onclick={() => toggleOwnerLoginById(owner.id, !owner.canLogin)}
+								title={owner.canLogin ? 'Login enabled' : 'Login disabled'}
+							></button>
+						</td>
 						<td>
 							<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(owner)}>{tt('common.edit')}</button>
 							<button class="btn btn-danger btn-sm" onclick={() => handleDelete(owner)}>{tt('common.delete')}</button>
@@ -519,6 +571,39 @@
 	.owner-name { margin: 0 0 0.5rem 0; font-size: 1.125rem; font-weight: 600; color: #111827; }
 	.owner-detail { margin: 0; color: #6b7280; font-size: 0.875rem; }
 	.owner-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+	.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+
+	/* Mini toggle switch for cards/tables */
+	.card-toggle {
+		position: relative;
+		width: 36px;
+		height: 18px;
+		border-radius: 9px;
+		border: none;
+		cursor: pointer;
+		background: #fca5a5;
+		transition: background 0.2s ease;
+		padding: 0;
+		flex-shrink: 0;
+	}
+	.card-toggle::after {
+		content: '';
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: white;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+		transition: transform 0.2s ease;
+	}
+	.card-toggle.active {
+		background: #10b981;
+	}
+	.card-toggle.active::after {
+		transform: translateX(18px);
+	}
 
 	/* View Toggle */
 	.view-toggle { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
