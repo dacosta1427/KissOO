@@ -39,6 +39,22 @@ Perst is disabled by default. To enable:
    ```
 2. Restart the application
 
+### Update Perst
+
+To download the latest Perst RELEASE version from the Maven repository:
+
+```bash
+./bld perst-update
+```
+
+Or using Maven directly:
+
+```bash
+mvn antrun:run@perst-update
+```
+
+Both commands download the latest `perst-dcg.jar` to the `libs/` directory.
+
 ## Project Structure
 
 ```

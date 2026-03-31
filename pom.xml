@@ -17,6 +17,14 @@
       this will work.  This is done by running:  mvn antrun:run@builder
   -->
 
+  <!-- Perst Maven Repository -->
+  <repositories>
+    <repository>
+      <id>nassyn-webdav</id>
+      <url>http://nassyn:5005/mavenRepo</url>
+    </repository>
+  </repositories>
+
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.kissweb</groupId>
@@ -231,12 +239,10 @@
       <systemPath>${project.basedir}/libs/lombok.jar</systemPath>
     </dependency>
     <dependency>
-      <!-- Perst OODBMS -->
+      <!-- Perst OODBMS - auto-downloaded from nassyn-webdav repository -->
       <groupId>org.garret.perst</groupId>
       <artifactId>perst-dcg</artifactId>
-      <version>5.1.0</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/libs/perst-dcg-5.1.0.jar</systemPath>
+      <version>RELEASE</version>
     </dependency>
 
     <!-- Mockito for testing -->
@@ -705,6 +711,26 @@
                   </classpath>
                   <arg value="libs"/>
                 </java>
+              </target>
+            </configuration>
+          </execution>
+
+          <!-- ========== perst-update ========== -->
+          <execution>
+            <id>perst-update</id>
+            <phase>none</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <exec executable="mvn">
+                  <arg value="dependency:get"/>
+                  <arg value="-Dartifact=org.garret.perst:perst-dcg:RELEASE"/>
+                  <arg value="-DremoteRepositories=nassyn::::https://repo.nasyn.io/repository/maven-public/"/>
+                  <arg value="-Dtransitive=false"/>
+                  <arg value="-Ddest=libs/perst-dcg.jar"/>
+                </exec>
               </target>
             </configuration>
           </execution>
