@@ -55,6 +55,16 @@
 	let loginToggleLoading = $state(false);
 	let loginInfo = $state<{username?: string; tempPassword?: string} | null>(null);
 
+	// Form section ref for scroll on small screens
+	let formSection = $state<HTMLElement | null>(null);
+
+	function scrollToEditForm() {
+		// Scroll to edit form on small screens (mobile/tablet)
+		if (window.innerWidth < 1024 && formSection) {
+			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}
+
 	async function toggleOwnerLogin() {
 		if (!editingOwner) return;
 		loginToggleLoading = true;
@@ -208,6 +218,7 @@
 		expandedHouseIds = new Set();
 		showForm = true;
 		await loadOwnerHousesWithSchedules(owner.id);
+		scrollToEditForm();
 	}
 
 	function handleFormCancel() {
@@ -292,7 +303,7 @@
 	{/if}
 
 	{#if showForm}
-		<div class="form-section">
+		<div class="form-section" bind:this={formSection}>
 			<h3 class="form-title">{editingOwner ? t('owners.edit_owner') : t('owners.add_new_owner')}</h3>
 			
 			<form onsubmit={handleFormSubmit}>
@@ -445,14 +456,16 @@
 			<div class="empty-message">{tt('owners.no_owners')}</div>
 		{:else}
 			{#each owners as owner}
-				<div class="owner-card">
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="owner-card clickable" onclick={() => openEditForm(owner)} onkeydown={(e) => e.key === 'Enter' && openEditForm(owner)}>
 					<div class="card-header">
 						<h3 class="owner-name">{owner.name}</h3>
 						<button
 							type="button"
 							class="card-toggle"
 							class:active={owner.canLogin}
-							onclick={() => toggleOwnerLoginById(owner.id, !owner.canLogin)}
+							onclick={(e) => { e.stopPropagation(); toggleOwnerLoginById(owner.id, !owner.canLogin); }}
 							title={owner.canLogin ? 'Login enabled' : 'Login disabled'}
 						></button>
 					</div>
@@ -460,8 +473,8 @@
 					{#if owner.phone}<p class="owner-detail">{owner.phone}</p>{/if}
 					{#if owner.address}<p class="owner-detail">{owner.address}</p>{/if}
 					<div class="owner-actions">
-						<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(owner)}>{tt('common.edit')}</button>
-						<button class="btn btn-danger btn-sm" onclick={() => handleDelete(owner)}>{tt('common.delete')}</button>
+						<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); openEditForm(owner); }}>{tt('common.edit')}</button>
+						<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); handleDelete(owner); }}>{tt('common.delete')}</button>
 					</div>
 				</div>
 			{/each}
@@ -482,7 +495,9 @@
 			</thead>
 			<tbody>
 				{#each owners as owner}
-					<tr>
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<tr class="clickable" onclick={() => openEditForm(owner)} onkeydown={(e) => e.key === 'Enter' && openEditForm(owner)}>
 						<td>{owner.name}</td>
 						<td>{owner.email || '-'}</td>
 						<td>{owner.phone || '-'}</td>
@@ -491,13 +506,13 @@
 								type="button"
 								class="card-toggle"
 								class:active={owner.canLogin}
-								onclick={() => toggleOwnerLoginById(owner.id, !owner.canLogin)}
+								onclick={(e) => { e.stopPropagation(); toggleOwnerLoginById(owner.id, !owner.canLogin); }}
 								title={owner.canLogin ? 'Login enabled' : 'Login disabled'}
 							></button>
 						</td>
 						<td>
-							<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(owner)}>{tt('common.edit')}</button>
-							<button class="btn btn-danger btn-sm" onclick={() => handleDelete(owner)}>{tt('common.delete')}</button>
+							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); openEditForm(owner); }}>{tt('common.edit')}</button>
+							<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); handleDelete(owner); }}>{tt('common.delete')}</button>
 						</td>
 					</tr>
 				{/each}
@@ -583,7 +598,10 @@
 	.btn-sm { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
 	.empty-message { grid-column: 1 / -1; text-align: center; color: #6b7280; padding: 2rem; }
 	.owners-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-	.owner-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+	.owner-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: box-shadow 0.2s, border-color 0.2s; }
+	.clickable { cursor: pointer; }
+	.clickable:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
+	.data-table tr.clickable:hover { background: #eff6ff; }
 	.owner-name { margin: 0 0 0.5rem 0; font-size: 1.125rem; font-weight: 600; color: #111827; }
 	.owner-detail { margin: 0; color: #6b7280; font-size: 0.875rem; }
 	.owner-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
