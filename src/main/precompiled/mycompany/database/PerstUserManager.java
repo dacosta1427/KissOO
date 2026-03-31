@@ -46,6 +46,10 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         return oodb.PerstStorageManager.getByOid(PerstUser.class, oid);
     }
 
+    public static PerstUser getByUserId(int userId) {
+        return oodb.PerstStorageManager.find(PerstUser.class, "userId", userId);
+    }
+
     // ========== AUTHENTICATION ==========
     
     public static PerstUser authenticate(String username, String password) {

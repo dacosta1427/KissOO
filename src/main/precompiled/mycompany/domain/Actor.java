@@ -72,8 +72,19 @@ public class Actor extends CVersion {
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }
     
-    public PerstUser getPerstUser() { return perstUser; }
-    public void setPerstUser(PerstUser perstUser) { this.perstUser = perstUser; }
+    public PerstUser getPerstUser() {
+        if (perstUser == null && userId > 0) {
+            // Lazy-load from Perst using userId (transient field won't persist)
+            perstUser = mycompany.database.PerstUserManager.getByUserId(userId);
+        }
+        return perstUser;
+    }
+    public void setPerstUser(PerstUser perstUser) { 
+        this.perstUser = perstUser; 
+        if (perstUser != null) {
+            this.userId = perstUser.getUserId();
+        }
+    }
     
     public Agreement getAgreement() { return agreement; }
     public void setAgreement(Agreement agreement) { this.agreement = agreement; }
