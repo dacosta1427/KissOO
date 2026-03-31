@@ -319,11 +319,12 @@
 					<!-- Can Login Toggle -->
 					<div class="login-toggle-section">
 						<div class="toggle-row">
-							<label class="toggle-label">
+							<label class="toggle-label" for="login-toggle">
 								<span>{tt('owners.can_login') || 'Can log in'}</span>
 								<span class="toggle-hint">{tt('owners.login_hint') || 'Allow owner to login with email'}</span>
 							</label>
 							<button
+								id="login-toggle"
 								type="button"
 								class="toggle-switch"
 								class:active={ownerCanLogin}
@@ -508,8 +509,11 @@
 </div>
 
 {#if showAddHouseModal}
-<div class="modal-overlay" onclick={() => showAddHouseModal = false} role="dialog" aria-modal="true">
-	<div class="modal-content" onclick={(e) => e.stopPropagation()}>
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="modal-overlay" onclick={() => showAddHouseModal = false}>
+	<!-- svelte-ignore a11y_interactive_supports_focus -->
+	<div class="modal-content" role="dialog" aria-modal="true" tabindex="-1" onclick={(e) => e.stopPropagation()}>
 		<h3>{tt('houses.add_house') || 'Add House'}</h3>
 		<form onsubmit={handleAddHouseSubmit}>
 			<div class="form-grid">

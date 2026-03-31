@@ -143,19 +143,6 @@
 		border-color: var(--primary-color);
 	}
 
-	.action-btn.edit:hover {
-		background: var(--edit-color);
-		border-color: var(--edit-color);
-	}
-	.action-btn.delete:hover {
-		background: var(--delete-color);
-		border-color: var(--delete-color);
-	}
-	.action-btn.view:hover {
-		background: var(--view-color);
-		border-color: var(--view-color);
-	}
-
 	.loading-message,
 	.error-message,
 	.empty-message {
