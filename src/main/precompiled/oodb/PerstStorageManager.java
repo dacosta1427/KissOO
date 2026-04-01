@@ -60,35 +60,32 @@ public class PerstStorageManager {
             String dbPath = PerstConfig.getInstance().getDatabasePath();
             String indexPath = dbPath + ".idx";
             
-            // Create fresh CDatabase instance to avoid stale singleton issues
-            System.out.println("[PerstStorageManager] Creating new CDatabase instance...");
-            CDatabase cdb = new CDatabase();
-            CDatabase.instance = cdb;  // Update the static singleton
-            
             storage = createStorage();
             
-            try {
-                cdb.open(storage, indexPath);
-            } catch (ClassCastException e) {
-                // RootObject cast error - existing database has incompatible root
-                // Delete database and retry with fresh storage
-                System.out.println("[PerstStorageManager] RootObject cast error, recreating database...");
-                storage.close();
-                java.io.File dbFile = new java.io.File(dbPath);
-                java.io.File idxDir = new java.io.File(indexPath);
-                if (dbFile.exists()) dbFile.delete();
-                if (idxDir.exists()) deleteRecursively(idxDir);
+            boolean useCDatabase = PerstConfig.getInstance().isUseCDatabase();
+            
+            if (useCDatabase) {
+                // Create fresh CDatabase instance to avoid stale singleton issues
+                System.out.println("[PerstStorageManager] Creating new CDatabase instance...");
+                CDatabase cdb = new CDatabase();
+                CDatabase.instance = cdb;  // Update the static singleton
                 
-                // Retry with fresh storage
-                storage = createStorage();
-                cdb.open(storage, indexPath);
+                try {
+                    cdb.open(storage, indexPath);
+                    org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
+                    startOptimizerScheduler(cdb);
+                    System.out.println("[PerstStorageManager] CDatabase initialized successfully");
+                } catch (ClassCastException e) {
+                    // RootObject cast error - existing database has incompatible root type
+                    // Fall back to standard Storage mode (data preserved, CDatabase features disabled)
+                    System.out.println("[PerstStorageManager] WARNING: CDatabase root type mismatch");
+                    System.out.println("[PerstStorageManager] Falling back to standard Storage mode");
+                    System.out.println("[PerstStorageManager] Data preserved. To use CDatabase: backup data, delete database files, restart.");
+                    org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, null);
+                }
             }
             
-            org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
-            
             initialized = true;
-            
-            startOptimizerScheduler(cdb);
             
         } catch (Exception e) {
             System.err.println("[PerstStorageManager] Failed to initialize: " + e.getMessage());
@@ -121,8 +118,31 @@ public class PerstStorageManager {
         return (CDatabase) org.kissweb.restServer.MainServlet.getEnvironment(CDATABASE_KEY);
     }
     
-    public static boolean isAvailable() {
+    /**
+     * Check if CDatabase is available (with CDatabase/Lucene features).
+     */
+    public static boolean isCDatabaseAvailable() {
         return getDBManager() != null;
+    }
+    
+    /**
+     * Check if Perst storage is available (either CDatabase or standard Storage).
+     */
+    public static boolean isAvailable() {
+        if (!initialized) {
+            initialize();
+        }
+        return storage != null;
+    }
+    
+    /**
+     * Get the Storage instance (works in both CDatabase and standard mode).
+     */
+    public static Storage getStorage() {
+        if (!initialized) {
+            initialize();
+        }
+        return storage;
     }
     
     // ========== TRANSACTION CONTROL ==========
