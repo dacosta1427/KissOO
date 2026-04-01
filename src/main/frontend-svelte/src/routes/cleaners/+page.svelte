@@ -18,6 +18,16 @@
 	// View toggle: 'card' or 'table'
 	let viewMode = $state<'card' | 'table'>('card');
 
+	// Form section ref for scroll on small screens
+	let formSection = $state<HTMLElement | null>(null);
+
+	function scrollToEditForm() {
+		// Scroll to edit form on small screens (mobile/tablet)
+		if (window.innerWidth < 1024 && formSection) {
+			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}
+
 	// Load data on mount
 	$effect(() => {
 		loadCleaners();
@@ -107,6 +117,7 @@
 		if (action.label === t('common.edit')) {
 			editingCleaner = row;
 			showForm = true;
+			scrollToEditForm();
 		} else if (action.label === t('common.delete')) {
 			if (confirm(t('cleaners.delete_confirm'))) {
 				try {
@@ -148,7 +159,7 @@
 	</div>
 
 	{#if showForm}
-		<div class="form-section">
+		<div class="form-section" bind:this={formSection}>
 			<Form
 				fields={cleanerFields}
 				data={editingCleaner || {}}
@@ -186,7 +197,9 @@
 				<div class="empty-message">{tt('cleaners.no_cleaners')}</div>
 			{:else}
 				{#each cleaners as cleaner}
-					<div class="cleaner-card">
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div class="cleaner-card clickable" onclick={() => { editingCleaner = cleaner; showForm = true; scrollToEditForm(); }} onkeydown={(e) => e.key === 'Enter' && (editingCleaner = cleaner, showForm = true, scrollToEditForm())}>
 						<h3 class="cleaner-name">{cleaner.name}</h3>
 						{#if cleaner.email}<p class="cleaner-detail">{cleaner.email}</p>{/if}
 						{#if cleaner.phone}<p class="cleaner-detail">{cleaner.phone}</p>{/if}
@@ -195,14 +208,10 @@
 							{cleaner.active ? tt('common.active') : tt('common.inactive')}
 						</span>
 						<div class="cleaner-actions">
-							<button class="btn btn-secondary btn-sm" onclick={() => { editingCleaner = cleaner; showForm = true; }}>
+							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); editingCleaner = cleaner; showForm = true; scrollToEditForm(); }}>
 								{tt('common.edit')}
 							</button>
-							<button class="btn btn-danger btn-sm" onclick={() => {
-								if (confirm(t('cleaners.delete_confirm'))) {
-									cleanersAPI.delete(cleaner.id).then(() => loadCleaners());
-								}
-							}}>
+							<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); if (confirm(t('cleaners.delete_confirm'))) { cleanersAPI.delete(cleaner.id).then(() => loadCleaners()); } }}>
 								{tt('common.delete')}
 							</button>
 						</div>
@@ -344,4 +353,7 @@
 			padding: 1rem;
 		}
 	}
+
+	.clickable { cursor: pointer; }
+	.clickable:hover { border-color: var(--primary-color); box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
 </style>

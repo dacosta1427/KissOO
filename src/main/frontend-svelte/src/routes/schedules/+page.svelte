@@ -22,6 +22,17 @@
 	let showForm = $state(false);
 	let editingSchedule = $state<Schedule | null>(null);
 	let viewMode = $state<'calendar' | 'table'>('calendar');
+
+	// Form section ref for scroll on small screens
+	let formSection = $state<HTMLElement | null>(null);
+
+	function scrollToEditForm() {
+		// Scroll to edit form on small screens (mobile/tablet)
+		if (window.innerWidth < 1024 && formSection) {
+			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}
+
 	let dateRange = $state({
 		start: new Date().toISOString().split('T')[0],
 		end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -152,6 +163,7 @@
 		editingSchedule = null;
 		resetForm();
 		showForm = true;
+		scrollToEditForm();
 	}
 
 	function handleScheduleClick(schedule: Schedule) {
@@ -165,6 +177,7 @@
 			status: schedule.status || 'scheduled'
 		};
 		showForm = true;
+		scrollToEditForm();
 	}
 	
 	function handleCleanerClick(cleanerId: number) {
@@ -276,7 +289,7 @@
 	{/if}
 
 	{#if showForm}
-		<div class="form-section">
+		<div class="form-section" bind:this={formSection}>
 			<h3 class="form-title">{editingSchedule ? t('schedules.edit_schedule') : t('schedules.add_new_schedule')}</h3>
 			
 			<form onsubmit={handleFormSubmit}>
@@ -398,7 +411,9 @@
 					{#each filteredSchedules as schedule}
 						{@const cleaner = cleaners.find(c => c.id === schedule.cleaner_id)}
 						{@const booking = bookings.find(b => b.id === schedule.booking_id)}
-						<tr>
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<!-- svelte-ignore a11y_no_static_element_interactions -->
+						<tr class={isAdmin ? "clickable" : ""} onclick={isAdmin ? () => handleScheduleClick(schedule) : undefined} onkeydown={isAdmin ? (e) => e.key === 'Enter' && handleScheduleClick(schedule) : undefined}>
 							<td>{cleaner?.name || t('houses.unknown')}</td>
 							<td>{booking?.guest_name || t('schedules.guest')}</td>
 							<td>{schedule.date}</td>
@@ -408,16 +423,16 @@
 							</td>
 							<td>
 								{#if isAdmin}
-									<button class="btn btn-sm btn-secondary" onclick={() => handleScheduleClick(schedule)} title={tt('hints.edit_item')}>
+									<button class="btn btn-sm btn-secondary" onclick={(e) => { e.stopPropagation(); handleScheduleClick(schedule); }} title={tt('hints.edit_item')}>
 										{tt('common.edit')}
 									</button>
 								{:else if isCleaner && schedule.status !== 'completed'}
 									{#if schedule.status === 'scheduled'}
-										<button class="btn btn-sm btn-primary" onclick={() => startCleaning(schedule)} title={tt('schedules.start_cleaning')}>
+										<button class="btn btn-sm btn-primary" onclick={(e) => { e.stopPropagation(); startCleaning(schedule); }} title={tt('schedules.start_cleaning')}>
 											{tt('schedules.start')}
 										</button>
 									{/if}
-									<button class="btn btn-sm btn-success" onclick={() => openCompleteForm(schedule)} title={tt('schedules.mark_complete')}>
+									<button class="btn btn-sm btn-success" onclick={(e) => { e.stopPropagation(); openCompleteForm(schedule); }} title={tt('schedules.mark_complete')}>
 										{tt('schedules.complete')}
 									</button>
 								{/if}
@@ -825,4 +840,8 @@
 		gap: 0.75rem;
 		margin-top: 1.5rem;
 	}
+
+	.clickable { cursor: pointer; }
+	.clickable:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
+	.schedule-table tr.clickable:hover { background: #eff6ff; }
 </style>

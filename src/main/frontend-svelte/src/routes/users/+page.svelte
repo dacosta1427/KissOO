@@ -38,6 +38,16 @@
     (editFormData.username?.length ?? 0) >= 3 && (editFormData.password?.length ?? 0) >= 3
   );
 
+  // Form section ref for scroll on small screens
+  let formSection = $state<HTMLElement | null>(null);
+
+  function scrollToEditForm() {
+    // Scroll to edit form on small screens (mobile/tablet)
+    if (window.innerWidth < 1024 && formSection) {
+      formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   // Field definitions for Form component (reactive)
   let addUserFields = $derived([
     { name: 'username', label: t('users.enter_username'), type: 'text' as const, required: true, placeholder: t('users.enter_username'), helpText: t('users.minimum_3_chars') },
@@ -114,6 +124,7 @@
       active: user.userActive
     };
     editModalOpen = true;
+    scrollToEditForm();
   }
 
   async function handleEditUser(data: Record<string, any>) {
@@ -204,7 +215,9 @@
     {:else}
       <div class="space-y-3">
         {#each users as user (user.id)}
-          <div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border">
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div class="clickable flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border" onclick={() => openEditModal(user)} onkeydown={(e) => e.key === 'Enter' && openEditModal(user)}>
             <div>
               <p class="font-medium">{user.userName}</p>
               <p class="text-gray-600 text-sm">
@@ -215,14 +228,14 @@
             </div>
             <div class="flex gap-2">
               <button
-                onclick={() => openEditModal(user)}
+                onclick={(e) => { e.stopPropagation(); openEditModal(user); }}
                 class="text-blue-600 hover:text-blue-800"
                 disabled={loading}
               >
                 {tt('common.edit')}
               </button>
               <button
-                onclick={() => handleDeleteUser(user.id)}
+                onclick={(e) => { e.stopPropagation(); handleDeleteUser(user.id); }}
                 class="text-red-600 hover:text-red-800"
                 disabled={loading}
               >
@@ -241,6 +254,7 @@
   bind:open={editModalOpen} 
   title={tt('users.edit_user')}
   onClose={() => editModalOpen = false}
+  bind:this={formSection}
 >
   <Form
     fields={editUserFields}
@@ -252,3 +266,8 @@
     onCancel={() => editModalOpen = false}
   />
 </Modal>
+
+<style>
+  .clickable { cursor: pointer; }
+  .clickable:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
+</style>

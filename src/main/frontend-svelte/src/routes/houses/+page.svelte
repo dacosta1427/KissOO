@@ -22,6 +22,16 @@
 	// View toggle: 'card' or 'table'
 	let viewMode = $state<'card' | 'table'>('card');
 
+	// Form section ref for scroll on small screens
+	let formSection = $state<HTMLElement | null>(null);
+
+	function scrollToEditForm() {
+		// Scroll to edit form on small screens (mobile/tablet)
+		if (window.innerWidth < 1024 && formSection) {
+			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}
+
 	let formData = $state({
 		name: '',
 		address: '',
@@ -108,6 +118,7 @@
 			luxury_level: house.luxury_level || 'standard'
 		};
 		showForm = true;
+		scrollToEditForm();
 	}
 
 	function handleFormCancel() {
@@ -224,7 +235,7 @@
 	{/if}
 
 	{#if showForm}
-		<div class="form-section">
+		<div class="form-section" bind:this={formSection}>
 			<h3 class="form-title">{editingHouse ? t('houses.edit_house') : t('houses.add_new_house')}</h3>
 			
 			<form onsubmit={handleFormSubmit}>
@@ -467,7 +478,9 @@
 				<div class="empty-message">{isAdmin ? tt('houses.no_houses') : tt('houses.no_houses_owner')}</div>
 			{:else}
 				{#each filteredHouses as house}
-					<div class="house-card">
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div class="house-card clickable" onclick={() => openEditForm(house)} onkeydown={(e) => e.key === 'Enter' && openEditForm(house)}>
 						<h3 class="house-name">{house.name}</h3>
 						<p class="house-address">{house.address}</p>
 						{#if house.owner}
@@ -477,10 +490,10 @@
 							<p class="house-description">{house.description}</p>
 						{/if}
 						<div class="house-actions">
-							<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(house)} title={tt('hints.edit_item')}>
+							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); openEditForm(house); }} title={tt('hints.edit_item')}>
 								{tt('common.edit')}
 							</button>
-							<button class="btn btn-danger btn-sm" onclick={() => handleDelete(house)} title={tt('hints.delete_item')}>
+							<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); handleDelete(house); }} title={tt('hints.delete_item')}>
 								{tt('common.delete')}
 							</button>
 						</div>
@@ -503,27 +516,29 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each filteredHouses as house}
-						<tr>
-							<td>{house.name}</td>
-							<td>{house.address}</td>
-							<td>{getOwnerName(house.owner)}</td>
-							<td>{house.check_in_time || '-'}</td>
-							<td>{house.check_out_time || '-'}</td>
-							<td>
-								<button class="btn btn-sm btn-secondary" onclick={() => openEditForm(house)} title={tt('hints.edit_item')}>
-									{tt('common.edit')}
-								</button>
-								<button class="btn btn-sm btn-danger" onclick={() => handleDelete(house)} title={tt('hints.delete_item')}>
-									{tt('common.delete')}
-								</button>
-							</td>
-						</tr>
-					{:else}
-						<tr>
-							<td colspan="6" class="empty-row">{isAdmin ? tt('houses.no_houses') : tt('houses.no_houses_owner')}</td>
-						</tr>
-					{/each}
+				{#each filteredHouses as house}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<tr class="clickable" onclick={() => openEditForm(house)} onkeydown={(e) => e.key === 'Enter' && openEditForm(house)}>
+						<td>{house.name}</td>
+						<td>{house.address}</td>
+						<td>{getOwnerName(house.owner)}</td>
+						<td>{house.check_in_time || '-'}</td>
+						<td>{house.check_out_time || '-'}</td>
+						<td>
+							<button class="btn btn-sm btn-secondary" onclick={(e) => { e.stopPropagation(); openEditForm(house); }} title={tt('hints.edit_item')}>
+								{tt('common.edit')}
+							</button>
+							<button class="btn btn-sm btn-danger" onclick={(e) => { e.stopPropagation(); handleDelete(house); }} title={tt('hints.delete_item')}>
+								{tt('common.delete')}
+							</button>
+						</td>
+					</tr>
+				{:else}
+					<tr>
+						<td colspan="6" class="empty-row">{isAdmin ? tt('houses.no_houses') : tt('houses.no_houses_owner')}</td>
+					</tr>
+				{/each}
 				</tbody>
 			</table>
 		</div>
@@ -861,4 +876,8 @@
 		border-bottom: 1px solid #e5e7eb;
 		padding-bottom: 0.5rem;
 	}
+
+	.clickable { cursor: pointer; }
+	.clickable:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
+	.data-table tr.clickable:hover { background: #eff6ff; }
 </style>

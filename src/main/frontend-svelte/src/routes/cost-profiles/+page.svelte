@@ -10,6 +10,16 @@
   // Check if user is admin
   let isAdmin = $derived(session.username === 'admin' || session.username === 'administrator');
 
+  // Form section ref for scroll on small screens
+  let formSection = $state<HTMLElement | null>(null);
+
+  function scrollToEditForm() {
+    // Scroll to edit form on small screens (mobile/tablet)
+    if (window.innerWidth < 1024 && formSection) {
+      formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   let costProfiles = $state<CostProfile[]>([]);
 	let owners = $state<Owner[]>([]);
 	let loading = $state(false);
@@ -68,6 +78,7 @@
 			active: true
 		};
 		showForm = true;
+		scrollToEditForm();
 	}
 
 	function openEditForm(profile: CostProfile) {
@@ -90,6 +101,7 @@
 			active: profile.active
 		};
 		showForm = true;
+		scrollToEditForm();
 	}
 
 	async function handleSubmit() {
@@ -172,7 +184,9 @@
 	{:else}
 		<div class="profiles-grid">
 			{#each costProfiles as profile}
-				<div class="profile-card" class:standard={profile.is_standard}>
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="profile-card clickable" class:standard={profile.is_standard} onclick={() => openEditForm(profile)} onkeydown={(e) => e.key === 'Enter' && openEditForm(profile)}>
 					<div class="profile-header">
 						<h3>{profile.name}</h3>
 						{#if profile.is_standard}
@@ -215,14 +229,14 @@
 					</div>
 					
 					<div class="profile-actions">
-						<button class="btn btn-secondary btn-sm" onclick={() => openEditForm(profile)} title={tt('hints.edit_item')}>
+						<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); openEditForm(profile); }} title={tt('hints.edit_item')}>
 							{tt('common.edit')}
 						</button>
-						<button class="btn btn-secondary btn-sm" onclick={() => handleCopy(profile)} title="Copy profile">
+						<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); handleCopy(profile); }} title="Copy profile">
 							Copy
 						</button>
 						{#if !profile.is_standard}
-							<button class="btn btn-danger btn-sm" onclick={() => handleDelete(profile)} title={tt('hints.delete_item')}>
+							<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); handleDelete(profile); }} title={tt('hints.delete_item')}>
 								{tt('common.delete')}
 							</button>
 						{/if}
@@ -236,7 +250,7 @@
 <!-- Edit/Create Modal -->
 {#if showForm}
 	<div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={() => showForm = false} onkeydown={(e) => e.key === 'Escape' && (showForm = false)}>
-		<div class="modal-content modal-large" role="document" onclick={(e) => e.stopPropagation()}>
+		<div class="modal-content modal-large" role="document" onclick={(e) => e.stopPropagation()} bind:this={formSection}>
 			<h2 class="modal-title">{editingProfile ? 'Edit Cost Profile' : 'Create Cost Profile'}</h2>
 			
 			<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
@@ -572,4 +586,7 @@
 		border-radius: 4px;
 		margin-bottom: 1rem;
 	}
+
+	.clickable { cursor: pointer; }
+	.clickable:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
 </style>
