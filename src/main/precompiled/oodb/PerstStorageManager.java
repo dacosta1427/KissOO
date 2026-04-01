@@ -60,15 +60,10 @@ public class PerstStorageManager {
             String dbPath = PerstConfig.getInstance().getDatabasePath();
             String indexPath = dbPath + ".idx";
             
-            CDatabase cdb = CDatabase.instance;
-            
-            // Check if already opened (database is already open)
-            if (cdb.getState() == CDatabase.State.OPEN) {
-                System.out.println("[PerstStorageManager] Database already open, using existing instance");
-                org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
-                initialized = true;
-                return;
-            }
+            // Create fresh CDatabase instance to avoid stale singleton issues
+            System.out.println("[PerstStorageManager] Creating new CDatabase instance...");
+            CDatabase cdb = new CDatabase();
+            CDatabase.instance = cdb;  // Update the static singleton
             
             storage = createStorage();
             cdb.open(storage, indexPath);
@@ -99,7 +94,18 @@ public class PerstStorageManager {
             parentDir.mkdirs();
         }
         
+        // Delete existing database to ensure fresh start
+        if (dbFile.exists()) {
+            System.out.println("[PerstStorageManager] Deleting existing database file: " + dbPath);
+            dbFile.delete();
+        }
+        
         storage.open(dbPath, poolSize);
+        
+        // Check root object type
+        Object root = storage.getRoot();
+        System.out.println("[PerstStorageManager] Storage root type: " + (root != null ? root.getClass().getName() : "null"));
+        
         return storage;
     }
     
