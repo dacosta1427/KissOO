@@ -66,7 +66,23 @@ public class PerstStorageManager {
             CDatabase.instance = cdb;  // Update the static singleton
             
             storage = createStorage();
-            cdb.open(storage, indexPath);
+            
+            try {
+                cdb.open(storage, indexPath);
+            } catch (ClassCastException e) {
+                // RootObject cast error - existing database has incompatible root
+                // Delete database and retry with fresh storage
+                System.out.println("[PerstStorageManager] RootObject cast error, recreating database...");
+                storage.close();
+                java.io.File dbFile = new java.io.File(dbPath);
+                java.io.File idxDir = new java.io.File(indexPath);
+                if (dbFile.exists()) dbFile.delete();
+                if (idxDir.exists()) deleteRecursively(idxDir);
+                
+                // Retry with fresh storage
+                storage = createStorage();
+                cdb.open(storage, indexPath);
+            }
             
             org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
             
@@ -94,18 +110,7 @@ public class PerstStorageManager {
             parentDir.mkdirs();
         }
         
-        // Delete existing database to ensure fresh start
-        if (dbFile.exists()) {
-            System.out.println("[PerstStorageManager] Deleting existing database file: " + dbPath);
-            dbFile.delete();
-        }
-        
         storage.open(dbPath, poolSize);
-        
-        // Check root object type
-        Object root = storage.getRoot();
-        System.out.println("[PerstStorageManager] Storage root type: " + (root != null ? root.getClass().getName() : "null"));
-        
         return storage;
     }
     
@@ -428,5 +433,17 @@ public class PerstStorageManager {
             }
         }
         return list;
+    }
+    
+    private static void deleteRecursively(java.io.File file) {
+        if (file.isDirectory()) {
+            java.io.File[] children = file.listFiles();
+            if (children != null) {
+                for (java.io.File child : children) {
+                    deleteRecursively(child);
+                }
+            }
+        }
+        file.delete();
     }
 }
