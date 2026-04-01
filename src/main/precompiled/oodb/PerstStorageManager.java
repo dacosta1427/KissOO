@@ -60,30 +60,45 @@ public class PerstStorageManager {
             String dbPath = PerstConfig.getInstance().getDatabasePath();
             String indexPath = dbPath + ".idx";
             
-            storage = createStorage();
+            // CDatabase requires fresh storage or storage previously created by CDatabase
+            // If database exists, test if compatible; if not, delete and recreate
+            java.io.File dbFile = new java.io.File(dbPath);
+            java.io.File idxDir = new java.io.File(indexPath);
             
-            boolean useCDatabase = PerstConfig.getInstance().isUseCDatabase();
-            
-            if (useCDatabase) {
-                // Create fresh CDatabase instance to avoid stale singleton issues
-                System.out.println("[PerstStorageManager] Creating new CDatabase instance...");
-                CDatabase cdb = new CDatabase();
-                CDatabase.instance = cdb;  // Update the static singleton
-                
+            if (dbFile.exists()) {
                 try {
-                    cdb.open(storage, indexPath);
-                    org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
-                    startOptimizerScheduler(cdb);
-                    System.out.println("[PerstStorageManager] CDatabase initialized successfully");
-                } catch (ClassCastException e) {
-                    // RootObject cast error - existing database has incompatible root type
-                    // Fall back to standard Storage mode (data preserved, CDatabase features disabled)
-                    System.out.println("[PerstStorageManager] WARNING: CDatabase root type mismatch");
-                    System.out.println("[PerstStorageManager] Falling back to standard Storage mode");
-                    System.out.println("[PerstStorageManager] Data preserved. To use CDatabase: backup data, delete database files, restart.");
-                    org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, null);
+                    Storage testStorage = org.garret.perst.StorageFactory.getInstance().createStorage();
+                    testStorage.open(dbPath, 536870912);
+                    Object root = testStorage.getRoot();
+                    testStorage.close();
+                    
+                    if (root != null && !root.getClass().getName().equals("org.garret.perst.continuous.RootObject")) {
+                        System.out.println("[PerstStorageManager] Existing database has incompatible root type: " + root.getClass().getName());
+                        System.out.println("[PerstStorageManager] Deleting database for CDatabase compatibility...");
+                        dbFile.delete();
+                        if (idxDir.exists()) {
+                            deleteRecursively(idxDir);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("[PerstStorageManager] Could not test existing database, deleting to be safe...");
+                    dbFile.delete();
+                    if (idxDir.exists()) {
+                        deleteRecursively(idxDir);
+                    }
                 }
             }
+            
+            storage = createStorage();
+            
+            // Use CDatabase.instance singleton as documented
+            System.out.println("[PerstStorageManager] Opening CDatabase...");
+            CDatabase cdb = CDatabase.instance;
+            
+            cdb.open(storage, indexPath);
+            org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
+            startOptimizerScheduler(cdb);
+            System.out.println("[PerstStorageManager] CDatabase initialized successfully");
             
             initialized = true;
             
@@ -91,6 +106,18 @@ public class PerstStorageManager {
             System.err.println("[PerstStorageManager] Failed to initialize: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    private static void deleteRecursively(java.io.File file) {
+        if (file.isDirectory()) {
+            java.io.File[] children = file.listFiles();
+            if (children != null) {
+                for (java.io.File child : children) {
+                    deleteRecursively(child);
+                }
+            }
+        }
+        file.delete();
     }
     
     private static Storage createStorage() throws Exception {
@@ -453,17 +480,5 @@ public class PerstStorageManager {
             }
         }
         return list;
-    }
-    
-    private static void deleteRecursively(java.io.File file) {
-        if (file.isDirectory()) {
-            java.io.File[] children = file.listFiles();
-            if (children != null) {
-                for (java.io.File child : children) {
-                    deleteRecursively(child);
-                }
-            }
-        }
-        file.delete();
     }
 }
