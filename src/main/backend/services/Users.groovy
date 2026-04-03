@@ -230,13 +230,22 @@ class Users {
     }
 
     /**
-     * Verify email with token
-     * Input JSON: { "token": "verification-token-here" }
+     * Verify email with token and optionally set password.
+     * 
+     * Input JSON: { "token": "verification-token-here", "password": "optional-password" }
+     * 
+     * If password is provided:
+     * - Verify token
+     * - Set password (hashed)
+     * - Set emailVerified = true
+     * - Set active = true (enables login)
+     * - Clear verification token
      */
     void verifyEmail(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Using PerstStorageManager directly
             String token = injson.getString("token")
+            String password = injson.optString("password", null)
             
             if (!token) {
                 outjson.put("_Success", false)
@@ -263,14 +272,29 @@ class Users {
             
             // Verify the email
             if (userToVerify.verifyEmail(token)) {
+                // If password provided, set it and enable login
+                if (password != null && !password.isEmpty()) {
+                    String hashedPassword = com.mycompany.security.PasswordSecurity.hashPassword(password)
+                    userToVerify.setPasswordHash(hashedPassword)
+                    userToVerify.setActive(true)
+                    userToVerify.setMustChangePassword(false)
+                }
+                
                 def tc = PerstStorageManager.createContainer()
                 tc.addUpdate(userToVerify)
                 PerstStorageManager.store(tc)
                 
-                outjson.put("_Success", true)
-                outjson.put("success", true)
-                outjson.put("message", "Email verified successfully")
-                outjson.put("username", userToVerify.getUsername())
+                if (password != null && !password.isEmpty()) {
+                    outjson.put("_Success", true)
+                    outjson.put("success", true)
+                    outjson.put("message", "Email verified. You can now login with your email and password.")
+                    outjson.put("username", userToVerify.getUsername())
+                } else {
+                    outjson.put("_Success", true)
+                    outjson.put("success", true)
+                    outjson.put("message", "Email verified successfully")
+                    outjson.put("username", userToVerify.getUsername())
+                }
             } else {
                 outjson.put("_Success", false)
                 outjson.put("error", "Verification failed - token may have expired")

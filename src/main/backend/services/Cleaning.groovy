@@ -1212,7 +1212,9 @@ class Cleaning {
 
     /**
      * Toggle login capability for an owner.
-     * PerstUser always exists for Owner - this just flips the active flag.
+     * 
+     * When enabling: Sends verification email with link. Owner must verify email AND set password before login works.
+     * When disabling: Immediately deactivates login.
      *
      * Input JSON: { "id": <owner_oid>, "canLogin": true|false }
      */
@@ -1234,15 +1236,52 @@ class Cleaning {
                 return
             }
 
-            // Simply flip the active flag
-            user.setActive(canLogin)
-            def tc = PerstStorageManager.createContainer()
-            tc.addUpdate(user)
-            PerstStorageManager.store(tc)
+            // Check if owner has email
+            String ownerEmail = owner.getEmail()
+            if (!ownerEmail || ownerEmail.isEmpty()) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner has no email address")
+                return
+            }
 
-            outjson.put("_Success", true)
-            outjson.put("canLogin", canLogin)
-            outjson.put("message", canLogin ? "Owner login activated" : "Owner login deactivated")
+            if (canLogin) {
+                // Enable login - need email verification first
+                // Generate verification token
+                user.generateVerificationToken()
+                
+                // Get base URL from config
+                String baseUrl = org.kissweb.restServer.MainServlet.getEnvironment("app.baseUrl") ?: "http://localhost:5173"
+                
+                // Send verification email
+                boolean emailSent = services.EmailService.sendVerificationEmail(
+                    ownerEmail,
+                    owner.getName(),
+                    user.getVerificationToken(),
+                    baseUrl
+                )
+                
+                def tc = PerstStorageManager.createContainer()
+                tc.addUpdate(user)
+                PerstStorageManager.store(tc)
+                
+                if (emailSent) {
+                    outjson.put("_Success", true)
+                    outjson.put("message", "Verification email sent to " + ownerEmail + ". User must verify email and set password before logging in.")
+                } else {
+                    outjson.put("_Success", false)
+                    outjson.put("_ErrorMessage", "Failed to send verification email. SMTP may not be configured.")
+                }
+            } else {
+                // Disable login - immediately deactivate
+                user.setActive(false)
+                def tc = PerstStorageManager.createContainer()
+                tc.addUpdate(user)
+                PerstStorageManager.store(tc)
+
+                outjson.put("_Success", true)
+                outjson.put("canLogin", false)
+                outjson.put("message", "Owner login deactivated")
+            }
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
