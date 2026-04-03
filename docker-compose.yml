@@ -1,0 +1,20 @@
+# Docker Compose for KissOO Development
+# Includes SMTP server (Mailhog) for testing emails
+
+services:
+  # Mailhog - SMTP server with web UI for testing emails
+  # Access UI at http://localhost:8025
+  mailhog:
+    image: mailhog/mailhog
+    container_name: kissoo-mailhog
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI
+    environment:
+      - MH_EXPOSE_DEBUG=1
+    networks:
+      - kissoo-net
+
+networks:
+  kissoo-net:
+    driver: bridge

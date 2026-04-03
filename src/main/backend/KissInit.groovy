@@ -31,6 +31,15 @@ class KissInit {
         
         MainServlet.readIniFile "application.ini", "main"
         MainServlet.readIniFile "application.ini", "PasswordSecurity"
+        
+        // Initialize EmailService with SMTP config
+        try {
+            def config = MainServlet.getConfig()
+            services.EmailService.initialize(config)
+            println "[KissInit] EmailService initialized"
+        } catch (Exception e) {
+            println "[KissInit] WARNING: Failed to initialize EmailService: " + e.message
+        }
 
         // Example of how to specify a method that is allowed without authentication
         // MainServlet.allowWithoutAuthentication("services.MyGroovyService", "addNumbers")
