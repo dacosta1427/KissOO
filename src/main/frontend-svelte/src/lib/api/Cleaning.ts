@@ -171,6 +171,11 @@ export const cleanersAPI = {
   
   delete: async (id: number): Promise<void> => {
     await callCleaningService('deleteCleaner', { id }, 'Delete cleaner');
+  },
+  
+  toggleActive: async (id: number, active: boolean): Promise<Cleaner> => {
+    const res = await callCleaningService('updateCleaner', { id, data: { active } }, active ? 'Activate cleaner' : 'Deactivate cleaner');
+    return res.data;
   }
 };
 
@@ -282,6 +287,11 @@ export const housesAPI = {
   getByOwner: async (ownerId: number): Promise<House[]> => {
     const res = await callCleaningService('getHousesByOwner', { owner_id: ownerId }, 'Load houses by owner');
     return res.data || [];
+  },
+  
+  toggleActive: async (id: number, active: boolean): Promise<House> => {
+    const res = await callCleaningService('updateHouse', { id, data: { active } }, active ? 'Activate house' : 'Deactivate house');
+    return res.data;
   }
 };
 

@@ -112,6 +112,21 @@
 			loading = false;
 		}
 	}
+	
+	async function toggleCleanerActive(id: number, active: boolean) {
+		const idx = cleaners.findIndex(c => c.id === id);
+		if (idx >= 0) {
+			cleaners[idx] = { ...cleaners[idx], active };
+		}
+		try {
+			await cleanersAPI.toggleActive(id, active);
+		} catch (err: any) {
+			if (idx >= 0) {
+				cleaners[idx] = { ...cleaners[idx], active: !active };
+			}
+			notificationActions.error(err.message || 'Failed to toggle cleaner status');
+		}
+	}
 
 	async function handleAction({ action, row }: { action: any; row: any }) {
 		if (action.label === t('common.edit')) {
@@ -200,13 +215,20 @@
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="cleaner-card clickable" onclick={() => { editingCleaner = cleaner; showForm = true; scrollToEditForm(); }} onkeydown={(e) => e.key === 'Enter' && (editingCleaner = cleaner, showForm = true, scrollToEditForm())}>
-						<h3 class="cleaner-name">{cleaner.name}</h3>
+						<div class="card-header">
+							<h3 class="cleaner-name">{cleaner.name}</h3>
+							<button
+								type="button"
+								class="card-toggle"
+								class:active={cleaner.active}
+								onclick={(e) => { e.stopPropagation(); toggleCleanerActive(cleaner.id, !cleaner.active); }}
+								title={cleaner.active ? 'Deactivate cleaner' : 'Activate cleaner'}
+								aria-label={cleaner.active ? 'Deactivate cleaner' : 'Activate cleaner'}
+							></button>
+						</div>
 						{#if cleaner.email}<p class="cleaner-detail">{cleaner.email}</p>{/if}
 						{#if cleaner.phone}<p class="cleaner-detail">{cleaner.phone}</p>{/if}
 						{#if cleaner.address}<p class="cleaner-detail">{cleaner.address}</p>{/if}
-						<span class="status-badge" class:active={cleaner.active}>
-							{cleaner.active ? tt('common.active') : tt('common.inactive')}
-						</span>
 						<div class="cleaner-actions">
 							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); editingCleaner = cleaner; showForm = true; scrollToEditForm(); }}>
 								{tt('common.edit')}
@@ -333,12 +355,45 @@
 		padding: 1rem;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	}
-	.cleaner-name { margin: 0 0 0.5rem 0; font-size: 1.125rem; font-weight: 600; }
+	.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+	.cleaner-name { margin: 0; font-size: 1.125rem; font-weight: 600; }
 	.cleaner-detail { margin: 0; color: #6b7280; font-size: 0.875rem; }
 	.cleaner-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
-	.status-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; margin-top: 0.5rem; }
-	.status-badge.active { background: #d1fae5; color: #065f46; }
-	.status-badge:not(.active) { background: #fee2e2; color: #991b1b; }
+	
+	/* Mini toggle switch for active/inactive */
+	.card-toggle {
+		position: relative;
+		width: 36px;
+		height: 18px;
+		border-radius: 9px;
+		border: none;
+		cursor: pointer;
+		background: #fca5a5;
+		transition: background 0.15s ease, opacity 0.15s ease;
+		padding: 0;
+		flex-shrink: 0;
+	}
+	.card-toggle::after {
+		content: '';
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: white;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+		transition: transform 0.15s ease;
+	}
+	.card-toggle.active {
+		background: #10b981;
+	}
+	.card-toggle.active::after {
+		transform: translateX(18px);
+	}
+	.card-toggle:active {
+		opacity: 0.7;
+	}
 	.empty-message { text-align: center; color: #6b7280; padding: 2rem; grid-column: 1 / -1; }
 
 	/* Responsive design */

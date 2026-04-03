@@ -81,6 +81,21 @@
 			console.error('Failed to load owners:', err);
 		}
 	}
+	
+	async function toggleHouseActive(id: number, active: boolean) {
+		const idx = houses.findIndex(h => h.id === id);
+		if (idx >= 0) {
+			houses[idx] = { ...houses[idx], active };
+		}
+		try {
+			await housesAPI.toggleActive(id, active);
+		} catch (err: any) {
+			if (idx >= 0) {
+				houses[idx] = { ...houses[idx], active: !active };
+			}
+			notificationActions.error(err.message || 'Failed to toggle house status');
+		}
+	}
 
 	function openAddForm() {
 		editingHouse = null;
@@ -481,7 +496,17 @@
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="house-card clickable" onclick={() => openEditForm(house)} onkeydown={(e) => e.key === 'Enter' && openEditForm(house)}>
-						<h3 class="house-name">{house.name}</h3>
+						<div class="card-header">
+							<h3 class="house-name">{house.name}</h3>
+							<button
+								type="button"
+								class="card-toggle"
+								class:active={house.active}
+								onclick={(e) => { e.stopPropagation(); toggleHouseActive(house.id, !house.active); }}
+								title={house.active ? 'Deactivate house' : 'Activate house'}
+								aria-label={house.active ? 'Deactivate house' : 'Activate house'}
+							></button>
+						</div>
 						<p class="house-address">{house.address}</p>
 						{#if house.owner}
 							<p class="house-owner">{tt('houses.owner')}: {getOwnerName(house.owner)}</p>
@@ -685,8 +710,10 @@
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	}
 
+	.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+
 	.house-name {
-		margin: 0 0 0.5rem 0;
+		margin: 0;
 		font-size: 1.125rem;
 		font-weight: 600;
 		color: var(--text-color, #111827);
@@ -880,4 +907,39 @@
 	.clickable { cursor: pointer; }
 	.clickable:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
 	.data-table tr.clickable:hover { background: #eff6ff; }
+	
+	/* Mini toggle switch for active/inactive */
+	.card-toggle {
+		position: relative;
+		width: 36px;
+		height: 18px;
+		border-radius: 9px;
+		border: none;
+		cursor: pointer;
+		background: #fca5a5;
+		transition: background 0.15s ease, opacity 0.15s ease;
+		padding: 0;
+		flex-shrink: 0;
+	}
+	.card-toggle::after {
+		content: '';
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: white;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+		transition: transform 0.15s ease;
+	}
+	.card-toggle.active {
+		background: #10b981;
+	}
+	.card-toggle.active::after {
+		transform: translateX(18px);
+	}
+	.card-toggle:active {
+		opacity: 0.7;
+	}
 </style>
