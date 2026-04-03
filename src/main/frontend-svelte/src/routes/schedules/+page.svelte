@@ -5,6 +5,7 @@
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import ScheduleBoard from '$lib/components/ScheduleBoard.svelte';
   import { t, currentLocale } from '$lib/i18n';
+  import { toInputDateFormat, toBackendDateFormat, toDisplayDateFormat } from '$lib/utils/Utils';
   
   // Reactive translation helper
   const tt = (key: string) => t(key, undefined, $currentLocale);
@@ -58,8 +59,8 @@
 	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.id), label: c.name })));
 	let bookingOptions = $derived(bookings.map((b) => ({
 		value: String(b.id),
-		label: `${b.guest_name || t('schedules.guest')} - ${b.check_in_date} to ${b.check_out_date}`,
-		checkOutDate: b.check_out_date
+		label: `${b.guest_name || t('schedules.guest')} - ${toDisplayDateFormat(b.check_in_date)} to ${toDisplayDateFormat(b.check_out_date)}`,
+		checkOutDate: toInputDateFormat(b.check_out_date)
 	})));
 
 	// Status options
@@ -120,7 +121,7 @@
 		const scheduleData = {
 			cleaner_id: parseInt(formData.cleaner_id),
 			booking_id: parseInt(formData.booking_id),
-			date: formData.date,
+			date: toBackendDateFormat(formData.date),
 			start_time: formData.start_time,
 			end_time: formData.end_time,
 			status: formData.status

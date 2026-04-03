@@ -3,6 +3,7 @@
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import { t, currentLocale } from '$lib/i18n';
 	import { Server } from '$lib/services/Server';
+	import { toDisplayDateFormat } from '$lib/utils/Utils';
 
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
@@ -273,7 +274,7 @@
 
 	function formatDate(dateStr: string) {
 		if (!dateStr) return '-';
-		return dateStr.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+		return toDisplayDateFormat(dateStr, $currentLocale);
 	}
 
 	let loaded = $state(false);

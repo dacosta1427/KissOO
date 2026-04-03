@@ -5,6 +5,7 @@
 	import Table from '$lib/components/Table.svelte';
 	import Form from '$lib/components/Form.svelte';
   import { t, currentLocale } from '$lib/i18n';
+  import { toInputDateFormat, toBackendDateFormat, toDisplayDateFormat } from '$lib/utils/Utils';
   
   // Reactive translation helper
   const tt = (key: string) => t(key, undefined, $currentLocale);
@@ -271,7 +272,7 @@
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="booking-card clickable" onclick={() => { editingBooking = booking; showForm = true; scrollToEditForm(); }} onkeydown={(e) => e.key === 'Enter' && (editingBooking = booking, showForm = true, scrollToEditForm())}>
 						<h3 class="booking-guest">{booking.guest_name}</h3>
-						<p class="booking-dates">{booking.check_in_date} → {booking.check_out_date}</p>
+						<p class="booking-dates">{toDisplayDateFormat(booking.check_in_date)} → {toDisplayDateFormat(booking.check_out_date)}</p>
 						<p class="booking-house">House: {houses.find(h => h.id === booking.house_id)?.name || booking.house_id}</p>
 						{#if booking.guest_email}<p class="booking-detail">{booking.guest_email}</p>{/if}
 						<span class="status-badge status-{booking.status}">{booking.status}</span>

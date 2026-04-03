@@ -2,11 +2,52 @@
  * Utils.ts - Utility Functions for KissOO Svelte 5 Frontend
  * 
  * Provides modal dialogs, loading overlays, and other common utilities.
+ * Includes date format conversion between backend (YYYYMMDD) and frontend (YYYY-MM-DD).
  */
 
 import { modal } from '$lib/state/modalStore';
 import { validators, commonValidations } from './validation';
 import { notificationActions } from '$lib/stores.svelte.js';
+
+// ==================== DATE FORMAT CONVERSION ====================
+
+/**
+ * Convert YYYYMMDD (backend format) to YYYY-MM-DD (HTML date input format)
+ * @param yyyymmdd - Date string in format YYYYMMDD (e.g., "20260426")
+ * @returns Date string in format YYYY-MM-DD (e.g., "2026-04-26")
+ */
+export function toInputDateFormat(yyyymmdd: string): string {
+  if (!yyyymmdd || yyyymmdd.length !== 8) return '';
+  const year = yyyymmdd.substring(0, 4);
+  const month = yyyymmdd.substring(4, 6);
+  const day = yyyymmdd.substring(6, 8);
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Convert YYYY-MM-DD (HTML date input format) to YYYYMMDD (backend format)
+ * @param yyyyMmDd - Date string in format YYYY-MM-DD (e.g., "2026-04-26")
+ * @returns Date string in format YYYYMMDD (e.g., "20260426")
+ */
+export function toBackendDateFormat(yyyyMmDd: string): string {
+  if (!yyyyMmDd || yyyyMmDd.length !== 10) return '';
+  return yyyyMmDd.replace(/-/g, '');
+}
+
+/**
+ * Format YYYYMMDD for display (localized)
+ * @param yyyymmdd - Date string in format YYYYMMDD
+ * @param locale - Optional locale (default: 'en')
+ * @returns Localized date string (e.g., "Apr 26, 2026")
+ */
+export function toDisplayDateFormat(yyyymmdd: string, locale: string = 'en'): string {
+  if (!yyyymmdd || yyyymmdd.length !== 8) return '';
+  const year = parseInt(yyyymmdd.substring(0, 4));
+  const month = parseInt(yyyymmdd.substring(4, 6)) - 1;
+  const day = parseInt(yyyymmdd.substring(6, 8));
+  const date = new Date(year, month, day);
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 // Legacy compatibility - these will be replaced with Modal component
 export const Utils = {
