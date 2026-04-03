@@ -242,7 +242,11 @@
 		"login_as": "U kunt nu inloggen als",
 		"go_to_login": "Ga naar Inloggen",
 		"try_again": "Probeer Opnieuw",
-		"go_home": "Ga naar Home"
+		"go_home": "Ga naar Home",
+		"set_password_title": "E-mail Verifiëren & Wachtwoord Instellen",
+		"set_password_desc": "Voer uw wachtwoord in om uw e-mail te verifiëren en uw account te activeren.",
+		"verifying": "Verifiëren...",
+		"verify_and_set_password": "Verifiëren & Wachtwoord Instellen"
 	},
 	"hints": {
 		"add_new": "Nieuw item toevoegen",

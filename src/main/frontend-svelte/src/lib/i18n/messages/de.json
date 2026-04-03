@@ -242,7 +242,11 @@
 		"login_as": "Sie können sich jetzt anmelden als",
 		"go_to_login": "Zur Anmeldung",
 		"try_again": "Erneut Versuchen",
-		"go_home": "Zur Startseite"
+		"go_home": "Zur Startseite",
+		"set_password_title": "E-Mail Verifizieren & Passwort Festlegen",
+		"set_password_desc": "Geben Sie Ihr Passwort ein, um Ihre E-Mail zu verifizieren und Ihr Konto zu aktivieren.",
+		"verifying": "Verifizieren...",
+		"verify_and_set_password": "Verifizieren & Passwort Festlegen"
 	},
 	"hints": {
 		"add_new": "Neues Element hinzufügen",

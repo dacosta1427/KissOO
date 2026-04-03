@@ -28,7 +28,9 @@
 		"no_account": "Don't have an account?",
 		"have_account": "Already have an account?",
 		"sign_up_here": "Sign Up",
-		"login_here": "Login here"
+		"login_here": "Login here",
+		"password_placeholder": "Enter password",
+		"confirm_password_placeholder": "Confirm password"
 	},
 	"common": {
 		"save": "Save",
@@ -242,7 +244,11 @@
 		"login_as": "You can now login as",
 		"go_to_login": "Go to Login",
 		"try_again": "Try Again",
-		"go_home": "Go Home"
+		"go_home": "Go Home",
+		"set_password_title": "Verify Email & Set Password",
+		"set_password_desc": "Enter your password to verify your email and activate your account.",
+		"verifying": "Verifying...",
+		"verify_and_set_password": "Verify & Set Password"
 	},
 	"hints": {
 		"add_new": "Add a new item",
