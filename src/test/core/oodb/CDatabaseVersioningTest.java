@@ -176,7 +176,7 @@ public class CDatabaseVersioningTest {
     private Actor createTestActorWithUser(String name, String description, int userId) {
         mycompany.domain.Agreement agreement = new mycompany.domain.Agreement(name + "_agreement");
         Actor actor = new Actor(name, "USER", agreement);
-        actor.setUserId(userId);
+        // userId field no longer exists - just return actor
         return actor;
     }
 

@@ -29,13 +29,13 @@ public class PerstUserManagerTest {
 
     @Test
     public void testValidateRejectsNullUsername() {
-        PerstUser user = new PerstUser(null, "password", 1);
+        PerstUser user = new PerstUser(null, "password", null);
         assertFalse(PerstUserManager.validate(user));
     }
 
     @Test
     public void testValidateAcceptsValidUser() {
-        PerstUser user = new PerstUser("testuser", "password", 1);
+        PerstUser user = new PerstUser("testuser", "password", null);
         assertTrue(PerstUserManager.validate(user));
     }
 

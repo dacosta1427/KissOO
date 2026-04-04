@@ -28,12 +28,13 @@ public class Login {
                 return null;
             }
             
-            UserData ud = UserCache.newUser(user, password, perstUser.getUserId());
+            UserData ud = UserCache.newUser(user, password, null);
+            ud.putUserData("perstUser", perstUser);
             
             perstUser.setLastLoginDate(System.currentTimeMillis());
             PerstUserManager.update(perstUser);
             
-            logger.info("[PerstAuth] Login SUCCESS for user: {} (ID: {})", user, perstUser.getUserId());
+            logger.info("[PerstAuth] Login SUCCESS for user: {} (Actor: {})", user, perstUser.getActor().getName());
             
             return ud;
             

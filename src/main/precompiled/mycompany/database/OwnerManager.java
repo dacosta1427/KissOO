@@ -14,8 +14,8 @@ public class OwnerManager extends BaseManager<Owner> {
         return oodb.PerstStorageManager.getAll(Owner.class);
     }
     
-    public static Owner getByUserId(long userId) {
-        return oodb.PerstStorageManager.find(Owner.class, "userId", userId);
+    public static Owner getByUser(PerstUser user) {
+        return user != null ? user.getActor() instanceof Owner ? (Owner) user.getActor() : null : null;
     }
     
     public static Owner getByKey(String key) {

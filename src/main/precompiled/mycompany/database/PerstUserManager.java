@@ -2,8 +2,6 @@ package mycompany.database;
 
 import mycompany.domain.Actor;
 import mycompany.domain.PerstUser;
-import mycompany.domain.Owner;
-import mycompany.database.OwnerManager;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 import java.util.List;
@@ -34,20 +32,21 @@ public class PerstUserManager extends BaseManager<PerstUser> {
     }
     
     public static PerstUser getByKey(String key) {
-        try {
-            int id = Integer.parseInt(key);
-            return oodb.PerstStorageManager.find(PerstUser.class, "userId", id);
-        } catch (NumberFormatException e) {
-            return oodb.PerstStorageManager.find(PerstUser.class, "username", key);
-        }
+        return oodb.PerstStorageManager.find(PerstUser.class, "username", key);
     }
     
     public static PerstUser getByOid(long oid) {
         return oodb.PerstStorageManager.getByOid(PerstUser.class, oid);
     }
 
-    public static PerstUser getByUserId(int userId) {
-        return oodb.PerstStorageManager.find(PerstUser.class, "userId", userId);
+    public static PerstUser getByActor(Actor actor) {
+        // Iterate all PerstUsers to find the one linked to this actor
+        for (PerstUser user : getAll()) {
+            if (user.getActor() == actor) {
+                return user;
+            }
+        }
+        return null;
     }
 
     // ========== AUTHENTICATION ==========
@@ -66,36 +65,8 @@ public class PerstUserManager extends BaseManager<PerstUser> {
     
     // ========== CRUD ==========
     
-    public static PerstUser create(Actor actor, Object... args) {
-        return create(args);
-    }
-    
-    public static boolean update(Actor actor, PerstUser user) {
-        return update(user);
-    }
-    
-    public static boolean delete(Actor actor, PerstUser user) {
-        return delete(user);
-    }
-    
-    public static PerstUser create(Object... args) {
-        if (args == null || args.length < 2) {
-            return null;
-        }
-        String username = args[0].toString();
-        String password = args[1].toString();
-        int userId = args.length > 2 ? Integer.parseInt(args[2].toString()) : 0;
-        Owner owner = null;
-        if (args.length > 3 && args[3] instanceof Owner) {
-            owner = (Owner) args[3];
-        } else if (args.length > 3) {
-            // Legacy: convert long ownerId to Owner object via lookup
-            long ownerId = Long.parseLong(args[3].toString());
-            owner = OwnerManager.getByOid(ownerId);
-        }
-        
-        PerstUser user = new PerstUser(username, password, userId);
-        user.setOwner(owner);
+    public static PerstUser create(Actor actor, String username, String password) {
+        PerstUser user = new PerstUser(username, password, actor);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(user);

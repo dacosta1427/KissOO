@@ -40,8 +40,8 @@ public class ActorManager extends BaseManager<Actor> {
         return oodb.PerstStorageManager.find(Actor.class, "uuid", uuid);
     }
     
-    public static Actor getByUserId(int userId) {
-        return oodb.PerstStorageManager.find(Actor.class, "userId", userId);
+    public static Actor getByPerstUser(mycompany.domain.PerstUser user) {
+        return user != null ? user.getActor() : null;
     }
     
     // ========== CRUD ==========

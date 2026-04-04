@@ -578,6 +578,9 @@ public class Tasks {
         dep.add(LIBS, "slf4j-api-1.7.30.jar");
         dep.add(LIBS, "slf4j-simple-1.7.30.jar");
         dep.add(LIBS, "password4j-1.8.4.jar");
+        dep.add(LIBS, "jakarta.mail-2.0.3.jar");
+        dep.add(LIBS, "angus-activation-2.0.2.jar");
+        dep.add(LIBS, "jakarta.activation-api-2.1.3.jar");
         return dep;
     }
 

@@ -111,11 +111,15 @@ class LoadTestdata {
                 }
             }
             if (!admin) {
-                admin = new PerstUser("admin", "admin", 1)
+                def agreement = new mycompany.domain.Agreement("superAdmin")
+                def adminActor = new mycompany.domain.Actor("System Admin", "superAdmin", agreement)
+                admin = new PerstUser("admin", "admin", adminActor)
                 admin.setEmail("admin@kissoo.local")
                 admin.setActive(true)
                 admin.setEmailVerified(true)
+                adminActor.setPerstUser(admin)
                 def tc = PerstStorageManager.createContainer()
+                tc.addInsert(adminActor)
                 tc.addInsert(admin)
                 PerstStorageManager.store(tc)
                 results.admin = "created"
@@ -146,6 +150,7 @@ class LoadTestdata {
                     def owner = new Owner(d.name, d.email, d.phone, "123 ${d.name.split(' ')[1]} Street, Amsterdam")
                     def tc = PerstStorageManager.createContainer()
                     tc.addInsert(owner)
+                    tc.addInsert(owner.getPerstUser())
                     PerstStorageManager.store(tc)
                     owners << owner
                 } catch (Exception e) {
@@ -176,20 +181,20 @@ class LoadTestdata {
             ]
             
             def houses = []
+            def houseTc = PerstStorageManager.createContainer()
             houseData.each { d ->
                 try {
                     def owner = owners[d.ownerIdx]
                     def house = new House(d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true)
-                    house.setOwner(owner)  // Proper OO reference
-                    def tc = PerstStorageManager.createContainer()
-                    tc.addInsert(house)
-                    PerstStorageManager.store(tc)
+                    house.setOwner(owner)
+                    houseTc.addInsert(house)
                     houses << house
                 } catch (Exception e) {
                     println "[LoadTestdata] Error creating house ${d.name}: ${e.message}"
                     throw e
                 }
             }
+            PerstStorageManager.store(houseTc)
             results.houses = "created ${houses.size()}"
             println "[LoadTestdata] Created ${houses.size()} houses"
             
@@ -209,6 +214,7 @@ class LoadTestdata {
                     def cleaner = new Cleaner(d.name, d.phone, d.email, "45 Cleaner Street, Amsterdam", true)
                     def tc = PerstStorageManager.createContainer()
                     tc.addInsert(cleaner)
+                    tc.addInsert(cleaner.getPerstUser())
                     PerstStorageManager.store(tc)
                     cleaners << cleaner
                 } catch (Exception e) {
@@ -223,19 +229,15 @@ class LoadTestdata {
             def bookings = []
             def today = LocalDate.now()
             def formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-            
+            def bookingTc = PerstStorageManager.createContainer()
             houses.eachWithIndex { house, houseIdx ->
-                // Create 2 bookings per house (spread over 6 months)
                 2.times { bookingIdx ->
                     try {
                         def checkIn = today.plusDays((houseIdx * 7) + (bookingIdx * 30))
                         def checkOut = checkIn.plusDays(3)
                         def guestName = "Guest ${houseIdx * 2 + bookingIdx + 1}"
-                        def booking = new Booking((int)house.getOid(), checkIn.format(formatter), checkOut.format(formatter), guestName, "${guestName.toLowerCase().replace(' ', '.')}@email.com", "+31 6 ${String.format('%08d', houseIdx * 2 + bookingIdx)}", "Special requests: None")
-                        booking.setHouse(house)  // Proper OO reference
-                        def tc = PerstStorageManager.createContainer()
-                        tc.addInsert(booking)
-                        PerstStorageManager.store(tc)
+                        def booking = new Booking(house, checkIn.format(formatter), checkOut.format(formatter), guestName, "${guestName.toLowerCase().replace(' ', '.')}@email.com", "+31 6 ${String.format('%08d', houseIdx * 2 + bookingIdx)}", "Special requests: None")
+                        bookingTc.addInsert(booking)
                         bookings << booking
                     } catch (Exception e) {
                         println "[LoadTestdata] Error creating booking for house ${houseIdx}: ${e.message}"
@@ -243,12 +245,18 @@ class LoadTestdata {
                     }
                 }
             }
+            PerstStorageManager.store(bookingTc)
             results.bookings = "created ${bookings.size()}"
             println "[LoadTestdata] Created ${bookings.size()} bookings"
             
             // Create schedules from today to 6 months (for each booking)
+            // Use batched transaction containers (15 per batch) to reduce lock contention
             def schedules = []
             def cleanerIdx = 0
+            def BATCH_SIZE = 15
+            def scheduleTc = PerstStorageManager.createContainer()
+            def scheduleCount = 0
+            
             bookings.eachWithIndex { booking, bookingIdx ->
                 def cleaner = cleaners[cleanerIdx % cleaners.size()]
                 def checkInDate = LocalDate.parse(booking.getCheckInDate(), formatter)
@@ -257,18 +265,26 @@ class LoadTestdata {
                 3.times { dayIdx ->
                     def scheduleDate = checkInDate.plusDays(dayIdx)
                     def schedule = new Schedule()
-                    schedule.setCleaner(cleaner)  // Proper OO reference
-                    schedule.setBooking(booking)  // Proper OO reference
+                    schedule.setCleaner(cleaner)
+                    schedule.setBooking(booking)
                     schedule.setScheduleDate(scheduleDate.format(formatter))
                     schedule.setStartTime("09:00")
                     schedule.setEndTime("12:00")
                     schedule.setStatus("scheduled")
-                    def tc = PerstStorageManager.createContainer()
-                    tc.addInsert(schedule)
-                    PerstStorageManager.store(tc)
+                    scheduleTc.addInsert(schedule)
                     schedules << schedule
+                    scheduleCount++
+                    
+                    if (scheduleCount % BATCH_SIZE == 0) {
+                        PerstStorageManager.store(scheduleTc)
+                        scheduleTc = PerstStorageManager.createContainer()
+                    }
                 }
                 cleanerIdx++
+            }
+            // Store remaining schedules
+            if (scheduleCount % BATCH_SIZE != 0) {
+                PerstStorageManager.store(scheduleTc)
             }
             results.schedules = "created ${schedules.size()}"
             

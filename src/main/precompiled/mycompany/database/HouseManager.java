@@ -1,6 +1,7 @@
 package mycompany.database;
 
 import mycompany.domain.House;
+import mycompany.domain.Owner;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 
@@ -36,12 +37,15 @@ public class HouseManager extends BaseManager<House> {
         String name = args[0].toString();
         String address = args.length > 1 ? args[1].toString() : null;
         String description = args.length > 2 ? args[2].toString() : null;
-        long ownerId = args.length > 3 ? Long.parseLong(args[3].toString()) : 0;
-        boolean active = args.length > 4 ? Boolean.parseBoolean(args[4].toString()) : true;
-        String checkInTime = args.length > 5 ? args[5].toString() : "16:00";
-        String checkOutTime = args.length > 6 ? args[6].toString() : "10:00";
+        boolean active = args.length > 3 ? Boolean.parseBoolean(args[3].toString()) : true;
+        String checkInTime = args.length > 4 ? args[4].toString() : "16:00";
+        String checkOutTime = args.length > 5 ? args[5].toString() : "10:00";
+        Owner owner = args.length > 6 && args[6] instanceof Owner ? (Owner) args[6] : null;
         
-        House house = new House(name, address, description, ownerId, active, checkInTime, checkOutTime);
+        House house = new House(name, address, description, active);
+        house.setCheckInTime(checkInTime);
+        house.setCheckOutTime(checkOutTime);
+        house.setOwner(owner);
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(house);

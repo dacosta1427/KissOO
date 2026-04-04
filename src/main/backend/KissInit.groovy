@@ -32,14 +32,8 @@ class KissInit {
         MainServlet.readIniFile "application.ini", "main"
         MainServlet.readIniFile "application.ini", "PasswordSecurity"
         
-        // Initialize EmailService with SMTP config
-        try {
-            def config = MainServlet.getConfig()
-            services.EmailService.initialize(config)
-            println "[KissInit] EmailService initialized"
-        } catch (Exception e) {
-            println "[KissInit] WARNING: Failed to initialize EmailService: " + e.message
-        }
+        // EmailService is initialized on first use (lazy init)
+        // EmailService.groovy reads application.ini directly via initializeFromConfig()
 
         // Example of how to specify a method that is allowed without authentication
         // MainServlet.allowWithoutAuthentication("services.MyGroovyService", "addNumbers")
@@ -164,14 +158,25 @@ class KissInit {
         try {
             def users = PerstStorageManager.getAll(PerstUser.class)
             if (!users || users.size() == 0) {
-                println "[KissInit] Creating default admin user..."
-                def admin = PerstUserManager.create("admin", "admin", 1)
-                if (admin) {
-                    admin.setEmail("admin@localhost")
-                    admin.setActive(true)
-                    admin.setEmailVerified(true)  // Required for canLogin() to return true
-                    PerstUserManager.update(admin)
-                    println "[KissInit] Default admin user created. CHANGE PASSWORD IMMEDIATELY!"
+                println "[KissInit] Creating default superAdmin user..."
+                
+                // Create superAdmin Actor with full Agreement
+                def agreement = new mycompany.domain.Agreement("superAdmin")
+                def adminActor = new mycompany.domain.Actor("System Admin", "superAdmin", agreement)
+                
+                // Replace auto-created PerstUser with one using "admin" as username
+                def adminUser = new PerstUser("admin", "admin", adminActor)
+                adminUser.setEmail("admin@localhost")
+                adminUser.setActive(true)
+                adminUser.setEmailVerified(true)
+                adminActor.setPerstUser(adminUser)
+                
+                // Store both together
+                def tc = PerstStorageManager.createContainer()
+                tc.addInsert(adminActor)
+                tc.addInsert(adminUser)
+                if (PerstStorageManager.store(tc)) {
+                    println "[KissInit] Default superAdmin user created. CHANGE PASSWORD IMMEDIATELY!"
                 } else {
                     println "[KissInit] ERROR: Failed to create admin user"
                 }

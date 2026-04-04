@@ -20,15 +20,15 @@ public class ScheduleManager extends BaseManager<Schedule> {
         return oodb.PerstStorageManager.getAll(Schedule.class);
     }
     
-    public static Collection<Schedule> getByCleaner(int cleanerId) {
+    public static Collection<Schedule> getByCleaner(mycompany.domain.Cleaner cleaner) {
         return getAll().stream()
-                .filter(s -> s.getCleanerId() == cleanerId)
+                .filter(s -> s.getCleaner() == cleaner)
                 .collect(Collectors.toList());
     }
     
-    public static Collection<Schedule> getByBooking(int bookingId) {
+    public static Collection<Schedule> getByBooking(mycompany.domain.Booking booking) {
         return getAll().stream()
-                .filter(s -> s.getBookingId() == bookingId)
+                .filter(s -> s.getBooking() == booking)
                 .collect(Collectors.toList());
     }
     
@@ -53,20 +53,15 @@ public class ScheduleManager extends BaseManager<Schedule> {
     
     // ========== CRUD ==========
     
-    public static Schedule create(Object... args) {
-        if (args == null || args.length < 5) {
-            return null;
-        }
-        int cleanerId = Integer.parseInt(args[0].toString());
-        int bookingId = Integer.parseInt(args[1].toString());
-        String scheduleDate = args[2].toString();
-        String startTime = args[3].toString();
-        String endTime = args[4].toString();
-        String notes = args.length > 5 ? args[5].toString() : null;
-        String status = args.length > 6 ? args[6].toString() : "scheduled";
-        
-        Schedule schedule = new Schedule(cleanerId, bookingId, scheduleDate, startTime, endTime, notes);
-        schedule.setStatus(status);
+    public static Schedule create(mycompany.domain.Cleaner cleaner, mycompany.domain.Booking booking, String scheduleDate, String startTime, String endTime, String notes) {
+        Schedule schedule = new Schedule();
+        schedule.setCleaner(cleaner);
+        schedule.setBooking(booking);
+        schedule.setScheduleDate(scheduleDate);
+        schedule.setStartTime(startTime);
+        schedule.setEndTime(endTime);
+        schedule.setNotes(notes);
+        schedule.setStatus("scheduled");
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(schedule);

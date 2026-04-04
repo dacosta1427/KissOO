@@ -3,8 +3,8 @@ package services;
 import org.garret.perst.json.JSONObject;
 import org.kissweb.database.Connection;
 import java.util.Properties;
-import javax.mail.*;
-import javax.mail.internet.*;
+import jakarta.mail.*;
+import jakarta.mail.internet.*;
 
 /**
  * EmailService - Utility for sending emails.
@@ -36,8 +36,61 @@ public class EmailService {
         SMTP_USERNAME = config.getProperty("mail.smtp.username", "");
         SMTP_PASSWORD = config.getProperty("mail.smtp.password", "");
         FROM_ADDRESS = config.getProperty("mail.from.address", "noreply@example.com");
-        FROM_NAME = config.getProperty("mail.from.name", "KISS");
+        FROM_NAME = config.getProperty("mail.from.name", "KissOO");
         INITIALIZED = true;
+        System.out.println("[EmailService] Initialized - SMTP: " + SMTP_HOST + ":" + SMTP_PORT + " From: " + FROM_ADDRESS);
+    }
+    
+    /**
+     * Initialize from application.ini config file
+     * Handles INI format with [section] headers
+     */
+    public static void initializeFromConfig() {
+        try {
+            Properties config = new Properties();
+            
+            // Find application.ini
+            String configPath = null;
+            try {
+                String appPath = org.kissweb.restServer.MainServlet.getApplicationPath();
+                if (appPath != null) {
+                    configPath = appPath + "application.ini";
+                }
+            } catch (Exception ignored) {}
+            
+            if (configPath == null) {
+                String appPath = System.getProperty("appPath");
+                if (appPath != null) {
+                    configPath = appPath + "application.ini";
+                } else {
+                    configPath = "src/main/backend/application.ini";
+                }
+            }
+            
+            System.out.println("[EmailService] Loading config from: " + configPath);
+            
+            // Read INI file, skipping section headers and comments
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(configPath));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("#") || line.startsWith("[")) {
+                    continue;
+                }
+                int eqIdx = line.indexOf('=');
+                if (eqIdx > 0) {
+                    String key = line.substring(0, eqIdx).trim();
+                    String value = line.substring(eqIdx + 1).trim();
+                    config.setProperty(key, value);
+                }
+            }
+            reader.close();
+            
+            initialize(config);
+        } catch (Exception e) {
+            System.err.println("[EmailService] Failed to load config: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -45,9 +98,14 @@ public class EmailService {
      */
     public static boolean send(String to, String toName, String subject, String body) {
         if (!INITIALIZED) {
-            System.err.println("EmailService not initialized");
+            initializeFromConfig();
+        }
+        if (!INITIALIZED) {
+            System.err.println("[EmailService] Not initialized, cannot send to " + to);
             return false;
         }
+        
+        System.out.println("[EmailService] Sending to " + to + " via " + SMTP_HOST + ":" + SMTP_PORT);
         
         try {
             Properties props = new Properties();
@@ -82,7 +140,8 @@ public class EmailService {
             return true;
             
         } catch (Exception e) {
-            System.err.println("Failed to send email: " + e.getMessage());
+            System.err.println("[EmailService] Failed to send email to " + to + ": " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }

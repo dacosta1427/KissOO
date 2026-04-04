@@ -1,9 +1,8 @@
 package services;
 
 import mycompany.domain.Actor;
+import mycompany.domain.PerstUser;
 import mycompany.domain.EndpointMethod;
-import mycompany.database.ActorManager;
-import mycompany.database.BaseManager;
 import org.garret.perst.json.JSONObject;
 import org.garret.perst.json.JSONArray;
 import org.kissweb.restServer.ProcessServlet;
@@ -239,7 +238,8 @@ public class ActorService {
         if (ud == null) {
             return null;
         }
-        return ActorManager.getByUserId((int) ud.getUserId());
+        PerstUser pu = (PerstUser) ud.getUserData("perstUser");
+        return pu != null ? pu.getActor() : null;
     }
     
     // ======================= LEGACY METHODS (still work) =======================

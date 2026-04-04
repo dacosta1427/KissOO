@@ -3,6 +3,9 @@ package mycompany.service;
 import org.kissweb.json.JSONObject;
 import mycompany.database.PerstUserManager;
 import mycompany.domain.PerstUser;
+import mycompany.domain.Actor;
+import mycompany.domain.Agreement;
+import mycompany.domain.Cleaner;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,17 +35,30 @@ public class PerstInit {
                 return result;
             }
             
-            // Create admin user
-            PerstUser admin = new PerstUser("admin", "admin", 1);
-            admin.setEmail("admin@localhost");
-            admin.setActive(true);
-            admin.setEmailVerified(true);  // Allow login without email verification
-            PerstUserManager.create(admin);
+            // Create superAdmin Actor with full Agreement
+            Agreement agreement = new Agreement("superAdmin");
+            Actor adminActor = new Actor("System Admin", "superAdmin", agreement);
+            
+            // Replace auto-created PerstUser with one using "admin" as username
+            String username = "admin";
+            String tempPassword = "admin";
+            PerstUser adminUser = new PerstUser(username, tempPassword, adminActor);
+            adminUser.setEmail("admin@localhost");
+            adminUser.setActive(true);
+            adminUser.setEmailVerified(true);
+            adminActor.setPerstUser(adminUser);
+            
+            // Store both together
+            org.garret.perst.continuous.TransactionContainer tc = oodb.PerstStorageManager.createContainer();
+            tc.addInsert(adminActor);
+            tc.addInsert(adminUser);
+            oodb.PerstStorageManager.store(tc);
             
             result.put("message", "Admin user created successfully");
             result.put("username", "admin");
             result.put("password", "admin");
-            logger.info("Admin user created successfully");
+            result.put("role", "superAdmin");
+            logger.info("Admin user created successfully with role=superAdmin");
             
         } catch (Exception e) {
             logger.error("Error initializing Perst", e);

@@ -152,7 +152,6 @@ class Cleaning {
     
     void createCleaner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Admin only
             checkAdminOnly(injson, "createCleaner")
             
             JSONObject data = injson.getJSONObject("data")
@@ -162,9 +161,12 @@ class Cleaning {
             String address = data.getString("address", "")
             boolean active = data.getBoolean("active", true)
             
+            // Cleaner constructor auto-creates a deactivated PerstUser
             Cleaner cleaner = new Cleaner(name, phone, email, address, active)
+            
             def tc = PerstStorageManager.createContainer()
             tc.addInsert(cleaner)
+            tc.addInsert(cleaner.getPerstUser())
             if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create cleaner")
@@ -181,6 +183,7 @@ class Cleaning {
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
+            e.printStackTrace()
         }
     }
     
@@ -1142,7 +1145,6 @@ class Cleaning {
     
     void createOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
             String name = data.getString("name")
             String email = data.getString("email", "")
@@ -1150,10 +1152,18 @@ class Cleaning {
             String address = data.getString("address", "")
             boolean active = data.getBoolean("active", true)
             
-            Owner owner = new Owner(name, email, phone, address, active)
+            // Owner constructor auto-creates a deactivated PerstUser
+            Owner owner = new Owner(name, email, phone, address)
+            owner.setActive(active)
+            
+            println "[Cleaning] createOwner: owner OID=${owner.getOid()}, perstUser=${owner.getPerstUser()?.username}"
+            
             def tc = PerstStorageManager.createContainer()
             tc.addInsert(owner)
-            if (!PerstStorageManager.store(tc)) {
+            tc.addInsert(owner.getPerstUser())
+            def storeResult = PerstStorageManager.store(tc)
+            println "[Cleaning] createOwner: store result=${storeResult}"
+            if (!storeResult) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create owner")
                 return
@@ -1169,6 +1179,7 @@ class Cleaning {
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
+            e.printStackTrace()
         }
     }
     
@@ -1252,13 +1263,16 @@ class Cleaning {
                 // Get base URL from config
                 String baseUrl = org.kissweb.restServer.MainServlet.getEnvironment("app.baseUrl") ?: "http://localhost:5173"
                 
-                // Send verification email
-                boolean emailSent = services.EmailService.sendVerificationEmail(
-                    ownerEmail,
-                    owner.getName(),
-                    user.getVerificationToken(),
-                    baseUrl
-                )
+                // Send verification email via EmailService
+                boolean emailSent = false
+                try {
+                    emailSent = (Boolean) Class.forName("services.EmailService")
+                        .getMethod("sendVerificationEmail", String.class, String.class, String.class, String.class)
+                        .invoke(null, ownerEmail, owner.getName(), user.getVerificationToken(), baseUrl)
+                } catch (Exception e) {
+                    println "[Cleaning] Failed to send email via EmailService: " + e.message
+                    e.printStackTrace()
+                }
                 
                 def tc = PerstStorageManager.createContainer()
                 tc.addUpdate(user)

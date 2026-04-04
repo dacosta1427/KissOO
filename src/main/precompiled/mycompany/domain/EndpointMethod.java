@@ -4,7 +4,6 @@ import org.kissweb.json.JSONObject;
 import org.kissweb.database.Connection;
 import org.kissweb.restServer.ProcessServlet;
 import org.kissweb.restServer.UserData;
-import mycompany.database.ActorManager;
 
 /**
  * EndpointMethod - Abstract base for all service endpoints.
@@ -108,7 +107,8 @@ public abstract class EndpointMethod {
         if (ud == null) {
             return null;
         }
-        return ActorManager.getByUserId((int) ud.getUserId());
+        PerstUser pu = (PerstUser) ud.getUserData("perstUser");
+        return pu != null ? pu.getActor() : null;
     }
     
     /**

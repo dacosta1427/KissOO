@@ -46,61 +46,64 @@ class Login {
                 return null
             }
             
-            // Create session using UserCache
-            UserData ud = UserCache.newUser(user, password, perstUser.getUserId())
+            // Create session using UserCache - store PerstUser directly
+            UserData ud = UserCache.newUser(user, password, null)
+            ud.putUserData("perstUser", perstUser)
             
             // Update last login date
             perstUser.setLastLoginDate(System.currentTimeMillis())
             PerstUserManager.update(perstUser)
             
             // Add user info to outjson - ALL OIDs for consistency
-            outjson.put("userId", perstUser.getOid())  // Perst OID
+            outjson.put("userId", perstUser.getOid())
             outjson.put("username", perstUser.getUsername())
             outjson.put("email", perstUser.getEmail() ?: "")
             outjson.put("preferredLanguage", perstUser.getPreferredLanguage() ?: "en")
             
             // Add owner OID if available
-            Owner owner = perstUser.getOwner()
+            def actor = perstUser.getActor()
+            Owner owner = (actor instanceof Owner) ? (Owner) actor : null
             if (owner != null) {
-                outjson.put("ownerId", owner.getOid())  // Perst OID
+                outjson.put("ownerId", owner.getOid())
                 outjson.put("ownerName", owner.getName() ?: "")
             } else {
                 outjson.put("ownerId", 0)
                 outjson.put("ownerName", "")
             }
             
-            // Get Actor once and cache - only if exists
-            def actor = perstUser.getActor()
-            
-            // Add cleaner OID if user is also a cleaner (via Actor relationship)
+            // Add cleaner OID if user is also a cleaner
             long cleanerId = 0
             if (actor != null) {
                 try {
                     if (actor instanceof mycompany.domain.Cleaner) {
-                        cleanerId = actor.getOid()  // Perst OID
+                        cleanerId = actor.getOid()
                     }
                 } catch (Exception e) {
-                    // Ignore - actor might be different type
+                    // Ignore
                 }
             }
             outjson.put("cleanerId", cleanerId)
             
-            // isAdmin: use userId == 1 for fast admin check (simpler than Agreement lookup)
-            boolean isAdmin = perstUser.getUserId() == 1
-            outjson.put("isAdmin", isAdmin)
+            // Determine admin role from Actor's Agreement
+            String role = null
+            if (actor != null && actor.getAgreement() != null) {
+                role = actor.getAgreement().getRole()
+            }
             
-            // adminType: system (full access) or content (no system/ users)
+            boolean isAdmin = "admin".equals(role) || "superAdmin".equals(role)
+            outjson.put("isAdmin", isAdmin)
+            outjson.put("role", role ?: "none")
+            
+            // adminType: system (full access) or content (business only)
             String adminType = "none"
-            if (isAdmin) {
-                adminType = "system"  // userId == 1 is system admin
-            } else if (actor != null && actor.getAgreement() != null && "content".equals(actor.getAgreement().getRole())) {
-                adminType = "content"  // Agreement role = content admin
-            } else if (perstUser.getUserId() == 2) {
-                adminType = "content"  // Fallback: userId 2 = content admin
+            if ("superAdmin".equals(role)) {
+                adminType = "system"
+            } else if ("admin".equals(role)) {
+                adminType = "content"
             }
             outjson.put("adminType", adminType)
             
-            logger.info("[PerstAuth] Login SUCCESS for user: ${user} (ID: ${perstUser.getUserId()}, Owner: ${owner?.getOid() ?: 'none'})")
+            logger.info("[PerstAuth] Login SUCCESS for user: ${user} (Role: ${role ?: 'none'}, Actor: ${actor?.getName() ?: 'none'})")
             
             return ud
             

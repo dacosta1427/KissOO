@@ -1,6 +1,7 @@
 package mycompany.database;
 
 import mycompany.domain.Booking;
+import mycompany.domain.House;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 import java.util.List;
@@ -20,9 +21,9 @@ public class BookingManager extends BaseManager<Booking> {
         return oodb.PerstStorageManager.getAll(Booking.class);
     }
     
-    public static Collection<Booking> getByHouse(int houseId) {
+    public static Collection<Booking> getByHouse(House house) {
         return getAll().stream()
-                .filter(b -> b.getHouseId() == houseId)
+                .filter(b -> b.getHouse() == house)
                 .collect(Collectors.toList());
     }
     
@@ -48,21 +49,18 @@ public class BookingManager extends BaseManager<Booking> {
     
     // ========== CRUD ==========
     
-    public static Booking create(Object... args) {
-        if (args == null || args.length < 6) {
-            return null;
-        }
-        int houseId = Integer.parseInt(args[0].toString());
-        String checkInDate = args[1].toString();
-        String checkOutDate = args[2].toString();
-        String guestName = args[3].toString();
-        String guestEmail = args[4].toString();
-        String guestPhone = args.length > 5 ? args[5].toString() : null;
-        String notes = args.length > 6 ? args[6].toString() : null;
-        int dogsCount = args.length > 7 ? Integer.parseInt(args[7].toString()) : 0;
-        
-        Booking booking = new Booking(houseId, checkInDate, checkOutDate,
-                guestName, guestEmail, guestPhone, notes, dogsCount);
+    public static Booking create(House house, String checkInDate, String checkOutDate,
+                                  String guestName, String guestEmail, String guestPhone, String notes, int dogsCount) {
+        Booking booking = new Booking();
+        booking.setHouse(house);
+        booking.setCheckInDate(checkInDate);
+        booking.setCheckOutDate(checkOutDate);
+        booking.setGuestName(guestName);
+        booking.setGuestEmail(guestEmail);
+        booking.setGuestPhone(guestPhone);
+        booking.setNotes(notes);
+        booking.setDogsCount(dogsCount);
+        booking.setStatus("pending");
         
         TransactionContainer tc = oodb.PerstStorageManager.createContainer();
         tc.addInsert(booking);

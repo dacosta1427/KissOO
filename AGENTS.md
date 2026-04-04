@@ -7,9 +7,31 @@ The following JARs must be present in `libs/`:
 - `abcl.jar` - ABCL Lisp implementation (required for LispService)
   - If missing, Lisp services will fail to compile
   - Workaround: See "Disabling Lisp" below
+- `jakarta.mail-2.0.3.jar` - Jakarta Mail for email sending
+- `angus-activation-2.0.2.jar` - Jakarta Activation (required by Jakarta Mail)
+- `jakarta.activation-api-2.1.3.jar` - Jakarta Activation API
 
-### Optional Dependencies
-- Perst OODBMS: `perst-dcg-5.1.0.jar` (included in libs)
+### Lombok Usage
+All domain classes in `src/main/precompiled/mycompany/domain/` use Lombok `@Getter @Setter` annotations.
+- Getters/setters are auto-generated — do NOT write manual getters/setters for fields
+- Use `@Getter` only for classes with controlled-mutation fields (Agreement, Group, BenchmarkData, Phone)
+- Business methods (e.g., `checkPassword()`, `canLogin()`, `generateVerificationToken()`) are written manually
+- Lombok is included via `lombok.jar` in `libs/` and is processed at compile time
+
+## Pure OO Navigation (No ID Fields)
+KissOO uses a pure object-oriented approach with Perst OODBMS:
+- **No ID/foreign key fields** — objects reference each other directly
+- **Actor → PerstUser**: `actor.getPerstUser()` (transient, cached)
+- **PerstUser → Actor**: `perstUser.getActor()` (persistent reference)
+- **Login flow**: Find PerstUser by username → `pu.getActor()` → cast to Owner/Cleaner
+- **Session**: PerstUser is stored directly in `UserData` via `ud.putUserData("perstUser", perstUser)`
+- **Navigation example**: `((PerstUser) ud.getUserData("perstUser")).getActor()`
+
+### Actor/PerstUser Relationship
+- Every Actor (Owner, Cleaner) creates its own deactivated PerstUser in the constructor
+- The PerstUser has a persistent `actor` reference back to its Actor
+- To create an Owner/Cleaner: just `new Owner(...)` — PerstUser is auto-created
+- Store both together: `tc.addInsert(owner); tc.addInsert(owner.getPerstUser()); PerstStorageManager.store(tc)`
 
 ## Disabling Lisp Services
 

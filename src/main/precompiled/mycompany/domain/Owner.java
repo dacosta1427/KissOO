@@ -1,15 +1,18 @@
 package mycompany.domain;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
-import mycompany.domain.PerstUser;
-import mycompany.domain.Agreement;
 
 /**
  * Owner entity for cleaning scheduler.
  * Represents an owner who can own multiple houses.
+ * 
+ * Automatically creates a deactivated PerstUser on construction.
  */
+@Getter @Setter
 public class Owner extends Actor {
     
     private String email;
@@ -25,19 +28,18 @@ public class Owner extends Actor {
         this.email = email;
         this.phone = phone;
         this.address = address;
+        
+        // Replace the auto-created PerstUser with one using email as username
+        String username = email != null && !email.isEmpty() ? email : name.toLowerCase().replaceAll("\\s+", "_") + "_" + getUuid().substring(0, 8);
+        String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 16);
+        PerstUser user = new PerstUser(username, tempPassword, this);
+        user.setEmail(email);
+        user.setActive(false);
+        user.setEmailVerified(false);
+        setPerstUser(user);
     }
     
-    // Getters and setters for Owner-specific fields
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-    
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
-    
-    // Delegating methods to Actor's perstUser field
+    // Convenience delegate
     public PerstUser getUser() { return getPerstUser(); }
     public void setUser(PerstUser user) { setPerstUser(user); }
     
