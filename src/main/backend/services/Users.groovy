@@ -72,52 +72,40 @@ class Users {
             String address = injson.getString("address", "")
             boolean requireVerification = injson.getBoolean("requireVerification", false)
             
-            // Generate unique userId
+            // Check if username already exists
             Collection<PerstUser> existingUsers = PerstStorageManager.getAll(PerstUser.class)
-            int maxUserId = existingUsers.collect { it.getUserId() }.max() ?: 0
-            int newUserId = maxUserId + 1
-            
-            // Create User first
-            PerstUser user = new PerstUser(userName, password, newUserId)
-            def userTc = PerstStorageManager.createContainer()
-            userTc.addInsert(user)
-            if (!PerstStorageManager.store(userTc)) {
+            if (existingUsers.any { it.getUsername() == userName }) {
                 outjson.put("_Success", false)
-                outjson.put("error", "Failed to create user")
+                outjson.put("error", "Username already exists")
                 return
             }
             
-            // Create Owner with User reference
+            // Create Owner - Actor constructor auto-creates deactivated PerstUser
             Owner owner = new Owner(name, email, phone, address)
-            owner.setPerstUser(user)
-            def ownerTc = PerstStorageManager.createContainer()
-            ownerTc.addInsert(owner)
-            if (!PerstStorageManager.store(ownerTc)) {
-                outjson.put("_Success", false)
-                outjson.put("error", "Failed to create owner")
-                return
-            }
             
-            // Update user with email info
+            // Configure the auto-created PerstUser
+            PerstUser user = owner.getPerstUser()
+            user.setUsername(userName)
+            user.setPassword(password)
             user.setActive(injson.getString("userActive") == "Y")
             user.setEmail(email)
             
             // Handle email verification
             if (requireVerification) {
-                // Generate verification token and don't verify yet
                 user.generateVerificationToken()
                 user.setEmailVerified(false)
-                
-                // TODO: Send verification email via EmailService when SMTP is configured
-                // EmailService.sendVerificationEmail(email, name, user.getVerificationToken(), baseUrl)
             } else {
-                // Auto-verify for development/convenience
                 user.setEmailVerified(true)
             }
             
-            def updateTc = PerstStorageManager.createContainer()
-            updateTc.addUpdate(user)
-            PerstStorageManager.store(updateTc)
+            def tc = PerstStorageManager.createContainer()
+            tc.addInsert(owner)
+            tc.addInsert(user)
+            if (!PerstStorageManager.store(tc)) {
+                outjson.put("_Success", false)
+                outjson.put("error", "Failed to create owner")
+                return
+            }
             
             outjson.put("_Success", true)
             outjson.put("success", true)

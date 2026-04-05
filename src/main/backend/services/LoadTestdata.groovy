@@ -59,22 +59,38 @@ class LoadTestdata {
                 tc.addDelete(h)
                 PerstStorageManager.store(tc)
             }
-            // Delete all cleaners
+            // Delete all PerstUsers via TC delete collection
+            def allUsers = PerstStorageManager.getAll(PerstUser.class)
+            def userDeleteTC = PerstStorageManager.createContainer()
+            allUsers.each { user ->
+                // Skip admin user - keep it
+                if (user.getUsername() == 'admin') {
+                    println "[ClearData] Skipping admin user"
+                    return
+                }
+                userDeleteTC.addDelete(user)
+                println "[ClearData] Added PerstUser to delete: ${user.getUsername()}"
+            }
+            PerstStorageManager.store(userDeleteTC)
+            // Now delete all Actors (Owners, Cleaners) - their PUs are already marked deleted
+            // In same transaction to ensure consistency
             def allCleaners = PerstStorageManager.getAll(Cleaner.class)
             allCleaners.each { c ->
                 def tc = PerstStorageManager.createContainer()
                 tc.addDelete(c)
                 PerstStorageManager.store(tc)
+                println "[ClearData] Deleted Cleaner: ${c.getName()}"
             }
-            // Delete all owners
             def allOwners = PerstStorageManager.getAll(Owner.class)
             allOwners.each { o ->
                 def tc = PerstStorageManager.createContainer()
                 tc.addDelete(o)
                 PerstStorageManager.store(tc)
+                println "[ClearData] Deleted Owner: ${o.getName()}"
             }
         } catch (Exception e) {
             println "Error clearing data: ${e.message}"
+            e.printStackTrace()
         }
     }
     
@@ -112,12 +128,15 @@ class LoadTestdata {
             }
             if (!admin) {
                 def agreement = new mycompany.domain.Agreement("superAdmin")
-                def adminActor = new mycompany.domain.Actor("System Admin", "superAdmin", agreement)
-                admin = new PerstUser("admin", "admin", adminActor)
+                def adminActor = new mycompany.domain.Actor("System Admin", "superAdmin", agreement, mycompany.domain.ActorType.NATURAL)
+                // Actor constructor already created a deactivated PerstUser
+                // Get it and configure it
+                admin = adminActor.getPerstUser()
+                admin.setUsername("admin")
+                admin.setPassword("admin")
                 admin.setEmail("admin@kissoo.local")
                 admin.setActive(true)
                 admin.setEmailVerified(true)
-                adminActor.setPerstUser(admin)
                 def tc = PerstStorageManager.createContainer()
                 tc.addInsert(adminActor)
                 tc.addInsert(admin)
@@ -151,7 +170,8 @@ class LoadTestdata {
                     def tc = PerstStorageManager.createContainer()
                     tc.addInsert(owner)
                     tc.addInsert(owner.getPerstUser())
-                    PerstStorageManager.store(tc)
+                    def storeResult = PerstStorageManager.store(tc)
+                    println "[LoadTestdata] Owner ${d.name} OID=${owner.getOid()} stored=${storeResult}"
                     owners << owner
                 } catch (Exception e) {
                     println "[LoadTestdata] Error creating owner ${d.name}: ${e.message}"
@@ -200,12 +220,12 @@ class LoadTestdata {
             
             // Create 6 Cleaners
             def cleanerData = [
-                [name: 'Lisa Smit', phone: '+31 6 11112222', email: 'lisa@example.com'],
-                [name: 'Emma de Jong', phone: '+31 6 22223333', email: 'emma@example.com'],
-                [name: 'Sophie Mulder', phone: '+31 6 33334444', email: 'sophie@example.com'],
-                [name: 'Anna Visser', phone: '+31 6 44445555', email: 'anna@example.com'],
-                [name: 'Nina de Groot', phone: '+31 6 55556666', email: 'nina@example.com'],
-                [name: 'Marieke van der Meer', phone: '+31 6 66667777', email: 'marieke@example.com']
+                [name: 'Lisa Smit', phone: '+31 6 11112222', email: 'lisa.cleaner@example.com'],
+                [name: 'Emma de Jong', phone: '+31 6 22223333', email: 'emma.cleaner@example.com'],
+                [name: 'Sophie Mulder', phone: '+31 6 33334444', email: 'sophie.cleaner@example.com'],
+                [name: 'Anna Visser', phone: '+31 6 44445555', email: 'anna.cleaner@example.com'],
+                [name: 'Nina de Groot', phone: '+31 6 55556666', email: 'nina.cleaner@example.com'],
+                [name: 'Marieke van der Meer', phone: '+31 6 66667777', email: 'marieke.cleaner@example.com']
             ]
             
             def cleaners = []
@@ -215,7 +235,8 @@ class LoadTestdata {
                     def tc = PerstStorageManager.createContainer()
                     tc.addInsert(cleaner)
                     tc.addInsert(cleaner.getPerstUser())
-                    PerstStorageManager.store(tc)
+                    def storeResult = PerstStorageManager.store(tc)
+                    println "[LoadTestdata] Cleaner ${d.name} OID=${cleaner.getOid()} userOID=${cleaner.getPerstUser()?.getOid()} username=${cleaner.getPerstUser()?.getUsername()} stored=${storeResult}"
                     cleaners << cleaner
                 } catch (Exception e) {
                     println "[LoadTestdata] Error creating cleaner ${d.name}: ${e.message}"

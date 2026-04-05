@@ -162,14 +162,16 @@ class KissInit {
                 
                 // Create superAdmin Actor with full Agreement
                 def agreement = new mycompany.domain.Agreement("superAdmin")
-                def adminActor = new mycompany.domain.Actor("System Admin", "superAdmin", agreement)
+                def adminActor = new mycompany.domain.Actor("System Admin", "superAdmin", agreement, mycompany.domain.ActorType.NATURAL)
                 
-                // Replace auto-created PerstUser with one using "admin" as username
-                def adminUser = new PerstUser("admin", "admin", adminActor)
+                // Actor constructor already created a deactivated PerstUser
+                // Configure it with admin credentials
+                def adminUser = adminActor.getPerstUser()
+                adminUser.setUsername("admin")
+                adminUser.setPassword("admin")
                 adminUser.setEmail("admin@localhost")
                 adminUser.setActive(true)
                 adminUser.setEmailVerified(true)
-                adminActor.setPerstUser(adminUser)
                 
                 // Store both together
                 def tc = PerstStorageManager.createContainer()

@@ -10,7 +10,8 @@ import org.garret.perst.continuous.FullTextSearchable;
  * Owner entity for cleaning scheduler.
  * Represents an owner who can own multiple houses.
  * 
- * Automatically creates a deactivated PerstUser on construction.
+ * Extends Actor (NATURAL by default), so automatically has a PerstUser
+ * created by the Actor constructor (deactivated by default).
  */
 @Getter @Setter
 public class Owner extends Actor {
@@ -24,19 +25,17 @@ public class Owner extends Actor {
     }
     
     public Owner(String name, String email, String phone, String address) {
-        super(name, "Owner", new Agreement());
+        super(name, "Owner", new Agreement(), ActorType.NATURAL);
         this.email = email;
         this.phone = phone;
         this.address = address;
         
-        // Replace the auto-created PerstUser with one using email as username
-        String username = email != null && !email.isEmpty() ? email : name.toLowerCase().replaceAll("\\s+", "_") + "_" + getUuid().substring(0, 8);
-        String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 16);
-        PerstUser user = new PerstUser(username, tempPassword, this);
-        user.setEmail(email);
-        user.setActive(false);
-        user.setEmailVerified(false);
-        setPerstUser(user);
+        // Actor constructor already created a deactivated PerstUser
+        // Update the PU username to use email if provided
+        if (email != null && !email.isEmpty()) {
+            getPerstUser().setUsername(email);
+            getPerstUser().setEmail(email);
+        }
     }
     
     // Convenience delegate

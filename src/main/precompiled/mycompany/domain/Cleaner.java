@@ -9,9 +9,9 @@ import org.garret.perst.continuous.FullTextSearchable;
 /**
  * Cleaner entity for cleaning scheduler.
  * Represents a cleaner who can be assigned to cleaning tasks.
- * Extends Actor to leverage the "Manager at the Gate" pattern with PerstUser.
  * 
- * Automatically creates a deactivated PerstUser on construction.
+ * Extends Actor (NATURAL by default), so automatically has a PerstUser
+ * created by the Actor constructor (deactivated by default).
  */
 @Getter @Setter
 public class Cleaner extends Actor {
@@ -28,30 +28,32 @@ public class Cleaner extends Actor {
     }
     
     public Cleaner(String name, String phone, String email, boolean active) {
-        super(name, "Cleaner", new Agreement());
+        super(name, "Cleaner", new Agreement(), ActorType.NATURAL);
         this.phone = phone;
         this.email = email;
         setActive(active);
-        replacePerstUserWithCleanerUser();
+        
+        // Actor constructor already created a deactivated PerstUser
+        // Update PU username/email if provided
+        if (email != null && !email.isEmpty()) {
+            getPerstUser().setUsername(email);
+            getPerstUser().setEmail(email);
+        }
     }
     
     public Cleaner(String name, String phone, String email, String address, boolean active) {
-        super(name, "Cleaner", new Agreement());
+        super(name, "Cleaner", new Agreement(), ActorType.NATURAL);
         this.phone = phone;
         this.email = email;
         this.address = address;
         setActive(active);
-        replacePerstUserWithCleanerUser();
-    }
-    
-    private void replacePerstUserWithCleanerUser() {
-        String username = email != null && !email.isEmpty() ? email : getName().toLowerCase().replaceAll("\\s+", "_") + "_" + getUuid().substring(0, 8);
-        String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 16);
-        PerstUser user = new PerstUser(username, tempPassword, this);
-        user.setEmail(email);
-        user.setActive(false);
-        user.setEmailVerified(false);
-        setPerstUser(user);
+        
+        // Actor constructor already created a deactivated PerstUser
+        // Update PU username/email if provided
+        if (email != null && !email.isEmpty()) {
+            getPerstUser().setUsername(email);
+            getPerstUser().setEmail(email);
+        }
     }
     
     // Convenience delegate

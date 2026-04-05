@@ -35,43 +35,25 @@ class AuthService {
                 return
             }
             
-            // Generate unique userId
-            int maxUserId = existingUsers.collect { it.getUserId() }.max() ?: 0
-            int newUserId = maxUserId + 1
-            
-            // Create Owner
+            // Create Owner - Actor constructor auto-creates deactivated PerstUser
             Owner owner = new Owner(name, email, phone, address)
-            def ownerTc = PerstStorageManager.createContainer()
-            ownerTc.addInsert(owner)
-            if (!PerstStorageManager.store(ownerTc)) {
+            
+            // Configure the auto-created PerstUser with signup credentials
+            PerstUser user = owner.getPerstUser()
+            user.setUsername(username)
+            user.setPassword(password)
+            user.setEmail(email)
+            user.setActive(true)
+            user.setEmailVerified(true)
+            
+            def tc = PerstStorageManager.createContainer()
+            tc.addInsert(owner)
+            tc.addInsert(user)
+            if (!PerstStorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create owner")
                 return
             }
-            
-            // Create User with ownerId
-            PerstUser user = new PerstUser(username, password, newUserId)
-            user.setOwner(owner)
-            def userTc = PerstStorageManager.createContainer()
-            userTc.addInsert(user)
-            if (!PerstStorageManager.store(userTc)) {
-                outjson.put("_Success", false)
-                outjson.put("_ErrorMessage", "Failed to create user")
-                return
-            }
-            
-            // Link owner to user
-            owner.setPerstUser(user)
-            def linkTc = PerstStorageManager.createContainer()
-            linkTc.addUpdate(owner)
-            PerstStorageManager.store(linkTc)
-            
-            // Set email as verified
-            user.setEmailVerified(true)
-            user.setEmail(email)
-            def updateTc = PerstStorageManager.createContainer()
-            updateTc.addUpdate(user)
-            PerstStorageManager.store(updateTc)
             
             JSONObject result = new JSONObject()
             result.put("userId", user.getOid())
@@ -94,7 +76,7 @@ class AuthService {
         try {
             long userId = injson.getLong("userId")
             Collection<Owner> allOwners = PerstStorageManager.getAll(Owner.class)
-            Owner owner = allOwners.find { it.getUserId() == userId }
+            Owner owner = allOwners.find { it.getPerstUser() != null && it.getPerstUser().getOid() == userId }
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -107,7 +89,7 @@ class AuthService {
             data.put("phone", owner.getPhone())
             data.put("address", owner.getAddress())
             data.put("active", owner.isActive())
-            data.put("userId", owner.getUserId())
+            data.put("userId", owner.getPerstUser().getOid())
             outjson.put("data", data)
         } catch (Exception e) {
             outjson.put("_Success", false)
@@ -121,21 +103,21 @@ class AuthService {
     void getUserByOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             long ownerId = injson.getLong("ownerId")
-            Collection<PerstUser> allUsers = PerstStorageManager.getAll(PerstUser.class)
-            PerstUser user = allUsers.find { it.getOwnerId() == ownerId }
-            if (user == null) {
+            Owner owner = PerstStorageManager.getByOid(Owner.class, ownerId)
+            if (owner == null || owner.getPerstUser() == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "User not found")
                 return
             }
+            PerstUser user = owner.getPerstUser()
             JSONObject data = new JSONObject()
             data.put("id", user.getOid())
             data.put("username", user.getUsername())
             data.put("email", user.getEmail())
             data.put("active", user.isActive())
             data.put("emailVerified", user.isEmailVerified())
-            data.put("ownerId", user.getOwnerId())
-            data.put("userId", user.getUserId())
+            data.put("ownerId", owner.getOid())
+            data.put("userId", user.getOid())
             outjson.put("data", data)
         } catch (Exception e) {
             outjson.put("_Success", false)

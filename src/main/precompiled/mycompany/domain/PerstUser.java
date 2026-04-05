@@ -12,10 +12,14 @@ import java.util.UUID;
 /**
  * PerstUser - User entity stored in Perst OODBMS.
  * 
- * Every PerstUser belongs to an Actor (Owner, Cleaner, etc.).
- * The bidirectional link is:
- *   - Actor has a transient perstUser reference (cached lookup)
- *   - PerstUser has a persistent actor reference (the real link)
+ * Every PerstUser belongs to a NATURAL Actor (Owner, Cleaner, etc.).
+ * The PerstUser has a persistent reference to its Actor.
+ * 
+ * PerstUser is indexed by username for fast lookup via find(username).
+ * After login, PerstUser is stored in session cache with reference to latest Actor.
+ * 
+ * When Actor is deleted, PerstUser is marked deleted but not immediately removed.
+ * PerstUserManager handles cleanup of deleted PerstUsers from cache.
  * 
  * Indexing is handled by CDatabase via @Indexable annotations.
  * Use PerstUserManager for all database operations.
@@ -115,7 +119,7 @@ public class PerstUser extends CVersion {
     }
     
     public boolean canLogin() {
-        return active && emailVerified;
+        return active && emailVerified && !isDeleted();
     }
 
     @Override

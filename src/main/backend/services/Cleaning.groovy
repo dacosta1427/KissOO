@@ -274,7 +274,7 @@ class Cleaning {
                 
                 JSONObject row = new JSONObject()
                 row.put("id", booking.getOid())
-                row.put("house_id", booking.getHouseId())
+                row.put("house_id", booking.getHouseOid())
                 row.put("check_in_date", booking.getCheckInDate())
                 row.put("check_out_date", booking.getCheckOutDate())
                 row.put("guest_name", booking.getGuestName())
@@ -305,7 +305,7 @@ class Cleaning {
             }
             JSONObject data = new JSONObject()
             data.put("id", booking.getOid())
-            data.put("house_id", booking.getHouseId())
+            data.put("house_id", booking.getHouseOid())
             data.put("check_in_date", booking.getCheckInDate())
             data.put("check_out_date", booking.getCheckOutDate())
             data.put("guest_name", booking.getGuestName())
@@ -345,7 +345,7 @@ class Cleaning {
             }
             JSONObject result = new JSONObject()
             result.put("id", booking.getOid())
-            result.put("house_id", booking.getHouseId())
+            result.put("house_id", booking.getHouseOid())
             result.put("check_in_date", booking.getCheckInDate())
             result.put("check_out_date", booking.getCheckOutDate())
             result.put("guest_name", booking.getGuestName())
@@ -391,7 +391,7 @@ class Cleaning {
             }
             JSONObject result = new JSONObject()
             result.put("id", booking.getOid())
-            result.put("house_id", booking.getHouseId())
+            result.put("house_id", booking.getHouseOid())
             result.put("check_in_date", booking.getCheckInDate())
             result.put("check_out_date", booking.getCheckOutDate())
             result.put("guest_name", booking.getGuestName())
@@ -442,7 +442,7 @@ class Cleaning {
             for (Booking booking : bookings) {
                 JSONObject row = new JSONObject()
                 row.put("id", booking.getOid())
-                row.put("house_id", booking.getHouseId())
+                row.put("house_id", booking.getHouseOid())
                 row.put("check_in_date", booking.getCheckInDate())
                 row.put("check_out_date", booking.getCheckOutDate())
                 row.put("guest_name", booking.getGuestName())
@@ -474,7 +474,7 @@ class Cleaning {
             for (Booking booking : bookings) {
                 JSONObject row = new JSONObject()
                 row.put("id", booking.getOid())
-                row.put("house_id", booking.getHouseId())
+                row.put("house_id", booking.getHouseOid())
                 row.put("check_in_date", booking.getCheckInDate())
                 row.put("check_out_date", booking.getCheckOutDate())
                 row.put("guest_name", booking.getGuestName())
@@ -533,8 +533,8 @@ class Cleaning {
                 
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
-                row.put("cleaner_id", schedule.getCleanerId())
-                row.put("booking_id", schedule.getBookingId())
+                row.put("cleaner_id", schedule.getCleanerOid())
+                row.put("booking_id", schedule.getBookingOid())
                 row.put("date", schedule.getScheduleDate())
                 row.put("start_time", schedule.getStartTime())
                 row.put("end_time", schedule.getEndTime())
@@ -562,8 +562,8 @@ class Cleaning {
             }
             JSONObject data = new JSONObject()
             data.put("id", schedule.getOid())
-            data.put("cleaner_id", schedule.getCleanerId())
-            data.put("booking_id", schedule.getBookingId())
+            data.put("cleaner_id", schedule.getCleanerOid())
+            data.put("booking_id", schedule.getBookingOid())
             data.put("date", schedule.getScheduleDate())
             data.put("start_time", schedule.getStartTime())
             data.put("end_time", schedule.getEndTime())
@@ -646,8 +646,8 @@ class Cleaning {
             }
             JSONObject result = new JSONObject()
             result.put("id", schedule.getOid())
-            result.put("cleaner_id", schedule.getCleanerId())
-            result.put("booking_id", schedule.getBookingId())
+            result.put("cleaner_id", schedule.getCleanerOid())
+            result.put("booking_id", schedule.getBookingOid())
             result.put("date", schedule.getScheduleDate())
             result.put("start_time", schedule.getStartTime())
             result.put("end_time", schedule.getEndTime())
@@ -694,8 +694,8 @@ class Cleaning {
             for (Schedule schedule : schedules) {
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
-                row.put("cleaner_id", schedule.getCleanerId())
-                row.put("booking_id", schedule.getBookingId())
+                row.put("cleaner_id", schedule.getCleanerOid())
+                row.put("booking_id", schedule.getBookingOid())
                 row.put("date", schedule.getScheduleDate())
                 row.put("start_time", schedule.getStartTime())
                 row.put("end_time", schedule.getEndTime())
@@ -720,8 +720,8 @@ class Cleaning {
             for (Schedule schedule : schedules) {
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
-                row.put("cleaner_id", schedule.getCleanerId())
-                row.put("booking_id", schedule.getBookingId())
+                row.put("cleaner_id", schedule.getCleanerOid())
+                row.put("booking_id", schedule.getBookingOid())
                 row.put("date", schedule.getScheduleDate())
                 row.put("start_time", schedule.getStartTime())
                 row.put("end_time", schedule.getEndTime())
@@ -749,8 +749,8 @@ class Cleaning {
             for (Schedule schedule : schedules) {
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
-                row.put("cleaner_id", schedule.getCleanerId())
-                row.put("booking_id", schedule.getBookingId())
+                row.put("cleaner_id", schedule.getCleanerOid())
+                row.put("booking_id", schedule.getBookingOid())
                 row.put("date", schedule.getScheduleDate())
                 row.put("start_time", schedule.getStartTime())
                 row.put("end_time", schedule.getEndTime())
@@ -1082,12 +1082,12 @@ class Cleaning {
     void getOwnerByUserId(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Using PerstStorageManager directly
-            int userId = injson.getInt("userId")
+            long userId = injson.getLong("userId")
             Collection<Owner> allOwners = PerstStorageManager.getAll(Owner.class)
             Owner found = null
             for (Owner owner : allOwners) {
                 PerstUser user = owner.getPerstUser()
-                if (user != null && user.getUserId() == userId) {
+                if (user != null && user.getOid() == userId) {
                     found = owner
                     break
                 }
@@ -1135,7 +1135,7 @@ class Cleaning {
             data.put("active", user.isActive())
             data.put("emailVerified", user.isEmailVerified())
             data.put("ownerId", owner.getOid())
-            data.put("userId", user.getUserId())
+            data.put("userId", user.getOid())
             outjson.put("data", data)
         } catch (Exception e) {
             outjson.put("_Success", false)
