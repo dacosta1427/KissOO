@@ -16,7 +16,8 @@ export interface Cleaner {
   phone?: string;
   email?: string;
   address?: string;
-  active: boolean;
+  canLogin: boolean;
+  emailVerified?: boolean;
 }
 
 export interface Booking {
@@ -49,6 +50,7 @@ export interface House {
   address: string;
   description?: string;
   owner?: number;  // Owner OID (was owner_id)
+  ownerName?: string;  // Owner name for display
   cost_profile?: number;  // CostProfile OID
   active: boolean;
   check_in_time: string; // 24h format, e.g., "16:00"
@@ -69,6 +71,7 @@ export interface Owner {
   address?: string;
   active: boolean;
   canLogin?: boolean;  // Whether owner has login capability
+  emailVerified?: boolean;  // Email verification status
 }
 
 export interface CostProfile {
@@ -173,9 +176,9 @@ export const cleanersAPI = {
     await callCleaningService('deleteCleaner', { id }, 'Delete cleaner');
   },
   
-  toggleActive: async (id: number, active: boolean): Promise<Cleaner> => {
-    const res = await callCleaningService('updateCleaner', { id, data: { active } }, active ? 'Activate cleaner' : 'Deactivate cleaner');
-    return res.data;
+  toggleLogin: async (id: number, canLogin: boolean): Promise<Cleaner> => {
+    const res = await callCleaningService('toggleCleanerLogin', { id, canLogin }, canLogin ? 'Enable cleaner login' : 'Disable cleaner login');
+    return res;
   }
 };
 

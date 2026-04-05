@@ -125,7 +125,7 @@ class Login {
      * @param ud - UserData to validate
      * @return true if the user is still valid, false if not
      */
-    public static Boolean checkLogin(Connection db, UserData ud, ProcessServlet servlet) {
+    public static Boolean checkLogin(Object db, UserData ud, ProcessServlet servlet) {
         // If using Perst only, we can check the user's active status
         // For now, always return true to allow sessions
         return true

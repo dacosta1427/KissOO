@@ -49,7 +49,17 @@ class Users {
                 row.put("id", user.getOid())
                 row.put("userName", user.getUsername())
                 row.put("userPassword", user.getPasswordHash())
-                row.put("userActive", user.isActive() ? "Y" : "N")
+                row.put("canLogin", user.isActive())
+                row.put("emailVerified", user.isEmailVerified())
+                row.put("email", user.getEmail())
+                
+                // Include actor type to identify if this is Owner or Cleaner
+                if (user.getActor() != null) {
+                    row.put("actorType", user.getActor().getType())
+                } else {
+                    row.put("actorType", null)
+                }
+                
                 rows.put(row)
             }
 
@@ -233,7 +243,7 @@ class Users {
         try {
             // Using PerstStorageManager directly
             String token = injson.getString("token")
-            String password = injson.optString("password", null)
+            String password = injson.has("password") ? injson.getString("password") : null
             
             if (!token) {
                 outjson.put("_Success", false)
@@ -262,8 +272,8 @@ class Users {
             if (userToVerify.verifyEmail(token)) {
                 // If password provided, set it and enable login
                 if (password != null && !password.isEmpty()) {
-                    String hashedPassword = com.mycompany.security.PasswordSecurity.hashPassword(password)
-                    userToVerify.setPasswordHash(hashedPassword)
+                    // Use PerstUser.setPassword which uses SHA-256
+                    userToVerify.setPassword(password)
                     userToVerify.setActive(true)
                     userToVerify.setMustChangePassword(false)
                 }
@@ -272,21 +282,67 @@ class Users {
                 tc.addUpdate(userToVerify)
                 PerstStorageManager.store(tc)
                 
+                // Get the user's name from their Actor
+                def actorName = ""
+                if (userToVerify.getActor() != null) {
+                    actorName = userToVerify.getActor().getName() ?: ""
+                }
+                
                 if (password != null && !password.isEmpty()) {
                     outjson.put("_Success", true)
                     outjson.put("success", true)
                     outjson.put("message", "Email verified. You can now login with your email and password.")
                     outjson.put("username", userToVerify.getUsername())
+                    outjson.put("userName", actorName)
                 } else {
                     outjson.put("_Success", true)
                     outjson.put("success", true)
                     outjson.put("message", "Email verified successfully")
                     outjson.put("username", userToVerify.getUsername())
+                    outjson.put("userName", actorName)
                 }
             } else {
                 outjson.put("_Success", false)
                 outjson.put("error", "Verification failed - token may have expired")
             }
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("error", e.message)
+        }
+    }
+    
+    /**
+     * Get user info from verification token (without verifying)
+     * Used to show the user's name on the verification page
+     */
+    void getUserByToken(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            String token = injson.getString("token")
+            
+            if (!token) {
+                outjson.put("_Success", false)
+                outjson.put("error", "Verification token is required")
+                return
+            }
+            
+            // Find user with this verification token
+            Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
+            for (PerstUser user : users) {
+                if (user.getVerificationToken() != null && user.getVerificationToken().equals(token)) {
+                    // Get the user's name from their Actor
+                    String actorName = ""
+                    if (user.getActor() != null) {
+                        actorName = user.getActor().getName() ?: ""
+                    }
+                    outjson.put("_Success", true)
+                    outjson.put("userName", actorName)
+                    outjson.put("email", user.getEmail())
+                    return
+                }
+            }
+            
+            outjson.put("_Success", false)
+            outjson.put("error", "Invalid or expired verification token")
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("error", e.message)
@@ -343,6 +399,76 @@ class Users {
             outjson.put("_Success", true)
             outjson.put("message", "Verification email sent")
             outjson.put("token", user.getVerificationToken()) // For development/debugging
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("error", e.message)
+        }
+    }
+    
+    void toggleUserLogin(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            checkSystemAdmin(injson, "toggleUserLogin")
+            
+            long oid = injson.getLong("id")
+            boolean canLogin = injson.getBoolean("canLogin")
+            
+            PerstUser user = PerstStorageManager.getByOid(PerstUser.class, oid)
+            if (user == null) {
+                outjson.put("_Success", false)
+                outjson.put("error", "User not found")
+                return
+            }
+            
+            user.setActive(canLogin)
+            
+            def tc = PerstStorageManager.createContainer()
+            tc.addUpdate(user)
+            PerstStorageManager.store(tc)
+            
+            // Send email notification
+            if (canLogin) {
+                try {
+                    def baseUrl = "http://localhost:5173"
+                    def actorName = user.getActor() != null ? user.getActor().getName() : user.getUsername()
+                    
+                    if (user.isEmailVerified()) {
+                        // Email already verified - send welcome/login info
+                        String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8)
+                        user.setPassword(tempPassword)
+                        user.setMustChangePassword(true)
+                        tc.addUpdate(user)
+                        PerstStorageManager.store(tc)
+                        
+                        services.EmailService.sendLoginCredentialsEmail(
+                            user.getEmail(), 
+                            actorName, 
+                            user.getUsername(), 
+                            tempPassword, 
+                            baseUrl
+                        )
+                        outjson.put("temporaryPassword", tempPassword)
+                    } else {
+                        // Email not verified - send verification email
+                        user.generateVerificationToken()
+                        tc.addUpdate(user)
+                        PerstStorageManager.store(tc)
+                        
+                        services.EmailService.sendVerificationEmail(
+                            user.getEmail(),
+                            actorName,
+                            user.getVerificationToken(),
+                            baseUrl
+                        )
+                    }
+                } catch(Exception e) {
+                    println "[Users] Failed to send email: ${e.message}"
+                }
+            }
+            
+            outjson.put("_Success", true)
+            outjson.put("canLogin", canLogin)
+            outjson.put("emailVerified", user.isEmailVerified())
+            outjson.put("message", canLogin ? "Login enabled" : "Login disabled")
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("error", e.message)

@@ -57,7 +57,11 @@
 		"start_date": "Startdatum",
 		"end_date": "Enddatum",
 		"start_time": "Startzeit",
-		"end_time": "Endzeit"
+		"end_time": "Endzeit",
+		"password": "Passwort",
+		"password_placeholder": "Passwort eingeben",
+		"confirm_password": "Passwort bestätigen",
+		"confirm_password_placeholder": "Passwort bestätigen"
 	},
 	"houses": {
 		"title": "Häuser",
@@ -246,7 +250,12 @@
 		"set_password_title": "E-Mail Verifizieren & Passwort Festlegen",
 		"set_password_desc": "Geben Sie Ihr Passwort ein, um Ihre E-Mail zu verifizieren und Ihr Konto zu aktivieren.",
 		"verifying": "Verifizieren...",
-		"verify_and_set_password": "Verifizieren & Passwort Festlegen"
+		"verify_and_set_password": "Verifizieren & Passwort Festlegen",
+		"welcome": "Willkommen",
+		"verify_email_title": "E-Mail Verifizieren",
+		"verify_email_desc": "Legen Sie Ihr Passwort fest, um Ihr Konto zu aktivieren",
+		"password_min_length": "Passwort muss mindestens 6 Zeichen haben",
+		"passwords_no_match": "Passwörter stimmen nicht überein"
 	},
 	"hints": {
 		"add_new": "Neues Element hinzufügen",

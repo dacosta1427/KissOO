@@ -48,6 +48,14 @@ class Cleaning {
         }
     }
     
+    private boolean isUserOwner(JSONObject injson) {
+        try {
+            return injson.has("_ownerId") && injson.getLong("_ownerId") > 0
+        } catch (Exception e) { 
+            return false 
+        }
+    }
+    
     private long getOwnerId(JSONObject injson) {
         try {
             return injson.has("_ownerId") ? injson.getLong("_ownerId") : 0
@@ -109,7 +117,16 @@ class Cleaning {
                 row.put("phone", cleaner.getPhone())
                 row.put("email", cleaner.getEmail())
                 row.put("address", cleaner.getAddress())
-                row.put("active", cleaner.isActive())
+                
+                // Get login and email verification status from PerstUser
+                PerstUser user = cleaner.getPerstUser()
+                if (user != null) {
+                    row.put("canLogin", user.isActive())
+                    row.put("emailVerified", user.isEmailVerified())
+                } else {
+                    row.put("canLogin", false)
+                    row.put("emailVerified", false)
+                }
                 rows.put(row)
             }
             
@@ -435,9 +452,9 @@ class Cleaning {
         try {
             // Using PerstStorageManager directly
             int houseId = injson.getInt("houseId")
-            // Filter bookings by house_id
+            // Filter bookings by house_id using OO reference
             Collection<Booking> allBookings = PerstStorageManager.getAll(Booking.class)
-            Collection<Booking> bookings = allBookings.findAll { it.getHouseId() == houseId }
+            Collection<Booking> bookings = allBookings.findAll { it.getHouseOid() == houseId }
             JSONArray rows = new JSONArray()
             for (Booking booking : bookings) {
                 JSONObject row = new JSONObject()
@@ -769,52 +786,42 @@ class Cleaning {
     
     void getHouses(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            Collection<House> allHouses = PerstStorageManager.getAll(House.class)
-            JSONArray rows = new JSONArray()
-            long ownerId = getOwnerId(injson)
-            long cleanerId = getCleanerId(injson)
+            // Check access - admins see all, owners see their own
             boolean admin = isAdmin(injson)
+            long ownerId = getOwnerId(injson)
+            boolean userIsOwner = ownerId > 0
             
-            for (House house : allHouses) {
-                // Authorization:
-                // - Admin: sees all houses
-                // - Owner: sees their own houses
-                // - Cleaner: sees houses assigned to their schedules (via booking)
-                boolean include = false
-                
-                if (admin) {
-                    include = true
-                } else if (ownerId > 0) {
-                    // Owner: check if house belongs to them
-                    Owner owner = house.getOwner()
-                    include = (owner != null && owner.getOid() == ownerId)
-                } else if (cleanerId > 0) {
-                    // Cleaner: see houses they need to clean (via their schedules)
-                    // This is handled in getSchedules - for now, show all active houses
-                    include = house.isActive()
+            Collection<House> houses = PerstStorageManager.getAll(House.class)
+            JSONArray rows = new JSONArray()
+            
+            for (House house : houses) {
+                // Filter by owner if not admin
+                if (!admin && userIsOwner && house.getOwnerOid() != ownerId) {
+                    continue
                 }
-                
-                if (!include) continue
                 
                 JSONObject row = new JSONObject()
                 row.put("id", house.getOid())
                 row.put("name", house.getName())
                 row.put("address", house.getAddress())
                 row.put("description", house.getDescription())
-                // Hide owner info from cleaners
-                if (admin || ownerId > 0) {
-                    row.put("owner", house.getOwnerOid())
-                }
-                row.put("cost_profile", house.getCostProfileOid())  // OO ref → OID
+                row.put("owner", house.getOwnerOid())
+                row.put("cost_profile", house.getCostProfileOid())
                 row.put("active", house.isActive())
                 row.put("check_in_time", house.getCheckInTime())
                 row.put("check_out_time", house.getCheckOutTime())
-                // Cost calculation fields
                 row.put("surface_m2", house.getSurfaceM2())
                 row.put("floors", house.getFloors())
                 row.put("bedrooms", house.getBedrooms())
                 row.put("bathrooms", house.getBathrooms())
                 row.put("luxury_level", house.getLuxuryLevel())
+                
+                // Get owner name for display
+                Owner owner = house.getOwner()
+                if (owner != null) {
+                    row.put("ownerName", owner.getName())
+                }
+                
                 rows.put(row)
             }
             
@@ -1042,6 +1049,7 @@ class Cleaning {
                 // canLogin = user is active (PerstUser always exists for Owner)
                 PerstUser user = owner.getUser()
                 row.put("canLogin", user != null && user.isActive())
+                row.put("emailVerified", user != null && user.isEmailVerified())
                 rows.put(row)
             }
             
@@ -1156,6 +1164,11 @@ class Cleaning {
             Owner owner = new Owner(name, email, phone, address)
             owner.setActive(active)
             
+            // Set PerstUser username to email address for login
+            if (owner.getPerstUser() != null && email != null && !email.isEmpty()) {
+                owner.getPerstUser().setUsername(email)
+            }
+            
             println "[Cleaning] createOwner: owner OID=${owner.getOid()}, perstUser=${owner.getPerstUser()?.username}"
             
             def tc = PerstStorageManager.createContainer()
@@ -1240,62 +1253,172 @@ class Cleaning {
                 return
             }
 
-            PerstUser user = owner.getUser()
+            PerstUser user = owner.getPerstUser()
+            println "[Cleaning] toggleOwnerLogin: owner=${owner.getName()}, user=${user}"
             if (user == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner has no PerstUser (data error)")
                 return
             }
 
-            // Check if owner has email
-            String ownerEmail = owner.getEmail()
-            if (!ownerEmail || ownerEmail.isEmpty()) {
+            // Simply toggle the PerstUser active state
+            // Get fresh reference and update
+            PerstUser freshUser = PerstStorageManager.getByOid(PerstUser.class, user.getOid())
+            freshUser.setActive(canLogin)
+            println "[Cleaning] toggleOwnerLogin: fresh user OID=${freshUser.getOid()}, active=${freshUser.isActive()}"
+            
+            // Create fresh container and force insert
+            def tc = PerstStorageManager.createContainer()
+            
+            // Debug - try marking for deletion first then update
+            println "[Cleaning] Adding user to TC for update..."
+            try {
+                tc.addUpdate(freshUser)
+            } catch(Exception e) {
+                println "[Cleaning] addUpdate error: ${e.message}"
+                try {
+                    tc.addInsert(freshUser)
+                } catch(Exception e2) {
+                    println "[Cleaning] addInsert error: ${e2.message}"
+                }
+            }
+            
+            def storeResult = PerstStorageManager.store(tc)
+            println "[Cleaning] toggleOwnerLogin: store result=${storeResult}, trying success..."
+            
+            // Send email notification
+            if (canLogin) {
+                try {
+                    def baseUrl = "http://localhost:5173"
+                    if (freshUser.isEmailVerified()) {
+                        // Email already verified - send welcome/login info
+                        String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8)
+                        freshUser.setPassword(tempPassword)
+                        freshUser.setMustChangePassword(true)
+                        tc.addUpdate(freshUser)
+                        PerstStorageManager.store(tc)
+                        
+                        services.EmailService.sendLoginCredentialsEmail(
+                            freshUser.getEmail(), 
+                            owner.getName(), 
+                            freshUser.getUsername(), 
+                            tempPassword, 
+                            baseUrl
+                        )
+                        outjson.put("temporaryPassword", tempPassword)
+                        println "[Cleaning] Login credentials sent to ${freshUser.getEmail()}"
+                    } else {
+                        // Email not verified - send verification email
+                        freshUser.generateVerificationToken()
+                        tc.addUpdate(freshUser)
+                        PerstStorageManager.store(tc)
+                        
+                        services.EmailService.sendVerificationEmail(
+                            freshUser.getEmail(),
+                            owner.getName(),
+                            freshUser.getVerificationToken(),
+                            baseUrl
+                        )
+                        println "[Cleaning] Verification email sent to ${freshUser.getEmail()}"
+                    }
+                } catch(Exception e) {
+                    println "[Cleaning] Failed to send email: ${e.message}"
+                }
+            }
+            
+            outjson.put("_Success", true)
+            outjson.put("canLogin", canLogin)
+            outjson.put("emailVerified", freshUser.isEmailVerified())
+            outjson.put("message", canLogin ? "Owner login enabled" : "Owner login disabled")
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    void toggleCleanerLogin(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            long oid = injson.getLong("id")
+            boolean canLogin = injson.getBoolean("canLogin")
+            Cleaner cleaner = PerstStorageManager.getByOid(Cleaner.class, oid)
+            if (cleaner == null) {
                 outjson.put("_Success", false)
-                outjson.put("_ErrorMessage", "Owner has no email address")
+                outjson.put("_ErrorMessage", "Cleaner not found")
                 return
             }
 
-            if (canLogin) {
-                // Enable login - need email verification first
-                // Generate verification token
-                user.generateVerificationToken()
-                
-                // Get base URL from config
-                String baseUrl = org.kissweb.restServer.MainServlet.getEnvironment("app.baseUrl") ?: "http://localhost:5173"
-                
-                // Send verification email via EmailService
-                boolean emailSent = false
-                try {
-                    emailSent = (Boolean) Class.forName("services.EmailService")
-                        .getMethod("sendVerificationEmail", String.class, String.class, String.class, String.class)
-                        .invoke(null, ownerEmail, owner.getName(), user.getVerificationToken(), baseUrl)
-                } catch (Exception e) {
-                    println "[Cleaning] Failed to send email via EmailService: " + e.message
-                    e.printStackTrace()
-                }
-                
-                def tc = PerstStorageManager.createContainer()
-                tc.addUpdate(user)
-                PerstStorageManager.store(tc)
-                
-                if (emailSent) {
-                    outjson.put("_Success", true)
-                    outjson.put("message", "Verification email sent to " + ownerEmail + ". User must verify email and set password before logging in.")
-                } else {
-                    outjson.put("_Success", false)
-                    outjson.put("_ErrorMessage", "Failed to send verification email. SMTP may not be configured.")
-                }
-            } else {
-                // Disable login - immediately deactivate
-                user.setActive(false)
-                def tc = PerstStorageManager.createContainer()
-                tc.addUpdate(user)
-                PerstStorageManager.store(tc)
-
-                outjson.put("_Success", true)
-                outjson.put("canLogin", false)
-                outjson.put("message", "Owner login deactivated")
+            PerstUser user = cleaner.getPerstUser()
+            println "[Cleaning] toggleCleanerLogin: cleaner=${cleaner.getName()}, user=${user}"
+            if (user == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Cleaner has no PerstUser (data error)")
+                return
             }
+
+            // Toggle the PerstUser active state
+            PerstUser freshUser = PerstStorageManager.getByOid(PerstUser.class, user.getOid())
+            freshUser.setActive(canLogin)
+            println "[Cleaning] toggleCleanerLogin: fresh user OID=${freshUser.getOid()}, active=${freshUser.isActive()}"
+            
+            def tc = PerstStorageManager.createContainer()
+            try {
+                tc.addUpdate(freshUser)
+            } catch(Exception e) {
+                println "[Cleaning] toggleCleanerLogin addUpdate error: ${e.message}"
+                try {
+                    tc.addInsert(freshUser)
+                } catch(Exception e2) {
+                    println "[Cleaning] toggleCleanerLogin addInsert error: ${e2.message}"
+                }
+            }
+            
+            def storeResult = PerstStorageManager.store(tc)
+            println "[Cleaning] toggleCleanerLogin: store result=${storeResult}"
+            
+            // Send email notification
+            if (canLogin) {
+                try {
+                    def baseUrl = "http://localhost:5173"
+                    if (freshUser.isEmailVerified()) {
+                        // Email already verified - send welcome/login info
+                        String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8)
+                        freshUser.setPassword(tempPassword)
+                        freshUser.setMustChangePassword(true)
+                        tc.addUpdate(freshUser)
+                        PerstStorageManager.store(tc)
+                        
+                        services.EmailService.sendLoginCredentialsEmail(
+                            freshUser.getEmail(), 
+                            cleaner.getName(), 
+                            freshUser.getUsername(), 
+                            tempPassword, 
+                            baseUrl
+                        )
+                        outjson.put("temporaryPassword", tempPassword)
+                        println "[Cleaning] Login credentials sent to ${freshUser.getEmail()}"
+                    } else {
+                        // Email not verified - send verification email
+                        freshUser.generateVerificationToken()
+                        tc.addUpdate(freshUser)
+                        PerstStorageManager.store(tc)
+                        
+                        services.EmailService.sendVerificationEmail(
+                            freshUser.getEmail(),
+                            cleaner.getName(),
+                            freshUser.getVerificationToken(),
+                            baseUrl
+                        )
+                        println "[Cleaning] Verification email sent to ${freshUser.getEmail()}"
+                    }
+                } catch(Exception e) {
+                    println "[Cleaning] Failed to send email: ${e.message}"
+                }
+            }
+            
+            outjson.put("_Success", true)
+            outjson.put("canLogin", canLogin)
+            outjson.put("emailVerified", freshUser.isEmailVerified())
+            outjson.put("message", canLogin ? "Cleaner login enabled" : "Cleaner login disabled")
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)

@@ -308,3 +308,111 @@ User services:
 ```json
 {"_class":"services.LoadTestdata","_method":"load","_uuid":"session-uuid"}
 ```
+
+## Svelte 5 Standards
+
+### Mandatory: Svelte 5 Only (No Svelte 4)
+All components MUST use Svelte 5 syntax. Svelte 4 syntax is deprecated and not allowed.
+
+### Key Differences
+
+| Svelte 4 | Svelte 5 |
+|----------|----------|
+| `export let prop` | `let { prop } = $props()` |
+| `$: reactive = ...` | `$derived(...)` |
+| `createEventDispatcher` | Callback props (`onEvent = () => void`) |
+| `on:event` | `onevent={handler}` |
+| `$$props` | `$props()` |
+| `$state(initial)` | `$state(initial)` (same) |
+| `$effect` | `$effect` (new) |
+
+### Props Pattern (Svelte 5)
+```svelte
+<script lang="ts">
+  interface Props {
+    title?: string;
+    count?: number;
+    onSave?: (value: string) => void;
+  }
+
+  let { title = 'Default', count = 0, onSave }: Props = $props();
+</script>
+```
+
+### Reactive Pattern (Svelte 5)
+```svelte
+<script lang="ts">
+  let items = $state(['a', 'b', 'c']);
+  let filtered = $derived(items.filter(i => i.startsWith('a')));
+</script>
+```
+
+### Event Handling (Svelte 5)
+```svelte
+<!-- Svelte 4: on:click={handler} -->
+<!-- Svelte 5: -->
+<button onclick={handler}>Click</button>
+```
+
+### Snippets (Svelte 5)
+```svelte
+<script>
+  let { children }: Props = $props();
+</script>
+
+{#if children}
+  {@render children()}
+{/if}
+```
+
+### Navbar Sticky
+Add `sticky top-0 z-50` class to the `<header>` element to make it stick to the top on scroll.
+
+### Check for Svelte 4 Patterns
+Run this to find Svelte 4 syntax:
+```bash
+grep -r "export let\|createEventDispatcher\|\$:\|on:" src/main/frontend-svelte/src/lib/components/
+```
+
+### CORS Configuration (Fork Override)
+The Kiss framework configures CORS via `web.xml` files in `src/main/core/WEB-INF/`:
+- `web.xml` - copied during `buildSystem()` 
+- `web-secure.xml` - copied during `war()` build
+- `web-unsafe.xml` - copied after war build
+
+These are **Kiss framework core files**. When updating from upstream Kiss framework, CORS settings may be overwritten.
+
+**Current fork override:** All web.xml files have `cors.allowed.origins = *` for development.
+
+**To change CORS:**
+1. Edit `src/main/core/WEB-INF/web.xml` (development)
+2. Edit `src/main/core/WEB-INF/web-secure.xml` (production)
+3. Rebuild with `./bld build`
+
+**Alternative:** Implement a custom CORS filter that reads from `application.ini` (future improvement).
+
+## Session Protocols
+
+### Recording Knowledge
+- All lessons learned and discoveries during development should be documented
+- Update AGENTS.md with new findings, fixes, and patterns discovered
+- Include root cause analysis when fixing bugs
+
+### Version Control Protocol
+- When changes are approved, commit them promptly
+- Always push commits to remote repository
+- Never leave approved changes uncommitted
+
+### Uncertainty Protocol
+- If unsure about something, ask the user for clarification
+- Don't make assumptions that could lead to incorrect implementation
+
+### Translation / i18n Protocol
+- ALL user-facing text must use translation keys (tt() function in Svelte)
+- NEVER hardcode visible text - always use tt('key.path')
+- When adding new text/UI, add translations to ALL language files:
+  - `src/main/frontend-svelte/src/lib/i18n/messages/en.json`
+  - `src/main/frontend-svelte/src/lib/i18n/messages/nl.json`
+  - `src/main/frontend-svelte/src/lib/i18n/messages/de.json`
+- Common keys should go under "common" section
+- Page-specific keys go under their respective section (e.g., "verify", "auth", "owners")

@@ -11,7 +11,10 @@ export interface User {
   id: number;
   userName: string;
   userPassword: string;
-  userActive: 'Y' | 'N';
+  canLogin: boolean;
+  emailVerified: boolean;
+  email: string;
+  actorType?: string;  // 'Owner', 'Cleaner', or null
 }
 
 export interface ApiResult {
@@ -109,6 +112,24 @@ export async function updateLanguage(
   const res = await Server.call('services.Users', 'updateLanguage', {
     id,
     preferredLanguage
+  });
+  
+  return {
+    success: res._Success ?? res.success ?? false,
+    error: res._ErrorMessage || res.error
+  };
+}
+
+/**
+ * Toggle user login capability
+ * @param id - User ID (oid)
+ * @param canLogin - Whether user can login
+ * @returns API result
+ */
+export async function toggleUserLogin(id: number, canLogin: boolean): Promise<ApiResult> {
+  const res = await Server.call('services.Users', 'toggleUserLogin', {
+    id,
+    canLogin
   });
   
   return {

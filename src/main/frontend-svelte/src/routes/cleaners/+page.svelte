@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { cleanersAPI, type Cleaner } from '$lib/api/Cleaning';
-	import { dataStores } from '../../lib/stores.svelte.js';
-	import Table from '$lib/components/Table.svelte';
-	import Form from '$lib/components/Form.svelte';
+  import { cleanersAPI, type Cleaner } from '$lib/api/Cleaning';
+  import { dataStores } from '../../lib/stores.svelte.js';
+  import { notificationActions } from '$lib/stores.svelte.js';
+  import Table from '$lib/components/Table.svelte';
+  import Form from '$lib/components/Form.svelte';
   import { t, currentLocale } from '$lib/i18n';
   
   // Reactive translation helper
@@ -78,7 +79,7 @@
 		{ key: 'phone', label: t('cleaners.phone') },
 		{ key: 'address', label: t('cleaners.address') },
 		{
-			key: 'active',
+			key: 'canLogin',
 			label: t('common.status'),
 			formatter: (value: boolean) => (value ? t('common.active') : t('common.inactive'))
 		}
@@ -113,18 +114,25 @@
 		}
 	}
 	
-	async function toggleCleanerActive(id: number, active: boolean) {
+	async function toggleCleanerActive(id: number, canLogin: boolean) {
 		const idx = cleaners.findIndex(c => c.id === id);
 		if (idx >= 0) {
-			cleaners[idx] = { ...cleaners[idx], active };
+			cleaners[idx] = { ...cleaners[idx], canLogin };
 		}
 		try {
-			await cleanersAPI.toggleActive(id, active);
+			const updated = await cleanersAPI.toggleLogin(id, canLogin);
+			// Update with server response (authoritative state)
+			if (updated && updated.id) {
+				const updateIdx = cleaners.findIndex(c => c.id === updated.id);
+				if (updateIdx >= 0) {
+					cleaners[updateIdx] = { ...cleaners[updateIdx], canLogin: updated.canLogin };
+				}
+			}
 		} catch (err: any) {
 			if (idx >= 0) {
-				cleaners[idx] = { ...cleaners[idx], active: !active };
+				cleaners[idx] = { ...cleaners[idx], canLogin: !canLogin };
 			}
-			notificationActions.error(err.message || 'Failed to toggle cleaner status');
+			notificationActions.error(err.message || 'Failed to toggle cleaner login');
 		}
 	}
 
@@ -216,14 +224,32 @@
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="cleaner-card clickable" onclick={() => { editingCleaner = cleaner; showForm = true; scrollToEditForm(); }} onkeydown={(e) => e.key === 'Enter' && (editingCleaner = cleaner, showForm = true, scrollToEditForm())}>
 						<div class="card-header">
-							<h3 class="cleaner-name">{cleaner.name}</h3>
+							<h3 class="cleaner-name">
+								{cleaner.name}
+								<!-- Email verified indicator -->
+								{#if cleaner.emailVerified}
+									<span class="ml-1 text-green-600" title="Email verified">
+										<svg class="inline w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+											<path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+											<path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+										</svg>
+									</span>
+								{:else}
+									<span class="ml-1 text-red-600" title="Email not verified">
+										<svg class="inline w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+											<path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+											<path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+										</svg>
+									</span>
+								{/if}
+							</h3>
 							<button
 								type="button"
 								class="card-toggle"
-								class:active={cleaner.active}
-								onclick={(e) => { e.stopPropagation(); toggleCleanerActive(cleaner.id, !cleaner.active); }}
-								title={cleaner.active ? 'Deactivate cleaner' : 'Activate cleaner'}
-								aria-label={cleaner.active ? 'Deactivate cleaner' : 'Activate cleaner'}
+								class:active={cleaner.canLogin}
+								onclick={(e) => { e.stopPropagation(); toggleCleanerActive(cleaner.id, !cleaner.canLogin); }}
+								title={cleaner.canLogin ? 'Disable login' : 'Enable login'}
+								aria-label={cleaner.canLogin ? 'Disable login' : 'Enable login'}
 							></button>
 						</div>
 						{#if cleaner.email}<p class="cleaner-detail">{cleaner.email}</p>{/if}

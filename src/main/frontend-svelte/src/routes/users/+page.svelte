@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getUsers, addUser, deleteUser, updateUser } from '$lib/api/Users';
+  import { getUsers, addUser, deleteUser, toggleUserLogin } from '$lib/api/Users';
   import { onMount } from 'svelte';
   import type { User } from '$lib/api/Users';
   import Modal from '$lib/components/Modal.svelte';
@@ -8,29 +8,21 @@
   import { notificationActions } from '$lib/stores.svelte.js';
   import { t, currentLocale } from '$lib/i18n';
   
-  // Reactive translation helper
   const tt = (key: string) => t(key, undefined, $currentLocale);
 
-  // Svelte 5 RUNES for reactive state
   let users = $state<User[]>([]);
+  let allUsers = $state<User[]>([]);
   let loading = $state(false);
-  // old variables removed, now using addFormData
   let error = $state('');
   let dataLoading = $state(true);
 
-  // Edit modal state
   let editModalOpen = $state(false);
   let editingUser = $state<User | null>(null);
-  let editUserName = $state('');
-  let editUserPassword = $state('');
-  let editUserActive = $state<'Y' | 'N'>('Y');
   
-  // Form data objects
   let addFormData = $state<Record<string, any>>({ username: '', password: '' });
-  let editFormData = $state<Record<string, any>>({ username: '', password: '', active: 'Y' });
+  let editFormData = $state<Record<string, any>>({ username: '', password: '' });
   let editLoading = $state(false);
 
-  // DERIVED state - form validity
   let canAddUser = $derived(
     (addFormData.username?.length ?? 0) >= 3 && (addFormData.password?.length ?? 0) >= 3
   );
@@ -38,33 +30,27 @@
     (editFormData.username?.length ?? 0) >= 3 && (editFormData.password?.length ?? 0) >= 3
   );
 
-  // Form section ref for scroll on small screens
   let formSection = $state<HTMLElement | null>(null);
 
+  let filterMode = $state<'all' | 'Owner' | 'Cleaner'>('all');
+
+  let filteredUsers = $derived(
+    filterMode === 'all' 
+      ? allUsers 
+      : allUsers.filter(u => u.actorType === filterMode)
+  );
+
   function scrollToEditForm() {
-    // Scroll to edit form on small screens (mobile/tablet)
     if (window.innerWidth < 1024 && formSection) {
       formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
-  // Field definitions for Form component (reactive)
   let addUserFields = $derived([
     { name: 'username', label: t('users.enter_username'), type: 'text' as const, required: true, placeholder: t('users.enter_username'), helpText: t('users.minimum_3_chars') },
     { name: 'password', label: t('users.enter_password'), type: 'password' as const, required: true, placeholder: t('users.enter_password'), helpText: t('users.minimum_3_chars') }
   ]);
 
-  let editUserFields = $derived([
-    { name: 'username', label: t('users.enter_username'), type: 'text' as const, required: true, placeholder: t('users.enter_username'), helpText: t('users.minimum_3_chars') },
-    { name: 'password', label: t('users.enter_password'), type: 'password' as const, required: true, placeholder: t('users.enter_password'), helpText: t('users.minimum_3_chars') },
-    { name: 'active', label: t('common.active'), type: 'select' as const, required: true, options: [{ value: 'Y', label: t('common.active') }, { value: 'N', label: t('common.inactive') }] }
-  ]);
-
-  // editUserFields removed, using editUserFields constant defined earlier? Actually we still need it for edit form. We'll keep but rename to editFields. Let's just keep but ensure it's used. We'll keep as is.
-
-
-
-  // Load data on mount
   onMount(() => {
     loadUsers();
   });
@@ -74,8 +60,8 @@
     dataLoading = true;
     error = '';
     try {
-      users = await getUsers();
-      console.log('[users] loadUsers success, count:', users.length);
+      allUsers = await getUsers();
+      console.log('[users] loadUsers success, count:', allUsers.length);
     } catch (e: any) {
       error = t('errors.failed_to_load') + ': ' + (e.message || 'Unknown error');
       console.error('[users] loadUsers error:', error);
@@ -85,31 +71,23 @@
   }
 
   async function handleAddUser(data: Record<string, any>) {
-    console.log('[users] handleAddUser called with:', data);
-    if (!canAddUser) {
-      console.log('[users] canAddUser false, aborting');
-      return;
-    }
+    if (!canAddUser) return;
     
     loading = true;
     error = '';
 
     try {
       const res = await addUser(data.username, data.password);
-      console.log('[users] addUser response:', res);
       if (res.success) {
         notificationActions.success(t('users.title') + ' ' + t('notifications.created_successfully'));
         addFormData = { username: '', password: '' };
-        console.log('[users] addUser success, reloading users...');
         await loadUsers();
       } else {
         error = res.error || t('errors.failed_to_save');
-        console.error('[users] addUser failed:', error);
         notificationActions.error(error);
       }
     } catch (e: any) {
       error = t('errors.failed_to_save') + ': ' + (e.message || 'Unknown error');
-      console.error('[users] addUser exception:', error);
       notificationActions.error(error);
     } finally {
       loading = false;
@@ -120,8 +98,7 @@
     editingUser = user;
     editFormData = {
       username: user.userName,
-      password: user.userPassword,
-      active: user.userActive
+      password: user.userPassword
     };
     editModalOpen = true;
     scrollToEditForm();
@@ -134,12 +111,7 @@
     error = '';
 
     try {
-      const res = await updateUser(
-        editingUser.id,
-        data.username,
-        data.password,
-        data.active
-      );
+      const res = await toggleUserLogin(editingUser.id, data.active === 'Y');
       if (res.success) {
         notificationActions.success(t('users.title') + ' ' + t('notifications.updated_successfully'));
         editModalOpen = false;
@@ -153,6 +125,29 @@
       notificationActions.error(error);
     } finally {
       editLoading = false;
+    }
+  }
+
+  async function toggleUserLoginById(id: number, canLogin: boolean) {
+    const idx = allUsers.findIndex(u => u.id === id);
+    if (idx >= 0) {
+      allUsers[idx] = { ...allUsers[idx], canLogin };
+    }
+    try {
+      const res = await toggleUserLogin(id, canLogin);
+      if (res.success) {
+        notificationActions.success(res.message || (canLogin ? 'Login enabled' : 'Login disabled'));
+      } else {
+        if (idx >= 0) {
+          allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
+        }
+        notificationActions.error(res.error || 'Failed to toggle login');
+      }
+    } catch (err: any) {
+      if (idx >= 0) {
+        allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
+      }
+      notificationActions.error(err.message || 'Failed to toggle login');
     }
   }
 
@@ -199,10 +194,35 @@
     <Form
       fields={addUserFields}
       bind:data={addFormData}
-      loading={loading}
+      {loading}
       submitLabel={tt('users.add_user')}
       onSubmit={handleAddUser}
     />
+  </div>
+
+  <!-- Filter Buttons -->
+  <div class="flex gap-2 mb-4">
+    <button
+      class="filter-btn"
+      class:active={filterMode === 'all'}
+      onclick={() => filterMode = 'all'}
+    >
+      All
+    </button>
+    <button
+      class="filter-btn"
+      class:active={filterMode === 'Owner'}
+      onclick={() => filterMode = 'Owner'}
+    >
+      Owners
+    </button>
+    <button
+      class="filter-btn"
+      class:active={filterMode === 'Cleaner'}
+      onclick={() => filterMode = 'Cleaner'}
+    >
+      Cleaners
+    </button>
   </div>
 
   <!-- Users List -->
@@ -210,23 +230,55 @@
     <h2 class="text-xl font-semibold mb-3">{tt('users.users_list')}</h2>
     {#if dataLoading}
       <p class="text-gray-500">{tt('users.loading_users')}</p>
-    {:else if users.length === 0}
+    {:else if filteredUsers.length === 0}
       <p class="text-gray-500">{tt('users.no_users')}</p>
     {:else}
       <div class="space-y-3">
-        {#each users as user (user.id)}
-          <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <div class="clickable flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border" onclick={() => openEditModal(user)} onkeydown={(e) => e.key === 'Enter' && openEditModal(user)}>
-            <div>
-              <p class="font-medium">{user.userName}</p>
-              <p class="text-gray-600 text-sm">
-                {tt('common.status')}: <span class={user.userActive === 'Y' ? 'text-green-600' : 'text-red-600'}>
-                  {user.userActive === 'Y' ? t('common.active') : t('common.inactive')}
+        {#each filteredUsers as user (user.id)}
+          <div class="user-card">
+            <div class="user-info">
+              <div class="user-main">
+                <span class="font-medium">{user.userName}</span>
+                {#if user.actorType}
+                  <span class="actor-badge" class:owner={user.actorType === 'Owner'} class:cleaner={user.actorType === 'Cleaner'}>
+                    {user.actorType}
+                  </span>
+                {/if}
+              </div>
+              <div class="user-details">
+                <span class="text-gray-600 text-sm">
+                  {tt('common.can_login')}: 
+                  <span class={user.canLogin ? 'text-green-600' : 'text-red-600'}>
+                    {user.canLogin ? t('common.yes') : t('common.no')}
+                  </span>
                 </span>
-              </p>
+                <!-- Email verified indicator -->
+                <span class="ml-2" title={user.emailVerified ? 'Email verified' : 'Email not verified'}>
+                  {#if user.emailVerified}
+                    <svg class="inline w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                    </svg>
+                  {:else}
+                    <svg class="inline w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                    </svg>
+                  {/if}
+                </span>
+                {#if user.email}
+                  <span class="text-gray-400 ml-1">({user.email})</span>
+                {/if}
+              </div>
             </div>
-            <div class="flex gap-2">
+            <div class="user-actions">
+              <button
+                type="button"
+                class="card-toggle"
+                class:active={user.canLogin}
+                onclick={() => toggleUserLoginById(user.id, !user.canLogin)}
+                title={user.canLogin ? 'Disable login' : 'Enable login'}
+              ></button>
               <button
                 onclick={(e) => { e.stopPropagation(); openEditModal(user); }}
                 class="text-blue-600 hover:text-blue-800"
@@ -249,25 +301,104 @@
   </div>
 </div>
 
-<!-- Edit User Modal -->
-<Modal 
-  bind:open={editModalOpen} 
-  title={tt('users.edit_user')}
-  onClose={() => editModalOpen = false}
-  bind:this={formSection}
->
-  <Form
-    fields={editUserFields}
-    bind:data={editFormData}
-    loading={editLoading}
-    submitLabel={tt('users.save')}
-    cancelLabel={tt('common.cancel')}
-    onSubmit={handleEditUser}
-    onCancel={() => editModalOpen = false}
-  />
-</Modal>
-
 <style>
-  .clickable { cursor: pointer; }
-  .clickable:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
+  .filter-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    background: white;
+    cursor: pointer;
+    font-size: 0.875rem;
+    border-radius: 6px;
+  }
+  .filter-btn.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+
+  .user-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  .user-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.2);
+  }
+
+  .user-info {
+    flex: 1;
+  }
+  .user-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+  .user-details {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .actor-badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  .actor-badge.owner {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  .actor-badge.cleaner {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .user-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .card-toggle {
+    position: relative;
+    width: 36px;
+    height: 18px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    background: #fca5a5;
+    transition: background 0.15s ease, opacity 0.15s ease;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .card-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    transition: transform 0.15s ease;
+  }
+  .card-toggle.active {
+    background: #10b981;
+  }
+  .card-toggle.active::after {
+    transform: translateX(18px);
+  }
+  .card-toggle:active {
+    opacity: 0.7;
+  }
 </style>

@@ -57,7 +57,11 @@
 		"start_date": "Startdatum",
 		"end_date": "Einddatum",
 		"start_time": "Starttijd",
-		"end_time": "Eindtijd"
+		"end_time": "Eindtijd",
+		"password": "Wachtwoord",
+		"password_placeholder": "Voer wachtwoord in",
+		"confirm_password": "Bevestig wachtwoord",
+		"confirm_password_placeholder": "Bevestig wachtwoord"
 	},
 	"houses": {
 		"title": "Huizen",
@@ -246,7 +250,12 @@
 		"set_password_title": "E-mail Verifiëren & Wachtwoord Instellen",
 		"set_password_desc": "Voer uw wachtwoord in om uw e-mail te verifiëren en uw account te activeren.",
 		"verifying": "Verifiëren...",
-		"verify_and_set_password": "Verifiëren & Wachtwoord Instellen"
+		"verify_and_set_password": "Verifiëren & Wachtwoord Instellen",
+		"welcome": "Welkom",
+		"verify_email_title": "Verifieer Uw E-mail",
+		"verify_email_desc": "Stel uw wachtwoord in om uw account te activeren",
+		"password_min_length": "Wachtwoord moet minimaal 6 tekens zijn",
+		"passwords_no_match": "Wachtwoorden komen niet overeen"
 	},
 	"hints": {
 		"add_new": "Nieuw item toevoegen",

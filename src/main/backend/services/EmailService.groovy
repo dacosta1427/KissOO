@@ -100,20 +100,6 @@ class EmailService {
         if (!INITIALIZED) {
             try {
                 initializeFromConfig()
-        } catch (Exception e) {
-            System.err.println("[EmailService] Failed to initialize: " + e.message)
-            e.printStackTrace()
-            return false
-        }
-    }
-    
-    /**
-     * Send email
-     */
-    static boolean send(String to, String toName, String subject, String body) {
-        if (!INITIALIZED) {
-            try {
-                initializeFromConfig()
             } catch (Exception e) {
                 System.err.println("[EmailService] Not initialized and could not load config: " + e.message)
                 e.printStackTrace()
@@ -196,6 +182,26 @@ class EmailService {
             "Best regards,\n" +
             "The KISS Team",
             name, link
+        )
+        return send(email, name, subject, body)
+    }
+    
+    /**
+     * Send login credentials email when owner is enabled
+     */
+    static boolean sendLoginCredentialsEmail(String email, String name, String username, String tempPassword, String baseUrl) {
+        String loginLink = baseUrl + "/login"
+        String subject = "Your login credentials"
+        String body = String.format(
+            "Hello %s,\n\n" +
+            "Your account has been enabled. Here are your login credentials:\n\n" +
+            "Username: %s\n" +
+            "Temporary Password: %s\n\n" +
+            "Login here: %s\n\n" +
+            "You will be asked to change your password on first login.\n\n" +
+            "Best regards,\n" +
+            "The KISS Team",
+            name, username, tempPassword, loginLink
         )
         return send(email, name, subject, body)
     }

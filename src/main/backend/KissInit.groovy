@@ -85,8 +85,11 @@ class KissInit {
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
         MainServlet.allowWithoutAuthentication("", "Login")
         
+        // Allow services.Login (for clients calling services.Login.Login)
+        MainServlet.allowWithoutAuthentication("services/Login", "Login")
+        
         // Allow user creation without authentication (for first-time setup)
-        MainServlet.allowWithoutAuthentication("services.Users", "addRecord")
+        MainServlet.allowWithoutAuthentication("services/Users", "addRecord")
         
         // Allow signup without authentication
         MainServlet.allowWithoutAuthentication("services.AuthService", "signup")

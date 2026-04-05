@@ -11,6 +11,8 @@
   let status = $state<'form' | 'loading' | 'success' | 'error'>('form');
   let message = $state('');
   let username = $state('');
+  let userName = $state('');
+  let userEmail = $state('');
   
   let password = $state('');
   let confirmPassword = $state('');
@@ -32,18 +34,29 @@
     }
     
     token = urlToken;
+    
+    // Fetch user info by token to show name/email
+    try {
+      const res = await Server.call('services.Users', 'getUserByToken', { token: urlToken });
+      if (res._Success || res.success) {
+        userName = res.userName || '';
+        userEmail = res.email || '';
+      }
+    } catch (e) {
+      console.error('Failed to get user info:', e);
+    }
   });
-  
+
   function validatePassword(): boolean {
     passwordError = '';
     
     if (!password || password.length < 6) {
-      passwordError = 'Password must be at least 6 characters';
+      passwordError = tt('verify.password_min_length') || 'Password must be at least 6 characters';
       return false;
     }
     
     if (password !== confirmPassword) {
-      passwordError = 'Passwords do not match';
+      passwordError = tt('verify.passwords_no_match') || 'Passwords do not match';
       return false;
     }
     
@@ -86,65 +99,78 @@
 <div class="min-h-screen bg-gray-50 flex items-center justify-center">
   <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
     {#if status === 'form'}
-      <div class="text-center mb-6">
-        <h1 class="text-xl font-semibold text-gray-900">{tt('verify.set_password_title') || 'Verify Email & Set Password'}</h1>
-        <p class="text-gray-600 mt-2">{tt('verify.set_password_desc') || 'Enter your password to verify your email and activate your account.'}</p>
+      <!-- Welcome message at top -->
+      <div class="text-center mb-8">
+        {#if userName}
+          <h1 class="text-2xl font-bold text-gray-900">{tt('verify.welcome') || 'Welcome'} {userName}!</h1>
+        {:else}
+          <h1 class="text-2xl font-bold text-gray-900">{tt('verify.verify_email_title') || 'Verify Your Email'}</h1>
+        {/if}
+        <p class="text-gray-600 mt-2">
+          {tt('verify.verify_email_desc') || 'Set your password to activate your account'}
+        </p>
+        {#if userEmail}
+          <p class="text-sm text-gray-500 mt-1">{userEmail}</p>
+        {/if}
       </div>
       
-      <form onsubmit={handleSubmit}>
-        <div class="mb-4">
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-            {tt('common.password') || 'Password'}
-          </label>
-          <input 
-            type="password" 
-            id="password" 
-            bind:value={password}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder={tt('common.password_placeholder') || 'Enter password'}
-            required
-            minlength="6"
-          />
-        </div>
-        
-        <div class="mb-4">
-          <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">
-            {tt('auth.confirm_password') || 'Confirm Password'}
-          </label>
-          <input 
-            type="password" 
-            id="confirmPassword" 
-            bind:value={confirmPassword}
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder={tt('auth.confirm_password_placeholder') || 'Confirm password'}
-            required
-          />
-        </div>
-        
-        {#if passwordError}
-          <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p class="text-sm text-red-600">{passwordError}</p>
+      <!-- Password form at ~33% from top -->
+      <div class="mt-16">
+        <form onsubmit={handleSubmit}>
+          <div class="mb-4">
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+              {tt('common.password') || 'Password'}
+            </label>
+            <input 
+              type="password" 
+              id="password" 
+              bind:value={password}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder={tt('common.password_placeholder') || 'Enter password'}
+              required
+              minlength="6"
+            />
           </div>
-        {/if}
-        
-        <button 
-          type="submit"
-          disabled={submitting}
-          class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {#if submitting}
-            <span class="inline-flex items-center">
-              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {tt('verify.verifying') || 'Verifying...'}
-            </span>
-          {:else}
-            {tt('verify.verify_and_set_password') || 'Verify & Set Password'}
+          
+          <div class="mb-4">
+            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">
+              {tt('common.confirm_password') || 'Confirm Password'}
+            </label>
+            <input 
+              type="password" 
+              id="confirmPassword" 
+              bind:value={confirmPassword}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder={tt('common.confirm_password_placeholder') || 'Confirm password'}
+              required
+            />
+          </div>
+          
+          {#if passwordError}
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p class="text-sm text-red-600">{passwordError}</p>
+            </div>
           {/if}
-        </button>
-      </form>
+          
+          <button 
+            type="submit"
+            disabled={submitting}
+            class="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {#if submitting}
+              <span class="inline-flex items-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {tt('verify.verifying') || 'Verifying...'}
+              </span>
+            {:else}
+              {tt('verify.verify_and_set_password') || 'Verify & Set Password'}
+            {/if}
+          </button>
+        </form>
+      </div>
       
     {:else if status === 'loading'}
       <div class="text-center">

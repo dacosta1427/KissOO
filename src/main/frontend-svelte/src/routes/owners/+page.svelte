@@ -461,7 +461,25 @@
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div class="owner-card clickable" onclick={() => openEditForm(owner)} onkeydown={(e) => e.key === 'Enter' && openEditForm(owner)}>
 					<div class="card-header">
-						<h3 class="owner-name">{owner.name}</h3>
+						<h3 class="owner-name">
+							{owner.name}
+							<!-- Email verified indicator -->
+							{#if owner.emailVerified}
+								<span class="ml-1 text-green-600" title="Email verified">
+									<svg class="inline w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+										<path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+									</svg>
+								</span>
+							{:else}
+								<span class="ml-1 text-red-600" title="Email not verified">
+									<svg class="inline w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+										<path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+									</svg>
+								</span>
+							{/if}
+						</h3>
 						<button
 							type="button"
 							class="card-toggle"
@@ -491,6 +509,7 @@
 					<th>{tt('owners.email')}</th>
 					<th>{tt('owners.phone')}</th>
 					<th>{tt('owners.can_login')}</th>
+					<th>Email</th>
 					<th>{tt('common.actions')}</th>
 				</tr>
 			</thead>
@@ -510,6 +529,23 @@
 								onclick={(e) => { e.stopPropagation(); toggleOwnerLoginById(owner.id, !owner.canLogin); }}
 								title={owner.canLogin ? 'Login enabled' : 'Login disabled'}
 							></button>
+						</td>
+						<td>
+							{#if owner.emailVerified}
+								<span class="text-green-600" title="Email verified">
+									<svg class="inline w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+										<path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+									</svg>
+								</span>
+							{:else}
+								<span class="text-red-600" title="Email not verified">
+									<svg class="inline w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+										<path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+									</svg>
+								</span>
+							{/if}
 						</td>
 						<td>
 							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); openEditForm(owner); }}>{tt('common.edit')}</button>

@@ -59,7 +59,11 @@
 		"start_date": "Start Date",
 		"end_date": "End Date",
 		"start_time": "Start Time",
-		"end_time": "End Time"
+		"end_time": "End Time",
+		"password": "Password",
+		"password_placeholder": "Enter password",
+		"confirm_password": "Confirm Password",
+		"confirm_password_placeholder": "Confirm password"
 	},
 	"houses": {
 		"title": "Houses",
@@ -248,7 +252,12 @@
 		"set_password_title": "Verify Email & Set Password",
 		"set_password_desc": "Enter your password to verify your email and activate your account.",
 		"verifying": "Verifying...",
-		"verify_and_set_password": "Verify & Set Password"
+		"verify_and_set_password": "Verify & Set Password",
+		"welcome": "Welcome",
+		"verify_email_title": "Verify Your Email",
+		"verify_email_desc": "Set your password to activate your account",
+		"password_min_length": "Password must be at least 6 characters",
+		"passwords_no_match": "Passwords do not match"
 	},
 	"hints": {
 		"add_new": "Add a new item",
