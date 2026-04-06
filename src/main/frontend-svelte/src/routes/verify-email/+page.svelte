@@ -190,7 +190,7 @@
           {#if username}
             <p class="text-gray-500 mt-1">{tt('verify.login_as')} <strong>{username}</strong></p>
           {/if}
-          <a href="/login" class="inline-block mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <a href="/login?username={encodeURIComponent(username || '')}" class="inline-block mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             {tt('verify.go_to_login')}
           </a>
         </div>
