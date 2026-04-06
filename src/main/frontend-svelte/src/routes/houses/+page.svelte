@@ -524,7 +524,7 @@
 						{#if house.description}
 							<p class="house-description">{house.description}</p>
 						{/if}
-						<p class="house-bookings">{tt('bookings.bookings')}: {getBookingCount(house.id)}</p>
+						<p class="house-bookings">{tt('bookings.title')}: {getBookingCount(house.id)}</p>
 						<div class="house-actions">
 							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); openEditForm(house); }} title={tt('hints.edit_item')}>
 								{tt('common.edit')}
