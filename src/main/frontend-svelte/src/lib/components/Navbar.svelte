@@ -1,8 +1,6 @@
 <script lang="ts">
   import { session } from '$lib/state/session';
   import { logout } from '$lib/api/Auth';
-  import { goto } from '$app/navigation';
-  import { resolve } from '$app/paths';
   import { t, currentLocale } from '$lib/i18n';
   import LanguageSwitcher from './LanguageSwitcher.svelte';
   
@@ -11,7 +9,6 @@
 
   async function handleLogout() {
     await logout();
-    goto(resolve('/'));
   }
   
   // Menu state
