@@ -40,6 +40,8 @@
         </a>
         
         {#if session.isAuthenticated}
+          <!-- DEBUG -->
+          <span class="text-xs text-red-500 mr-2">isAdmin={session.isAdmin} ownerOid={session.ownerOid} cleanerOid={session.cleanerOid}</span>
           <!-- Admin sees all links -->
           {#if session.isAdmin}
             <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">

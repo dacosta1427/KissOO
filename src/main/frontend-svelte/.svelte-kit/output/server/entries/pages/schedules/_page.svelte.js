@@ -1,7 +1,11 @@
 import "../../../chunks/async.js";
-import { e as ensure_array_like, b as attr_class, c as stringify, d as derived, u as unsubscribe_stores, s as store_get } from "../../../chunks/index2.js";
-import { s as session } from "../../../chunks/session.svelte.js";
-import { e as escape_html, a as attr } from "../../../chunks/attributes.js";
+import { c as ensure_array_like, f as attr_class, g as stringify, e as escape_html, a as attr, d as derived, u as unsubscribe_stores, s as store_get } from "../../../chunks/index2.js";
+import "@sveltejs/kit/internal";
+import "../../../chunks/exports.js";
+import "../../../chunks/utils.js";
+import "@sveltejs/kit/internal/server";
+import "../../../chunks/root.js";
+import "../../../chunks/state.svelte.js";
 import { t, c as currentLocale } from "../../../chunks/index3.js";
 function ScheduleBoard($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
@@ -104,7 +108,6 @@ function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     var $$store_subs;
     const tt = (key) => t(key, void 0, store_get($$store_subs ??= {}, "$currentLocale", currentLocale));
-    let isAdmin = derived(() => session.username === "admin" || session.username === "administrator");
     let schedules = [];
     let cleaners = [];
     let bookings = [];
@@ -117,7 +120,7 @@ function _page($$renderer, $$props) {
     };
     let selectedCleanerId = null;
     let selectedCleanerName = derived(() => "");
-    let filteredSchedules = derived(() => isAdmin() ? schedules : schedules.filter((s) => s.cleaner_id === session.cleanerId));
+    let filteredSchedules = derived(() => schedules);
     $$renderer2.push(`<div class="schedules-page svelte-1uvighd"><div class="page-header svelte-1uvighd"><h1 class="svelte-1uvighd">${escape_html(
       // Load data on mount
       tt("schedules.title")
@@ -154,6 +157,10 @@ function _page($$renderer, $$props) {
       });
     }
     $$renderer2.push(`<!--]--></div> `);
+    {
+      $$renderer2.push("<!--[-1-->");
+    }
+    $$renderer2.push(`<!--]--> `);
     {
       $$renderer2.push("<!--[-1-->");
     }

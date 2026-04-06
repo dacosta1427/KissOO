@@ -1,6 +1,5 @@
 import "../../../chunks/async.js";
-import { b as attr_class, u as unsubscribe_stores, s as store_get, d as derived, c as stringify } from "../../../chunks/index2.js";
-import { e as escape_html, a as attr } from "../../../chunks/attributes.js";
+import { e as escape_html, a as attr, f as attr_class, u as unsubscribe_stores, s as store_get, d as derived, g as stringify } from "../../../chunks/index2.js";
 import "@sveltejs/kit/internal";
 import "../../../chunks/exports.js";
 import "../../../chunks/utils.js";

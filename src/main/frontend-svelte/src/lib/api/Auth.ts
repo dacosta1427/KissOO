@@ -41,28 +41,23 @@ export async function login(usernameInput: string, password: string): Promise<Lo
     session.setUsername(usernameInput.toLowerCase());
     Server.setUUID(res.uuid);
     
-    console.log('[Auth] Login response:', res);
-    
     // Store user info from response
     if (res.userOid) {
       session.setUserOid(res.userOid);
     }
     if (res.isAdmin !== undefined) {
-      console.log('[Auth] Setting isAdmin:', res.isAdmin);
       session.setIsAdmin(res.isAdmin);
     }
     if (res.adminType) {
       session.setAdminType(res.adminType);
     }
     if (res.ownerOid) {
-      console.log('[Auth] Setting ownerOid:', res.ownerOid);
       session.setOwnerOid(res.ownerOid);
     }
     if (res.ownerName) {
       session.setOwnerName(res.ownerName);
     }
     if (res.cleanerOid) {
-      console.log('[Auth] Setting cleanerOid:', res.cleanerOid);
       session.setCleanerOid(res.cleanerOid);
     }
     if (res.email) {

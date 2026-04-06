@@ -1,7 +1,12 @@
 import "../../../chunks/async.js";
-import { e as ensure_array_like, b as attr_class, u as unsubscribe_stores, s as store_get } from "../../../chunks/index2.js";
+import { a as attr, e as escape_html, c as ensure_array_like, f as attr_class, u as unsubscribe_stores, s as store_get } from "../../../chunks/index2.js";
+import "@sveltejs/kit/internal";
+import "../../../chunks/exports.js";
+import "../../../chunks/utils.js";
+import "@sveltejs/kit/internal/server";
+import "../../../chunks/root.js";
+import "../../../chunks/state.svelte.js";
 import { t, c as currentLocale } from "../../../chunks/index3.js";
-import { a as attr, e as escape_html } from "../../../chunks/attributes.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     var $$store_subs;
@@ -24,7 +29,7 @@ function _page($$renderer, $$props) {
       const each_array = ensure_array_like(costProfiles);
       for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
         let profile = each_array[$$index];
-        $$renderer2.push(`<div${attr_class("profile-card svelte-p07anx", void 0, { "standard": profile.is_standard })}><div class="profile-header svelte-p07anx"><h3 class="svelte-p07anx">${escape_html(profile.name)}</h3> `);
+        $$renderer2.push(`<div${attr_class("profile-card clickable svelte-p07anx", void 0, { "standard": profile.is_standard })}><div class="profile-header svelte-p07anx"><h3 class="svelte-p07anx">${escape_html(profile.name)}</h3> `);
         if (profile.is_standard) {
           $$renderer2.push("<!--[0-->");
           $$renderer2.push(`<span class="badge badge-standard svelte-p07anx">Standard</span>`);

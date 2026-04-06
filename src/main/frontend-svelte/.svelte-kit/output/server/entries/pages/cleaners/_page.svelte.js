@@ -1,153 +1,72 @@
 import "../../../chunks/async.js";
-import { u as unsubscribe_stores, s as store_get, d as derived } from "../../../chunks/index2.js";
-import { T as Table, c as cleanersAPI } from "../../../chunks/Table.js";
-import { d as dataStores } from "../../../chunks/stores.svelte.js";
-import { F as Form } from "../../../chunks/Form.js";
+import { e as escape_html, f as attr_class, c as ensure_array_like, a as attr, u as unsubscribe_stores, s as store_get } from "../../../chunks/index2.js";
+import "@sveltejs/kit/internal";
+import "../../../chunks/exports.js";
+import "../../../chunks/utils.js";
+import "@sveltejs/kit/internal/server";
+import "../../../chunks/root.js";
+import "../../../chunks/state.svelte.js";
+/* empty css                                                  */
 import { t, c as currentLocale } from "../../../chunks/index3.js";
-import { e as escape_html } from "../../../chunks/attributes.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     var $$store_subs;
     const tt = (key) => t(key, void 0, store_get($$store_subs ??= {}, "$currentLocale", currentLocale));
     let cleaners = [];
-    let loading = false;
-    let error = null;
-    let showForm = false;
-    let editingCleaner = null;
-    let cleanerFields = derived(() => [
-      {
-        name: "name",
-        label: t("cleaners.name"),
-        type: "text",
-        required: true,
-        placeholder: t("cleaners.enter_cleaner_name")
-      },
-      {
-        name: "email",
-        label: t("cleaners.email"),
-        type: "email",
-        required: true,
-        placeholder: t("cleaners.enter_cleaner_email")
-      },
-      {
-        name: "phone",
-        label: t("cleaners.phone"),
-        type: "tel",
-        required: false,
-        placeholder: t("cleaners.enter_cleaner_phone")
-      },
-      {
-        name: "address",
-        label: t("cleaners.address"),
-        type: "textarea",
-        required: false,
-        placeholder: t("cleaners.enter_cleaner_address"),
-        rows: 3
-      },
-      {
-        name: "active",
-        label: t("common.active"),
-        type: "checkbox",
-        required: false
-      }
-    ]);
-    let tableColumns = derived(() => [
-      { key: "name", label: t("cleaners.name") },
-      { key: "email", label: t("cleaners.email") },
-      { key: "phone", label: t("cleaners.phone") },
-      { key: "address", label: t("cleaners.address") },
-      {
-        key: "active",
-        label: t("common.status"),
-        formatter: (value) => value ? t("common.active") : t("common.inactive")
-      }
-    ]);
-    let tableActions = derived(() => [
-      {
-        label: t("common.edit"),
-        class: "edit",
-        title: t("cleaners.edit_cleaner"),
-        icon: "✏️"
-      },
-      {
-        label: t("common.delete"),
-        class: "delete",
-        title: t("cleaners.delete_cleaner"),
-        icon: "🗑️"
-      }
-    ]);
-    async function loadCleaners() {
-      loading = true;
-      error = null;
-      try {
-        cleaners = await cleanersAPI.getAll();
-        dataStores.cleaners.set(cleaners);
-      } catch (err) {
-        error = err.message || t("errors.failed_to_load");
-      } finally {
-        loading = false;
-      }
-    }
-    async function handleAction({ action, row }) {
-      if (action.label === t("common.edit")) {
-        editingCleaner = row;
-        showForm = true;
-      } else if (action.label === t("common.delete")) {
-        if (confirm(t("cleaners.delete_confirm"))) {
-          try {
-            await cleanersAPI.delete(row.id);
-            await loadCleaners();
-          } catch (err) {
-            error = err.message || t("errors.failed_to_delete");
-          }
-        }
-      }
-    }
-    async function handleFormSubmit(data) {
-      try {
-        if (editingCleaner) {
-          await cleanersAPI.update(editingCleaner.id, data);
-        } else {
-          await cleanersAPI.create(data);
-        }
-        showForm = false;
-        editingCleaner = null;
-        await loadCleaners();
-      } catch (err) {
-        error = err.message || t("errors.failed_to_save");
-      }
-    }
-    function handleFormCancel() {
-      showForm = false;
-      editingCleaner = null;
-    }
+    let viewMode = "card";
     $$renderer2.push(`<div class="cleaners-page svelte-ivoje8"><div class="page-header svelte-ivoje8"><h1 class="svelte-ivoje8">${escape_html(tt("cleaners.title"))}</h1> <button class="btn btn-primary svelte-ivoje8">${escape_html(tt("cleaners.add_cleaner"))}</button></div> `);
-    if (showForm) {
-      $$renderer2.push("<!--[0-->");
-      $$renderer2.push(`<div class="form-section svelte-ivoje8">`);
-      Form($$renderer2, {
-        fields: cleanerFields(),
-        data: editingCleaner || {},
-        loading,
-        title: editingCleaner ? t("cleaners.edit_cleaner") : t("cleaners.add_new_cleaner"),
-        submitLabel: editingCleaner ? t("cleaners.edit_cleaner") : t("cleaners.add_cleaner"),
-        onSubmit: handleFormSubmit,
-        onCancel: handleFormCancel
-      });
-      $$renderer2.push(`<!----></div>`);
-    } else {
+    {
       $$renderer2.push("<!--[-1-->");
     }
-    $$renderer2.push(`<!--]--> <div class="table-section svelte-ivoje8">`);
-    Table($$renderer2, {
-      data: cleaners,
-      columns: tableColumns(),
-      actions: tableActions(),
-      loading,
-      error,
-      onAction: handleAction
-    });
-    $$renderer2.push(`<!----></div></div>`);
+    $$renderer2.push(`<!--]--> <div class="view-toggle svelte-ivoje8"><button${attr_class("toggle-btn svelte-ivoje8", void 0, { "active": viewMode === "card" })}>${escape_html(tt("houses.card_view"))}</button> <button${attr_class("toggle-btn svelte-ivoje8", void 0, { "active": viewMode === "table" })}>${escape_html(tt("houses.table_view"))}</button></div> `);
+    {
+      $$renderer2.push("<!--[0-->");
+      $$renderer2.push(`<div class="cleaners-grid svelte-ivoje8">`);
+      if (cleaners.length === 0 && true) {
+        $$renderer2.push("<!--[0-->");
+        $$renderer2.push(`<div class="empty-message svelte-ivoje8">${escape_html(tt("cleaners.no_cleaners"))}</div>`);
+      } else {
+        $$renderer2.push("<!--[-1-->");
+        $$renderer2.push(`<!--[-->`);
+        const each_array = ensure_array_like(cleaners);
+        for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
+          let cleaner = each_array[$$index];
+          $$renderer2.push(`<div class="cleaner-card clickable svelte-ivoje8"><div class="card-header svelte-ivoje8"><h3 class="cleaner-name svelte-ivoje8">${escape_html(cleaner.name)} `);
+          if (cleaner.emailVerified) {
+            $$renderer2.push("<!--[0-->");
+            $$renderer2.push(`<span class="ml-1 text-green-600" title="Email verified"><svg class="inline w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg></span>`);
+          } else {
+            $$renderer2.push("<!--[-1-->");
+            $$renderer2.push(`<span class="ml-1 text-red-600" title="Email not verified"><svg class="inline w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg></span>`);
+          }
+          $$renderer2.push(`<!--]--></h3> <button type="button"${attr_class("card-toggle svelte-ivoje8", void 0, { "active": cleaner.canLogin })}${attr("title", cleaner.canLogin ? "Disable login" : "Enable login")}${attr("aria-label", cleaner.canLogin ? "Disable login" : "Enable login")}></button></div> `);
+          if (cleaner.email) {
+            $$renderer2.push("<!--[0-->");
+            $$renderer2.push(`<p class="cleaner-detail svelte-ivoje8">${escape_html(cleaner.email)}</p>`);
+          } else {
+            $$renderer2.push("<!--[-1-->");
+          }
+          $$renderer2.push(`<!--]--> `);
+          if (cleaner.phone) {
+            $$renderer2.push("<!--[0-->");
+            $$renderer2.push(`<p class="cleaner-detail svelte-ivoje8">${escape_html(cleaner.phone)}</p>`);
+          } else {
+            $$renderer2.push("<!--[-1-->");
+          }
+          $$renderer2.push(`<!--]--> `);
+          if (cleaner.address) {
+            $$renderer2.push("<!--[0-->");
+            $$renderer2.push(`<p class="cleaner-detail svelte-ivoje8">${escape_html(cleaner.address)}</p>`);
+          } else {
+            $$renderer2.push("<!--[-1-->");
+          }
+          $$renderer2.push(`<!--]--> <div class="cleaner-actions svelte-ivoje8"><button class="btn btn-secondary btn-sm svelte-ivoje8">${escape_html(tt("common.edit"))}</button> <button class="btn btn-danger btn-sm svelte-ivoje8">${escape_html(tt("common.delete"))}</button></div></div>`);
+        }
+        $$renderer2.push(`<!--]-->`);
+      }
+      $$renderer2.push(`<!--]--></div>`);
+    }
+    $$renderer2.push(`<!--]--></div>`);
     if ($$store_subs) unsubscribe_stores($$store_subs);
   });
 }

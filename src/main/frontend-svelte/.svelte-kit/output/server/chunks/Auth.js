@@ -1,4 +1,11 @@
 import { s as session } from "./session.svelte.js";
+import "clsx";
+import "@sveltejs/kit/internal";
+import "./exports.js";
+import "./utils.js";
+import "@sveltejs/kit/internal/server";
+import "./root.js";
+import "./state.svelte.js";
 class Server {
   static url = "";
   static uuid = "";
@@ -350,17 +357,23 @@ async function login(usernameInput, password) {
     session.setUUID(res.uuid);
     session.setUsername(usernameInput.toLowerCase());
     Server.setUUID(res.uuid);
-    if (res.userId) {
-      session.setUserId(res.userId);
+    if (res.userOid) {
+      session.setUserOid(res.userOid);
     }
-    if (res.ownerId) {
-      session.setOwnerId(res.ownerId);
+    if (res.isAdmin !== void 0) {
+      session.setIsAdmin(res.isAdmin);
+    }
+    if (res.adminType) {
+      session.setAdminType(res.adminType);
+    }
+    if (res.ownerOid) {
+      session.setOwnerOid(res.ownerOid);
     }
     if (res.ownerName) {
       session.setOwnerName(res.ownerName);
     }
-    if (res.cleanerId) {
-      session.setCleanerId(res.cleanerId);
+    if (res.cleanerOid) {
+      session.setCleanerOid(res.cleanerOid);
     }
     if (res.email) {
       session.setEmail(res.email);

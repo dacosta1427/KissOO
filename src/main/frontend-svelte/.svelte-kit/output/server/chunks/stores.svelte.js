@@ -31,33 +31,7 @@ function addNotification(message, type) {
     timeout
   );
 }
-const createStore = (initialValue = []) => {
-  let value = initialValue;
-  return {
-    /** @param {function} fn */
-    subscribe: (fn) => {
-      fn(value);
-      return () => {
-      };
-    },
-    /** @param {any} newValue */
-    set: (newValue) => {
-      value = newValue;
-    },
-    /** @param {function} fn */
-    update: (fn) => {
-      value = fn(value);
-    }
-  };
-};
-const dataStores = {
-  cleaners: createStore([]),
-  bookings: createStore([]),
-  schedules: createStore([]),
-  houses: createStore([])
-};
 export {
   notificationActions as a,
-  dataStores as d,
   notificationsState as n
 };

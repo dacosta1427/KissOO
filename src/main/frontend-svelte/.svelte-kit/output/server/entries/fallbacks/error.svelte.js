@@ -1,5 +1,5 @@
 import "../../chunks/async.js";
-import { e as escape_html } from "../../chunks/attributes.js";
+import { i as getContext, e as escape_html } from "../../chunks/index2.js";
 import "clsx";
 import "../../chunks/state.svelte.js";
 import "@sveltejs/kit/internal";
@@ -8,7 +8,6 @@ import "../../chunks/utils.js";
 import { w as writable } from "../../chunks/index.js";
 import "@sveltejs/kit/internal/server";
 import "../../chunks/root.js";
-import { g as getContext } from "../../chunks/index2.js";
 function create_updated_store() {
   const { set, subscribe } = writable(false);
   {

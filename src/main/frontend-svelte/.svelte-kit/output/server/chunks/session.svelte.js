@@ -1,23 +1,27 @@
 import "clsx";
 let uuid = "";
 let username = "";
-let userId = 0;
-let ownerId = 0;
+let userOid = 0;
+let isAdmin = false;
+let adminType = "none";
+let ownerOid = 0;
 let ownerName = "";
-let cleanerId = 0;
+let cleanerOid = 0;
 let email = "";
 let preferredLanguage = "en";
 let persistToStorage = true;
 const STORAGE_KEY = "kiss_session_uuid";
 const USERNAME_KEY = "kiss_session_username";
-const USERID_KEY = "kiss_session_userid";
-const OWNERID_KEY = "kiss_session_ownerid";
+const USERID_KEY = "kiss_session_useroid";
+const OWNERID_KEY = "kiss_session_owneroid";
 const OWNERNAME_KEY = "kiss_session_ownername";
-const CLEANERID_KEY = "kiss_session_cleanerid";
+const CLEANERID_KEY = "kiss_session_cleaneroid";
 const EMAIL_KEY = "kiss_session_email";
 const CREDENTIALS_KEY = "kiss_encrypted_credentials";
 const KEY_STORAGE_KEY = "kiss_encryption_key";
 const LANGUAGE_KEY = "kiss_preferred_language";
+const IS_ADMIN_KEY = "kiss_session_isadmin";
+const ADMIN_TYPE_KEY = "kiss_session_admintype";
 async function generateEncryptionKey() {
   return await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
 }
@@ -88,31 +92,61 @@ const session = {
     }
   },
   /**
-   * Get the user ID
+   * Get the user OID
    */
-  get userId() {
-    return userId;
+  get userOid() {
+    return userOid;
   },
   /**
-   * Set the user ID
+   * Set the user OID
    */
-  setUserId(id) {
-    userId = id;
+  setUserOid(id) {
+    userOid = id;
     if (typeof localStorage !== "undefined") {
       localStorage.setItem(USERID_KEY, id.toString());
     }
   },
   /**
-   * Get the owner ID
+   * Get isAdmin flag
    */
-  get ownerId() {
-    return ownerId;
+  get isAdmin() {
+    return isAdmin;
   },
   /**
-   * Set the owner ID
+   * Set isAdmin flag
    */
-  setOwnerId(id) {
-    ownerId = id;
+  setIsAdmin(admin) {
+    isAdmin = admin;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(IS_ADMIN_KEY, admin.toString());
+    }
+  },
+  /**
+   * Get admin type: 'system' (full), 'content' (no system), or 'none'
+   */
+  get adminType() {
+    return adminType;
+  },
+  /**
+   * Set admin type
+   */
+  setAdminType(type) {
+    adminType = type;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(ADMIN_TYPE_KEY, type);
+    }
+  },
+  /**
+   * Get the owner OID
+   */
+  get ownerOid() {
+    return ownerOid;
+  },
+  /**
+   * Set the owner OID
+   */
+  setOwnerOid(id) {
+    ownerOid = id;
     if (typeof localStorage !== "undefined") {
       localStorage.setItem(OWNERID_KEY, id.toString());
     }
@@ -133,16 +167,16 @@ const session = {
     }
   },
   /**
-   * Get the cleaner ID (for cleaner-specific views)
+   * Get the cleaner OID (for cleaner-specific views)
    */
-  get cleanerId() {
-    return cleanerId;
+  get cleanerOid() {
+    return cleanerOid;
   },
   /**
-   * Set the cleaner ID
+   * Set the cleaner OID
    */
-  setCleanerId(id) {
-    cleanerId = id;
+  setCleanerOid(id) {
+    cleanerOid = id;
     if (typeof localStorage !== "undefined") {
       localStorage.setItem(CLEANERID_KEY, id.toString());
     }
@@ -187,10 +221,10 @@ const session = {
   clear() {
     uuid = "";
     username = "";
-    userId = 0;
-    ownerId = 0;
+    userOid = 0;
+    ownerOid = 0;
     ownerName = "";
-    cleanerId = 0;
+    cleanerOid = 0;
     email = "";
     if (typeof localStorage !== "undefined") {
       localStorage.removeItem(STORAGE_KEY);
@@ -217,11 +251,11 @@ const session = {
       }
       const savedUserId = localStorage.getItem(USERID_KEY);
       if (savedUserId) {
-        userId = parseInt(savedUserId) || 0;
+        userOid = parseInt(savedUserId) || 0;
       }
       const savedOwnerId = localStorage.getItem(OWNERID_KEY);
       if (savedOwnerId) {
-        ownerId = parseInt(savedOwnerId) || 0;
+        ownerOid = parseInt(savedOwnerId) || 0;
       }
       const savedOwnerName = localStorage.getItem(OWNERNAME_KEY);
       if (savedOwnerName) {
@@ -229,11 +263,19 @@ const session = {
       }
       const savedCleanerId = localStorage.getItem(CLEANERID_KEY);
       if (savedCleanerId) {
-        cleanerId = parseInt(savedCleanerId) || 0;
+        cleanerOid = parseInt(savedCleanerId) || 0;
       }
       const savedEmail = localStorage.getItem(EMAIL_KEY);
       if (savedEmail) {
         email = savedEmail;
+      }
+      const savedIsAdmin = localStorage.getItem(IS_ADMIN_KEY);
+      if (savedIsAdmin) {
+        isAdmin = savedIsAdmin === "true";
+      }
+      const savedAdminType = localStorage.getItem(ADMIN_TYPE_KEY);
+      if (savedAdminType) {
+        adminType = savedAdminType;
       }
       return true;
     }

@@ -1,5 +1,11 @@
 import "../../../chunks/async.js";
-import { a as attr } from "../../../chunks/attributes.js";
+import { a as attr } from "../../../chunks/index2.js";
+import "@sveltejs/kit/internal";
+import "../../../chunks/exports.js";
+import "../../../chunks/utils.js";
+import "@sveltejs/kit/internal/server";
+import "../../../chunks/root.js";
+import "../../../chunks/state.svelte.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let loading = false;

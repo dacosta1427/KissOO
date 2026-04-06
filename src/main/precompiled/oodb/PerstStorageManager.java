@@ -95,6 +95,15 @@ public class PerstStorageManager {
             System.out.println("[PerstStorageManager] Opening CDatabase...");
             CDatabase cdb = CDatabase.instance;
             
+            // Handle re-initialization after hot-reload: CDatabase singleton persists
+            // across class reloads. If already open, reuse it.
+            if (cdb.getState() == CDatabase.State.OPEN) {
+                System.out.println("[PerstStorageManager] CDatabase already open, reusing existing instance");
+                org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
+                initialized = true;
+                return;
+            }
+            
             cdb.open(storage, indexPath);
             org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
             startOptimizerScheduler(cdb);
@@ -246,10 +255,15 @@ public class PerstStorageManager {
         if (cdb == null) return java.util.Collections.emptyList();
         
         try {
-            IterableIterator<T> results = cdb.getRecords(clazz);
-            return toList(results);
+            // select() iterates the class extent directly (not Lucene).
+            // getRecords() uses Lucene full-text search which is wrong for simple retrieval.
+            IterableIterator<T> results = cdb.select(clazz, "true");
+            java.util.List<T> list = toList(results);
+            System.out.println("[PerstStorageManager] getAll(" + clazz.getName() + ") = " + list.size());
+            return list;
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] GetAll failed: " + e.getMessage());
+            System.err.println("[PerstStorageManager] GetAll(" + clazz.getName() + ") failed: " + e.getMessage());
+            e.printStackTrace();
             return java.util.Collections.emptyList();
         }
     }
@@ -297,7 +311,10 @@ public class PerstStorageManager {
     public static TransactionContainer createContainer() {
         CDatabase cdb = getDBManager();
         if (cdb == null) return null;
-        return cdb.createContainer();
+        // Use sync container because CDatabase.open() doesn't initialize the linQueue,
+        // so async Lucene indexing is never triggered. Sync containers force immediate
+        // Lucene indexing via processLinSync().
+        return cdb.createSyncContainer();
     }
     
     public static TransactionContainer createSyncContainer() {
@@ -312,9 +329,15 @@ public class PerstStorageManager {
         
         try {
             StoreResult result = cdb.store(container);
+            if (!result.isSuccess()) {
+                System.err.println("[PerstStorageManager] Store failed: " + result.getStatus() + " - " + result.getMessage());
+            } else {
+                System.out.println("[PerstStorageManager] Store success: " + result.getStatus());
+            }
             return result.isSuccess();
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] Store failed: " + e.getMessage());
+            System.err.println("[PerstStorageManager] Store exception: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }

@@ -1,6 +1,5 @@
 import "./async.js";
-import { e as ensure_array_like, b as attr_class, c as stringify, i as bind_props } from "./index2.js";
-import { e as escape_html, a as attr } from "./attributes.js";
+import { e as escape_html, c as ensure_array_like, a as attr, f as attr_class, g as stringify, k as bind_props } from "./index2.js";
 function Form($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let {

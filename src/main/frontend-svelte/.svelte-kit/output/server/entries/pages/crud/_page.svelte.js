@@ -1,18 +1,17 @@
 import "../../../chunks/async.js";
-import { b as attr_class, h as attr_style, i as bind_props, d as derived } from "../../../chunks/index2.js";
-import { a as attr, e as escape_html } from "../../../chunks/attributes.js";
+import { f as attr_class, j as attr_style, k as bind_props, a as attr, d as derived, e as escape_html } from "../../../chunks/index2.js";
 import { S as Server } from "../../../chunks/Auth.js";
 import { o as onDestroy } from "../../../chunks/index-server.js";
 import "ag-grid-community";
 import { M as Modal } from "../../../chunks/Modal.js";
 import { F as Form } from "../../../chunks/Form.js";
 import { a as notificationActions } from "../../../chunks/stores.svelte.js";
-async function getRecords() {
-  const res = await Server.call("services.Crud", "getRecords", {});
+async function getPhones() {
+  const res = await Server.call("services.Crud", "getPhones", {});
   return res.rows || [];
 }
-async function addRecord(firstName, lastName, phoneNumber) {
-  const res = await Server.call("services.Crud", "addRecord", {
+async function createPhone(firstName, lastName, phoneNumber) {
+  const res = await Server.call("services.Crud", "createPhone", {
     firstName,
     lastName,
     phoneNumber
@@ -23,8 +22,8 @@ async function addRecord(firstName, lastName, phoneNumber) {
     id: res.id
   };
 }
-async function updateRecord(id, firstName, lastName, phoneNumber) {
-  const res = await Server.call("services.Crud", "updateRecord", {
+async function updatePhone(id, firstName, lastName, phoneNumber) {
+  const res = await Server.call("services.Crud", "updatePhone", {
     id,
     firstName,
     lastName,
@@ -134,7 +133,7 @@ function _page($$renderer, $$props) {
       dataLoading = true;
       error = "";
       try {
-        records = await getRecords();
+        records = await getPhones();
         if (gridRef) ;
       } catch (e) {
         error = "Failed to load records: " + (e.message || "Unknown error");
@@ -159,9 +158,9 @@ function _page($$renderer, $$props) {
       try {
         let res;
         if (isAddMode) {
-          res = await addRecord(data.firstName, data.lastName, data.phoneNumber);
+          res = await createPhone(data.firstName, data.lastName, data.phoneNumber);
         } else if (editingRecord) {
-          res = await updateRecord(editingRecord.id, data.firstName, data.lastName, data.phoneNumber);
+          res = await updatePhone(editingRecord.id, data.firstName, data.lastName, data.phoneNumber);
         }
         if (res && res.success) {
           notificationActions.success(isAddMode ? "Record added successfully" : "Record updated successfully");

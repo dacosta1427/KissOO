@@ -1,5 +1,5 @@
 import "../../../chunks/async.js";
-import { a as attr, e as escape_html } from "../../../chunks/attributes.js";
+import { a as attr, e as escape_html } from "../../../chunks/index2.js";
 import { M as Modal } from "../../../chunks/Modal.js";
 function _page($$renderer) {
   let textValue = "";

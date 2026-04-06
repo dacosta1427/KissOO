@@ -1,5 +1,11 @@
 import "../../../chunks/async.js";
-import { a as attr, e as escape_html } from "../../../chunks/attributes.js";
+import { a as attr, e as escape_html } from "../../../chunks/index2.js";
+import "@sveltejs/kit/internal";
+import "../../../chunks/exports.js";
+import "../../../chunks/utils.js";
+import "@sveltejs/kit/internal/server";
+import "../../../chunks/root.js";
+import "../../../chunks/state.svelte.js";
 function _page($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     $$renderer2.push(`<div class="p-6 max-w-2xl mx-auto"><h1 class="text-2xl font-bold mb-6">File Upload</h1> `);

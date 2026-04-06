@@ -1,13 +1,12 @@
 import "../../chunks/async.js";
-import { s as store_get, u as unsubscribe_stores, a as store_mutate, d as derived, e as ensure_array_like, b as attr_class, c as stringify, f as slot } from "../../chunks/index2.js";
-import { s as session } from "../../chunks/session.svelte.js";
-import { a as attr, e as escape_html } from "../../chunks/attributes.js";
+import { a as attr, e as escape_html, s as store_get, u as unsubscribe_stores, b as store_mutate, d as derived, c as ensure_array_like, f as attr_class, g as stringify, h as slot } from "../../chunks/index2.js";
 import "@sveltejs/kit/internal";
 import "../../chunks/exports.js";
 import "../../chunks/utils.js";
 import "@sveltejs/kit/internal/server";
 import "../../chunks/root.js";
 import "../../chunks/state.svelte.js";
+import { s as session } from "../../chunks/session.svelte.js";
 import { t, c as currentLocale } from "../../chunks/index3.js";
 import { o as onDestroy } from "../../chunks/index-server.js";
 import { M as Modal } from "../../chunks/Modal.js";
@@ -31,7 +30,7 @@ function Navbar($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     var $$store_subs;
     const tt = (key) => t(key, void 0, store_get($$store_subs ??= {}, "$currentLocale", currentLocale));
-    $$renderer2.push(`<header class="bg-white shadow-sm border-b"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center h-16"><div class="flex items-center"><a href="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700">KissOO Svelte 5</a></div> <nav class="hidden md:flex items-center space-x-4"><div class="flex items-center mr-2"${attr("title", session.isAuthenticated ? "Logged in" : "Not logged in")}>`);
+    $$renderer2.push(`<header class="sticky top-0 z-50 bg-white shadow-sm border-b"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center h-16"><div class="flex items-center"><a href="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700">KissOO Svelte 5</a></div> <nav class="hidden md:flex items-center space-x-4"><div class="flex items-center mr-2"${attr("title", session.isAuthenticated ? "Logged in" : "Not logged in")}>`);
     if (session.isAuthenticated) {
       $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<span class="inline-block w-3 h-3 rounded-full bg-green-500" title="Logged in"></span>`);
@@ -42,7 +41,20 @@ function Navbar($$renderer, $$props) {
     $$renderer2.push(`<!--]--></div> <a href="/" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.home"))}</a> `);
     if (session.isAuthenticated) {
       $$renderer2.push("<!--[0-->");
-      $$renderer2.push(`<a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.houses"))}</a> <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.owners"))}</a> <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.cleaners"))}</a> <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.bookings"))}</a> <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.schedules"))}</a> <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.users"))}</a> `);
+      $$renderer2.push(`<span class="text-xs text-red-500 mr-2">isAdmin=${escape_html(session.isAdmin)} ownerOid=${escape_html(session.ownerOid)} cleanerOid=${escape_html(session.cleanerOid)}</span> `);
+      if (session.isAdmin) {
+        $$renderer2.push("<!--[0-->");
+        $$renderer2.push(`<a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.houses"))}</a> <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.owners"))}</a> <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.cleaners"))}</a> <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.bookings"))}</a> <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.schedules"))}</a> <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.users"))}</a>`);
+      } else if (session.ownerOid > 0) {
+        $$renderer2.push("<!--[1-->");
+        $$renderer2.push(`<a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.houses"))}</a> <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.bookings"))}</a> <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.schedules"))}</a>`);
+      } else if (session.cleanerOid > 0) {
+        $$renderer2.push("<!--[2-->");
+        $$renderer2.push(`<a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">${escape_html(tt("nav.schedules"))}</a>`);
+      } else {
+        $$renderer2.push("<!--[-1-->");
+      }
+      $$renderer2.push(`<!--]--> `);
       LanguageSwitcher($$renderer2);
       $$renderer2.push(`<!----> <button class="text-red-600 hover:text-red-800 font-medium">${escape_html(tt("nav.logout"))}</button> <span class="text-green-600 text-sm">${escape_html(session.username || "User")}</span>`);
     } else {
