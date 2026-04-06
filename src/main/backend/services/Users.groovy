@@ -245,6 +245,8 @@ class Users {
             String token = injson.getString("token")
             String password = injson.has("password") ? injson.getString("password") : null
             
+            println "[Users] verifyEmail called with token: ${token}"
+            
             if (!token) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Verification token is required")
@@ -256,6 +258,7 @@ class Users {
             PerstUser userToVerify = null
             
             for (PerstUser user : users) {
+                println "[Users] verifyEmail: Checking user: ${user.getUsername()} token: ${user.getVerificationToken()}"
                 if (user.getVerificationToken() != null && user.getVerificationToken().equals(token)) {
                     userToVerify = user
                     break
@@ -263,13 +266,19 @@ class Users {
             }
             
             if (userToVerify == null) {
+                println "[Users] verifyEmail: No user found with token: ${token}"
                 outjson.put("_Success", false)
                 outjson.put("error", "Invalid or expired verification token")
                 return
             }
             
+            println "[Users] verifyEmail: Found user: ${userToVerify.getUsername()}"
+            
             // Verify the email
-            if (userToVerify.verifyEmail(token)) {
+            boolean verified = userToVerify.verifyEmail(token)
+            println "[Users] verifyEmail: verifyEmail result: ${verified}"
+            
+            if (verified) {
                 // If password provided, set it and enable login
                 if (password != null && !password.isEmpty()) {
                     // Use PerstUser.setPassword which uses SHA-256
@@ -318,6 +327,7 @@ class Users {
     void getUserByToken(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             String token = injson.getString("token")
+            println "[Users] getUserByToken called with token: ${token}"
             
             if (!token) {
                 outjson.put("_Success", false)
@@ -328,6 +338,7 @@ class Users {
             // Find user with this verification token
             Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
             for (PerstUser user : users) {
+                println "[Users] Checking user: ${user.getUsername()} token: ${user.getVerificationToken()}"
                 if (user.getVerificationToken() != null && user.getVerificationToken().equals(token)) {
                     // Get the user's name from their Actor
                     String actorName = ""
@@ -337,13 +348,16 @@ class Users {
                     outjson.put("_Success", true)
                     outjson.put("userName", actorName)
                     outjson.put("email", user.getEmail())
+                    println "[Users] Found user: ${user.getUsername()}, actorName: ${actorName}"
                     return
                 }
             }
             
+            println "[Users] No user found with token: ${token}"
             outjson.put("_Success", false)
             outjson.put("error", "Invalid or expired verification token")
         } catch (Exception e) {
+            println "[Users] getUserByToken error: ${e.message}"
             outjson.put("_Success", false)
             outjson.put("error", e.message)
         }

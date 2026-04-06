@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { Server } from '$lib/services/Server';
+  import { initBackend } from '$lib/api/Auth';
   import { t, currentLocale } from '$lib/i18n';
   
   const tt = (key: string) => t(key, undefined, $currentLocale);
@@ -19,6 +20,9 @@
   let username = $state('');
 
   onMount(async () => {
+    // Initialize backend first
+    initBackend();
+    
     const urlParams = new URLSearchParams(window.location.search);
     token = urlParams.get('token') || '';
     
