@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { housesAPI, ownersAPI, costProfilesAPI, type House, type Owner, type CostProfile } from '$lib/api/Cleaning';
+	import { housesAPI, ownersAPI, costProfilesAPI, bookingsAPI, type House, type Owner, type CostProfile, type Booking } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import { session } from '$lib/state/session.svelte';
 	import { t, currentLocale } from '$lib/i18n';
@@ -16,6 +16,7 @@
   let houses = $state<House[]>([]);
 	let owners = $state<Owner[]>([]);
 	let costProfiles = $state<CostProfile[]>([]);
+	let bookings = $state<Booking[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
@@ -38,6 +39,8 @@
 			houses = await housesAPI.getAll();
 			// Load cost profiles for dropdown
 			costProfiles = await costProfilesAPI.getAll();
+			// Load bookings for display
+			bookings = await bookingsAPI.getAll();
 		} catch (err: any) {
 			error = err.message || t('errors.failed_to_load');
 		} finally {
@@ -227,6 +230,10 @@
 		if (!ownerId || ownerId === 0) return t('houses.no_owner');
 		const owner = owners.find(o => o.id === ownerId);
 		return owner ? owner.name : t('houses.unknown');
+	}
+
+	function getBookingCount(houseId: number): number {
+		return bookings.filter(b => b.house_id === houseId).length;
 	}
 
 	$effect(() => {
@@ -517,6 +524,7 @@
 						{#if house.description}
 							<p class="house-description">{house.description}</p>
 						{/if}
+						<p class="house-bookings">{tt('bookings.bookings')}: {getBookingCount(house.id)}</p>
 						<div class="house-actions">
 							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); openEditForm(house); }} title={tt('hints.edit_item')}>
 								{tt('common.edit')}
