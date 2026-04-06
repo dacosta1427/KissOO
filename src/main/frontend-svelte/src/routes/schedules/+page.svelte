@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { schedulesAPI, cleanersAPI, bookingsAPI, type Schedule, type Cleaner, type Booking } from '$lib/api/Cleaning';
+	import { schedulesAPI, cleanersAPI, bookingsAPI, housesAPI, type Schedule, type Cleaner, type Booking, type House } from '$lib/api/Cleaning';
 	import { dataStores } from '../../lib/stores.svelte.js';
 	import { session } from '$lib/state/session.svelte';
 	import { notificationActions } from '$lib/stores.svelte.js';
@@ -18,11 +18,16 @@
 	let schedules = $state<Schedule[]>([]);
 	let cleaners = $state<Cleaner[]>([]);
 	let bookings = $state<Booking[]>([]);
+	let houses = $state<House[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingSchedule = $state<Schedule | null>(null);
 	let viewMode = $state<'calendar' | 'table'>('calendar');
+	
+	// Modal for showing house details to cleaner
+	let showHouseModal = $state(false);
+	let selectedHouseForModal = $state<House | null>(null);
 
 	// Form section ref for scroll on small screens
 	let formSection = $state<HTMLElement | null>(null);
@@ -93,15 +98,17 @@
 		error = null;
 
 		try {
-			const [schedulesResult, cleanersResult, bookingsResult] = await Promise.all([
+			const [schedulesResult, cleanersResult, bookingsResult, housesResult] = await Promise.all([
 				schedulesAPI.getAll({ dateRange }),
 				cleanersAPI.getAll(),
-				bookingsAPI.getAll()
+				bookingsAPI.getAll(),
+				housesAPI.getAll()
 			]);
 
 			schedules = schedulesResult;
 			cleaners = cleanersResult;
 			bookings = bookingsResult;
+			houses = housesResult;
 
 			dataStores.schedules.set(schedules);
 			dataStores.cleaners.set(cleaners);
@@ -177,6 +184,20 @@
 		};
 		showForm = true;
 		scrollToEditForm();
+	}
+
+	// For cleaner: show house details in modal
+	function showHouseDetailsForCleaner(schedule: Schedule) {
+		const booking = bookings.find(b => b.id === schedule.booking_id);
+		if (booking && booking.house_id) {
+			selectedHouseForModal = houses.find(h => h.id === booking.house_id) || null;
+			showHouseModal = true;
+		}
+	}
+
+	function closeHouseModal() {
+		showHouseModal = false;
+		selectedHouseForModal = null;
 	}
 	
 	function handleCleanerClick(cleanerId: number) {
@@ -425,15 +446,20 @@
 									<button class="btn btn-sm btn-secondary" onclick={(e) => { e.stopPropagation(); handleScheduleClick(schedule); }} title={tt('hints.edit_item')}>
 										{tt('common.edit')}
 									</button>
-								{:else if isCleaner && schedule.status !== 'completed'}
-									{#if schedule.status === 'scheduled'}
-										<button class="btn btn-sm btn-primary" onclick={(e) => { e.stopPropagation(); startCleaning(schedule); }} title={tt('schedules.start_cleaning')}>
-											{tt('schedules.start')}
+								{:else if isCleaner}
+									<button class="btn btn-sm btn-info" onclick={(e) => { e.stopPropagation(); showHouseDetailsForCleaner(schedule); }} title={tt('houses.view_house')}>
+										{tt('houses.view_house')}
+									</button>
+									{#if schedule.status !== 'completed'}
+										{#if schedule.status === 'scheduled'}
+											<button class="btn btn-sm btn-primary" onclick={(e) => { e.stopPropagation(); startCleaning(schedule); }} title={tt('schedules.start_cleaning')}>
+												{tt('schedules.start')}
+											</button>
+										{/if}
+										<button class="btn btn-sm btn-success" onclick={(e) => { e.stopPropagation(); openCompleteForm(schedule); }} title={tt('schedules.mark_complete')}>
+											{tt('schedules.complete')}
 										</button>
 									{/if}
-									<button class="btn btn-sm btn-success" onclick={(e) => { e.stopPropagation(); openCompleteForm(schedule); }} title={tt('schedules.mark_complete')}>
-										{tt('schedules.complete')}
-									</button>
 								{/if}
 							</td>
 						</tr>
@@ -475,6 +501,33 @@
 					</button>
 				</div>
 			</form>
+		</div>
+	</div>
+{/if}
+
+<!-- House Details Modal for Cleaner -->
+{#if showHouseModal && selectedHouseForModal}
+	<div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={closeHouseModal} onkeydown={(e) => e.key === 'Escape' && closeHouseModal()}>
+		<div class="modal-content" role="document" onclick={(e) => e.stopPropagation()}>
+			<h3 class="modal-title">{tt('houses.house_details')}</h3>
+			<div class="house-details">
+				<p><strong>{tt('houses.name')}:</strong> {selectedHouseForModal.name}</p>
+				<p><strong>{tt('houses.address')}:</strong> {selectedHouseForModal.address}</p>
+				<p><strong>{tt('houses.check_in_time')}:</strong> {selectedHouseForModal.check_in_time || '-'}</p>
+				<p><strong>{tt('houses.check_out_time')}:</strong> {selectedHouseForModal.check_out_time || '-'}</p>
+				<p><strong>{tt('houses.surface_m2')}:</strong> {selectedHouseForModal.surface_m2 || '-'}</p>
+				<p><strong>{tt('houses.floors')}:</strong> {selectedHouseForModal.floors || '-'}</p>
+				<p><strong>{tt('houses.bedrooms')}:</strong> {selectedHouseForModal.bedrooms || '-'}</p>
+				<p><strong>{tt('houses.bathrooms')}:</strong> {selectedHouseForModal.bathrooms || '-'}</p>
+				{#if selectedHouseForModal.description}
+					<p><strong>{tt('houses.description')}:</strong> {selectedHouseForModal.description}</p>
+				{/if}
+			</div>
+			<div class="modal-actions">
+				<button type="button" class="btn btn-secondary" onclick={closeHouseModal}>
+					{tt('common.close')}
+				</button>
+			</div>
 		</div>
 	</div>
 {/if}
