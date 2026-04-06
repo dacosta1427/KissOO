@@ -62,8 +62,8 @@
         } else {
           session.clearCredentials();
         }
-        // Refresh page to show dashboard
-        window.location.reload();
+        // Use client-side navigation to avoid page flash
+        goto(resolve('/'));
       } else {
         error = res._ErrorMessage || t('errors.login_failed');
         password = '';
