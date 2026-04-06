@@ -40,6 +40,7 @@ const STORAGE_KEY = 'kiss_session_uuid';
 const USERNAME_KEY = 'kiss_session_username';
 const USERID_KEY = 'kiss_session_useroid';
 const OWNERID_KEY = 'kiss_session_owneroid';
+const OWNERNAME_KEY = 'kiss_session_ownername';
 const CLEANERID_KEY = 'kiss_session_cleaneroid';
 const EMAIL_KEY = 'kiss_session_email';
 const CREDENTIALS_KEY = 'kiss_encrypted_credentials';
