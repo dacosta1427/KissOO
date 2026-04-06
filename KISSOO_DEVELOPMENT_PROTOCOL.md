@@ -99,6 +99,37 @@ let cleanerOid = $state(0)
 
 ## SECTION 2: MEMORY SYSTEM INTEGRATION
 
+### 2.0 Active Plan Execution (.currentPLAN/)
+
+The `.currentPLAN/` directory contains the active plan to execute NOW. Supported prefixes:
+
+| Prefix | Purpose |
+|--------|---------|
+| `FEAT_` | Feature implementation |
+| `CHG_` | Change request |
+| `PLAN_` | General plan |
+
+**Execution Flow:**
+
+```
+1. Read AP.md (this file)
+2. Read KISSOO_DEVELOPMENT_PROTOCOL.md
+3. Read all .memory/ protocol docs
+4. Check .currentPLAN/ for active plan
+5. If plan found → Execute tasks from plan
+   - Create todo_*.md from plan tasks
+   - Track progress in progress_*.md
+   - Update EXPERIENCE_LOG.md with current task
+6. If NO plan → Ask human: "What should I work on?"
+```
+
+**While Executing:**
+- Work through tasks sequentially
+- Update progress after each task
+- Mark tasks complete: `- [x]`
+- If blocked → escalate to human
+- When plan complete → move to REQUESTS/ as COMPLETED
+
 ### 2.1 Document Structure
 
 Maintain these documents in a `.memory/` folder:
