@@ -7,6 +7,7 @@
 
 import { Server } from '$lib/services/Server';
 import { session } from '$lib/state/session';
+import { goto } from '$app/navigation';
 
 export interface LoginResult {
   _Success: boolean;
@@ -81,6 +82,9 @@ export async function logout(): Promise<void> {
   }
   session.clear();
   session.clearCredentials(); // Clear encrypted credentials
+  
+  // Redirect to home page
+  goto('/');
 }
 
 /**
