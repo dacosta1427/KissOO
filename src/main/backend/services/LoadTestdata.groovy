@@ -8,6 +8,12 @@ import oodb.PerstStorageManager
 import mycompany.domain.PerstUser
 import mycompany.domain.Owner
 import mycompany.domain.House
+import mycompany.domain.Cleaner
+import mycompany.domain.Booking
+import mycompany.domain.Schedule
+import java.util.Collections
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import mycompany.domain.Booking
 import mycompany.domain.Cleaner
 import mycompany.domain.Schedule
@@ -181,32 +187,30 @@ class LoadTestdata {
             results.owners = "created ${owners.size()}"
             println "[LoadTestdata] Created ${owners.size()} owners"
             
-            // Create 15 Houses with proper Owner references
+            // Create 15 Houses (initially without owners)
             def houseData = [
-                [name: 'Strandhuis Zandvoort', desc: 'Beach house with sea view', ownerIdx: 0],
-                [name: 'Stadswoning Amsterdam', desc: 'Modern city apartment', ownerIdx: 1],
-                [name: 'Boerderij Limburg', desc: 'Rural farmhouse', ownerIdx: 2],
-                [name: 'Appartement Rotterdam', desc: 'Downtown apartment', ownerIdx: 3],
-                [name: 'Villa Den Haag', desc: 'Luxury villa with pool', ownerIdx: 4],
-                [name: 'Chalet Ski', desc: 'Mountain chalet', ownerIdx: 5],
-                [name: 'Kamphuisje Texel', desc: 'Cozy island house', ownerIdx: 6],
-                [name: 'Grachtenpand Utrecht', desc: 'Historic canal house', ownerIdx: 7],
-                [name: 'Bungalow Eelde', desc: 'Forest bungalow', ownerIdx: 8],
-                [name: 'Herenhuis Groningen', desc: 'Mansion in city center', ownerIdx: 9],
-                [name: 'Duinwoning Bloemendaal', desc: 'Dune cottage', ownerIdx: 0],
-                [name: 'Loft Eindhoven', desc: 'Industrial loft', ownerIdx: 1],
-                [name: 'Serre Delft', desc: 'Glass house', ownerIdx: 2],
-                [name: 'Molenhuis Friesland', desc: 'Traditional mill house', ownerIdx: 3],
-                [name: 'Watervilla Almere', desc: 'Floating house', ownerIdx: 4]
+                [name: 'Strandhuis Zandvoort', desc: 'Beach house with sea view'],
+                [name: 'Stadswoning Amsterdam', desc: 'Modern city apartment'],
+                [name: 'Boerderij Limburg', desc: 'Rural farmhouse'],
+                [name: 'Appartement Rotterdam', desc: 'Downtown apartment'],
+                [name: 'Villa Den Haag', desc: 'Luxury villa with pool'],
+                [name: 'Chalet Ski', desc: 'Mountain chalet'],
+                [name: 'Kamphuisje Texel', desc: 'Cozy island house'],
+                [name: 'Grachtenpand Utrecht', desc: 'Historic canal house'],
+                [name: 'Bungalow Eelde', desc: 'Forest bungalow'],
+                [name: 'Herenhuis Groningen', desc: 'Mansion in city center'],
+                [name: 'Duinwoning Bloemendaal', desc: 'Dune cottage'],
+                [name: 'Loft Eindhoven', desc: 'Industrial loft'],
+                [name: 'Serre Delft', desc: 'Glass house'],
+                [name: 'Molenhuis Friesland', desc: 'Traditional mill house'],
+                [name: 'Watervilla Almere', desc: 'Floating house']
             ]
             
             def houses = []
             def houseTc = PerstStorageManager.createContainer()
             houseData.each { d ->
                 try {
-                    def owner = owners[d.ownerIdx]
                     def house = new House(d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true)
-                    house.setOwner(owner)
                     houseTc.addInsert(house)
                     houses << house
                 } catch (Exception e) {
@@ -216,7 +220,57 @@ class LoadTestdata {
             }
             PerstStorageManager.store(houseTc)
             results.houses = "created ${houses.size()}"
-            println "[LoadTestdata] Created ${houses.size()} houses"
+            println "[LoadTestdata] Created ${houses.size()} houses (unassigned)"
+            
+            // Randomly assign 1-5 houses to each owner
+            // Ensure EVERY owner has at least 1 house
+            if (houses != null && houses.size() > 0 && owners != null && owners.size() > 0) {
+                // Shuffle houses using simple randomization
+                def houseList = houses as List
+                Collections.shuffle(houseList)
+                def shuffledHouses = houseList
+                def houseAssignmentTc = PerstStorageManager.createContainer()
+                
+                // First, give each owner exactly 1 house (ensures min 1)
+                for (int i = 0; i < owners.size(); i++) {
+                    if (i < shuffledHouses.size()) {
+                        def house = shuffledHouses[i]
+                        def owner = owners[i]
+                        house.setOwner(owner)
+                        houseAssignmentTc.addUpdate(house)
+                        println "[LoadTestdata] Assigned house ${house.getName()} to owner ${owner.getName()}"
+                    }
+                }
+                
+                // Randomly distribute remaining houses (0-4 more per owner)
+                if (shuffledHouses.size() > owners.size()) {
+                    for (int i = owners.size(); i < shuffledHouses.size(); i++) {
+                        def house = shuffledHouses[i]
+                        // Randomly pick an owner
+                        def randomOwnerIdx = (int)(Math.random() * owners.size())
+                        def randomOwner = owners[randomOwnerIdx]
+                        house.setOwner(randomOwner)
+                        houseAssignmentTc.addUpdate(house)
+                        println "[LoadTestdata] Randomly assigned house ${house.getName()} to owner ${randomOwner.getName()}"
+                    }
+                }
+                
+                // Store all house-owner assignments
+                try {
+                    def updates = houseAssignmentTc.getUpdates()
+                    if (updates != null && updates.size() > 0) {
+                        PerstStorageManager.store(houseAssignmentTc)
+                    }
+                } catch (Exception e) {
+                    println "[LoadTestdata] Error storing house assignments: ${e.message}"
+                }
+                
+                // Verify each owner has at least one house
+                for (def owner : owners) {
+                    def ownerHouses = houseList.findAll { h -> h.getOwner() != null && h.getOwner().getOid() == owner.getOid() }
+                    println "[LoadTestdata] Owner ${owner.getName()} has ${ownerHouses.size()} house(s)"
+                }
+            }
             
             // Create 6 Cleaners
             def cleanerData = [
