@@ -12,7 +12,7 @@
 
   // Check if user is admin or cleaner
   let isAdmin = $derived(session.username === 'admin' || session.username === 'administrator');
-  let isCleaner = $derived(!isAdmin && session.cleanerId > 0);
+  let isCleaner = $derived(!isAdmin && session.cleanerOid > 0);
 
   // Svelte 5: Use $state for reactive variables
 	let schedules = $state<Schedule[]>([]);
@@ -76,10 +76,8 @@
 		selectedCleanerId ? (cleaners.find(c => c.id === selectedCleanerId)?.name || '') : ''
 	);
 	
-	// Filtered schedules for cleaner view (only show own schedules)
-	let filteredSchedules = $derived(
-		isAdmin ? schedules : schedules.filter(s => s.cleaner_id === session.cleanerId)
-	);
+	// Filtered schedules - backend already filters by actor, just use all
+	let filteredSchedules = $derived(schedules);
 
 	// Handle booking selection - auto-fill date with check_out_date
 	function handleBookingChange(bookingId: string) {

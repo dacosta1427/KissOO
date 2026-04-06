@@ -21,8 +21,8 @@
   let isAdmin = $derived(session.isAdmin === true);
   let isSystemAdmin = $derived(isAdmin && session.adminType === 'system');
   let isContentAdmin = $derived(isAdmin && session.adminType === 'content');
-  let isOwner = $derived(!isAdmin && session.ownerId > 0);
-  let isCleaner = $derived(!isAdmin && !isOwner && session.cleanerId > 0);
+  let isOwner = $derived(!isAdmin && session.ownerOid > 0);
+  let isCleaner = $derived(!isAdmin && !isOwner && session.cleanerOid > 0);
   
   // Test data loading state
   let loadingData = $state(false);

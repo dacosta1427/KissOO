@@ -55,7 +55,7 @@ class Login {
             PerstUserManager.update(perstUser)
             
             // Add user info to outjson - ALL OIDs for consistency
-            outjson.put("userId", perstUser.getOid())
+            outjson.put("userOid", perstUser.getOid())
             outjson.put("username", perstUser.getUsername())
             outjson.put("email", perstUser.getEmail() ?: "")
             outjson.put("preferredLanguage", perstUser.getPreferredLanguage() ?: "en")
@@ -64,25 +64,25 @@ class Login {
             def actor = perstUser.getActor()
             Owner owner = (actor instanceof Owner) ? (Owner) actor : null
             if (owner != null) {
-                outjson.put("ownerId", owner.getOid())
+                outjson.put("ownerOid", owner.getOid())
                 outjson.put("ownerName", owner.getName() ?: "")
             } else {
-                outjson.put("ownerId", 0)
+                outjson.put("ownerOid", 0)
                 outjson.put("ownerName", "")
             }
             
             // Add cleaner OID if user is also a cleaner
-            long cleanerId = 0
+            long cleanerOid = 0
             if (actor != null) {
                 try {
                     if (actor instanceof mycompany.domain.Cleaner) {
-                        cleanerId = actor.getOid()
+                        cleanerOid = actor.getOid()
                     }
                 } catch (Exception e) {
                     // Ignore
                 }
             }
-            outjson.put("cleanerId", cleanerId)
+            outjson.put("cleanerOid", cleanerOid)
             
             // Determine admin role from Actor's Agreement
             String role = null

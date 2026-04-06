@@ -17,21 +17,21 @@ import java.time.format.DateTimeFormatter
 
 class LoadTestdata {
 
-    private boolean isSystemAdmin(JSONObject injson) {
+    private boolean isSystemAdmin(ProcessServlet servlet) {
         try {
-            if (injson.has("_isAdmin") && injson.getBoolean("_isAdmin")) {
-                if (injson.has("_adminType") && injson.getString("_adminType") == "system") {
-                    return true
-                }
-            }
-            return false
+            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
+            if (pu == null) return false
+            def actor = pu.getActor()
+            if (actor == null) return false
+            def role = actor.getAgreement()?.getRole()
+            return "superAdmin".equals(role)
         } catch (Exception e) { 
             return false 
         }
     }
     
-    private void checkSystemAdmin(JSONObject injson, String operation) {
-        if (!isSystemAdmin(injson)) {
+    private void checkSystemAdmin(ProcessServlet servlet, String operation) {
+        if (!isSystemAdmin(servlet)) {
             throw new Exception("System admin access required for: " + operation)
         }
     }
@@ -96,7 +96,7 @@ class LoadTestdata {
     
     void load(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            checkSystemAdmin(injson, "load")
+            checkSystemAdmin(servlet, "load")
             
             println "[LoadTestdata] Starting test data load..."
             
@@ -321,7 +321,7 @@ class LoadTestdata {
     
     void clear(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            checkSystemAdmin(injson, "clear")
+            checkSystemAdmin(servlet, "clear")
             
             if (!PerstStorageManager.isAvailable()) {
                 outjson.put("_Success", false)

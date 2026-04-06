@@ -18,28 +18,28 @@ import mycompany.domain.Owner
  */
 class Users {
 
-    private boolean isSystemAdmin(JSONObject injson) {
+    private boolean isSystemAdmin(ProcessServlet servlet) {
         try {
-            if (injson.has("_isAdmin") && injson.getBoolean("_isAdmin")) {
-                if (injson.has("_adminType") && injson.getString("_adminType") == "system") {
-                    return true
-                }
-            }
-            return false
+            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
+            if (pu == null) return false
+            def actor = pu.getActor()
+            if (actor == null) return false
+            def role = actor.getAgreement()?.getRole()
+            return "superAdmin".equals(role)
         } catch (Exception e) {
             return false
         }
     }
 
-    private void checkSystemAdmin(JSONObject injson, String operation) {
-        if (!isSystemAdmin(injson)) {
+    private void checkSystemAdmin(ProcessServlet servlet, String operation) {
+        if (!isSystemAdmin(servlet)) {
             throw new Exception("System admin access required for: " + operation)
         }
     }
 
     void getUsers(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            checkSystemAdmin(injson, "getUsers")
+            checkSystemAdmin(servlet, "getUsers")
 
             Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
             JSONArray rows = new JSONArray()
@@ -71,7 +71,7 @@ class Users {
 
     void createUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            checkSystemAdmin(injson, "createUser")
+            checkSystemAdmin(servlet, "createUser")
             
             // Using PerstStorageManager directly
             String userName = injson.getString("userName")
@@ -136,7 +136,7 @@ class Users {
 
     void updateUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            checkSystemAdmin(injson, "updateUser")
+            checkSystemAdmin(servlet, "updateUser")
             
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
@@ -165,7 +165,7 @@ class Users {
 
     void deleteUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            checkSystemAdmin(injson, "deleteUser")
+            checkSystemAdmin(servlet, "deleteUser")
             
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
@@ -407,7 +407,7 @@ class Users {
     
     void toggleUserLogin(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            checkSystemAdmin(injson, "toggleUserLogin")
+            checkSystemAdmin(servlet, "toggleUserLogin")
             
             long oid = injson.getLong("id")
             boolean canLogin = injson.getBoolean("canLogin")

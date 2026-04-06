@@ -12,21 +12,21 @@ let uuid = $state('');
 // Username - stored for admin detection
 let username = $state('');
 
-// User ID - stored for user operations
-let userId = $state(0);
+// User OID - stored for user operations
+let userOid = $state(0);
 
 // Is Admin - for admin-only operations
 let isAdmin = $state(false);
 let adminType = $state<'system' | 'content' | 'none'>('none');
 
-// Owner ID - stored for owner-specific operations (user is also an owner)
-let ownerId = $state(0);
+// Owner OID - stored for owner-specific operations (user is also an owner)
+let ownerOid = $state(0);
 
 // Owner name - for display purposes
 let ownerName = $state('');
 
-// Cleaner ID - for cleaner-specific views (if user is a cleaner)
-let cleanerId = $state(0);
+// Cleaner OID - for cleaner-specific views (if user is a cleaner)
+let cleanerOid = $state(0);
 
 // Email - for display and verification
 let email = $state('');
@@ -38,10 +38,9 @@ let preferredLanguage = $state('en');
 let persistToStorage = true;
 const STORAGE_KEY = 'kiss_session_uuid';
 const USERNAME_KEY = 'kiss_session_username';
-const USERID_KEY = 'kiss_session_userid';
-const OWNERID_KEY = 'kiss_session_ownerid';
-const OWNERNAME_KEY = 'kiss_session_ownername';
-const CLEANERID_KEY = 'kiss_session_cleanerid';
+const USERID_KEY = 'kiss_session_useroid';
+const OWNERID_KEY = 'kiss_session_owneroid';
+const CLEANERID_KEY = 'kiss_session_cleaneroid';
 const EMAIL_KEY = 'kiss_session_email';
 const CREDENTIALS_KEY = 'kiss_encrypted_credentials';
 const KEY_STORAGE_KEY = 'kiss_encryption_key';
@@ -160,17 +159,17 @@ export const session = {
   },
   
   /**
-   * Get the user ID
+   * Get the user OID
    */
-  get userId(): number {
-    return userId;
+  get userOid(): number {
+    return userOid;
   },
-  
+
   /**
-   * Set the user ID
+   * Set the user OID
    */
-  setUserId(id: number): void {
-    userId = id;
+  setUserOid(id: number): void {
+    userOid = id;
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(USERID_KEY, id.toString());
     }
@@ -211,17 +210,17 @@ export const session = {
   },
   
   /**
-   * Get the owner ID
+   * Get the owner OID
    */
-  get ownerId(): number {
-    return ownerId;
+  get ownerOid(): number {
+    return ownerOid;
   },
-  
+
   /**
-   * Set the owner ID
+   * Set the owner OID
    */
-  setOwnerId(id: number): void {
-    ownerId = id;
+  setOwnerOid(id: number): void {
+    ownerOid = id;
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(OWNERID_KEY, id.toString());
     }
@@ -245,17 +244,17 @@ export const session = {
   },
   
   /**
-   * Get the cleaner ID (for cleaner-specific views)
+   * Get the cleaner OID (for cleaner-specific views)
    */
-  get cleanerId(): number {
-    return cleanerId;
+  get cleanerOid(): number {
+    return cleanerOid;
   },
-  
+
   /**
-   * Set the cleaner ID
+   * Set the cleaner OID
    */
-  setCleanerId(id: number): void {
-    cleanerId = id;
+  setCleanerOid(id: number): void {
+    cleanerOid = id;
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(CLEANERID_KEY, id.toString());
     }
@@ -305,10 +304,10 @@ export const session = {
   clear(): void {
     uuid = '';
     username = '';
-    userId = 0;
-    ownerId = 0;
+    userOid = 0;
+    ownerOid = 0;
     ownerName = '';
-    cleanerId = 0;
+    cleanerOid = 0;
     email = '';
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY);
@@ -338,16 +337,16 @@ export const session = {
         username = savedUsername;
       }
       
-      // Restore userId if available
+      // Restore userOid if available
       const savedUserId = localStorage.getItem(USERID_KEY);
       if (savedUserId) {
-        userId = parseInt(savedUserId) || 0;
+        userOid = parseInt(savedUserId) || 0;
       }
       
-      // Restore ownerId if available
+      // Restore ownerOid if available
       const savedOwnerId = localStorage.getItem(OWNERID_KEY);
       if (savedOwnerId) {
-        ownerId = parseInt(savedOwnerId) || 0;
+        ownerOid = parseInt(savedOwnerId) || 0;
       }
       
       // Restore ownerName if available
@@ -356,10 +355,10 @@ export const session = {
         ownerName = savedOwnerName;
       }
       
-      // Restore cleanerId if available
+      // Restore cleanerOid if available
       const savedCleanerId = localStorage.getItem(CLEANERID_KEY);
       if (savedCleanerId) {
-        cleanerId = parseInt(savedCleanerId) || 0;
+        cleanerOid = parseInt(savedCleanerId) || 0;
       }
       
       // Restore email if available

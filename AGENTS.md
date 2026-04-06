@@ -391,7 +391,118 @@ These are **Kiss framework core files**. When updating from upstream Kiss framew
 
 **Alternative:** Implement a custom CORS filter that reads from `application.ini` (future improvement).
 
-## Session Protocols
+## Session and OO Data Access Pattern
+
+### Why Pass Only UUID, Not IDs?
+
+The session already contains all the information needed. Here's how it works:
+
+**Login flow:**
+1. User logs in with username/password
+2. Login.groovy creates a PerstUser and stores it in UserData: `ud.putUserData("perstUser", perstUser)`
+3. UserData is stored in UserCache, keyed by UUID
+4. UUID is sent with every request as `_uuid`
+
+**Service call flow:**
+1. Request comes with `_uuid` 
+2. ProcessServlet finds the UserData via `UserCache.findUser(uuid)`
+3. Service gets the actor via: `((PerstUser) servlet.getUserData("perstUser")).getActor()`
+
+**Key insight:** The UUID uniquely identifies a session, which contains ONE user. There's no need to pass `_ownerId`, `_cleanerId`, `_isAdmin` separately - all that info is already in the PerstUser → Actor relationship.
+
+### No-ID Pattern (Pure OO)
+
+**OLD (SQL-style - WRONG):**
+```typescript
+// Frontend passes IDs
+housesAPI.getByOwner(ownerId)
+
+// Backend receives ID and filters by it
+if (injson.has("_ownerId")) { filter by ownerId }
+```
+
+**NEW (OO-style - CORRECT):**
+```typescript
+// Frontend just calls getAll(), backend filters by actor relationship
+housesAPI.getAll()
+
+// Backend gets actor from session and uses OO navigation
+def actor = pu.getActor()  // PerstUser → Actor
+return actor.getHouses()   // Actor → Houses (pure OO!)
+```
+
+### Implementation
+
+#### Frontend: Remove redundant ID params
+In `Server.ts`, remove these from request:
+- `_ownerId`
+- `_cleanerId`  
+- `_isAdmin`
+
+Keep only `_uuid` - the session UUID is sufficient.
+
+#### Backend: Get actor from session
+In services (Cleaning.groovy, Users.groovy, etc.):
+
+```groovy
+// OLD (SQL-style):
+boolean isAdmin = injson.has("_isAdmin") && injson.getBoolean("_isAdmin")
+long ownerId = injson.has("_ownerId") ? injson.getLong("_ownerId") : 0
+
+// NEW (OO-style):
+PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
+def actor = pu.getActor()
+boolean isAdmin = actor?.getAgreement()?.getRole() in ["admin", "superAdmin"]
+```
+
+#### Data filtering by role
+
+**Admin sees everything:**
+```groovy
+if (isAdmin) {
+    return PerstStorageManager.getAll(House.class)
+}
+```
+
+**Owner/Cleaner sees their own:**
+```groovy
+// Pure OO - no ID parameters needed!
+return actor.getHouses()
+return actor.getBookings()
+return actor.getSchedules()
+```
+
+### Field Naming Convention
+
+**Always use OID suffix for object references:**
+- `ownerOid` - OID of an Owner
+- `cleanerOid` - OID of a Cleaner  
+- `userOid` - OID of a PerstUser
+- `houseOid` - OID of a House
+
+**NEVER use ID suffix** - that suggests SQL auto-increment IDs which don't exist in Perst.
+
+### Why getUserData("perstUser")?
+
+The `servlet.getUserData("perstUser")` pattern exists because:
+1. UserData is per-session (one per UUID)
+2. It stores the PerstUser object directly (not just an OID)
+3. This avoids repeated database lookups
+
+The PerstUser is stored once at login time and reused for the lifetime of the session.
+
+### Future Enhancement
+
+Could add a convenience method to ProcessServlet:
+```groovy
+// Current:
+def actor = ((PerstUser) servlet.getUserData("perstUser")).getActor()
+
+// Future (cleaner):
+def actor = servlet.getActor()  // one-liner
+```
+
+For now, keep the explicit pattern as it's clear and self-documenting.
 
 ### Recording Knowledge
 - All lessons learned and discoveries during development should be documented

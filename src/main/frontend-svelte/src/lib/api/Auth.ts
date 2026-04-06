@@ -11,12 +11,12 @@ import { session } from '$lib/state/session';
 export interface LoginResult {
   _Success: boolean;
   uuid?: string;
-  userId?: number;
+  userOid?: number;
   isAdmin?: boolean;
   adminType?: 'system' | 'content' | 'none';
-  ownerId?: number;
+  ownerOid?: number;
   ownerName?: string;
-  cleanerId?: number;
+  cleanerOid?: number;
   email?: string;
   preferredLanguage?: string;
   _ErrorMessage?: string;
@@ -41,8 +41,8 @@ export async function login(usernameInput: string, password: string): Promise<Lo
     Server.setUUID(res.uuid);
     
     // Store user info from response
-    if (res.userId) {
-      session.setUserId(res.userId);
+    if (res.userOid) {
+      session.setUserOid(res.userOid);
     }
     if (res.isAdmin) {
       session.setIsAdmin(res.isAdmin);
@@ -50,14 +50,14 @@ export async function login(usernameInput: string, password: string): Promise<Lo
     if (res.adminType) {
       session.setAdminType(res.adminType);
     }
-    if (res.ownerId) {
-      session.setOwnerId(res.ownerId);
+    if (res.ownerOid) {
+      session.setOwnerOid(res.ownerOid);
     }
     if (res.ownerName) {
       session.setOwnerName(res.ownerName);
     }
-    if (res.cleanerId) {
-      session.setCleanerId(res.cleanerId);
+    if (res.cleanerOid) {
+      session.setCleanerOid(res.cleanerOid);
     }
     if (res.email) {
       session.setEmail(res.email);

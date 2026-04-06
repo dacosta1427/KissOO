@@ -50,20 +50,15 @@ export class Server {
 
     await Server.checkTime();
 
-    // Add required parameters
+    // Add required parameters - only _uuid is needed, backend gets actor from session
     const payload = {
       ...injson,
       _uuid: Server.uuid,
       _method: meth,
-      _class: cls,
-      // Add role info for authorization
-      _isAdmin: session.isAdmin,
-      _adminType: session.adminType,
-      _ownerId: session.ownerId,
-      _cleanerId: session.cleanerId
+      _class: cls
     };
     if (cls === 'services.Cleaning') {
-      console.log('[Server] Cleaning service call:', meth, 'UUID:', Server.uuid, 'isAdmin:', session.isAdmin);
+      console.log('[Server] Cleaning service call:', meth, 'UUID:', Server.uuid);
     }
 
     try {

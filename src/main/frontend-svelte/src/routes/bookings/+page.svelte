@@ -37,7 +37,7 @@
 	}
 	
 	// Get user's house IDs for filtering
-	let userHouseIds = $derived(houses.filter(h => h.owner_id === session.ownerId).map(h => h.id));
+	let userHouseIds = $derived(houses.filter(h => h.owner_id === session.ownerOid).map(h => h.id));
 	
 	// Filtered bookings based on user role
 	let filteredBookings = $derived(

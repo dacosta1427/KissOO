@@ -43,24 +43,43 @@
         </a>
         
         {#if session.isAuthenticated}
-          <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">
-            {tt('nav.houses')}
-          </a>
-          <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">
-            {tt('nav.owners')}
-          </a>
-          <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">
-            {tt('nav.cleaners')}
-          </a>
-          <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">
-            {tt('nav.bookings')}
-          </a>
-          <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">
-            {tt('nav.schedules')}
-          </a>
-          <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">
-            {tt('nav.users')}
-          </a>
+          <!-- Admin sees all links -->
+          {#if session.isAdmin}
+            <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.houses')}
+            </a>
+            <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.owners')}
+            </a>
+            <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.cleaners')}
+            </a>
+            <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.bookings')}
+            </a>
+            <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.schedules')}
+            </a>
+            <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.users')}
+            </a>
+          <!-- Owner sees their own houses, bookings, schedules -->
+          {:else if session.ownerOid > 0}
+            <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.houses')}
+            </a>
+            <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.bookings')}
+            </a>
+            <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.schedules')}
+            </a>
+          <!-- Cleaner sees their own schedules -->
+          {:else if session.cleanerOid > 0}
+            <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">
+              {tt('nav.schedules')}
+            </a>
+          {/if}
           
           <LanguageSwitcher />
           

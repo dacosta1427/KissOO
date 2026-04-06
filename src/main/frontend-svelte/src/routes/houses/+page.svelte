@@ -9,6 +9,8 @@
 
   // Check if user is admin
   let isAdmin = $derived(session.isAdmin === true);
+  // Check if user is owner (not admin)
+  let isOwner = $derived(!isAdmin && session.ownerOid > 0);
 
   let houses = $state<House[]>([]);
 	let owners = $state<Owner[]>([]);
@@ -25,10 +27,20 @@
 	// Form section ref for scroll on small screens
 	let formSection = $state<HTMLElement | null>(null);
 
-	function scrollToEditForm() {
-		// Scroll to edit form on small screens (mobile/tablet)
-		if (window.innerWidth < 1024 && formSection) {
-			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	// Load houses - backend now filters by actor automatically
+	async function loadHouses() {
+		loading = true;
+		error = null;
+
+		try {
+			// Backend filters based on session actor (admin sees all, owner sees theirs)
+			houses = await housesAPI.getAll();
+			// Load cost profiles for dropdown
+			costProfiles = await costProfilesAPI.getAll();
+		} catch (err: any) {
+			error = err.message || t('errors.failed_to_load');
+		} finally {
+			loading = false;
 		}
 	}
 
@@ -54,25 +66,8 @@
 		address: ''
 	});
 
-	// Filtered houses based on user role
-	let filteredHouses = $derived(
-		isAdmin ? houses : houses.filter(h => h.owner === session.ownerId)
-	);
-
-	async function loadHouses() {
-		loading = true;
-		error = null;
-
-		try {
-			houses = await housesAPI.getAll();
-			// Load cost profiles for dropdown
-			costProfiles = await costProfilesAPI.getAll();
-		} catch (err: any) {
-			error = err.message || t('errors.failed_to_load');
-		} finally {
-			loading = false;
-		}
-	}
+	// Filtered houses - backend already filters, but keep for consistency
+	let filteredHouses = $derived(houses);
 
 	async function loadOwners() {
 		try {
@@ -88,7 +83,14 @@
 			houses[idx] = { ...houses[idx], active };
 		}
 		try {
-			await housesAPI.toggleActive(id, active);
+			const updated = await housesAPI.toggleActive(id, active);
+			// Update with server response (authoritative state)
+			if (updated && updated.id) {
+				const updateIdx = houses.findIndex(h => h.id === updated.id);
+				if (updateIdx >= 0) {
+					houses[updateIdx] = { ...houses[updateIdx], active: updated.active };
+				}
+			}
 		} catch (err: any) {
 			if (idx >= 0) {
 				houses[idx] = { ...houses[idx], active: !active };
