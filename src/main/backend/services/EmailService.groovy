@@ -156,10 +156,10 @@ class EmailService {
         String subject = "Verify your email"
         String body = String.format(
             "Hello %s,\n\n" +
-            "Thank you for signing up. Please verify your email by clicking the link below:\n\n" +
+            "Your account has been created. Please verify your email by clicking the link below:\n\n" +
             "%s\n\n" +
             "This link expires in 24 hours.\n\n" +
-            "If you did not sign up, please ignore this email.\n\n" +
+            "If you did not request this account, please ignore this email.\n\n" +
             "Best regards,\n" +
             "The KISS Team",
             name, link
