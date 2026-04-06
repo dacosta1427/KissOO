@@ -2,7 +2,8 @@
 	import { housesAPI, ownersAPI, costProfilesAPI, type House, type Owner, type CostProfile } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import { session } from '$lib/state/session.svelte';
-  import { t, currentLocale } from '$lib/i18n';
+	import { t, currentLocale } from '$lib/i18n';
+	import { goto } from '$app/navigation';
   
   // Reactive translation helper
   const tt = (key: string) => t(key, undefined, $currentLocale);
@@ -519,6 +520,9 @@
 						<div class="house-actions">
 							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); openEditForm(house); }} title={tt('hints.edit_item')}>
 								{tt('common.edit')}
+							</button>
+							<button class="btn btn-primary btn-sm" onclick={(e) => { e.stopPropagation(); goto('/bookings?newBooking=true&houseId=' + house.id); }} title={tt('bookings.add_booking')}>
+								{tt('bookings.add_booking')}
 							</button>
 							<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); handleDelete(house); }} title={tt('hints.delete_item')}>
 								{tt('common.delete')}

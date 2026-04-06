@@ -6,6 +6,7 @@
 	import Form from '$lib/components/Form.svelte';
   import { t, currentLocale } from '$lib/i18n';
   import { toInputDateFormat, toBackendDateFormat, toDisplayDateFormat } from '$lib/utils/Utils';
+  import { page } from '$app/stores';
   
   // Reactive translation helper
   const tt = (key: string) => t(key, undefined, $currentLocale);
@@ -228,6 +229,31 @@
 	// Svelte 5: Use $effect for lifecycle management
 	$effect(() => {
 		loadData();
+		
+		// Check for newBooking URL param - pre-select house and open form
+		const urlParams = new URLSearchParams(window.location.search);
+		const newBooking = urlParams.get('newBooking');
+		const houseIdParam = urlParams.get('houseId');
+		
+		if (newBooking === 'true' && houseIdParam) {
+			const houseId = parseInt(houseIdParam);
+			// Find the house and pre-select it
+			const house = houses.find(h => h.id === houseId);
+			if (house) {
+				// Find owner of this house and select it
+				const ownerId = house.owner;
+				if (ownerId) {
+					selectedOwnerId = ownerId;
+					// Update house options for this owner
+					const ownerHouses = houses.filter(h => h.owner === ownerId);
+					bookingFields[1].options = ownerHouses.map(h => ({ value: h.id, label: h.name }));
+					// Pre-fill form with house
+					setTimeout(() => {
+						showForm = true;
+					}, 100);
+				}
+			}
+		}
 	});
 </script>
 
