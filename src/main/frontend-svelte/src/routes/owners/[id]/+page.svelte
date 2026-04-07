@@ -8,8 +8,12 @@
 
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
-	let ownerId = $derived(parseInt($page.params.id));
-	console.log('[owners/[id]] OWNER ID:', ownerId);
+	let ownerId = $derived.by(() => {
+		const p = $page;
+		const id = p.params.id;
+		console.log('[owners/[id]] $page.params.id:', id);
+		return id ? parseInt(id) : NaN;
+	});
 	let owner = $state<Owner | null>(null);
 	let houses = $state<House[]>([]);
 	let loading = $state(true);
@@ -34,13 +38,14 @@
 			}
 			
 			const allHouses = await housesAPI.getAll();
-			houses = allHouses.filter(h => h.owner_id === ownerId);
+			console.log('[owners/[id]] allHouses:', allHouses.map(h => ({id: h.id, owner: h.owner})));
+			houses = allHouses.filter(h => h.owner === ownerId);
 			
 			for (const house of houses) {
-				const bookings = await bookingsByHouseAPI.get(house.id);
+				const bookings = await bookingsByHouseAPI.getByHouse(house.id);
 				const bws: BookingWithSchedules[] = [];
 				for (const booking of bookings) {
-					const schedules = await schedulesByBookingAPI.get(booking.id);
+					const schedules = await schedulesByBookingAPI.getByBooking(booking.id);
 					bws.push({ booking, schedules });
 				}
 				houseData.set(house.id, bws);

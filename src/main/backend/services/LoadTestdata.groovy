@@ -215,6 +215,7 @@ class LoadTestdata {
                 houseData.each { d ->
                     try {
                         def randomOwner = owners[new Random().nextInt(owners.size())]
+                        println "[LoadTestdata] Assigning house ${d.name} to owner ${randomOwner.getName()} (OID: ${randomOwner.getOid()})"
                         def house = new House(d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true, randomOwner)
                         houseTc.addInsert(house)
                         houses << house
