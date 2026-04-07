@@ -35,6 +35,8 @@
 | OO-001 | Use object.getXxxOid() not getXxxId() | Domain classes | |
 | OO-002 | Add collections to domain for bidirectional navigation | Owner, Cleaner, House | |
 | OO-003 | Use select() not getRecords() for retrieval | Services | |
+| SV5-001 | Use [id] folder notation for detail routes | Frontend routes | 2026-04-07 |
+| SV5-002 | Use goto() from $app/navigation for routing | Frontend routes | 2026-04-07 |
 
 ## Anti-Patterns
 
@@ -52,6 +54,31 @@
 - **Alternative:** Backend derives from session
 - **Related Pitfalls:** PIT-XXX (parameter pollution)
 
+## Svelte 5 Routing Patterns
+
+### Dynamic Detail Routes
+```bash
+# Folder structure
+/routes/owners/+page.svelte      # list
+/routes/owners/[id]/+page.svelte  # detail
+
+# Navigation in list page
+import { goto } from '$app/navigation';
+
+function openDetail(item: Item) {
+    goto('/owners/' + item.id);  // URL: /owners/123
+}
+
+# Reading ID in detail page
+import { page } from '$app/stores';
+let id = $derived(parseInt($page.params.id));
+```
+
+### Why [id] Notation
+- URL reflects state → bookmarkable, sharable
+- Browser back/forward works correctly  
+- Debugging easier (visible in URL bar)
+
 ## Common Patterns Quick Reference
 
 | Pattern | When to Use | Example |
@@ -60,3 +87,4 @@
 | OO Navigation | Related objects | `cleaner.getSchedules()` |
 | Session Auth | Authorization | `servlet.getUserData("perstUser")` |
 | TransactionContainer | Batch operations | `tc.addInsert(obj); store(tc)` |
+| Svelte 5 goto() | Navigation | `goto('/route/' + id)` |
