@@ -77,6 +77,24 @@ public class Owner extends Actor {
         return result;
     }
     
+    public void addHouse(House house) {
+        if (house != null) {
+            house.setOwner(this);
+        }
+    }
+    
+    public void removeHouse(House house) {
+        if (house != null && house.getOwner() != null && house.getOwner().getOid() == this.getOid()) {
+            house.setOwner(null);
+        }
+    }
+    
+    public void addBooking(Booking booking) {
+        if (booking != null) {
+            booking.setHouse(getHouses().isEmpty() ? null : getHouses().iterator().next());
+        }
+    }
+    
     // Convenience delegate
     public PerstUser getUser() { return getPerstUser(); }
     public void setUser(PerstUser user) { setPerstUser(user); }

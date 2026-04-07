@@ -2,14 +2,14 @@
 
 ## Current State
 - Active Branch: feat/pure-oo-refactor
-- Current Iteration: 4
+- Current Iteration: 6
 - Last Updated: 2026-04-07
 
 ## Active Context
-- Primary Task: Testing - fix Cleaner dashboard showing houses/bookings
+- Primary Task: Add collection ownership methods to domain classes
 - Blocking Issues: None
 - Open Questions: None
-- Next Actions: [ ] User testing
+- Next Actions: [ ] Add addSchedule() to Cleaner.java
 
 ## Iteration 4 - 2026-04-07 14:35
 - Task: Fix mobile Navbar shows all links regardless of role
@@ -24,6 +24,17 @@
 - Outcome: success
 - Changes: Schedule.java, House.java
 - Reflections: House MUST have owner - business rule enforced
+
+### Iteration 6 - 2026-04-07 17:00
+- Task: Add collection ownership methods to domain classes
+- Problem: Cleaner has getSchedules() but NO addSchedule() - incomplete OO
+- Decisions: Add collection management methods to OWN the relationships:
+  - Cleaner: addSchedule(Schedule), removeSchedule(Schedule)
+  - Owner: addHouse(House), addBooking(Booking)
+  - House: addBooking(Booking)
+- Rationale: Proper OO encapsulation - container object must manage its own collections
+- Outcome: in_progress
+- Changes: Cleaner.java, Owner.java, House.java
 
 ## Iteration History
 

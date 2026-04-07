@@ -89,6 +89,18 @@ public class House extends CVersion {
         return result;
     }
     
+    public void addBooking(Booking booking) {
+        if (booking != null) {
+            booking.setHouse(this);
+        }
+    }
+    
+    public void removeBooking(Booking booking) {
+        if (booking != null && booking.getHouse() != null && booking.getHouse().getOid() == this.getOid()) {
+            booking.setHouse(null);
+        }
+    }
+    
     @Override
     public String toString() {
         return "House{" +

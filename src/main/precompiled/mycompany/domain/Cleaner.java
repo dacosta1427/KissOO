@@ -70,6 +70,18 @@ public class Cleaner extends Actor {
         return result;
     }
     
+    public void addSchedule(Schedule schedule) {
+        if (schedule != null) {
+            schedule.setCleaner(this);
+        }
+    }
+    
+    public void removeSchedule(Schedule schedule) {
+        if (schedule != null && schedule.getCleaner() != null && schedule.getCleaner().getOid() == this.getOid()) {
+            schedule.setCleaner(null);
+        }
+    }
+    
     // Convenience delegate
     public PerstUser getUser() { return getPerstUser(); }
     public void setUser(PerstUser user) { setPerstUser(user); }
