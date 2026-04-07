@@ -28,6 +28,21 @@
 - /bookings/[bookingId] - booking detail
 - /cleaners/[cleanerId] - cleaner detail
 
+**PIT-002: Svelte 5 goto() Not Working**
+- **Category:** INTEGRATION
+- **First Seen:** 2026-04-07
+- **Last Updated:** 2026-04-07
+- **Occurrences:** 1
+
+**Context:** Clicking owner in list should navigate to detail page
+
+**Symptom:** 
+- openEditForm() calls goto('/owners/' + owner.id)
+- URL does NOT change when clicking owner
+- Detail page opens but URL stays at /owners
+
+**Root Cause:** TBD - investigation in progress
+
 **Prevention:** Use Svelte 5 /[id] notation for all detail pages
 
 **Related Classes:** Navbar.svelte, owners/+page.svelte, houses/+page.svelte

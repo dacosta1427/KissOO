@@ -9,6 +9,7 @@
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
 	let ownerId = $derived(parseInt($page.params.id));
+	console.log('[owners/[id]] OWNER ID:', ownerId);
 	let owner = $state<Owner | null>(null);
 	let houses = $state<House[]>([]);
 	let loading = $state(true);

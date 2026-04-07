@@ -207,6 +207,7 @@
 	}
 
 	async function openEditForm(owner: Owner) {
+		console.log('[owners] openEditForm called, owner.id:', owner.id);
 		goto('/owners/' + owner.id);
 	}
 
