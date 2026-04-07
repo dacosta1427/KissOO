@@ -219,7 +219,11 @@
 		ownerHousesWithSchedules = [];
 		expandedHouseIds = new Set();
 		showForm = true;
+		// Force reload by clearing expanded IDs first
+		expandedHouseIds = new Set();
 		await loadOwnerHousesWithSchedules(owner.id);
+		// Force reactivity update
+		ownerHousesWithSchedules = ownerHousesWithSchedules;
 		scrollToEditForm();
 	}
 
@@ -229,6 +233,8 @@
 		ownerHousesWithSchedules = [];
 		expandedHouseIds = new Set();
 		formData = { name: '', email: '', phone: '', address: '' };
+		// Force reactivity update
+		expandedHouseIds = expandedHouseIds;
 	}
 
 	async function handleFormSubmit(e: Event) {
