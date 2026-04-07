@@ -28,6 +28,40 @@
 - /bookings/[bookingId] - booking detail
 - /cleaners/[cleanerId] - cleaner detail
 
+**PIT-003: JSON Translation File Corruption**
+- **Category:** SYNTAX
+- **First Seen:** 2026-04-07
+- **Last Updated:** 2026-04-07
+- **Occurrences:** 1
+- **Status:** RESOLVED - en.json restored from cleaners2
+
+**Context:** Navbar shows placeholder keys like "nav.home" instead of "Home"
+
+**Symptom:**
+- Translation keys showing as plain text in navbar
+- Missing keys: nav.home, nav.houses, nav.owners, nav.cleaners, etc.
+
+**Root Cause (5 Whys):**
+1. Why? → en.json missing entire "nav" section
+2. Why? → Commit c1d3a507 changed the JSON structure
+3. Why? → Developer edited file, replaced "nav": with "common": instead of adding
+4. Why? → Edit replacing top-level key instead of merging both sections
+5. Why? → No JSON validation after manual edit
+
+**Resolution:** Copied working en.json from cleaners2 branch:
+```bash
+git show cleaners2:src/main/frontend-svelte/src/lib/i18n/messages/en.json > \
+  src/main/frontend-svelte/src/lib/i18n/messages/en.json
+```
+
+**Prevention:** ALWAYS validate JSON with `python3 -m json.tool file.json` after editing
+
+**Related Files:** en.json, nl.json, de.json
+
+**Evidence:** git diff showed entire nav object replaced with common
+
+---
+
 **PIT-002: Svelte 5 goto() Not Working** [RESOLVED]
 - **Category:** INTEGRATION
 - **First Seen:** 2026-04-07

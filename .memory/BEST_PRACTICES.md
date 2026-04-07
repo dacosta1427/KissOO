@@ -37,6 +37,7 @@
 | OO-003 | Use select() not getRecords() for retrieval | Services | |
 | SV5-001 | Use [id] folder notation for detail routes | Frontend routes | 2026-04-07 |
 | SV5-002 | Use goto() from $app/navigation for routing | Frontend routes | 2026-04-07 |
+| JSON-001 | Validate JSON after manual editing | i18n files | 2026-04-07 |
 
 ## Anti-Patterns
 
@@ -53,6 +54,13 @@
 - **Root Cause:** Not leveraging session-based auth
 - **Alternative:** Backend derives from session
 - **Related Pitfalls:** PIT-XXX (parameter pollution)
+
+### Anti-Pattern: Manual JSON Editing
+- **Symptom:** Translation keys missing, JSON parse errors
+- **Root Cause:** Manual edits replace object keys instead of merging
+- **Alternative:** Use JSON validator after edit, copy from working branch
+- **Prevention:** `python3 -m json.tool file.json > /dev/null` validates
+- **Related Pitfalls:** PIT-003 (JSON corruption)
 
 ## Svelte 5 Routing Patterns
 
@@ -90,6 +98,15 @@ let id = $derived(parseInt($page.params.id));
 | Svelte 5 goto() | Navigation | `goto('/route/' + id)` |
 
 ## Automated Checks
+
+### JSON Validation (Required after manual edits)
+```bash
+# Validate any JSON file before commit
+python3 -m json.tool src/main/frontend-svelte/src/lib/i18n/messages/en.json > /dev/null && echo "Valid" || echo "Invalid"
+
+# Or use node
+node -e "JSON.parse(require('fs').readFileSync('file.json'))" && echo "Valid"
+```
 
 ### Frontend (SvelteKit)
 ```bash

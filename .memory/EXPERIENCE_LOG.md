@@ -2,14 +2,14 @@
 
 ## Current State
 - Active Branch: feat/pure-oo-refactor
-- Current Iteration: 6
+- Current Iteration: 8
 - Last Updated: 2026-04-07
 
 ## Active Context
-- Primary Task: Fix LoadTestdata + Add Svelte 5 dynamic routes
-- Blocking Issues: Testdata load fails, no [id] routes
+- Primary Task: Fix i18n corruption + analyze styling differences
+- Blocking Issues: RESOLVED - c1d3a507 corrupted en.json
 - Open Questions: None
-- Next Actions: [ ] Fix LoadTestdata error, [ ] Create /owners/[id] route
+- Next Actions: [ ] Verify navbar renders correctly after refresh
 
 ## Iteration 4 - 2026-04-07 14:35
 - Task: Fix mobile Navbar shows all links regardless of role
@@ -77,6 +77,19 @@
 - [ ] Owner.getHouses() returns only owner's houses
 - [ ] Cleaner.getSchedules() returns only cleaner's schedules
 - [ ] Admin still sees all
+
+### Iteration 8 - 2026-04-07 22:30
+- Task: Analyze missing navbar translations + broken i18n
+- Problem: Navbar shows placeholder keys like "nav.home" instead of "Home"
+- Problem: Navbar shows plain text, not styled buttons
+- Problem: Browser shows different styling between branches despite identical code
+- Root Cause Found: Commit c1d3a507 CORRUPTED en.json - replaced "nav" section with "common" instead of adding both
+- Investigation: Compared branches, found c1d3a507 removed entire nav object
+- Resolution: Copied working en.json from cleaners2, rebuilt frontend
+- Outcome: success
+- Changes: en.json restored, pushed to origin
+- Reflections: ALWAYS validate JSON after editing - human error replaced instead of merged
+- Commits: 3b40a845
 
 ## Escalations
 None
