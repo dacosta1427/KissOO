@@ -207,24 +207,7 @@
 	}
 
 	async function openEditForm(owner: Owner) {
-		editingOwner = owner;
-		formData = {
-			name: owner.name,
-			email: owner.email || '',
-			phone: owner.phone || '',
-			address: owner.address || ''
-		};
-		ownerCanLogin = owner.canLogin || false;
-		loginInfo = null;
-		ownerHousesWithSchedules = [];
-		expandedHouseIds = new Set();
-		showForm = true;
-		// Force reload by clearing expanded IDs first
-		expandedHouseIds = new Set();
-		await loadOwnerHousesWithSchedules(owner.id);
-		// Force reactivity update
-		ownerHousesWithSchedules = ownerHousesWithSchedules;
-		scrollToEditForm();
+		goto('/owners/' + owner.id);
 	}
 
 	function handleFormCancel() {
