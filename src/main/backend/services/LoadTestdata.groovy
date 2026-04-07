@@ -226,42 +226,10 @@ class LoadTestdata {
                 PerstStorageManager.store(houseTc)
                 results.houses = "created ${houses.size()}"
                 println "[LoadTestdata] Created ${houses.size()} houses with owners"
-                for (int i = 0; i < owners.size(); i++) {
-                    if (i < shuffledHouses.size()) {
-                        def house = shuffledHouses[i]
-                        def owner = owners[i]
-                        house.setOwner(owner)
-                        houseAssignmentTc.addUpdate(house)
-                        println "[LoadTestdata] Assigned house ${house.getName()} to owner ${owner.getName()}"
-                    }
-                }
-                
-                // Randomly distribute remaining houses (0-4 more per owner)
-                if (shuffledHouses.size() > owners.size()) {
-                    for (int i = owners.size(); i < shuffledHouses.size(); i++) {
-                        def house = shuffledHouses[i]
-                        // Randomly pick an owner
-                        def randomOwnerIdx = (int)(Math.random() * owners.size())
-                        def randomOwner = owners[randomOwnerIdx]
-                        house.setOwner(randomOwner)
-                        houseAssignmentTc.addUpdate(house)
-                        println "[LoadTestdata] Randomly assigned house ${house.getName()} to owner ${randomOwner.getName()}"
-                    }
-                }
-                
-                // Store all house-owner assignments
-                try {
-                    def updates = houseAssignmentTc.getUpdates()
-                    if (updates != null && updates.size() > 0) {
-                        PerstStorageManager.store(houseAssignmentTc)
-                    }
-                } catch (Exception e) {
-                    println "[LoadTestdata] Error storing house assignments: ${e.message}"
-                }
                 
                 // Verify each owner has at least one house
                 for (def owner : owners) {
-                    def ownerHouses = houseList.findAll { h -> h.getOwner() != null && h.getOwner().getOid() == owner.getOid() }
+                    def ownerHouses = houses.findAll { h -> h.getOwner() != null && h.getOwner().getOid() == owner.getOid() }
                     println "[LoadTestdata] Owner ${owner.getName()} has ${ownerHouses.size()} house(s)"
                 }
             }

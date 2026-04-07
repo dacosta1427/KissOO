@@ -6,10 +6,10 @@
 - Last Updated: 2026-04-07
 
 ## Active Context
-- Primary Task: Add collection ownership methods to domain classes
-- Blocking Issues: None
+- Primary Task: Fix LoadTestdata + Add Svelte 5 dynamic routes
+- Blocking Issues: Testdata load fails, no [id] routes
 - Open Questions: None
-- Next Actions: [ ] Add addSchedule() to Cleaner.java
+- Next Actions: [ ] Fix LoadTestdata error, [ ] Create /owners/[id] route
 
 ## Iteration 4 - 2026-04-07 14:35
 - Task: Fix mobile Navbar shows all links regardless of role
@@ -33,8 +33,19 @@
   - Owner: addHouse(House), addBooking(Booking)
   - House: addBooking(Booking)
 - Rationale: Proper OO encapsulation - container object must manage its own collections
-- Outcome: in_progress
+- Outcome: completed
 - Changes: Cleaner.java, Owner.java, House.java
+
+### Iteration 7 - 2026-04-07 18:30
+- Task: Fix LoadTestdata + analyze Svelte 5 routes
+- Problem: LoadTestdata ERROR - "No such property: shuffledHouses"
+- Problem: Svelte 5 routes MISSING [id] dynamic segments
+- Decisions: 
+  1. Fix LoadTestdata (remove broken references)
+  2. Add dynamic routes /owners/[id], /houses/[id], etc.
+- Rationale: Svelte 5 uses /[id] for object-specific pages - enables URL state
+- Outcome: in_progress
+- Missing: ALL routes use flat structure with internal state, no URL params
 
 ## Iteration History
 
