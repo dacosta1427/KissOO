@@ -5,6 +5,9 @@ import lombok.Setter;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
+import java.util.ArrayList;
+import java.util.Collection;
+import oodb.PerstStorageManager;
 
 /**
  * House entity for cleaning scheduler.
@@ -60,6 +63,17 @@ public class House extends CVersion {
     
     public long getCostProfileOid() {
         return costProfile != null ? costProfile.getOid() : 0;
+    }
+    
+    public Collection<Booking> getBookings() {
+        Collection<Booking> result = new ArrayList<>();
+        Collection<Booking> all = PerstStorageManager.getAll(Booking.class);
+        for (Booking booking : all) {
+            if (booking.getHouse() != null && booking.getHouse().getOid() == this.getOid()) {
+                result.add(booking);
+            }
+        }
+        return result;
     }
     
     @Override

@@ -5,6 +5,10 @@ import lombok.Setter;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import oodb.PerstStorageManager;
 
 /**
  * Owner entity for cleaning scheduler.
@@ -36,6 +40,41 @@ public class Owner extends Actor {
             getPerstUser().setUsername(email);
             getPerstUser().setEmail(email);
         }
+    }
+    
+    public Collection<House> getHouses() {
+        Collection<House> result = new ArrayList<>();
+        Collection<House> all = PerstStorageManager.getAll(House.class);
+        for (House house : all) {
+            if (house.getOwner() != null && house.getOwner().getOid() == this.getOid()) {
+                result.add(house);
+            }
+        }
+        return result;
+    }
+
+    public Collection<Booking> getBookings() {
+        Collection<Booking> result = new ArrayList<>();
+        Collection<House> houses = getHouses();
+        Collection<Booking> all = PerstStorageManager.getAll(Booking.class);
+        for (Booking booking : all) {
+            if (booking.getHouse() != null && houses.contains(booking.getHouse())) {
+                result.add(booking);
+            }
+        }
+        return result;
+    }
+
+    public Collection<Schedule> getSchedulesViaHouses() {
+        Collection<Schedule> result = new ArrayList<>();
+        Collection<Booking> bookings = getBookings();
+        Collection<Schedule> all = PerstStorageManager.getAll(Schedule.class);
+        for (Schedule schedule : all) {
+            if (schedule.getBooking() != null && bookings.contains(schedule.getBooking())) {
+                result.add(schedule);
+            }
+        }
+        return result;
     }
     
     // Convenience delegate

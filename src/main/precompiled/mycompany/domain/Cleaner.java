@@ -5,6 +5,9 @@ import lombok.Setter;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
+import java.util.ArrayList;
+import java.util.Collection;
+import oodb.PerstStorageManager;
 
 /**
  * Cleaner entity for cleaning scheduler.
@@ -54,6 +57,17 @@ public class Cleaner extends Actor {
             getPerstUser().setUsername(email);
             getPerstUser().setEmail(email);
         }
+    }
+    
+    public Collection<Schedule> getSchedules() {
+        Collection<Schedule> result = new ArrayList<>();
+        Collection<Schedule> all = PerstStorageManager.getAll(Schedule.class);
+        for (Schedule schedule : all) {
+            if (schedule.getCleaner() != null && schedule.getCleaner().getOid() == this.getOid()) {
+                result.add(schedule);
+            }
+        }
+        return result;
     }
     
     // Convenience delegate
