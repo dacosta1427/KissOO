@@ -12,7 +12,6 @@
 	"/login": [],
 	"/ollama": [],
 	"/owners": [],
-	"/owners/[id]": [],
 	"/report": [],
 	"/rest-services": [],
 	"/schedules": [],

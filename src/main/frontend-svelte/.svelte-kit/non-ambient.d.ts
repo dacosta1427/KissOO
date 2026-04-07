@@ -29,12 +29,12 @@ declare module "$app/types" {
 	type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;
 
 	export interface AppTypes {
-		RouteId(): "/" | "/api" | "/benchmark" | "/bookings" | "/cleaners" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/login" | "/ollama" | "/owners" | "/owners/[id]" | "/report" | "/rest-services" | "/schedules" | "/signup" | "/sql-access" | "/users" | "/verify-email";
+		RouteId(): "/" | "/api" | "/benchmark" | "/bookings" | "/cleaners" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/login" | "/ollama" | "/owners" | "/report" | "/rest-services" | "/schedules" | "/signup" | "/sql-access" | "/users" | "/verify-email";
 		RouteParams(): {
-			"/owners/[id]": { id: string }
+			
 		};
 		LayoutParams(): {
-			"/": { id?: string };
+			"/": Record<string, never>;
 			"/api": Record<string, never>;
 			"/benchmark": Record<string, never>;
 			"/bookings": Record<string, never>;
@@ -47,8 +47,7 @@ declare module "$app/types" {
 			"/houses": Record<string, never>;
 			"/login": Record<string, never>;
 			"/ollama": Record<string, never>;
-			"/owners": { id?: string };
-			"/owners/[id]": { id: string };
+			"/owners": Record<string, never>;
 			"/report": Record<string, never>;
 			"/rest-services": Record<string, never>;
 			"/schedules": Record<string, never>;
@@ -57,7 +56,7 @@ declare module "$app/types" {
 			"/users": Record<string, never>;
 			"/verify-email": Record<string, never>
 		};
-		Pathname(): "/" | "/benchmark" | "/bookings" | "/cleaners" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/login" | "/ollama" | "/owners" | `/owners/${string}` & {} | "/report" | "/rest-services" | "/schedules" | "/signup" | "/sql-access" | "/users" | "/verify-email";
+		Pathname(): "/" | "/benchmark" | "/bookings" | "/cleaners" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/login" | "/ollama" | "/owners" | "/report" | "/rest-services" | "/schedules" | "/signup" | "/sql-access" | "/users" | "/verify-email";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): string & {};
 	}
