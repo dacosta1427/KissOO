@@ -207,20 +207,7 @@
 	}
 
 	async function openEditForm(owner: Owner) {
-		editingOwner = owner;
-		formData = {
-			name: owner.name,
-			email: owner.email || '',
-			phone: owner.phone || '',
-			address: owner.address || ''
-		};
-		ownerCanLogin = owner.canLogin || false;
-		loginInfo = null;
-		ownerHousesWithSchedules = [];
-		expandedHouseIds = new Set();
-		showForm = true;
-		await loadOwnerHousesWithSchedules(owner.id);
-		scrollToEditForm();
+		goto('/owners/' + owner.id);
 	}
 
 	function handleFormCancel() {
