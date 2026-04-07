@@ -1,7 +1,6 @@
 {
-	"common": {
-		"back": "Back",
-		"cancel": "Cancel",
+	"nav": {
+		"home": "Home",
 		"houses": "Houses",
 		"bookings": "Bookings",
 		"cleaners": "Cleaners",
