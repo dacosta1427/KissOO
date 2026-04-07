@@ -86,6 +86,8 @@
 					loginInfo = { username: res.username, tempPassword: res.temporaryPassword };
 				}
 				notificationActions.success(res.message || 'Login status updated');
+				// Reload full data to ensure fresh Perst references
+				await loadData();
 			} else {
 				notificationActions.error(res._ErrorMessage || res.error || 'Failed to toggle login');
 			}
