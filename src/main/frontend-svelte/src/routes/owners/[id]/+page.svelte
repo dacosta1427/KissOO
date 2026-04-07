@@ -86,8 +86,6 @@
 					loginInfo = { username: res.username, tempPassword: res.temporaryPassword };
 				}
 				notificationActions.success(res.message || 'Login status updated');
-				// Reload full data to ensure fresh Perst references
-				await loadData();
 			} else {
 				notificationActions.error(res._ErrorMessage || res.error || 'Failed to toggle login');
 			}
@@ -175,9 +173,8 @@
 		if (!urlOwnerId) return;
 		loading = true;
 		try {
-			// Load owner by ID
-			const allOwners = await ownersAPI.getAll();
-			editingOwner = allOwners.find(o => o.id === urlOwnerId) || null;
+			// Load owner by ID - use getById for fresh data (bypass list caching)
+			editingOwner = await ownersAPI.getById(urlOwnerId);
 			if (!editingOwner) {
 				loading = false;
 				return;
