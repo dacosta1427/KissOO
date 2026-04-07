@@ -288,7 +288,7 @@ export const housesAPI = {
   },
   
   getByOwner: async (ownerId: number): Promise<House[]> => {
-    const res = await callCleaningService('getHousesByOwner', { owner_id: ownerId }, 'Load houses by owner');
+    const res = await callCleaningService('getOwnerHouses', { owner_id: ownerId }, 'Load houses by owner');
     return res.data || [];
   },
   

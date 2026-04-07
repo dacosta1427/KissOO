@@ -903,6 +903,41 @@ class Cleaning {
         }
     }
     
+    void getOwnerHouses(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            // Pure OO: Get Owner first, then ask for their houses
+            long ownerId = injson.getLong("owner_id")
+            Owner owner = PerstStorageManager.getByOid(Owner.class, ownerId)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found")
+                return
+            }
+            
+            // Pure OO navigation - ask owner directly
+            Collection<House> houses = owner.getHouses()
+            JSONArray rows = new JSONArray()
+            
+            for (House house : houses) {
+                JSONObject row = new JSONObject()
+                row.put("id", house.getOid())
+                row.put("name", house.getName())
+                row.put("address", house.getAddress())
+                row.put("description", house.getDescription())
+                row.put("owner", house.getOwnerOid())
+                row.put("active", house.isActive())
+                row.put("check_in_time", house.getCheckInTime())
+                row.put("check_out_time", house.getCheckOutTime())
+                rows.put(row)
+            }
+            
+            outjson.put("data", rows)
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
     void getHousesByOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             long ownerId = injson.getLong("owner_id")
