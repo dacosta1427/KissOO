@@ -556,11 +556,15 @@ class Cleaning {
             Owner owner = getCurrentOwner(servlet)
             Cleaner cleaner = getCurrentCleaner(servlet)
             
+            println "[DEBUG] getSchedules: admin=${admin}, owner=${owner}, cleaner=${cleaner}"
+            
             Collection<Schedule> schedules
             if (admin) {
                 schedules = PerstStorageManager.getAll(Schedule.class)
             } else if (cleaner != null) {
+                println "[DEBUG] Cleaner != null, calling cleaner.getSchedules()"
                 schedules = cleaner.getSchedules()
+                println "[DEBUG] cleaner.getSchedules() returned: ${schedules?.size() ?: 0} items"
             } else if (owner != null) {
                 schedules = owner.getSchedulesViaHouses()
             } else {

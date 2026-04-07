@@ -39,6 +39,14 @@ public class Schedule extends CVersion {
         return booking != null ? booking.getOid() : 0;
     }
     
+    public Booking getBooking() {
+        return booking;
+    }
+    
+    public void setBooking(Booking booking) {
+        this.booking = booking;
+    }
+    
     @Override
     public String toString() {
         return "Schedule{" +
