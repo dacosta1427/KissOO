@@ -10,7 +10,7 @@ return {
 	assets: new Set([]),
 	mimeTypes: {},
 	_: {
-		client: {start:"_app/immutable/entry/start.okyDLNXU.js",app:"_app/immutable/entry/app.Dm8tG9kE.js",imports:["_app/immutable/entry/start.okyDLNXU.js","_app/immutable/chunks/CwHskekI.js","_app/immutable/chunks/BYFhwfgA.js","_app/immutable/chunks/Bmu30RG6.js","_app/immutable/entry/app.Dm8tG9kE.js","_app/immutable/chunks/BYFhwfgA.js","_app/immutable/chunks/Dgxoc8cv.js","_app/immutable/chunks/CkrBU4Y_.js","_app/immutable/chunks/Bmu30RG6.js","_app/immutable/chunks/B-aT14Ls.js","_app/immutable/chunks/BPVNBZBT.js","_app/immutable/chunks/BYoPigrj.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
+		client: {start:"_app/immutable/entry/start.a4bEm4LB.js",app:"_app/immutable/entry/app.CRVSV-dC.js",imports:["_app/immutable/entry/start.a4bEm4LB.js","_app/immutable/chunks/Dm-hEju4.js","_app/immutable/chunks/BYFhwfgA.js","_app/immutable/chunks/Bmu30RG6.js","_app/immutable/entry/app.CRVSV-dC.js","_app/immutable/chunks/BYFhwfgA.js","_app/immutable/chunks/Dgxoc8cv.js","_app/immutable/chunks/CkrBU4Y_.js","_app/immutable/chunks/Bmu30RG6.js","_app/immutable/chunks/B-aT14Ls.js","_app/immutable/chunks/BPVNBZBT.js","_app/immutable/chunks/BYoPigrj.js"],stylesheets:[],fonts:[],uses_env_dynamic_public:false},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),
@@ -33,7 +33,8 @@ return {
 			__memo(() => import('./nodes/18.js')),
 			__memo(() => import('./nodes/19.js')),
 			__memo(() => import('./nodes/20.js')),
-			__memo(() => import('./nodes/21.js'))
+			__memo(() => import('./nodes/21.js')),
+			__memo(() => import('./nodes/22.js'))
 		],
 		remotes: {
 			
@@ -131,52 +132,59 @@ return {
 				endpoint: null
 			},
 			{
+				id: "/owners/[id]",
+				pattern: /^\/owners\/([^/]+?)\/?$/,
+				params: [{"name":"id","optional":false,"rest":false,"chained":false}],
+				page: { layouts: [0,], errors: [1,], leaf: 15 },
+				endpoint: null
+			},
+			{
 				id: "/report",
 				pattern: /^\/report\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 15 },
+				page: { layouts: [0,], errors: [1,], leaf: 16 },
 				endpoint: null
 			},
 			{
 				id: "/rest-services",
 				pattern: /^\/rest-services\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 16 },
+				page: { layouts: [0,], errors: [1,], leaf: 17 },
 				endpoint: null
 			},
 			{
 				id: "/schedules",
 				pattern: /^\/schedules\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 17 },
+				page: { layouts: [0,], errors: [1,], leaf: 18 },
 				endpoint: null
 			},
 			{
 				id: "/signup",
 				pattern: /^\/signup\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 18 },
+				page: { layouts: [0,], errors: [1,], leaf: 19 },
 				endpoint: null
 			},
 			{
 				id: "/sql-access",
 				pattern: /^\/sql-access\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 19 },
+				page: { layouts: [0,], errors: [1,], leaf: 20 },
 				endpoint: null
 			},
 			{
 				id: "/users",
 				pattern: /^\/users\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 20 },
+				page: { layouts: [0,], errors: [1,], leaf: 21 },
 				endpoint: null
 			},
 			{
 				id: "/verify-email",
 				pattern: /^\/verify-email\/?$/,
 				params: [],
-				page: { layouts: [0,], errors: [1,], leaf: 21 },
+				page: { layouts: [0,], errors: [1,], leaf: 22 },
 				endpoint: null
 			}
 		],

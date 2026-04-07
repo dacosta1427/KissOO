@@ -88,3 +88,42 @@ let id = $derived(parseInt($page.params.id));
 | Session Auth | Authorization | `servlet.getUserData("perstUser")` |
 | TransactionContainer | Batch operations | `tc.addInsert(obj); store(tc)` |
 | Svelte 5 goto() | Navigation | `goto('/route/' + id)` |
+
+## Automated Checks
+
+### Frontend (SvelteKit)
+```bash
+# Type check - catches import errors, type mismatches
+cd src/main/frontend-svelte
+npm run check
+
+# Build - full compilation
+npm run build
+```
+
+### Why These Matter
+- **Import errors** - `session` vs `session.svelte` - check catches this
+- **Type mismatches** - Svelte 5 runes ($state, $derived) need proper typing
+- **Missing translations** - can add custom lint rule
+
+### Before Every Commit (Required)
+```bash
+cd src/main/frontend-svelte
+npm run check
+# If clean:
+npm run build
+# Then commit
+```
+
+### Backend
+```bash
+# Java/Groovy - build handles compilation
+./bld build
+```
+
+## Protocol Adherence Checklist
+
+- [ ] Run `npm run check` before frontend commits
+- [ ] Run `./bld build` before backend commits  
+- [ ] Test changes in browser after build
+- [ ] Update .memory/ with any new findings

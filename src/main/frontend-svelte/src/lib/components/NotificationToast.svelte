@@ -55,7 +55,7 @@
 </script>
 
 {#if notificationList.length > 0}
-	<div class="pointer-events-none fixed inset-0 z-50 flex items-start justify-end px-4 py-6 sm:p-6">
+	<div class="pointer-events-none fixed inset-0 z-[60] flex items-start justify-end px-4 py-6 sm:p-6">
 		<div class="flex w-full flex-col items-center space-y-4 sm:items-end">
 			{#each notificationList as notification (notification.id)}
 				<div class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg border-l-4 shadow-lg {getNotificationClass(notification.type)}">

@@ -230,7 +230,7 @@ function NotificationToast($$renderer, $$props) {
     }
     if (notificationList().length > 0) {
       $$renderer2.push("<!--[0-->");
-      $$renderer2.push(`<div class="pointer-events-none fixed inset-0 z-50 flex items-start justify-end px-4 py-6 sm:p-6"><div class="flex w-full flex-col items-center space-y-4 sm:items-end"><!--[-->`);
+      $$renderer2.push(`<div class="pointer-events-none fixed inset-0 z-[60] flex items-start justify-end px-4 py-6 sm:p-6"><div class="flex w-full flex-col items-center space-y-4 sm:items-end"><!--[-->`);
       const each_array = ensure_array_like(notificationList());
       for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
         let notification = each_array[$$index];

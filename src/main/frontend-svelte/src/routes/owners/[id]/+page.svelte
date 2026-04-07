@@ -398,7 +398,7 @@
 						{tt('common.cancel')}
 					</button>
 					<button type="submit" class="btn btn-primary">
-						{tt('common.update')} {tt('owners.title')}
+						{tt('common.update')} Owner
 					</button>
 				</div>
 			</form>

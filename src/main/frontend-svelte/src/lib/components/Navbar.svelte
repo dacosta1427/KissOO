@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { session } from '$lib/state/session';
+  import { session } from '$lib/state/session.svelte';
   import { logout } from '$lib/api/Auth';
   import { t, currentLocale } from '$lib/i18n';
   import LanguageSwitcher from './LanguageSwitcher.svelte';
