@@ -208,30 +208,24 @@ class LoadTestdata {
             
             def houses = []
             def houseTc = PerstStorageManager.createContainer()
-            houseData.each { d ->
-                try {
-                    def house = new House(d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true)
-                    houseTc.addInsert(house)
-                    houses << house
-                } catch (Exception e) {
-                    println "[LoadTestdata] Error creating house ${d.name}: ${e.message}"
-                    throw e
+            if (owners == null || owners.size() == 0) {
+                results.houses = "0 (no owners)"
+                println "[LoadTestdata] Cannot create houses - no owners exist"
+            } else {
+                houseData.each { d ->
+                    try {
+                        def randomOwner = owners[new Random().nextInt(owners.size())]
+                        def house = new House(d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true, randomOwner)
+                        houseTc.addInsert(house)
+                        houses << house
+                    } catch (Exception e) {
+                        println "[LoadTestdata] Error creating house ${d.name}: ${e.message}"
+                        throw e
+                    }
                 }
-            }
-            PerstStorageManager.store(houseTc)
-            results.houses = "created ${houses.size()}"
-            println "[LoadTestdata] Created ${houses.size()} houses (unassigned)"
-            
-            // Randomly assign 1-5 houses to each owner
-            // Ensure EVERY owner has at least 1 house
-            if (houses != null && houses.size() > 0 && owners != null && owners.size() > 0) {
-                // Shuffle houses using simple randomization
-                def houseList = houses as List
-                Collections.shuffle(houseList)
-                def shuffledHouses = houseList
-                def houseAssignmentTc = PerstStorageManager.createContainer()
-                
-                // First, give each owner exactly 1 house (ensures min 1)
+                PerstStorageManager.store(houseTc)
+                results.houses = "created ${houses.size()}"
+                println "[LoadTestdata] Created ${houses.size()} houses with owners"
                 for (int i = 0; i < owners.size(); i++) {
                     if (i < shuffledHouses.size()) {
                         def house = shuffledHouses[i]
