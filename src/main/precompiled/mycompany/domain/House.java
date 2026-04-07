@@ -56,6 +56,19 @@ public class House extends CVersion {
         this.checkOutTime = "10:00";
     }
     
+    public House(String name, String address, String description, boolean active, Owner owner) {
+        this.name = name;
+        this.address = address;
+        this.description = description;
+        this.active = active;
+        this.checkInTime = "16:00";
+        this.checkOutTime = "10:00";
+        if (owner == null) {
+            throw new IllegalArgumentException("House must have an owner");
+        }
+        this.owner = owner;
+    }
+    
     // Convenience methods for API serialization
     public long getOwnerOid() {
         return owner != null ? owner.getOid() : 0;

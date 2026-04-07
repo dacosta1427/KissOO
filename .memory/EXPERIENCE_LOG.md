@@ -18,6 +18,13 @@
 - Changes: Navbar.svelte mobile section
 - Reflections: Mobile menu was missing role checks
 
+### Iteration 5 - 2026-04-07 16:30
+- Task: Fix Schedule missing getBooking, House requires owner
+- Decisions: Added getBooking/setBooking to Schedule, constructor validates owner required
+- Outcome: success
+- Changes: Schedule.java, House.java
+- Reflections: House MUST have owner - business rule enforced
+
 ## Iteration History
 
 ### Iteration 1 - 2026-04-07 14:03
