@@ -2,14 +2,14 @@
 
 ## Current State
 - Active Branch: feat/pure-oo-refactor
-- Current Iteration: 8
-- Last Updated: 2026-04-07
+- Current Iteration: 9
+- Last Updated: 2026-04-08
 
 ## Active Context
-- Primary Task: Fix i18n corruption + analyze styling differences
-- Blocking Issues: RESOLVED - c1d3a507 corrupted en.json
+- Primary Task: Fix owner OID shift after update + prevent unnecessary versioning
+- Blocking Issues: RESOLVED - now handle OID changes properly
 - Open Questions: None
-- Next Actions: [ ] Verify navbar renders correctly after refresh
+- Next Actions: [ ] Test full flow with real changes
 
 ## Iteration 4 - 2026-04-07 14:35
 - Task: Fix mobile Navbar shows all links regardless of role
@@ -93,3 +93,17 @@
 
 ## Escalations
 None
+
+### Iteration 9 - 2026-04-08 14:30
+- Task: Fix owner houses disappearing after clicking update then navigating back
+- Problem: Houses disappear after clicking Update Owner then Back then re-clicking
+- Root Cause: Perst versioning creates new OID, list showed stale OIDs
+- Investigation: Found getOwners() returns OIDs, clicking different OID shows 0 houses
+- Solution: 
+  1. Frontend: Gray-out Update button when no changes (prevents unnecessary versioning)
+  2. Backend: Skip storage if no delta detected (hasChanges check)
+  3. Frontend: Navigate to new OID after successful update if OID changed
+- Outcome: in progress
+- Changes: owners/[id]/+page.svelte (hasChanges derived, button disabled), Cleaning.groovy (delta check)
+- Commits: bed577f0
+- Reflections: Perst versioning is CORRECT behavior - client must handle new OIDs
