@@ -209,6 +209,8 @@
 			if (editingOwner) {
 				await ownersAPI.update(editingOwner.id, formData);
 				notificationActions.success(t('owners.title') + ' ' + t('notifications.updated_successfully'));
+				// Reload data after update to get fresh Perst references
+				await loadData();
 			}
 		} catch (err: any) {
 			notificationActions.error(err.message || t('errors.failed_to_save'));

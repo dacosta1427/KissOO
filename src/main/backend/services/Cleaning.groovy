@@ -907,15 +907,18 @@ class Cleaning {
         try {
             // Pure OO: Get Owner first, then ask for their houses
             long ownerId = injson.getLong("owner_id")
+            println "[Cleaning] getOwnerHouses: fetching owner with id=${ownerId}"
             Owner owner = PerstStorageManager.getByOid(Owner.class, ownerId)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
                 return
             }
+            println "[Cleaning] getOwnerHouses: owner=${owner.getName()}, OID=${owner.getOid()}"
             
             // Pure OO navigation - ask owner directly
             Collection<House> houses = owner.getHouses()
+            println "[Cleaning] getOwnerHouses: found ${houses.size()} houses"
             JSONArray rows = new JSONArray()
             
             for (House house : houses) {
@@ -933,6 +936,8 @@ class Cleaning {
             
             outjson.put("data", rows)
         } catch (Exception e) {
+            println "[Cleaning] getOwnerHouses ERROR: ${e.message}"
+            e.printStackTrace()
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
         }
@@ -1274,17 +1279,23 @@ class Cleaning {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
+            println "[Cleaning] updateOwner: oid=${oid}, data=${data}"
             Owner owner = PerstStorageManager.getByOid(Owner.class, oid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
                 return
             }
+            println "[Cleaning] updateOwner: before - name=${owner.getName()}, active=${owner.isActive()}"
             if (data.has("name")) owner.setName(data.getString("name"))
             if (data.has("email")) owner.setEmail(data.getString("email"))
             if (data.has("phone")) owner.setPhone(data.getString("phone"))
             if (data.has("address")) owner.setAddress(data.getString("address"))
-            if (data.has("active")) owner.setActive(data.getBoolean("active"))
+            if (data.has("active")) {
+                println "[Cleaning] updateOwner: setting active=${data.getBoolean('active')}"
+                owner.setActive(data.getBoolean("active"))
+            }
+            println "[Cleaning] updateOwner: after - name=${owner.getName()}, active=${owner.isActive()}"
             
             def tc = PerstStorageManager.createContainer()
             tc.addUpdate(owner)
@@ -1293,6 +1304,10 @@ class Cleaning {
                 outjson.put("_ErrorMessage", "Failed to update owner")
                 return
             }
+            // Verify after store
+            Owner verifyOwner = PerstStorageManager.getByOid(Owner.class, oid)
+            println "[Cleaning] updateOwner: verify after store - active=${verifyOwner.isActive()}, houses count=${verifyOwner.getHouses().size()}"
+            
             JSONObject result = new JSONObject()
             result.put("id", owner.getOid())
             result.put("name", owner.getName())
