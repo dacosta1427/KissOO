@@ -11,6 +11,10 @@
 
 	// Get ownerId from URL - use derived for reactivity
 	let urlOwnerId = $derived($page.params.id ? parseInt($page.params.id) : 0);
+	
+	$effect(() => {
+		console.log('[DEBUG] urlOwnerId changed to:', urlOwnerId);
+	});
 
 	// State: load single owner by URL param
 	let editingOwner = $state<Owner | null>(null);
@@ -165,11 +169,13 @@
 	}
 
 	async function loadData() {
+		console.log('[DEBUG] loadData called with urlOwnerId:', urlOwnerId);
 		if (!urlOwnerId) return;
 		loading = true;
 		try {
 			// Load owner by ID - use getById for fresh data (bypass list caching)
 			editingOwner = await ownersAPI.getById(urlOwnerId);
+			console.log('[DEBUG] getById returned:', editingOwner);
 			if (!editingOwner) {
 				loading = false;
 				return;
