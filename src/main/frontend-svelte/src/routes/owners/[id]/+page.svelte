@@ -6,6 +6,7 @@
 	import { Server } from '$lib/services/Server';
 	import { toDisplayDateFormat } from '$lib/utils/Utils';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/Button.svelte';
 
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
@@ -404,15 +405,12 @@
 				</div>
 
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary" onclick={handleFormCancel} disabled={saving}>
+					<Button type="button" class="btn-secondary" onclick={handleFormCancel} disabled={saving}>
 						{tt('common.cancel')}
-					</button>
-					<button type="submit" class="btn" class:btn-primary={hasChanges && !saving} class:btn-disabled={!hasChanges || saving} disabled={!hasChanges || saving}>
-						{#if saving}
-							<span class="spinner"></span>
-						{/if}
+					</Button>
+					<Button type="submit" class={hasChanges ? 'btn-primary' : 'btn-disabled'} loading={saving} disabled={!hasChanges}>
 						{tt('common.update')} Owner
-					</button>
+					</Button>
 				</div>
 			</form>
 		</div>
