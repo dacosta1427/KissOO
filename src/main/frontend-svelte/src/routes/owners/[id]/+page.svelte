@@ -215,9 +215,13 @@
 		e.preventDefault();
 		try {
 			if (editingOwner) {
-				await ownersAPI.update(editingOwner.id, formData);
+				const result = await ownersAPI.update(editingOwner.id, formData);
+				if (result && result.id !== editingOwner.id) {
+					// OID changed - navigate to new URL
+					goto('/owners/' + result.id);
+					return;
+				}
 				notificationActions.success(t('owners.title') + ' ' + t('notifications.updated_successfully'));
-				// Reload data after update to get fresh Perst references
 				await loadData();
 			}
 		} catch (err: any) {
