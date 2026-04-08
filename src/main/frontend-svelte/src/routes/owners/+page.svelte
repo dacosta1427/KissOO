@@ -221,7 +221,7 @@
 		expandedHouseIds = expandedHouseIds;
 	}
 
-	async function handleFormSubmit(e: Event) {
+async function handleFormSubmit(e: Event) {
 		e.preventDefault();
 		try {
 			if (editingOwner) {
@@ -231,6 +231,14 @@
 				await ownersAPI.create(formData);
 				notificationActions.success(t('owners.title') + ' ' + t('notifications.created_successfully'));
 			}
+			showForm = false;
+			editingOwner = null;
+			// Reload owners to get fresh OIDs after any change
+			loadOwners();
+		} catch (err: any) {
+			notificationActions.error(err.message || t('errors.failed_to_save'));
+		}
+	}
 			showForm = false;
 			editingOwner = null;
 			ownerHousesWithSchedules = [];
