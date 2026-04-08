@@ -39,6 +39,14 @@
 
 	// Add house modal state
 	let showAddHouseModal = $state(false);
+	
+	// Check if form has changes
+	let hasChanges = $derived(editingOwner && (
+		formData.name !== editingOwner.name ||
+		formData.email !== (editingOwner.email || '') ||
+		formData.phone !== (editingOwner.phone || '') ||
+		formData.address !== (editingOwner.address || '')
+	));
 	let houseFormData = $state({
 		name: '',
 		address: '',
@@ -393,7 +401,7 @@
 					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
 						{tt('common.cancel')}
 					</button>
-					<button type="submit" class="btn btn-primary">
+					<button type="submit" class="btn btn-primary" disabled={!hasChanges}>
 						{tt('common.update')} Owner
 					</button>
 				</div>

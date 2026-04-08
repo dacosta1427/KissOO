@@ -238,15 +238,6 @@ async function handleFormSubmit(e: Event) {
 			notificationActions.error(err.message || t('errors.failed_to_save'));
 		}
 	}
-			showForm = false;
-			editingOwner = null;
-			ownerHousesWithSchedules = [];
-			formData = { name: '', email: '', phone: '', address: '' };
-			await loadOwners();
-		} catch (err: any) {
-			notificationActions.error(err.message || t('errors.failed_to_save'));
-		}
-	}
 
 	async function handleDelete(owner: Owner) {
 		if (confirm(t('owners.delete_confirm').replace('"${owner.name}"', `"${owner.name}"`))) {

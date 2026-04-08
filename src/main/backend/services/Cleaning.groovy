@@ -1114,9 +1114,11 @@ class Cleaning {
         try {
             // Using PerstStorageManager directly
             Collection<Owner> owners = PerstStorageManager.getAll(Owner.class)
+            println "[Cleaning] getOwners: found ${owners.size()} owners"
             JSONArray rows = new JSONArray()
             
             for (Owner owner : owners) {
+                println "[Cleaning] getOwners: owner ${owner.getOid()} - ${owner.getName()}, houses count=${owner.getHouses().size()}"
                 JSONObject row = new JSONObject()
                 row.put("id", owner.getOid())
                 row.put("name", owner.getName())
@@ -1142,6 +1144,7 @@ class Cleaning {
         try {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
+            println "[Cleaning] getOwner: fetching owner with id=${oid}"
             Owner owner = PerstStorageManager.getByOid(Owner.class, oid)
             if (owner == null) {
                 outjson.put("_Success", false)
@@ -1286,7 +1289,30 @@ class Cleaning {
                 outjson.put("_ErrorMessage", "Owner not found")
                 return
             }
-            println "[Cleaning] updateOwner: before - name=${owner.getName()}, active=${owner.isActive()}"
+            
+            // Delta check - only update if values actually changed
+            boolean hasChanges = false
+            if (data.has("name") && data.getString("name") != owner.getName()) hasChanges = true
+            if (data.has("email") && data.getString("email") != owner.getEmail()) hasChanges = true
+            if (data.has("phone") && data.getString("phone") != owner.getPhone()) hasChanges = true
+            if (data.has("address") && data.getString("address") != owner.getAddress()) hasChanges = true
+            if (data.has("active") && data.getBoolean("active") != owner.isActive()) hasChanges = true
+            
+            if (!hasChanges) {
+                println "[Cleaning] updateOwner: NO CHANGES - skipping store"
+                // Return current data without storing
+                JSONObject result = new JSONObject()
+                result.put("id", owner.getOid())
+                result.put("name", owner.getName())
+                result.put("email", owner.getEmail())
+                result.put("phone", owner.getPhone())
+                result.put("address", owner.getAddress())
+                result.put("active", owner.isActive())
+                outjson.put("data", result)
+                return
+            }
+            
+            println "[Cleaning] updateOwner: changes detected - applying"
             if (data.has("name")) owner.setName(data.getString("name"))
             if (data.has("email")) owner.setEmail(data.getString("email"))
             if (data.has("phone")) owner.setPhone(data.getString("phone"))
@@ -1295,7 +1321,6 @@ class Cleaning {
                 println "[Cleaning] updateOwner: setting active=${data.getBoolean('active')}"
                 owner.setActive(data.getBoolean("active"))
             }
-            println "[Cleaning] updateOwner: after - name=${owner.getName()}, active=${owner.isActive()}"
             
             def tc = PerstStorageManager.createContainer()
             tc.addUpdate(owner)
