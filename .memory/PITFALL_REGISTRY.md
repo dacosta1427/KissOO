@@ -78,6 +78,43 @@ git show cleaners2:src/main/frontend-svelte/src/lib/i18n/messages/en.json > \
 
 **Prevention:** Standard Svelte 5 goto() for navigation
 
+---
+
+**PIT-004: OID Shift After Perst Versioning** [RESOLVED]
+- **Category:** ASSUMPTION
+- **First Seen:** 2026-04-08
+- **Last Updated:** 2026-04-08
+- **Occurrences:** 1
+- **Status:** RESOLVED - now handle OID changes properly
+
+**Context:** After clicking "Update Owner" then "Back" then re-clicking same owner, houses disappear
+
+**Symptom:**
+- First click on owner shows houses (e.g., Array(2))
+- After Update + Back + re-click, shows 0 houses
+- Console shows different OID used on second click (e.g., 2218→2921)
+
+**Root Cause (5 Whys):**
+1. Why? → getOwners() returns different OIDs after each page reload
+2. Why? → Perst versioning creates new OID on each store operation
+3. Why? → updateOwner called even with no changes, causing unnecessary versioning
+4. Why? → Frontend didn't gray-out button, user could click with no changes
+5. Why? → Didn't implement hasChanges check to disable button
+
+**Resolution:**
+1. Frontend: Add hasChanges derived state to disable Update button when no fields changed
+2. Backend: Add delta check in updateOwner - skip storage if no actual changes
+3. Frontend: After successful update, check if OID changed and navigate to new URL
+
+**Prevention:** 
+- Use hasChanges state to gray-out buttons
+- Handle OID changes in update responses
+- Backend should skip storage when no delta
+
+**Related Files:** owners/[id]/+page.svelte, Cleaning.groovy
+
+**Evidence:** Debug logs showed OID 2218→2921 after update with no changes
+
 **Related Classes:** Navbar.svelte, owners/+page.svelte, houses/+page.svelte
 
 **Evidence:** Click owner → URL stays /owners, no ownerId in path

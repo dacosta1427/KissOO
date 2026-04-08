@@ -35,9 +35,11 @@
 | OO-001 | Use object.getXxxOid() not getXxxId() | Domain classes | |
 | OO-002 | Add collections to domain for bidirectional navigation | Owner, Cleaner, House | |
 | OO-003 | Use select() not getRecords() for retrieval | Services | |
+| OO-004 | Handle OID changes after versioning - navigate to new OID | Frontend detail pages | 2026-04-08 |
 | SV5-001 | Use [id] folder notation for detail routes | Frontend routes | 2026-04-07 |
 | SV5-002 | Use goto() from $app/navigation for routing | Frontend routes | 2026-04-07 |
 | JSON-001 | Validate JSON after manual editing | i18n files | 2026-04-07 |
+| UI-001 | Gray-out update buttons when no changes to prevent unnecessary versioning | Forms | 2026-04-08 |
 
 ## Anti-Patterns
 
@@ -61,6 +63,16 @@
 - **Alternative:** Use JSON validator after edit, copy from working branch
 - **Prevention:** `python3 -m json.tool file.json > /dev/null` validates
 - **Related Pitfalls:** PIT-003 (JSON corruption)
+
+### Anti-Pattern: Not Handling Perst Versioning
+- **Symptom:** After update, clicking same entity shows no data (e.g., houses disappear)
+- **Root Cause:** Perst creates new version with new OID, frontend uses stale OID
+- **Alternative:** 
+  1. Gray-out update button when no changes (prevents unnecessary versioning)
+  2. Backend delta check skips storage when no changes
+  3. Frontend navigates to new OID after successful update if OID changed
+- **Prevention:** Use hasChanges state to disable button, handle OID changes in update response
+- **Related Pitfalls:** PIT-004 (OID shift after update)
 
 ## Svelte 5 Routing Patterns
 
