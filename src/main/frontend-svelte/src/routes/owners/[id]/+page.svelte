@@ -13,9 +13,14 @@
 	let params = $state<{id?: string}>({});
 	$effect(() => {
 		params = $page.params as {id?: string};
+		console.log('[DEBUG] params changed:', params);
 	});
 	
 	let urlOwnerId = $derived(params.id ? parseInt(params.id) : 0);
+	
+	$effect(() => {
+		console.log('[DEBUG] urlOwnerId:', urlOwnerId);
+	});
 
 	// State: load single owner by URL param
 	let editingOwner = $state<Owner | null>(null);
@@ -154,8 +159,11 @@
 
 	async function loadOwnerHousesWithSchedules(ownerId: number) {
 		try {
+			console.log('[DEBUG] loadOwnerHousesWithSchedules called with ownerId:', ownerId);
 			const houses = await housesAPI.getByOwner(ownerId);
+			console.log('[DEBUG] houses API returned:', houses.length, 'houses');
 			for (const house of houses) {
+				console.log('[DEBUG] processing house:', house.id, house.name);
 				const bookings = await bookingsByHouseAPI.getByHouse(house.id);
 				const bookingsWithSchedules: BookingWithSchedules[] = [];
 				for (const booking of bookings) {
@@ -170,6 +178,7 @@
 	}
 
 	async function loadData() {
+		console.log('[DEBUG] loadData START, urlOwnerId:', urlOwnerId);
 		if (!urlOwnerId) return;
 		loading = true;
 		try {
@@ -250,8 +259,10 @@
 
 	let loaded = $state(false);
 	$effect(() => {
+		console.log('[DEBUG] effect running, loaded:', loaded, 'urlOwnerId:', urlOwnerId);
 		if (!loaded && urlOwnerId > 0) {
 			loaded = true;
+			console.log('[DEBUG] calling loadData');
 			loadData();
 		}
 	});
