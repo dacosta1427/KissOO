@@ -436,12 +436,13 @@
 							/>
 						</div>
 						<div class="form-field">
-							<label for="newOwnerEmail">{tt('common.email')}</label>
+							<label for="newOwnerEmail">{tt('common.email')} <span class="required">*</span></label>
 							<input 
 								type="email" 
 								id="newOwnerEmail" 
 								bind:value={newOwnerData.email} 
 								placeholder={tt('owners.enter_email_address')}
+								required
 							/>
 						</div>
 						<div class="form-field">

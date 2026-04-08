@@ -303,8 +303,8 @@ async function handleFormSubmit(e: Event) {
 						<input type="text" id="name" bind:value={formData.name} placeholder={tt('owners.enter_owner_name')} required />
 					</div>
 					<div class="form-field">
-						<label for="email">{tt('common.email')}</label>
-						<input type="email" id="email" bind:value={formData.email} placeholder={tt('owners.enter_email_address')} />
+						<label for="email">{tt('common.email')} <span class="required">*</span></label>
+						<input type="email" id="email" bind:value={formData.email} placeholder={tt('owners.enter_email_address')} required />
 					</div>
 					<div class="form-field">
 						<label for="phone">{tt('common.phone')}</label>
