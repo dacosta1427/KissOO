@@ -39,6 +39,7 @@
 
 	// Add house modal state
 	let showAddHouseModal = $state(false);
+	let saving = $state(false);
 	
 	// Check if form has changes
 	let hasChanges = $derived(editingOwner && (
@@ -213,19 +214,20 @@
 
 	async function handleFormSubmit(e: Event) {
 		e.preventDefault();
+		if (!editingOwner || saving) return;
+		saving = true;
 		try {
-			if (editingOwner) {
-				const result = await ownersAPI.update(editingOwner.id, formData);
-				if (result && result.id !== editingOwner.id) {
-					// OID changed - navigate to new URL
-					goto('/owners/' + result.id);
-					return;
-				}
-				notificationActions.success(t('owners.title') + ' ' + t('notifications.updated_successfully'));
-				await loadData();
+			const result = await ownersAPI.update(editingOwner.id, formData);
+			if (result && result.id !== editingOwner.id) {
+				goto('/owners/' + result.id);
+				return;
 			}
+			notificationActions.success(t('owners.title') + ' ' + t('notifications.updated_successfully'));
+			await loadData();
 		} catch (err: any) {
 			notificationActions.error(err.message || t('errors.failed_to_save'));
+		} finally {
+			saving = false;
 		}
 	}
 
@@ -402,10 +404,13 @@
 				</div>
 
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
+					<button type="button" class="btn btn-secondary" onclick={handleFormCancel} disabled={saving}>
 						{tt('common.cancel')}
 					</button>
-					<button type="submit" class="btn" class:btn-primary={hasChanges} class:btn-disabled={!hasChanges}>
+					<button type="submit" class="btn" class:btn-primary={hasChanges && !saving} class:btn-disabled={!hasChanges || saving} disabled={!hasChanges || saving}>
+						{#if saving}
+							<span class="spinner"></span>
+						{/if}
 						{tt('common.update')} Owner
 					</button>
 				</div>
