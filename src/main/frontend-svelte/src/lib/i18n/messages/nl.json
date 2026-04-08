@@ -31,6 +31,7 @@
 		"login_here": "Inloggen"
 	},
 	"common": {
+		"back": "Terug",
 		"save": "Opslaan",
 		"cancel": "Annuleren",
 		"delete": "Verwijderen",
@@ -48,6 +49,10 @@
 		"no_data": "Geen gegevens beschikbaar",
 		"actions": "Acties",
 		"required": "Dit veld is verplicht",
+		"name": "Naam",
+		"email": "E-mail",
+		"phone": "Telefoon",
+		"address": "Adres",
 		"description": "Beschrijving",
 		"active": "Actief",
 		"inactive": "Inactief",

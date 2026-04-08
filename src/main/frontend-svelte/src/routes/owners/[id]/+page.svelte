@@ -405,7 +405,7 @@
 					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
 						{tt('common.cancel')}
 					</button>
-					<button type="submit" class="btn btn-primary" disabled={!hasChanges}>
+					<button type="submit" class="btn" class:btn-primary={hasChanges} class:btn-disabled={!hasChanges}>
 						{tt('common.update')} Owner
 					</button>
 				</div>
@@ -481,6 +481,8 @@
 	.btn { padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 	.btn-primary { background: #3b82f6; color: white; }
 	.btn-primary:hover { background: #2563eb; }
+	.btn-disabled { background: #93c5fd; color: #1e40af; cursor: not-allowed; }
+	.btn-disabled:hover { background: #93c5fd; }
 	.btn-secondary { background: #6b7280; color: white; }
 	.btn-secondary:hover { background: #4b5563; }
 	.btn-danger { background: #ef4444; color: white; }
