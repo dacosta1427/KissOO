@@ -1,24 +1,16 @@
+import koo.oodb.core.actor.ActorType
+import koo.oodb.core.actor.Agreement
 import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import oodb.PerstConfig
-import oodb.PerstStorageManager
-import oodb.PerstConnection
-import mycompany.database.PerstUserManager
-import mycompany.domain.PerstUser
-import mycompany.domain.Actor
-import mycompany.domain.Cleaner
-import mycompany.domain.House
-import mycompany.domain.Booking
-import mycompany.domain.Schedule
-import mycompany.domain.Owner
-import mycompany.domain.CostProfile
-import mycompany.domain.Agreement
-import mycompany.domain.Phone
-import mycompany.domain.Group
-import mycompany.domain.BenchmarkData
-import com.mycompany.security.PasswordSecurity
+import koo.oodb.core.PerstConfig
+import koo.oodb.core.StorageManager
+import koo.oodb.core.PerstConnection
+import koo.oodb.core.user.PerstUserManager
+import koo.oodb.core.user.PerstUser
+import koo.oodb.core.actor.AActor
+import koo.security.PasswordSecurity
 import java.util.function.Consumer
 
 class KissInit {
@@ -46,11 +38,11 @@ class KissInit {
         println "[KissInit] init() - PerstEnabled=" + PerstConfig.getInstance().isPerstEnabled()
         
         // Step 1: Initialize Perst if needed
-        if (PerstConfig.getInstance().isPerstEnabled() && !PerstStorageManager.isAvailable()) {
+        if (PerstConfig.getInstance().isPerstEnabled() && !StorageManager.isAvailable()) {
             println "[KissInit] init() - Initializing Perst NOW..."
             try {
-                PerstStorageManager.initialize()
-                println "[KissInit] init() - Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
+                StorageManager.initialize()
+                println "[KissInit] init() - Perst initialized, isAvailable=" + StorageManager.isAvailable()
             } catch (Exception e) {
                 println "[KissInit] ERROR during Perst init: " + e.message
                 e.printStackTrace()
@@ -59,7 +51,7 @@ class KissInit {
         
         // Step 2: Register PerstConnection ALWAYS when Perst is enabled and available
         // This runs even if Perst was already initialized from a previous startup
-        if (PerstConfig.getInstance().isPerstEnabled() && PerstStorageManager.isAvailable()) {
+        if (PerstConfig.getInstance().isPerstEnabled() && StorageManager.isAvailable()) {
             try {
                 // Check if already registered
                 def existing = MainServlet.getEnvironment("NonSqlConnection")
@@ -85,14 +77,14 @@ class KissInit {
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
         MainServlet.allowWithoutAuthentication("", "Login")
         
-        // Allow services.Login (for clients calling services.Login.Login)
+        // Allow koo.services.Login (for clients calling koo.services.Login.Login)
         MainServlet.allowWithoutAuthentication("services/Login", "Login")
         
         // Allow user creation without authentication (for first-time setup)
         MainServlet.allowWithoutAuthentication("services/Users", "addRecord")
         
         // Allow signup without authentication
-        MainServlet.allowWithoutAuthentication("services.AuthService", "signup")
+        MainServlet.allowWithoutAuthentication("services.auth.AuthService", "signup")
         
         println "[KissInit] init() COMPLETED"
         
@@ -130,16 +122,16 @@ class KissInit {
             println "[KissInit] Checking Perst config: enabled=" + PerstConfig.getInstance().isPerstEnabled()
             println "[KissInit] Database path: " + PerstConfig.getInstance().getDatabasePath()
             
-            if (PerstConfig.getInstance().isPerstEnabled() && !PerstStorageManager.isAvailable()) {
+            if (PerstConfig.getInstance().isPerstEnabled() && !StorageManager.isAvailable()) {
                 println "[KissInit] Initializing Perst database via PerstStorageManager..."
-                PerstStorageManager.initialize()
-                println "[KissInit] Perst initialized, isAvailable=" + PerstStorageManager.isAvailable()
+                StorageManager.initialize()
+                println "[KissInit] Perst initialized, isAvailable=" + StorageManager.isAvailable()
             } else {
                 println "[KissInit] Perst is NOT enabled - check application.ini"
             }
 
             // Initialize default admin user if none exists
-            if (PerstStorageManager.isAvailable()) {
+            if (StorageManager.isAvailable()) {
                 initDefaultUser()
                 indexPerstUsers()
                 indexActors()
@@ -159,15 +151,15 @@ class KissInit {
      */
     private static void initDefaultUser() {
         try {
-            def users = PerstStorageManager.getAll(PerstUser.class)
+            def users = StorageManager.getAll(PerstUser.class)
             if (!users || users.size() == 0) {
                 println "[KissInit] Creating default superAdmin user..."
                 
-                // Create superAdmin Actor with full Agreement
-                def agreement = new mycompany.domain.Agreement("superAdmin")
-                def adminActor = new mycompany.domain.Actor("System Admin", "superAdmin", agreement, mycompany.domain.ActorType.NATURAL)
+                // Create superAdmin AActor with full Agreement
+                def agreement = new Agreement("superAdmin")
+                def adminActor = new AActor("System Admin", "superAdmin", agreement, ActorType.NATURAL)
                 
-                // Actor constructor already created a deactivated PerstUser
+                // AActor constructor already created a deactivated PerstUser
                 // Configure it with admin credentials
                 def adminUser = adminActor.getPerstUser()
                 adminUser.setUsername("admin")
@@ -177,10 +169,10 @@ class KissInit {
                 adminUser.setEmailVerified(true)
                 
                 // Store both together
-                def tc = PerstStorageManager.createContainer()
+                def tc = StorageManager.createContainer()
                 tc.addInsert(adminActor)
                 tc.addInsert(adminUser)
-                if (PerstStorageManager.store(tc)) {
+                if (StorageManager.store(tc)) {
                     println "[KissInit] Default superAdmin user created. CHANGE PASSWORD IMMEDIATELY!"
                 } else {
                     println "[KissInit] ERROR: Failed to create admin user"
@@ -224,7 +216,7 @@ class KissInit {
      * Index all Actors for fast lookup
      */
     private static void indexActors() {
-        println "[KissInit] Skipping Actor indexing (not required for CDatabase)"
+        println "[KissInit] Skipping AActor indexing (not required for CDatabase)"
     }
     
 }

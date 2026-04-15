@@ -1,5 +1,6 @@
 package oodb;
 
+import koo.oodb.StorageManager;
 import org.garret.perst.continuous.TransactionContainer;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,14 +13,14 @@ public class PerstContextIntegrationTest {
 
     @Test
     public void testIsAvailableReflectsInitialization() {
-        boolean available = PerstStorageManager.isAvailable();
+        boolean available = StorageManager.isAvailable();
         assertNotNull(available);
     }
 
     @Test
     public void testCreateContainerWhenAvailable() {
-        if (PerstStorageManager.isAvailable()) {
-            TransactionContainer tc = PerstStorageManager.createContainer();
+        if (StorageManager.isAvailable()) {
+            TransactionContainer tc = StorageManager.createContainer();
             assertNotNull(tc);
         }
     }

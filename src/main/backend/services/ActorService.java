@@ -1,10 +1,10 @@
 package services;
 
-import mycompany.domain.Actor;
-import mycompany.domain.PerstUser;
-import mycompany.domain.EndpointMethod;
+import koo.oodb.core.actor.AActor;
+import koo.oodb.core.actor.ActorManager;
+import koo.oodb.core.user.PerstUser;
+import koo.security.EndpointMethod;
 import org.garret.perst.json.JSONObject;
-import org.garret.perst.json.JSONArray;
 import org.kissweb.restServer.ProcessServlet;
 import org.kissweb.restServer.UserData;
 import org.kissweb.database.Connection;
@@ -23,7 +23,7 @@ import java.util.Map;
  * HTTP API Call Format:
  * {
  *   "_class": "services.ActorService",
- *   "_method": "getAllActors",   // or "getActor", "createActor"
+ *   "_method": "getAllActors",   // or "getAActor", "createActor"
  *   "_uuid": "session-uuid",     // from login
  *   ...params...
  * }
@@ -48,8 +48,8 @@ import java.util.Map;
  *   agreement.grant(ActorService.CREATE_ACTOR);
  * 
  * OR via CRUD:
- *   agreement.grant("Actor", "read");
- *   agreement.grant("Actor", "create");
+ *   agreement.grant("AActor", "read");
+ *   agreement.grant("AActor", "create");
  */
 public class ActorService {
     
@@ -57,11 +57,11 @@ public class ActorService {
     // These can be granted via Agreement for type-safe authorization
     
     /** Get a single actor by UUID */
-    public static final EndpointMethod GET_ACTOR = new EndpointMethod("services.ActorService.getActor", Actor.class) {
+    public static final EndpointMethod GET_ACTOR = new EndpointMethod("services.ActorService.getAActor", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             // Inline implementation - authorization done by Agreement
-            Actor caller = getAuthenticatedActor(servlet);
+            AActor caller = getAuthenticatedActor(servlet);
             if (caller == null) {
                 out.put("error", "Not authenticated");
                 return false;
@@ -73,39 +73,39 @@ public class ActorService {
                 return false;
             }
             
-            Actor actor = ActorManager.getByUuid(caller, uuid);
-            if (actor == null) {
-                out.put("error", "Not authorized or Actor not found");
+            AActor AActor = ActorManager.getByUuid(caller, uuid);
+            if (AActor == null) {
+                out.put("error", "Not authorized or AActor not found");
                 return false;
             }
             
-            out.put("actor", actor.toJSON());
+            out.put("AActor", AActor.toJSON());
             out.put("source", "perst");
             return true;
         }
     };
     
     /** Get all actors */
-    public static final EndpointMethod GET_ALL_ACTORS = new EndpointMethod("services.ActorService.getAllActors", Actor.class) {
+    public static final EndpointMethod GET_ALL_ACTORS = new EndpointMethod("services.ActorService.getAllActors", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
-            Actor caller = getAuthenticatedActor(servlet);
+            AActor caller = getAuthenticatedActor(servlet);
             if (caller == null) {
                 out.put("error", "Not authenticated");
                 return false;
             }
             
-            Collection<Actor> actors = ActorManager.getAll(caller);
-            if (actors == null) {
+            Collection<AActor> AActors = ActorManager.getAll(caller);
+            if (AActors == null) {
                 out.put("error", "Not authorized to list Actors");
                 return false;
             }
             
             List<Map<String, Object>> actorList = new ArrayList<>();
-            for (Actor actor : actors) {
-                actorList.add(actor.toJSON());
+            for (AActor AActor : AActors) {
+                actorList.add(AActor.toJSON());
             }
-            out.put("actors", actorList);
+            out.put("AActors", actorList);
             out.put("source", "perst");
             out.put("count", actorList.size());
             return true;
@@ -113,10 +113,10 @@ public class ActorService {
     };
     
     /** Create a new actor */
-    public static final EndpointMethod CREATE_ACTOR = new EndpointMethod("services.ActorService.createActor", Actor.class) {
+    public static final EndpointMethod CREATE_ACTOR = new EndpointMethod("services.ActorService.createActor", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
-            Actor caller = getAuthenticatedActor(servlet);
+            AActor caller = getAuthenticatedActor(servlet);
             if (caller == null) {
                 out.put("error", "Not authenticated");
                 return false;
@@ -131,23 +131,23 @@ public class ActorService {
                 return false;
             }
             
-            Actor actor = ActorManager.create(caller, name, type);
-            if (actor == null) {
-                out.put("error", "Not authorized to create Actor");
+            AActor AActor = ActorManager.create(caller, name, type);
+            if (AActor == null) {
+                out.put("error", "Not authorized to create AActor");
                 return false;
             }
             
-            out.put("actor", actor.toJSON());
+            out.put("AActor", AActor.toJSON());
             out.put("status", "created");
             return true;
         }
     };
     
     /** Update an actor */
-    public static final EndpointMethod UPDATE_ACTOR = new EndpointMethod("services.ActorService.updateActor", Actor.class) {
+    public static final EndpointMethod UPDATE_ACTOR = new EndpointMethod("services.ActorService.updateActor", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
-            Actor caller = getAuthenticatedActor(servlet);
+            AActor caller = getAuthenticatedActor(servlet);
             if (caller == null) {
                 out.put("error", "Not authenticated");
                 return false;
@@ -161,32 +161,32 @@ public class ActorService {
                 return false;
             }
             
-            Actor actor = ActorManager.getByUuid(caller, uuid);
-            if (actor == null) {
-                out.put("error", "Not authorized or Actor not found");
+            AActor AActor = ActorManager.getByUuid(caller, uuid);
+            if (AActor == null) {
+                out.put("error", "Not authorized or AActor not found");
                 return false;
             }
             
             if (name != null && !name.isEmpty()) {
-                actor.setName(name);
+                AActor.setName(name);
             }
             
-            if (!ActorManager.update(caller, actor)) {
-                out.put("error", "Not authorized to update Actor");
+            if (!ActorManager.update(caller, AActor)) {
+                out.put("error", "Not authorized to update AActor");
                 return false;
             }
             
-            out.put("actor", actor.toJSON());
+            out.put("AActor", AActor.toJSON());
             out.put("status", "updated");
             return true;
         }
     };
     
     /** Delete an actor */
-    public static final EndpointMethod DELETE_ACTOR = new EndpointMethod("services.ActorService.deleteActor", Actor.class) {
+    public static final EndpointMethod DELETE_ACTOR = new EndpointMethod("services.ActorService.deleteActor", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
-            Actor caller = getAuthenticatedActor(servlet);
+            AActor caller = getAuthenticatedActor(servlet);
             if (caller == null) {
                 out.put("error", "Not authenticated");
                 return false;
@@ -198,14 +198,14 @@ public class ActorService {
                 return false;
             }
             
-            Actor actor = ActorManager.getByUuid(caller, uuid);
-            if (actor == null) {
-                out.put("error", "Not authorized or Actor not found");
+            AActor AActor = ActorManager.getByUuid(caller, uuid);
+            if (AActor == null) {
+                out.put("error", "Not authorized or AActor not found");
                 return false;
             }
             
-            if (!ActorManager.delete(caller, actor)) {
-                out.put("error", "Not authorized to delete Actor");
+            if (!ActorManager.delete(caller, AActor)) {
+                out.put("error", "Not authorized to delete AActor");
                 return false;
             }
             
@@ -219,7 +219,7 @@ public class ActorService {
     // These are NOT callable via REST (internal only)
     
     /** Internal calculation - not accessible via REST */
-    public static final EndpointMethod DO_INTERNAL_CALC = new EndpointMethod("services.ActorService.doInternalCalc", Actor.class, false) {
+    public static final EndpointMethod DO_INTERNAL_CALC = new EndpointMethod("services.ActorService.doInternalCalc", AActor.class, false) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             // Internal logic only - can only be called from within the app
@@ -230,16 +230,16 @@ public class ActorService {
     // ======================= HELPER METHODS =======================
     
     /**
-     * Helper method to get authenticated Actor from servlet.
+     * Helper method to get authenticated AActor from servlet.
      * Returns null if not authenticated.
      */
-    private static Actor getAuthenticatedActor(ProcessServlet servlet) {
+    private static AActor getAuthenticatedActor(ProcessServlet servlet) {
         UserData ud = servlet.getUserData();
         if (ud == null) {
             return null;
         }
         PerstUser pu = (PerstUser) ud.getUserData("perstUser");
-        return pu != null ? pu.getActor() : null;
+        return pu != null ? pu.getAActor() : null;
     }
     
     // ======================= LEGACY METHODS (still work) =======================

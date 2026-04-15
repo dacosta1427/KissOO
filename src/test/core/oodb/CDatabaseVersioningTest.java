@@ -4,7 +4,10 @@ import org.garret.perst.continuous.CDatabase;
 import org.garret.perst.continuous.FullTextSearchResult;
 import org.garret.perst.continuous.VersionSelector;
 import org.garret.perst.IterableIterator;
-import mycompany.domain.Actor;
+import koo.oodb.core.actor.Actor;
+import koo.oodb.core.actor.Agreement;
+import koo.oodb.core.StorageManager;
+import koo.oodb.core.PerstConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +25,7 @@ public class CDatabaseVersioningTest {
 
     public static void main(String[] args) {
         // Initialize Perst first (this is normally done by KissInit)
-        PerstStorageManager.initialize();
+        StorageManager.initialize();
         
         CDatabaseVersioningTest test = new CDatabaseVersioningTest();
         try {
@@ -56,7 +59,7 @@ public class CDatabaseVersioningTest {
         database.commitTransaction();
         String uuid = actor1.getUuid();
         long txId1 = actor1.getTransactionId();
-        System.out.println("   Created Actor with UUID: " + uuid);
+        System.out.println("   Created AActor with UUID: " + uuid);
         System.out.println("   Transaction ID: " + txId1);
 
         // 4. Update to create v2
@@ -169,12 +172,12 @@ public class CDatabaseVersioningTest {
     }
 
     private Actor createTestActor(String name, String description) {
-        mycompany.domain.Agreement agreement = new mycompany.domain.Agreement(name + "_agreement");
+        Agreement agreement = new Agreement(name + "_agreement");
         return new Actor(name, "USER", agreement);
     }
     
     private Actor createTestActorWithUser(String name, String description, int userId) {
-        mycompany.domain.Agreement agreement = new mycompany.domain.Agreement(name + "_agreement");
+        Agreement agreement = new Agreement(name + "_agreement");
         Actor actor = new Actor(name, "USER", agreement);
         // userId field no longer exists - just return actor
         return actor;

@@ -52,7 +52,7 @@ public class ComparisonBenchmark13 {
         }
     }
     
-    // Movie-Actor relationship (many-to-many)
+    // Movie-AActor relationship (many-to-many)
     static class MovieActor extends Persistent {
         String movieUuid;
         String actorUuid;
@@ -71,7 +71,7 @@ public class ComparisonBenchmark13 {
     
     static final int N_MOVIES = 5000;
     static final int N_ACTORS = 2000;
-    static final int N_RELATIONSHIPS = 15000;  // average 3 actors per movie
+    static final int N_RELATIONSHIPS = 15000;  // average 3 AActors per movie
     
     static String jdbcUrl = "jdbc:postgresql://localhost:5432/perst_test";
     static String dbUser = "postgres";
@@ -109,7 +109,7 @@ public class ComparisonBenchmark13 {
         // Movies table
         stmt.execute("DROP TABLE IF EXISTS movie_actors CASCADE");
         stmt.execute("DROP TABLE IF EXISTS movies CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS actors CASCADE");
+        stmt.execute("DROP TABLE IF EXISTS AActors CASCADE");
         
         stmt.execute("""
             CREATE TABLE movies (
@@ -129,7 +129,7 @@ public class ComparisonBenchmark13 {
         
         // Actors table
         stmt.execute("""
-            CREATE TABLE actors (
+            CREATE TABLE AActors (
                 id SERIAL PRIMARY KEY,
                 uuid VARCHAR(36) UNIQUE NOT NULL,
                 name VARCHAR(255) NOT NULL,
@@ -138,9 +138,9 @@ public class ComparisonBenchmark13 {
             )
         """);
         
-        stmt.execute("CREATE INDEX idx_actors_name ON actors(name)");
-        stmt.execute("CREATE INDEX idx_actors_birth_year ON actors(birth_year)");
-        stmt.execute("CREATE INDEX idx_actors_uuid ON actors(uuid)");
+        stmt.execute("CREATE INDEX idx_actors_name ON AActors(name)");
+        stmt.execute("CREATE INDEX idx_actors_birth_year ON AActors(birth_year)");
+        stmt.execute("CREATE INDEX idx_actors_uuid ON AActors(uuid)");
         
         // Movie-Actors junction table (many-to-many)
         stmt.execute("""
@@ -150,7 +150,7 @@ public class ComparisonBenchmark13 {
                 actor_uuid VARCHAR(36) NOT NULL,
                 role VARCHAR(100),
                 FOREIGN KEY (movie_uuid) REFERENCES movies(uuid),
-                FOREIGN KEY (actor_uuid) REFERENCES actors(uuid)
+                FOREIGN KEY (actor_uuid) REFERENCES AActors(uuid)
             )
         """);
         
@@ -199,7 +199,7 @@ public class ComparisonBenchmark13 {
             "INSERT INTO movies (uuid, title, year, genre, rating) VALUES (?, ?, ?, ?, ?)"
         );
         PreparedStatement psActor = pgConn.prepareStatement(
-            "INSERT INTO actors (uuid, name, birth_year, country) VALUES (?, ?, ?, ?)"
+            "INSERT INTO AActors (uuid, name, birth_year, country) VALUES (?, ?, ?, ?)"
         );
         PreparedStatement psRelation = pgConn.prepareStatement(
             "INSERT INTO movie_actors (movie_uuid, actor_uuid, role) VALUES (?, ?, ?)"
@@ -220,13 +220,13 @@ public class ComparisonBenchmark13 {
         }
         psMovie.executeBatch();
         
-        // Create actors
+        // Create AActors
         String[] countries = {"USA", "UK", "Canada", "France", "Germany", "Japan", "Australia"};
         for (int i = 0; i < N_ACTORS; i++) {
             String uuid = UUID.randomUUID().toString();
             actorUuids.add(uuid);
             psActor.setString(1, uuid);
-            psActor.setString(2, "Actor-" + i);
+            psActor.setString(2, "AActor-" + i);
             psActor.setInt(3, 1950 + (i % 70));
             psActor.setString(4, countries[i % countries.length]);
             psActor.addBatch();
@@ -268,10 +268,10 @@ public class ComparisonBenchmark13 {
             perstMovieUuids.add(movie.uuid);
         }
         
-        // Create actors in Perst
+        // Create AActors in Perst
         for (int i = 0; i < N_ACTORS; i++) {
             Actor actor = new Actor(
-                "Actor-" + i,
+                "AActor-" + i,
                 1950 + (i % 70),
                 countries[i % countries.length]
             );
@@ -304,7 +304,7 @@ public class ComparisonBenchmark13 {
             SELECT m.title, m.rating, a.name, a.country
             FROM movies m
             INNER JOIN movie_actors ma ON m.uuid = ma.movie_uuid
-            INNER JOIN actors a ON ma.actor_uuid = a.uuid
+            INNER JOIN AActors a ON ma.actor_uuid = a.uuid
             WHERE m.year >= 2015 AND a.birth_year > 1970
             LIMIT 500
         """;
@@ -323,7 +323,7 @@ public class ComparisonBenchmark13 {
         while (movieIter.hasNext() && perstCount < 500) {
             Movie m = (Movie) movieIter.next();
             if (m.year >= 2015) {
-                // Get actors for this movie
+                // Get AActors for this movie
                 List<String> actorUuids = movieToActors.get(m.uuid);
                 if (actorUuids != null) {
                     for (String actorUuid : actorUuids) {
@@ -337,19 +337,19 @@ public class ComparisonBenchmark13 {
         }
         long perstTime = System.currentTimeMillis() - start;
         
-        printResult("INNER JOIN (movies + actors with filters)", perstTime, pgTime);
+        printResult("INNER JOIN (movies + AActors with filters)", perstTime, pgTime);
     }
     
     // ==================== Test 2: Left JOIN ====================
     
     static void testLeftJoin() throws Exception {
-        // PostgreSQL - LEFT JOIN (all movies with their actors)
+        // PostgreSQL - LEFT JOIN (all movies with their AActors)
         long start = System.currentTimeMillis();
         String sql = """
             SELECT m.title, m.genre, a.name
             FROM movies m
             LEFT JOIN movie_actors ma ON m.uuid = ma.movie_uuid
-            LEFT JOIN actors a ON ma.actor_uuid = a.uuid
+            LEFT JOIN AActors a ON ma.actor_uuid = a.uuid
             WHERE m.genre = 'Action'
             LIMIT 200
         """;
@@ -373,7 +373,7 @@ public class ComparisonBenchmark13 {
                         perstCount++;
                     }
                 }
-                // Even if no actors, we still "include" the movie (left join behavior)
+                // Even if no AActors, we still "include" the movie (left join behavior)
                 if (actorUuids == null || actorUuids.isEmpty()) {
                     perstCount++;
                 }
@@ -381,7 +381,7 @@ public class ComparisonBenchmark13 {
         }
         long perstTime = System.currentTimeMillis() - start;
         
-        printResult("LEFT JOIN (all Action movies with actors)", perstTime, pgTime);
+        printResult("LEFT JOIN (all Action movies with AActors)", perstTime, pgTime);
     }
     
     // ==================== Test 3: Aggregation with JOIN ====================
@@ -391,7 +391,7 @@ public class ComparisonBenchmark13 {
         long start = System.currentTimeMillis();
         String sql = """
             SELECT a.name, a.country, COUNT(m.id) as movie_count
-            FROM actors a
+            FROM AActors a
             LEFT JOIN movie_actors ma ON a.uuid = ma.actor_uuid
             LEFT JOIN movies m ON ma.movie_uuid = m.uuid
             GROUP BY a.uuid, a.name, a.country
@@ -425,7 +425,7 @@ public class ComparisonBenchmark13 {
             .count();
         long perstTime = System.currentTimeMillis() - start;
         
-        printResult("Aggregation with JOIN (actors with movie count)", perstTime, pgTime);
+        printResult("Aggregation with JOIN (AActors with movie count)", perstTime, pgTime);
     }
     
     // ==================== Test 4: Multi-table JOIN ====================
@@ -437,7 +437,7 @@ public class ComparisonBenchmark13 {
             SELECT m.title, m.year, a.name, ma.role
             FROM movies m
             INNER JOIN movie_actors ma ON m.uuid = ma.movie_uuid
-            INNER JOIN actors a ON ma.actor_uuid = a.uuid
+            INNER JOIN AActors a ON ma.actor_uuid = a.uuid
             WHERE m.rating >= 8.0 AND a.country = 'USA'
             ORDER BY m.rating DESC
             LIMIT 100
@@ -479,7 +479,7 @@ public class ComparisonBenchmark13 {
         long start = System.currentTimeMillis();
         String sql = """
             SELECT DISTINCT a.name, a.birth_year
-            FROM actors a
+            FROM AActors a
             WHERE a.uuid IN (
                 SELECT ma.actor_uuid FROM movie_actors ma
                 WHERE ma.movie_uuid IN (
@@ -509,7 +509,7 @@ public class ComparisonBenchmark13 {
             }
         }
         
-        // Find actors in those movies
+        // Find AActors in those movies
         Set<String> actorUuids = new HashSet<>();
         for (String movieUuid : highRatedMovieUuids) {
             List<String> actorList = movieToActors.get(movieUuid);
@@ -527,7 +527,7 @@ public class ComparisonBenchmark13 {
         }
         long perstTime = System.currentTimeMillis() - start;
         
-        printResult("Nested Subquery (actors in top-rated movies)", perstTime, pgTime);
+        printResult("Nested Subquery (AActors in top-rated movies)", perstTime, pgTime);
     }
     
     // ==================== Test 6: Complex Aggregation ====================

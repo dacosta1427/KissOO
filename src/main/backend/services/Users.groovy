@@ -1,12 +1,13 @@
 package services
 
+
 import org.kissweb.json.JSONArray
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import oodb.PerstStorageManager
-import mycompany.domain.PerstUser
-import mycompany.domain.Owner
+import koo.oodb.core.StorageManager
+import koo.oodb.core.user.PerstUser
+import mycompany.actor.owner.Owner
 
 /**
  * Users service for CRUD operations on PerstUser.
@@ -22,7 +23,7 @@ class Users {
         try {
             PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
             if (pu == null) return false
-            def actor = pu.getActor()
+            def actor = pu.getAActor()
             if (actor == null) return false
             def role = actor.getAgreement()?.getRole()
             return "superAdmin".equals(role)
@@ -41,7 +42,7 @@ class Users {
         try {
             checkSystemAdmin(servlet, "getUsers")
 
-            Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
+            Collection<PerstUser> users = StorageManager.getAll(PerstUser.class)
             JSONArray rows = new JSONArray()
 
             for (PerstUser user : users) {
@@ -53,9 +54,9 @@ class Users {
                 row.put("emailVerified", user.isEmailVerified())
                 row.put("email", user.getEmail())
                 
-                // Include actor type to identify if this is Owner or Cleaner
-                if (user.getActor() != null) {
-                    row.put("actorType", user.getActor().getType())
+                // Include AActor type to identify if this is Owner or Cleaner
+                if (user.getAActor() != null) {
+                    row.put("actorType", user.getAActor().getType())
                 } else {
                     row.put("actorType", null)
                 }
@@ -83,15 +84,15 @@ class Users {
             boolean requireVerification = injson.getBoolean("requireVerification", false)
             
             // Check if username already exists
-            Collection<PerstUser> existingUsers = PerstStorageManager.getAll(PerstUser.class)
+            Collection<PerstUser> existingUsers = StorageManager.getAll(PerstUser.class)
             if (existingUsers.any { it.getUsername() == userName }) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Username already exists")
                 return
             }
             
-            // Create Owner - Actor constructor auto-creates deactivated PerstUser
-            Owner owner = new Owner(name, email, phone, address)
+            // Create Owner - AActor constructor auto-creates deactivated PerstUser
+            Owner owner = new Owner(name, phone, email, address)
             
             // Configure the auto-created PerstUser
             PerstUser user = owner.getPerstUser()
@@ -108,10 +109,10 @@ class Users {
                 user.setEmailVerified(true)
             }
             
-            def tc = PerstStorageManager.createContainer()
+            def tc = StorageManager.createContainer()
             tc.addInsert(owner)
             tc.addInsert(user)
-            if (!PerstStorageManager.store(tc)) {
+            if (!StorageManager.store(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Failed to create owner")
                 return
@@ -140,7 +141,7 @@ class Users {
             
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            PerstUser userToUpdate = PerstStorageManager.getByOid(PerstUser.class, oid)
+            PerstUser userToUpdate = StorageManager.getByOid(PerstUser.class, oid)
             
             if (userToUpdate == null) {
                 outjson.put("_Success", false)
@@ -152,9 +153,9 @@ class Users {
             userToUpdate.setPassword(injson.getString("userPassword"))
             userToUpdate.setActive(injson.getString("userActive") == "Y")
             
-            def tc = PerstStorageManager.createContainer()
+            def tc = StorageManager.createContainer()
             tc.addUpdate(userToUpdate)
-            PerstStorageManager.store(tc)
+            StorageManager.store(tc)
             
             outjson.put("_Success", true)
             outjson.put("success", true)
@@ -169,7 +170,7 @@ class Users {
             
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            PerstUser userToDelete = PerstStorageManager.getByOid(PerstUser.class, oid)
+            PerstUser userToDelete = StorageManager.getByOid(PerstUser.class, oid)
             
             if (userToDelete == null) {
                 outjson.put("_Success", false)
@@ -177,9 +178,9 @@ class Users {
                 return
             }
             
-            def tc = PerstStorageManager.createContainer()
+            def tc = StorageManager.createContainer()
             tc.addDelete(userToDelete)
-            PerstStorageManager.store(tc)
+            StorageManager.store(tc)
             
             outjson.put("_Success", true)
             outjson.put("success", true)
@@ -205,7 +206,7 @@ class Users {
                 return
             }
             
-            PerstUser userToUpdate = PerstStorageManager.getByOid(PerstUser.class, oid)
+            PerstUser userToUpdate = StorageManager.getByOid(PerstUser.class, oid)
             
             if (userToUpdate == null) {
                 outjson.put("_Success", false)
@@ -215,9 +216,9 @@ class Users {
             
             userToUpdate.setPreferredLanguage(language)
             
-            def tc = PerstStorageManager.createContainer()
+            def tc = StorageManager.createContainer()
             tc.addUpdate(userToUpdate)
-            PerstStorageManager.store(tc)
+            StorageManager.store(tc)
             
             outjson.put("_Success", true)
             outjson.put("success", true)
@@ -254,7 +255,7 @@ class Users {
             }
             
             // Find user with this verification token
-            Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
+            Collection<PerstUser> users = StorageManager.getAll(PerstUser.class)
             PerstUser userToVerify = null
             
             for (PerstUser user : users) {
@@ -287,14 +288,14 @@ class Users {
                     userToVerify.setMustChangePassword(false)
                 }
                 
-                def tc = PerstStorageManager.createContainer()
+                def tc = StorageManager.createContainer()
                 tc.addUpdate(userToVerify)
-                PerstStorageManager.store(tc)
+                StorageManager.store(tc)
                 
-                // Get the user's name from their Actor
+                // Get the user's name from their AActor
                 def actorName = ""
-                if (userToVerify.getActor() != null) {
-                    actorName = userToVerify.getActor().getName() ?: ""
+                if (userToVerify.getAActor() != null) {
+                    actorName = userToVerify.getAActor().getName() ?: ""
                 }
                 
                 if (password != null && !password.isEmpty()) {
@@ -336,14 +337,14 @@ class Users {
             }
             
             // Find user with this verification token
-            Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
+            Collection<PerstUser> users = StorageManager.getAll(PerstUser.class)
             for (PerstUser user : users) {
                 println "[Users] Checking user: ${user.getUsername()} token: ${user.getVerificationToken()}"
                 if (user.getVerificationToken() != null && user.getVerificationToken().equals(token)) {
-                    // Get the user's name from their Actor
+                    // Get the user's name from their AActor
                     String actorName = ""
-                    if (user.getActor() != null) {
-                        actorName = user.getActor().getName() ?: ""
+                    if (user.getAActor() != null) {
+                        actorName = user.getAActor().getName() ?: ""
                     }
                     outjson.put("_Success", true)
                     outjson.put("userName", actorName)
@@ -379,7 +380,7 @@ class Users {
             }
             
             // Find user by email
-            Collection<PerstUser> users = PerstStorageManager.getAll(PerstUser.class)
+            Collection<PerstUser> users = StorageManager.getAll(PerstUser.class)
             PerstUser user = null
             
             for (PerstUser u : users) {
@@ -404,9 +405,9 @@ class Users {
             
             // Generate new verification token
             user.generateVerificationToken()
-            def tc = PerstStorageManager.createContainer()
+            def tc = StorageManager.createContainer()
             tc.addUpdate(user)
-            PerstStorageManager.store(tc)
+            StorageManager.store(tc)
             
             // TODO: Send verification email via EmailService when SMTP is configured
             // For now, just return success
@@ -426,7 +427,7 @@ class Users {
             long oid = injson.getLong("id")
             boolean canLogin = injson.getBoolean("canLogin")
             
-            PerstUser user = PerstStorageManager.getByOid(PerstUser.class, oid)
+            PerstUser user = StorageManager.getByOid(PerstUser.class, oid)
             if (user == null) {
                 outjson.put("_Success", false)
                 outjson.put("error", "User not found")
@@ -435,15 +436,15 @@ class Users {
             
             user.setActive(canLogin)
             
-            def tc = PerstStorageManager.createContainer()
+            def tc = StorageManager.createContainer()
             tc.addUpdate(user)
-            PerstStorageManager.store(tc)
+            StorageManager.store(tc)
             
             // Send email notification
             if (canLogin) {
                 try {
                     def baseUrl = "http://localhost:5173"
-                    def actorName = user.getActor() != null ? user.getActor().getName() : user.getUsername()
+                    def actorName = user.getAActor() != null ? user.getAActor().getName() : user.getUsername()
                     
                     if (user.isEmailVerified()) {
                         // Email already verified - send welcome/login info
@@ -451,9 +452,9 @@ class Users {
                         user.setPassword(tempPassword)
                         user.setMustChangePassword(true)
                         tc.addUpdate(user)
-                        PerstStorageManager.store(tc)
+                        StorageManager.store(tc)
                         
-                        services.EmailService.sendLoginCredentialsEmail(
+                        services.auth.EmailService.sendLoginCredentialsEmail(
                             user.getEmail(), 
                             actorName, 
                             user.getUsername(), 
@@ -465,9 +466,9 @@ class Users {
                         // Email not verified - send verification email
                         user.generateVerificationToken()
                         tc.addUpdate(user)
-                        PerstStorageManager.store(tc)
+                        StorageManager.store(tc)
                         
-                        services.EmailService.sendVerificationEmail(
+                        services.auth.EmailService.sendVerificationEmail(
                             user.getEmail(),
                             actorName,
                             user.getVerificationToken(),

@@ -476,7 +476,7 @@
 	{/if}
 </div>
 
-<!-- Complete Cleaning Modal -->
+<!-- Complete CleaningService Modal -->
 {#if selectedScheduleForAction}
 	<div class="modal-overlay" role="dialog" aria-modal="true" tabindex="-1" onclick={() => selectedScheduleForAction = null} onkeydown={(e) => e.key === 'Escape' && (selectedScheduleForAction = null)}>
 		<div class="modal-content" role="document" onclick={(e) => e.stopPropagation()}>

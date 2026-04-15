@@ -1,22 +1,19 @@
 package services
 
+
+import koo.oodb.core.actor.AActor
+import koo.oodb.core.actor.ActorType
+import koo.oodb.core.actor.Agreement
 import org.kissweb.json.JSONObject
-import org.kissweb.json.JSONArray
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import oodb.PerstStorageManager
-import mycompany.domain.PerstUser
-import mycompany.domain.Owner
-import mycompany.domain.House
-import mycompany.domain.Cleaner
-import mycompany.domain.Booking
-import mycompany.domain.Schedule
-import java.util.Collections
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import mycompany.domain.Booking
-import mycompany.domain.Cleaner
-import mycompany.domain.Schedule
+import koo.oodb.core.StorageManager
+import koo.oodb.core.user.PerstUser
+import mycompany.actor.owner.Owner
+import mycompany.oov.house.House
+import mycompany.oov.house.Booking
+import mycompany.actor.cleaner.Cleaner
+import mycompany.actor.cleaner.Schedule
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -27,7 +24,7 @@ class LoadTestdata {
         try {
             PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
             if (pu == null) return false
-            def actor = pu.getActor()
+            def actor = pu.getAActor()
             if (actor == null) return false
             def role = actor.getAgreement()?.getRole()
             return "superAdmin".equals(role)
@@ -45,29 +42,29 @@ class LoadTestdata {
     private void clearDataInternal() {
         try {
             // Delete all schedules
-            def allSchedules = PerstStorageManager.getAll(Schedule.class)
+            def allSchedules = StorageManager.getAll(Schedule.class)
             allSchedules.each { s ->
-                def tc = PerstStorageManager.createContainer()
+                def tc = StorageManager.createContainer()
                 tc.addDelete(s)
-                PerstStorageManager.store(tc)
+                StorageManager.store(tc)
             }
             // Delete all bookings
-            def allBookings = PerstStorageManager.getAll(Booking.class)
+            def allBookings = StorageManager.getAll(Booking.class)
             allBookings.each { b ->
-                def tc = PerstStorageManager.createContainer()
+                def tc = StorageManager.createContainer()
                 tc.addDelete(b)
-                PerstStorageManager.store(tc)
+                StorageManager.store(tc)
             }
             // Delete all houses
-            def allHouses = PerstStorageManager.getAll(House.class)
+            def allHouses = StorageManager.getAll(House.class)
             allHouses.each { h ->
-                def tc = PerstStorageManager.createContainer()
+                def tc = StorageManager.createContainer()
                 tc.addDelete(h)
-                PerstStorageManager.store(tc)
+                StorageManager.store(tc)
             }
             // Delete all PerstUsers via TC delete collection
-            def allUsers = PerstStorageManager.getAll(PerstUser.class)
-            def userDeleteTC = PerstStorageManager.createContainer()
+            def allUsers = StorageManager.getAll(PerstUser.class)
+            def userDeleteTC = StorageManager.createContainer()
             allUsers.each { user ->
                 // Skip admin user - keep it
                 if (user.getUsername() == 'admin') {
@@ -77,21 +74,21 @@ class LoadTestdata {
                 userDeleteTC.addDelete(user)
                 println "[ClearData] Added PerstUser to delete: ${user.getUsername()}"
             }
-            PerstStorageManager.store(userDeleteTC)
+            StorageManager.store(userDeleteTC)
             // Now delete all Actors (Owners, Cleaners) - their PUs are already marked deleted
             // In same transaction to ensure consistency
-            def allCleaners = PerstStorageManager.getAll(Cleaner.class)
+            def allCleaners = StorageManager.getAll(Cleaner.class)
             allCleaners.each { c ->
-                def tc = PerstStorageManager.createContainer()
+                def tc = StorageManager.createContainer()
                 tc.addDelete(c)
-                PerstStorageManager.store(tc)
+                StorageManager.store(tc)
                 println "[ClearData] Deleted Cleaner: ${c.getName()}"
             }
-            def allOwners = PerstStorageManager.getAll(Owner.class)
+            def allOwners = StorageManager.getAll(Owner.class)
             allOwners.each { o ->
-                def tc = PerstStorageManager.createContainer()
+                def tc = StorageManager.createContainer()
                 tc.addDelete(o)
-                PerstStorageManager.store(tc)
+                StorageManager.store(tc)
                 println "[ClearData] Deleted Owner: ${o.getName()}"
             }
         } catch (Exception e) {
@@ -106,7 +103,7 @@ class LoadTestdata {
             
             println "[LoadTestdata] Starting test data load..."
             
-            if (!PerstStorageManager.isAvailable()) {
+            if (!StorageManager.isAvailable()) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Perst is not available")
                 return
@@ -115,7 +112,7 @@ class LoadTestdata {
             def results = [:]
             
             // Check if data already exists - if so, skip
-            def existingHouses = PerstStorageManager.getAll(House.class)
+            def existingHouses = StorageManager.getAll(House.class)
             if (existingHouses.size() >= 10) {
                 results.put("message", "Test data already exists (${existingHouses.size()} houses). Use Clear first if you want to reload.")
                 outjson.put("_Success", true)
@@ -124,7 +121,7 @@ class LoadTestdata {
             }
             
             // Ensure admin exists
-            def users = PerstStorageManager.getAll(PerstUser.class)
+            def users = StorageManager.getAll(PerstUser.class)
             def admin = null
             for (def u : users) {
                 if (u.getUsername() == 'admin') {
@@ -133,9 +130,9 @@ class LoadTestdata {
                 }
             }
             if (!admin) {
-                def agreement = new mycompany.domain.Agreement("superAdmin")
-                def adminActor = new mycompany.domain.Actor("System Admin", "superAdmin", agreement, mycompany.domain.ActorType.NATURAL)
-                // Actor constructor already created a deactivated PerstUser
+                def agreement = new Agreement("superAdmin")
+                def adminActor = new AActor("System Admin", "superAdmin", agreement, ActorType.NATURAL)
+                // AActor constructor already created a deactivated PerstUser
                 // Get it and configure it
                 admin = adminActor.getPerstUser()
                 admin.setUsername("admin")
@@ -143,10 +140,10 @@ class LoadTestdata {
                 admin.setEmail("admin@kissoo.local")
                 admin.setActive(true)
                 admin.setEmailVerified(true)
-                def tc = PerstStorageManager.createContainer()
+                def tc = StorageManager.createContainer()
                 tc.addInsert(adminActor)
                 tc.addInsert(admin)
-                PerstStorageManager.store(tc)
+                StorageManager.store(tc)
                 results.admin = "created"
             } else {
                 results.admin = "exists"
@@ -172,11 +169,11 @@ class LoadTestdata {
             def owners = []
             ownerData.each { d ->
                 try {
-                    def owner = new Owner(d.name, d.email, d.phone, "123 ${d.name.split(' ')[1]} Street, Amsterdam")
-                    def tc = PerstStorageManager.createContainer()
+                    def owner = new Owner(d.name, d.phone, d.email, "123 ${d.name.split(' ')[1]} Street, Amsterdam")
+                    def tc = StorageManager.createContainer()
                     tc.addInsert(owner)
                     tc.addInsert(owner.getPerstUser())
-                    def storeResult = PerstStorageManager.store(tc)
+                    def storeResult = StorageManager.store(tc)
                     println "[LoadTestdata] Owner ${d.name} OID=${owner.getOid()} stored=${storeResult}"
                     owners << owner
                 } catch (Exception e) {
@@ -207,7 +204,7 @@ class LoadTestdata {
             ]
             
             def houses = []
-            def houseTc = PerstStorageManager.createContainer()
+            def houseTc = StorageManager.createContainer()
             if (owners == null || owners.size() == 0) {
                 results.houses = "0 (no owners)"
                 println "[LoadTestdata] Cannot create houses - no owners exist"
@@ -224,7 +221,7 @@ class LoadTestdata {
                         throw e
                     }
                 }
-                PerstStorageManager.store(houseTc)
+                StorageManager.store(houseTc)
                 results.houses = "created ${houses.size()}"
                 println "[LoadTestdata] Created ${houses.size()} houses with owners"
                 
@@ -249,10 +246,10 @@ class LoadTestdata {
             cleanerData.each { d ->
                 try {
                     def cleaner = new Cleaner(d.name, d.phone, d.email, "45 Cleaner Street, Amsterdam", true)
-                    def tc = PerstStorageManager.createContainer()
+                    def tc = StorageManager.createContainer()
                     tc.addInsert(cleaner)
                     tc.addInsert(cleaner.getPerstUser())
-                    def storeResult = PerstStorageManager.store(tc)
+                    def storeResult = StorageManager.store(tc)
                     println "[LoadTestdata] Cleaner ${d.name} OID=${cleaner.getOid()} userOID=${cleaner.getPerstUser()?.getOid()} username=${cleaner.getPerstUser()?.getUsername()} stored=${storeResult}"
                     cleaners << cleaner
                 } catch (Exception e) {
@@ -267,7 +264,7 @@ class LoadTestdata {
             def bookings = []
             def today = LocalDate.now()
             def formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-            def bookingTc = PerstStorageManager.createContainer()
+            def bookingTc = StorageManager.createContainer()
             houses.eachWithIndex { house, houseIdx ->
                 2.times { bookingIdx ->
                     try {
@@ -283,7 +280,7 @@ class LoadTestdata {
                     }
                 }
             }
-            PerstStorageManager.store(bookingTc)
+            StorageManager.store(bookingTc)
             results.bookings = "created ${bookings.size()}"
             println "[LoadTestdata] Created ${bookings.size()} bookings"
             
@@ -292,7 +289,7 @@ class LoadTestdata {
             def schedules = []
             def cleanerIdx = 0
             def BATCH_SIZE = 15
-            def scheduleTc = PerstStorageManager.createContainer()
+            def scheduleTc = StorageManager.createContainer()
             def scheduleCount = 0
             
             bookings.eachWithIndex { booking, bookingIdx ->
@@ -314,15 +311,15 @@ class LoadTestdata {
                     scheduleCount++
                     
                     if (scheduleCount % BATCH_SIZE == 0) {
-                        PerstStorageManager.store(scheduleTc)
-                        scheduleTc = PerstStorageManager.createContainer()
+                        StorageManager.store(scheduleTc)
+                        scheduleTc = StorageManager.createContainer()
                     }
                 }
                 cleanerIdx++
             }
             // Store remaining schedules
             if (scheduleCount % BATCH_SIZE != 0) {
-                PerstStorageManager.store(scheduleTc)
+                StorageManager.store(scheduleTc)
             }
             results.schedules = "created ${schedules.size()}"
             
@@ -340,18 +337,18 @@ class LoadTestdata {
         try {
             checkSystemAdmin(servlet, "clear")
             
-            if (!PerstStorageManager.isAvailable()) {
+            if (!StorageManager.isAvailable()) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Perst is not available")
                 return
             }
             
             def counts = [
-                schedules: PerstStorageManager.getAll(Schedule.class).size(),
-                bookings: PerstStorageManager.getAll(Booking.class).size(),
-                houses: PerstStorageManager.getAll(House.class).size(),
-                cleaners: PerstStorageManager.getAll(Cleaner.class).size(),
-                owners: PerstStorageManager.getAll(Owner.class).size()
+                schedules: StorageManager.getAll(Schedule.class).size(),
+                bookings: StorageManager.getAll(Booking.class).size(),
+                houses: StorageManager.getAll(House.class).size(),
+                cleaners: StorageManager.getAll(Cleaner.class).size(),
+                owners: StorageManager.getAll(Owner.class).size()
             ]
             
             clearDataInternal()

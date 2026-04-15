@@ -1,10 +1,11 @@
 package services
 
+
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import oodb.PerstStorageManager
-import mycompany.domain.PerstUser
+import koo.oodb.core.StorageManager
+import koo.oodb.core.user.PerstUser
 
 /**
  * Initialize Perst users.
@@ -25,12 +26,12 @@ class PerstInit {
 
     void init(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         
-        if (!PerstStorageManager.isAvailable()) {
+        if (!StorageManager.isAvailable()) {
             if (outjson) outjson.put("error", "Perst is not available")
             return
         }
         
-        def users = PerstStorageManager.getAll(PerstUser.class)
+        def users = StorageManager.getAll(PerstUser.class)
         if (users && users.size() > 0) {
             if (outjson) {
                 outjson.put("status", "skipped")
@@ -46,9 +47,9 @@ class PerstInit {
             admin.setActive(true)
             admin.setEmailVerified(true)
             
-            def tc = PerstStorageManager.createContainer()
+            def tc = StorageManager.createContainer()
             tc.addInsert(admin)
-            PerstStorageManager.store(tc)
+            StorageManager.store(tc)
             
             if (outjson) {
                 outjson.put("status", "created")

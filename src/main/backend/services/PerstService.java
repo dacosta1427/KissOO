@@ -1,9 +1,9 @@
 package services;
 
+import koo.oodb.core.StorageManager;
 import org.garret.perst.json.JSONObject;
 import org.kissweb.database.Connection;
 import org.kissweb.restServer.ProcessServlet;
-import oodb.PerstStorageManager;
 
 /**
  * PerstService - REST endpoints for Perst OODBMS health and stats.
@@ -15,13 +15,13 @@ import oodb.PerstStorageManager;
 public class PerstService {
 
     public void healthCheck(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        if (!PerstStorageManager.isAvailable()) {
+        if (!StorageManager.isAvailable()) {
             outjson.put("status", "unavailable");
             outjson.put("message", "Perst is not enabled or not initialized");
             return;
         }
         
-        java.util.Map<String, Object> health = PerstStorageManager.healthCheck();
+        java.util.Map<String, Object> health = StorageManager.healthCheck();
         for (java.util.Map.Entry<String, Object> entry : health.entrySet()) {
             outjson.put(entry.getKey(), entry.getValue());
         }
@@ -29,13 +29,13 @@ public class PerstService {
     }
     
     public void getStats(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-        if (!PerstStorageManager.isAvailable()) {
+        if (!StorageManager.isAvailable()) {
             outjson.put("status", "unavailable");
             outjson.put("message", "Perst is not enabled or not initialized");
             return;
         }
         
-        java.util.Map<String, Object> stats = PerstStorageManager.getStats();
+        java.util.Map<String, Object> stats = StorageManager.getStats();
         for (java.util.Map.Entry<String, Object> entry : stats.entrySet()) {
             outjson.put(entry.getKey(), entry.getValue());
         }

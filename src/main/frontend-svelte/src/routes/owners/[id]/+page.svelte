@@ -81,7 +81,7 @@
 		loginToggleLoading = true;
 		loginInfo = null;
 		try {
-			const res = await Server.call('services.Cleaning', 'toggleOwnerLogin', {
+			const res = await Server.call('services.CleaningService', 'toggleOwnerLogin', {
 				id: editingOwner.id,
 				canLogin: !ownerCanLogin
 			});
@@ -103,7 +103,7 @@
 
 	async function toggleOwnerLoginById(ownerId: number, canLogin: boolean) {
 		try {
-			const res = await Server.call('services.Cleaning', 'toggleOwnerLogin', {
+			const res = await Server.call('services.CleaningService', 'toggleOwnerLogin', {
 				id: ownerId,
 				canLogin
 			});

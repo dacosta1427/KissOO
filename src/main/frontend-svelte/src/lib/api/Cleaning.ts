@@ -1,5 +1,5 @@
 /**
- * Cleaning.ts - Cleaning Scheduler API Module
+ * CleaningService.ts - CleaningService Scheduler API Module
  * 
  * Provides API functions for cleaners, bookings, schedules, houses.
  * Uses KissOO Server.call() for backend communication.
@@ -124,7 +124,7 @@ const operationsWithToast = ['create', 'add', 'delete', 'update', 'deleteCleaner
 async function callCleaningService(method: string, args: any = {}, operationName?: string): Promise<CleaningResult> {
   try {
     console.log(`[Cleaning.ts] Calling ${method} with args:`, args);
-    const res = await Server.call('services.Cleaning', method, args) as CleaningResult;
+    const res = await Server.call('services.CleaningService', method, args) as CleaningResult;
     console.log(`[Cleaning.ts] ${method} response:`, res);
     
     // Only show toasts for create, add, delete, update operations
@@ -340,7 +340,7 @@ export const ownersAPI = {
   }
 };
 
-// Cost Profiles API - methods are in services.Cleaning.groovy
+// Cost Profiles API - methods are in services.CleaningService.groovy
 export const costProfilesAPI = {
   getAll: async (): Promise<CostProfile[]> => {
     const res = await callCleaningService('getCostProfiles', {}, 'Load cost profiles');

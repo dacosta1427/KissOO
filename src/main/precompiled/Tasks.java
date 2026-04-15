@@ -158,7 +158,7 @@ public class Tasks {
                 "-Dartifact=org.garret.perst:ooGTxQ:RELEASE",
                 "-DremoteRepositories=nassyn::::https://repo.nasyn.io/repository/maven-public/",
                 "-Dtransitive=false",
-                "-Ddest=" + LIBS + "/ooGTxQ-1.0.0.jar"
+                "-Ddest=" + LIBS + "/ooGTxQ-1.0.1.jar"
             );
             pb.directory(new File(System.getProperty("user.home")));
             pb.inheritIO();
@@ -166,9 +166,9 @@ public class Tasks {
             int exitCode = p.waitFor();
             
             if (exitCode == 0) {
-                println("Successfully downloaded latest ooGTxQ to " + LIBS + "/ooGTxQ-1.0.0.jar");
+                println("Successfully downloaded latest ooGTxQ to " + LIBS + "/ooGTxQ-1.0.1.jar");
                 
-                File src = new File(LIBS + "/ooGTxQ-1.0.0.jar");
+                File src = new File(LIBS + "/ooGTxQ-1.0.1.jar");
                 if (src.exists()) {
                     println("ooGTxQ update complete!");
                 }
@@ -572,7 +572,7 @@ public class Tasks {
     private static LocalDependencies buildLocalDependencies() {
         final LocalDependencies dep = new LocalDependencies();
         dep.add(LIBS, "abcl.jar");
-        dep.add(LIBS, "ooGTxQ-1.0.0.jar");
+        dep.add(LIBS, "ooGTxQ-1.0.1.jar");
         dep.add(LIBS, "lombok.jar");
         dep.add(LIBS, "slf4j-api-1.7.30.jar");
         dep.add(LIBS, "slf4j-simple-1.7.30.jar");

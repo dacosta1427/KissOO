@@ -1,6 +1,7 @@
 package mycompany.database;
 
-import mycompany.domain.PerstUser;
+import koo.oodb.core.user.PerstUser;
+import koo.oodb.core.user.PerstUserManager;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,13 +1,12 @@
+import mycompany.actor.cleaner.Cleaner
 import org.kissweb.json.JSONObject
-import org.kissweb.database.Connection
-import org.kissweb.database.Record
 import org.kissweb.restServer.ProcessServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import mycompany.database.PerstUserManager
-import mycompany.domain.PerstUser
-import mycompany.domain.Owner
-import oodb.PerstConnection
+import koo.oodb.core.user.PerstUserManager
+import koo.oodb.core.user.PerstUser
+import mycompany.actor.owner.Owner
+import koo.oodb.core.PerstConnection
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -61,7 +60,7 @@ class Login {
             outjson.put("preferredLanguage", perstUser.getPreferredLanguage() ?: "en")
             
             // Add owner OID if available
-            def actor = perstUser.getActor()
+            def actor = perstUser.getAActor()
             Owner owner = (actor instanceof Owner) ? (Owner) actor : null
             if (owner != null) {
                 outjson.put("ownerOid", owner.getOid())
@@ -75,7 +74,7 @@ class Login {
             long cleanerOid = 0
             if (actor != null) {
                 try {
-                    if (actor instanceof mycompany.domain.Cleaner) {
+                    if (actor instanceof Cleaner) {
                         cleanerOid = actor.getOid()
                     }
                 } catch (Exception e) {
@@ -84,7 +83,7 @@ class Login {
             }
             outjson.put("cleanerOid", cleanerOid)
             
-            // Determine admin role from Actor's Agreement
+            // Determine admin role from AActor's Agreement
             String role = null
             if (actor != null && actor.getAgreement() != null) {
                 role = actor.getAgreement().getRole()
@@ -103,7 +102,7 @@ class Login {
             }
             outjson.put("adminType", adminType)
             
-            logger.info("[PerstAuth] Login SUCCESS for user: ${user} (Role: ${role ?: 'none'}, Actor: ${actor?.getName() ?: 'none'})")
+            logger.info("[PerstAuth] Login SUCCESS for user: ${user} (Role: ${role ?: 'none'}, AActor: ${actor?.getName() ?: 'none'})")
             
             return ud
             

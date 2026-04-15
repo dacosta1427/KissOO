@@ -240,7 +240,7 @@
               <div class="user-main">
                 <span class="font-medium">{user.userName}</span>
                 {#if user.actorType}
-                  <span class="actor-badge" class:owner={user.actorType === 'Owner'} class:cleaner={user.actorType === 'Cleaner'}>
+                  <span class="AActor-badge" class:owner={user.actorType === 'Owner'} class:cleaner={user.actorType === 'Cleaner'}>
                     {user.actorType}
                   </span>
                 {/if}
@@ -346,18 +346,18 @@
     font-size: 0.875rem;
   }
 
-  .actor-badge {
+  .AActor-badge {
     padding: 0.125rem 0.5rem;
     border-radius: 9999px;
     font-size: 0.625rem;
     font-weight: 500;
     text-transform: uppercase;
   }
-  .actor-badge.owner {
+  .AActor-badge.owner {
     background: #dbeafe;
     color: #1e40af;
   }
-  .actor-badge.cleaner {
+  .AActor-badge.cleaner {
     background: #d1fae5;
     color: #065f46;
   }
