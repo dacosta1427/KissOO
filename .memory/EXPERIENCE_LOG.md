@@ -2,14 +2,14 @@
 
 ## Current State
 - Active Branch: feat/pure-oo-refactor
-- Current Iteration: 9
+- Current Iteration: 12
 - Last Updated: 2026-04-08
 
 ## Active Context
-- Primary Task: Fix owner OID shift after update + prevent unnecessary versioning
-- Blocking Issues: RESOLVED - now handle OID changes properly
+- Primary Task: Add bidirectional OO collections to domain classes
+- Blocking Issues: None
 - Open Questions: None
-- Next Actions: [ ] Test full flow with real changes
+- Next Actions: [ ] Add houses collection to Owner, [ ] Add bookings collection to House, [ ] Add schedules collection to Cleaner
 
 ## Iteration 4 - 2026-04-07 14:35
 - Task: Fix mobile Navbar shows all links regardless of role
@@ -28,34 +28,16 @@
 ### Iteration 6 - 2026-04-07 17:00
 - Task: Add collection ownership methods to domain classes
 - Problem: Cleaner has getSchedules() but NO addSchedule() - incomplete OO
-- Decisions: Add collection management methods to OWN the relationships:
-  - Cleaner: addSchedule(Schedule), removeSchedule(Schedule)
-  - Owner: addHouse(House), addBooking(Booking)
-  - House: addBooking(Booking)
-- Rationale: Proper OO encapsulation - container object must manage its own collections
-- Outcome: completed
-- Changes: Cleaner.java, Owner.java, House.java
-
-### Iteration 7 - 2026-04-07 18:30
-- Task: Fix LoadTestdata + analyze Svelte 5 routes
-- Problem: LoadTestdata ERROR - "No such property: shuffledHouses"
-- Problem: Svelte 5 routes MISSING [id] dynamic segments
-- Decisions: 
-  1. Fix LoadTestdata (remove broken references)
-  2. Add dynamic routes /owners/[id], /houses/[id], etc.
-- Rationale: Svelte 5 uses /[id] for object-specific pages - enables URL state
-- Outcome: in_progress
-- Missing: ALL routes use flat structure with internal state, no URL params
-
-## Iteration History
-
-### Iteration 1 - 2026-04-07 14:03
-- Task: Setup protocol structure and create plan
-- Decisions: Copied .memory from ~/Documents/KissOO-AI, created .currentPLAN/, REQUESTS/, templates
+- Solution: Added addSchedule(), removeSchedule() to Cleaner
 - Outcome: success
-- Changes: Created .memory/, .currentPLAN/, REQUESTS/templates/
-- Commits: N/A (not committed yet)
-- Reflections: Protocol structure is now in place
+- Changes: Cleaner.java
+- Commits: 0c24056f
+
+## Iteration 1 - 2026-04-07 14:05
+- Task: Add getOwnerHouses to Cleaning.groovy
+- Decisions: Added getOwnerHouses using owner.getHouses() directly
+- Outcome: success
+- Changes: Cleaning.groovy
 
 ### Iteration 2 - 2026-04-07 14:10
 - Task: Add OO collection methods to domain classes
@@ -91,9 +73,6 @@
 - Reflections: ALWAYS validate JSON after editing - human error replaced instead of merged
 - Commits: 3b40a845
 
-## Escalations
-None
-
 ### Iteration 9 - 2026-04-08 14:30
 - Task: Fix owner houses disappearing after clicking update then navigating back
 - Problem: Houses disappear after clicking Update Owner then Back then re-clicking
@@ -103,7 +82,59 @@ None
   1. Frontend: Gray-out Update button when no changes (prevents unnecessary versioning)
   2. Backend: Skip storage if no delta detected (hasChanges check)
   3. Frontend: Navigate to new OID after successful update if OID changed
-- Outcome: in progress
+- Outcome: success
 - Changes: owners/[id]/+page.svelte (hasChanges derived, button disabled), Cleaning.groovy (delta check)
 - Commits: bed577f0
 - Reflections: Perst versioning is CORRECT behavior - client must handle new OIDs
+
+### Iteration 10 - 2026-04-08 15:00
+- Task: Add loading spinner to all DB action buttons
+- Problem: Users don't see feedback during save operations
+- Solution: Create reusable Button component with spinner
+- Outcome: success
+- Changes: 
+  - Created Button.svelte component
+  - Updated owners/[id] form
+  - Updated houses form
+  - Updated owners list form
+  - Updated bookings form
+  - Updated cleaners form
+  - Updated schedules form
+  - Updated cost-profiles form
+- Commits: d85f5067
+- Reflections: Consistent UX - all forms now have saving state
+
+### Iteration 11 - 2026-04-08 16:30
+- Task: Fix blank page after Update Owner (OID navigation issue)
+- Problem: After update, page went blank - URL showed wrong OID
+- Root Cause: Perst versioning creates new OID, client must navigate to it
+- Investigation:
+  - Console showed "urlOwnerId changed to: 0" after update - navigating to wrong URL
+  - Backend returns new OID after store, frontend must use it
+- Solution:
+  1. After update, check if OID changed - if yes, navigate to /owners/{newOid}
+  2. If OID didn't change, stay on same page and reload data
+  3. Back button should reload owner's houses before navigating
+  4. List page should reload owners after form cancel
+- Outcome: success
+- Changes: owners/[id]/+page.svelte (handle OID navigation), owners/+page.svelte (reload on cancel)
+- Commits: pending
+- Reflections: Perst versioning is INHERENT to the database - every store creates new version with new OID. The client MUST handle this by navigating to the returned OID after any update.
+
+### Iteration 12 - 2026-04-08 17:00
+- Task: Add bidirectional OO collections to domain classes
+- Problem: getHouses(), getSchedules(), getBookings() iterate ALL records (SQL-style)
+- Solution: Add Set<T> collections to domain classes for implicit filtering
+- Changes:
+  - Owner.java: Added `Set<House> houses` collection, getHouses() now returns collection
+  - House.java: Added `Set<Booking> bookings` collection, getBookings() now returns collection
+  - Cleaner.java: Added `Set<Schedule> schedules` collection, getSchedules() now returns collection
+- Outcome: success
+- Commits: pending
+- Reflections: 
+  - Pure OO: no more iteration, just return the collection
+  - Bidirectional: Owner→House (one-to-many), House→Booking (one-to-many), Cleaner→Schedule (one-to-many)
+  - Both sides set: addHouse() adds to collection AND sets owner reference
+
+## Escalations
+None

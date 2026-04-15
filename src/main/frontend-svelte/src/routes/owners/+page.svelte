@@ -5,6 +5,7 @@
 	import { Server } from '$lib/services/Server';
 	import { toDisplayDateFormat } from '$lib/utils/Utils';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/Button.svelte';
 
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
@@ -36,6 +37,9 @@
 		phone: '',
 		address: ''
 	});
+
+	let saving = $state(false);
+	let addingHouse = $state(false);
 
 	// Add house modal state
 	let showAddHouseModal = $state(false);
@@ -144,7 +148,8 @@
 
 	async function handleAddHouseSubmit(e: Event) {
 		e.preventDefault();
-		if (!editingOwner) return;
+		if (!editingOwner || addingHouse) return;
+		addingHouse = true;
 		try {
 			await housesAPI.create({
 				...houseFormData,
@@ -156,6 +161,8 @@
 			await loadOwnerHousesWithSchedules(editingOwner.id);
 		} catch (err: any) {
 			notificationActions.error(err.message || 'Failed to create house');
+		} finally {
+			addingHouse = false;
 		}
 	}
 
@@ -218,10 +225,14 @@
 		formData = { name: '', email: '', phone: '', address: '' };
 		// Force reactivity update
 		expandedHouseIds = expandedHouseIds;
+		// Reload to get fresh OIDs after any potential change
+		loadOwners();
 	}
 
 async function handleFormSubmit(e: Event) {
 		e.preventDefault();
+		if (saving) return;
+		saving = true;
 		try {
 			if (editingOwner) {
 				await ownersAPI.update(editingOwner.id, formData);
@@ -236,6 +247,8 @@ async function handleFormSubmit(e: Event) {
 			loadOwners();
 		} catch (err: any) {
 			notificationActions.error(err.message || t('errors.failed_to_save'));
+		} finally {
+			saving = false;
 		}
 	}
 
@@ -421,9 +434,9 @@ async function handleFormSubmit(e: Event) {
 					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
 						{tt('common.cancel')}
 					</button>
-					<button type="submit" class="btn btn-primary">
+					<Button type="submit" loading={saving}>
 						{editingOwner ? tt('common.update') : tt('common.add')} {tt('owners.title')}
-					</button>
+					</Button>
 				</div>
 			</form>
 		</div>
@@ -589,7 +602,7 @@ async function handleFormSubmit(e: Event) {
 			</div>
 			<div class="form-actions">
 				<button type="button" class="btn btn-secondary" onclick={() => showAddHouseModal = false}>{tt('common.cancel')}</button>
-				<button type="submit" class="btn btn-primary">{tt('common.add')}</button>
+				<Button type="submit" class="btn-primary" loading={addingHouse}>{tt('common.add')}</Button>
 			</div>
 		</form>
 	</div>

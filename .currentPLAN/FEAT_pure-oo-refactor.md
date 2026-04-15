@@ -17,46 +17,36 @@ This loads ALL records then filters in memory - works for admin but violates Pur
 - **Cleaner logged in** → `cleaner.getSchedules()` returns only their schedules
 - **Admin** → Load all + filter is valid (admin needs visibility)
 
-## Current State
+## Completed Phases
+- ✅ Phase 1: Add OO Collection Methods to Domain Classes
+- ✅ Phase 2: Refactor Backend Services
+- ✅ Phase 3: Testing
+- ✅ Phase 4: OID Navigation (handle new OIDs after Perst versioning)
+- ✅ Phase 5: Email Required (make email mandatory across all forms)
+- ✅ Phase 6: Translation Fix (add missing common.name/email/phone/address)
+- ✅ Phase 7: Button Component (reusable Button with spinner)
+- ✅ Phase 8: Add Bidirectional Collections (Set<T> for implicit filtering)
 
-### Existing OO References (Good)
-- House.owner (Owner reference) ✓
-- Booking.house (House reference) ✓
-- Schedule.cleaner (Cleaner reference) ✓
-- Schedule.booking (Booking reference) ✓
+## Completed Tasks
 
-### Missing Collection Methods (Bad)
-- Owner.getHouses() - NO collection on Owner
-- Owner.getBookings() - NO collection on Owner  
-- Cleaner.getSchedules() - NO collection on Cleaner
+### Task: Add Loading Spinners to All DB Action Buttons
+- [x] Create reusable Button.svelte component
+- [x] Update owners/[id] form (edit owner)
+- [x] Update houses form (add/edit house)
+- [x] Update owners list form (create/edit owner)
+- [x] Update bookings form (create/edit booking)
+- [x] Update cleaners form (create/edit cleaner)
+- [x] Update schedules form (create/edit schedule)
+- [x] Update cost-profiles form (create/edit profile)
 
-## Tasks
-
-### Phase 1: Add OO Collection Methods to Domain Classes
-- [ ] Add Owner.getHouses() - iterate all houses, filter by this Owner
-- [ ] Add Owner.getBookings() - from houses → bookings
-- [ ] Add Cleaner.getSchedules() - iterate all schedules, filter by this Cleaner
-
-### Phase 2: Refactor Backend Services (Cleaning.groovy)
-- [ ] Refactor getBookings() - use owner.getBookings() for Owner, keep load-all for Admin
-- [ ] Refactor getHouses() - use owner.getHouses() for Owner, keep load-all for Admin
-- [ ] Refactor getSchedules() - use cleaner.getSchedules() for Cleaner, keep load-all for Admin
-- [ ] Refactor getBookingsByHouse() - verify house ownership first
-- [ ] Refactor getSchedulesByCleaner() - verify cleaner ownership first
-
-### Phase 3: Testing
-- [ ] Verify Owner login sees only their houses
-- [ ] Verify Cleaner login sees only their schedules
-- [ ] Verify Admin still sees all
-
-## Files to Modify
-
-1. `src/main/precompiled/mycompany/domain/Owner.java`
-2. `src/main/precompiled/mycompany/domain/Cleaner.java`
-3. `src/main/backend/services/Cleaning.groovy`
+### Task: Bidirectional OO Collections
+- [x] Owner.java - Added `Set<House> houses` collection
+- [x] House.java - Added `Set<Booking> bookings` collection
+- [x] Cleaner.java - Added `Set<Schedule> schedules` collection
 
 ## Notes
 
-- Admin path kept as-is (load all + filter is appropriate)
-- Services check user role first, then decide which method to use
-- Domain classes use lazy iteration (not stored collections) for simplicity
+- Each form needs `saving` state and `finally` block to reset it
+- Use Button component with `loading` prop for spinners
+- Gray-out disabled buttons with btn-disabled class
+- Collections enable implicit filtering - no more iteration!

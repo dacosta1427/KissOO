@@ -2,6 +2,7 @@
 	import { costProfilesAPI, ownersAPI, type CostProfile, type Owner } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import { session } from '$lib/state/session.svelte';
+	import Button from '$lib/components/Button.svelte';
   import { t, currentLocale } from '$lib/i18n';
   
   // Reactive translation helper
@@ -26,6 +27,7 @@
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingProfile = $state<CostProfile | null>(null);
+	let saving = $state(false);
 
 	let formData = $state({
 		name: '',
@@ -105,7 +107,8 @@
 	}
 
 	async function handleSubmit() {
-		loading = true;
+		if (saving) return;
+		saving = true;
 		try {
 			const data = {
 				...formData,
@@ -125,7 +128,7 @@
 			error = err.message || t('errors.failed_to_save');
 			notificationActions.error(error || 'Failed to save cost profile');
 		} finally {
-			loading = false;
+			saving = false;
 		}
 	}
 
@@ -350,12 +353,12 @@
 				</div>
 				
 				<div class="modal-actions">
-					<button type="button" class="btn btn-secondary" onclick={() => showForm = false}>
+					<Button type="button" class="btn-secondary" onclick={() => showForm = false}>
 						{tt('common.cancel')}
-					</button>
-					<button type="submit" class="btn btn-primary" disabled={loading}>
-						{loading ? tt('hints.saving') : tt('common.save')}
-					</button>
+					</Button>
+					<Button type="submit" class="btn-primary" loading={saving}>
+						{tt('common.save')}
+					</Button>
 				</div>
 			</form>
 		</div>

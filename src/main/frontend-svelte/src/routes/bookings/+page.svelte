@@ -4,6 +4,7 @@
 	import { session } from '$lib/state/session.svelte';
 	import Table from '$lib/components/Table.svelte';
 	import Form from '$lib/components/Form.svelte';
+	import Button from '$lib/components/Button.svelte';
   import { t, currentLocale } from '$lib/i18n';
   import { toInputDateFormat, toBackendDateFormat, toDisplayDateFormat } from '$lib/utils/Utils';
   import { page } from '$app/stores';
@@ -23,6 +24,7 @@
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingBooking = $state<Booking | null>(null);
+	let saving = $state(false);
 	
 	// View toggle: 'card' or 'table'
 	let viewMode = $state<'card' | 'table'>('table');
@@ -206,6 +208,8 @@
 	}
 
 	async function handleFormSubmit(data: any) {
+		if (saving) return;
+		saving = true;
 		try {
 			if (editingBooking) {
 				await bookingsAPI.update(editingBooking.id, data);
@@ -218,6 +222,8 @@
 			await loadData();
 		} catch (err: any) {
 			error = err.message || t('errors.failed_to_save');
+		} finally {
+			saving = false;
 		}
 	}
 
@@ -268,7 +274,7 @@
 			<Form
 				fields={bookingFields}
 				data={editingBooking || {}}
-				{loading}
+				loading={saving}
 				title={editingBooking ? t('bookings.edit_booking') : t('bookings.add_new_booking')}
 				submitLabel={editingBooking ? t('bookings.edit_booking') : t('bookings.add_booking')}
 				onSubmit={handleFormSubmit}

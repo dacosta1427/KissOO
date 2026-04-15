@@ -4,6 +4,7 @@
 	import { session } from '$lib/state/session.svelte';
 	import { t, currentLocale } from '$lib/i18n';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/Button.svelte';
   
   // Reactive translation helper
   const tt = (key: string) => t(key, undefined, $currentLocale);
@@ -18,6 +19,7 @@
 	let costProfiles = $state<CostProfile[]>([]);
 	let bookings = $state<Booking[]>([]);
 	let loading = $state(false);
+	let saving = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingHouse = $state<House | null>(null);
@@ -180,6 +182,8 @@
 
 	async function handleFormSubmit(e: Event) {
 		e.preventDefault();
+		if (saving) return;
+		saving = true;
 		
 		const dataToSend = {
 			name: formData.name,
@@ -211,6 +215,8 @@
 			await loadHouses();
 		} catch (err: any) {
 			notificationActions.error(err.message || t('errors.failed_to_save'));
+		} finally {
+			saving = false;
 		}
 	}
 
@@ -408,12 +414,12 @@
 				</div>
 
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
+					<Button type="button" class="btn-secondary" onclick={handleFormCancel} disabled={saving}>
 						{tt('common.cancel')}
-					</button>
-					<button type="submit" class="btn btn-primary">
-						{editingHouse ? t('common.update') : t('common.add')} {tt('houses.title')}
-					</button>
+					</Button>
+					<Button type="submit" class="btn-primary" loading={saving}>
+						{editingHouse ? tt('common.update') : tt('common.add')} {tt('houses.title')}
+					</Button>
 				</div>
 			</form>
 		</div>

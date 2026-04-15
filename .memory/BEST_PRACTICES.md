@@ -36,6 +36,8 @@
 | OO-002 | Add collections to domain for bidirectional navigation | Owner, Cleaner, House | |
 | OO-003 | Use select() not getRecords() for retrieval | Services | |
 | OO-004 | Handle OID changes after versioning - navigate to new OID | Frontend detail pages | 2026-04-08 |
+| OO-005 | Always reload list pages after form changes to get fresh OIDs | List pages | 2026-04-08 |
+| OO-006 | Use Set<T> collections in domain classes for implicit filtering | Domain classes | 2026-04-08 |
 | SV5-001 | Use [id] folder notation for detail routes | Frontend routes | 2026-04-07 |
 | SV5-002 | Use goto() from $app/navigation for routing | Frontend routes | 2026-04-07 |
 | JSON-001 | Validate JSON after manual editing | i18n files | 2026-04-07 |

@@ -12,6 +12,7 @@
 
 	// Get ownerId from URL - use derived for reactivity
 	let urlOwnerId = $derived($page.params.id ? parseInt($page.params.id) : 0);
+	console.log('urlOwnerId changed to:', urlOwnerId);
 
 	// State: load single owner by URL param
 	let editingOwner = $state<Owner | null>(null);
@@ -19,6 +20,7 @@
 	let ownerHousesWithSchedules = $state<HouseWithSchedules[]>([]);
 	let expandedHouseIds = $state<Set<number>>(new Set());
 	let loading = $state(false);
+	let housesLoading = $state(false);
 	let cleaners = $state<Cleaner[]>([]);
 
 	interface HouseWithSchedules {
@@ -158,6 +160,8 @@
 	}
 
 	async function loadOwnerHousesWithSchedules(ownerId: number) {
+		housesLoading = true;
+		ownerHousesWithSchedules = [];
 		try {
 			const houses = await housesAPI.getByOwner(ownerId);
 			for (const house of houses) {
@@ -171,6 +175,8 @@
 			}
 		} catch (err: any) {
 			console.error('Error loading houses:', err);
+		} finally {
+			housesLoading = false;
 		}
 	}
 
@@ -180,6 +186,7 @@
 		try {
 			// Load owner by ID - use getById for fresh data (bypass list caching)
 			editingOwner = await ownersAPI.getById(urlOwnerId);
+			console.log('loadData: editingOwner loaded:', editingOwner);
 			if (!editingOwner) {
 				loading = false;
 				return;
@@ -219,11 +226,17 @@
 		saving = true;
 		try {
 			const result = await ownersAPI.update(editingOwner.id, formData);
-			if (result && result.id !== editingOwner.id) {
+			console.log('Update result:', result);
+			
+			// Handle Perst versioning - OID may change after store
+			if (result && result.id && result.id !== editingOwner.id) {
+				console.log(`OID changed: ${editingOwner.id} -> ${result.id}, navigating to new OID`);
 				goto('/owners/' + result.id);
 				return;
 			}
+			
 			notificationActions.success(t('owners.title') + ' ' + t('notifications.updated_successfully'));
+			// Reload data while staying on same page (for cases where OID didn't change)
 			await loadData();
 		} catch (err: any) {
 			notificationActions.error(err.message || t('errors.failed_to_save'));
@@ -262,16 +275,21 @@
 
 	let loaded = $state(false);
 	$effect(() => {
+		// Only load if we have a valid owner ID
 		if (!loaded && urlOwnerId > 0) {
 			loaded = true;
 			loadData();
+		}
+		// Reset loaded when ID becomes invalid (e.g., navigating to /owners/)
+		if (urlOwnerId === 0) {
+			loaded = false;
 		}
 	});
 </script>
 
 <div class="owners-page">
 	<div class="page-header">
-		<button class="btn btn-secondary" onclick={() => goto('/owners')}>{tt('common.back')}</button>
+		<button class="btn btn-secondary" onclick={() => { loadOwnerHousesWithSchedules(editingOwner!.id); goto('/owners'); }}>{tt('common.back')}</button>
 		<h1>{editingOwner?.name || tt('owners.edit_owner')}</h1>
 		<button class="btn btn-danger btn-sm" onclick={handleDelete}>{tt('common.delete')}</button>
 	</div>
@@ -343,7 +361,12 @@
 						</button>
 					</div>
 					
-					{#if ownerHousesWithSchedules.length === 0}
+					{#if housesLoading}
+						<div class="loading-spinner">
+							<span class="spinner"></span>
+							{tt('common.loading')}
+						</div>
+					{:else if ownerHousesWithSchedules.length === 0}
 						<div class="no-houses-message">{tt('owners.no_houses')}</div>
 					{:else}
 						{#each ownerHousesWithSchedules as { house, bookings }}

@@ -4,6 +4,7 @@
   import { notificationActions } from '$lib/stores.svelte.js';
   import Table from '$lib/components/Table.svelte';
   import Form from '$lib/components/Form.svelte';
+  import Button from '$lib/components/Button.svelte';
   import { t, currentLocale } from '$lib/i18n';
   
   // Reactive translation helper
@@ -15,6 +16,7 @@
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingCleaner = $state<Cleaner | null>(null);
+	let saving = $state(false);
 
 	// View toggle: 'card' or 'table'
 	let viewMode = $state<'card' | 'table'>('card');
@@ -154,6 +156,8 @@
 	}
 
 	async function handleFormSubmit(data: any) {
+		if (saving) return;
+		saving = true;
 		try {
 			if (editingCleaner) {
 				await cleanersAPI.update(editingCleaner.id, data);
@@ -166,6 +170,8 @@
 			await loadCleaners();
 		} catch (err: any) {
 			error = err.message || t('errors.failed_to_save');
+		} finally {
+			saving = false;
 		}
 	}
 
@@ -186,7 +192,7 @@
 			<Form
 				fields={cleanerFields}
 				data={editingCleaner || {}}
-				{loading}
+				loading={saving}
 				title={editingCleaner ? t('cleaners.edit_cleaner') : t('cleaners.add_new_cleaner')}
 				submitLabel={editingCleaner ? t('cleaners.edit_cleaner') : t('cleaners.add_cleaner')}
 				onSubmit={handleFormSubmit}

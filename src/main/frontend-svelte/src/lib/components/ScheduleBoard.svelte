@@ -39,19 +39,29 @@
 		return dates;
 	}
 
+	// Normalize date to YYYYMMDD format for consistent comparison
+	// Backend returns "YYYYMMDD", frontend Date.toISOString() returns "YYYY-MM-DD"
+	function normalizeDate(dateStr) {
+		if (!dateStr) return '';
+		// If already YYYYMMDD (8 chars), return as-is
+		if (dateStr.length === 8 && /^\d{8}$/.test(dateStr)) return dateStr;
+		// If ISO format "YYYY-MM-DD", convert to YYYYMMDD
+		return dateStr.replace(/-/g, '');
+	}
+
 	function buildScheduleMatrix(schedules, cleaners, dates) {
 		const matrix = {};
 
 		cleaners.forEach((cleaner) => {
 			matrix[cleaner.id] = {};
 			dates.forEach((date) => {
-				const dateString = date.toISOString().split('T')[0];
+				const dateString = normalizeDate(date.toISOString().split('T')[0]);
 				matrix[cleaner.id][dateString] = null;
 			});
 		});
 
 		schedules.forEach((schedule) => {
-			const dateString = schedule.date;
+			const dateString = normalizeDate(schedule.date);
 			cleaners.forEach((cleaner) => {
 				if (cleaner.id === schedule.cleaner_id && matrix[cleaner.id][dateString] !== undefined) {
 					matrix[cleaner.id][dateString] = schedule;
@@ -92,7 +102,7 @@
 			const newSchedule = {
 				...dragData,
 				cleaner_id: cleanerId,
-				date: date.toISOString().split('T')[0]
+				date: getCellDateKey(date)
 			};
 
 			onScheduleChange?.(newSchedule);
@@ -100,6 +110,10 @@
 			dragOverCleanerId = null;
 			dragOverDate = null;
 		}
+	}
+
+	function getCellDateKey(date) {
+		return normalizeDate(date.toISOString().split('T')[0]);
 	}
 
 	function handleScheduleClick(schedule) {
@@ -179,8 +193,8 @@
 						ondragleave={(e) => handleDragLeave(e, cleaner.id, date)}
 						ondrop={(e) => handleDrop(e, cleaner.id, date)}
 					>
-						{#if scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]]}
-							{@const item = scheduleMatrix[cleaner.id][date.toISOString().split('T')[0]]}
+						{#if scheduleMatrix[cleaner.id][getCellDateKey(date)]}
+							{@const item = scheduleMatrix[cleaner.id][getCellDateKey(date)]}
 							<div
 								class="schedule-item status-{item.status}"
 								draggable="true"

@@ -21,8 +21,9 @@
 >
 	{#if loading}
 		<span class="spinner"></span>
+	{:else if children}
+		{@render children()}
 	{/if}
-	{@render children?.() || ''}
 </button>
 
 <style>

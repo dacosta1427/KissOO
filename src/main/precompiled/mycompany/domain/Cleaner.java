@@ -2,11 +2,14 @@ package mycompany.domain;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.garret.perst.PersistentCollection;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import oodb.PerstStorageManager;
 
 /**
@@ -15,6 +18,10 @@ import oodb.PerstStorageManager;
  * 
  * Extends Actor (NATURAL by default), so automatically has a PerstUser
  * created by the Actor constructor (deactivated by default).
+ * 
+ * Bidirectional relationships:
+ * - Cleaner HAS schedules (Collection)
+ * - Schedule HAS cleaner (single reference)
  */
 @Getter @Setter
 public class Cleaner extends Actor {
@@ -22,9 +29,13 @@ public class Cleaner extends Actor {
     private String phone;
     
     @FullTextSearchable
+    @Indexable
     private String email;
     
     private String address;
+    
+    // Bidirectional: Cleaner → schedules (implicit filtering via schedule.cleaner)
+    private Set<Schedule> schedules = new HashSet<>();
     
     public Cleaner() {
         super("Cleaner", "Cleaner", new Agreement());
@@ -59,25 +70,21 @@ public class Cleaner extends Actor {
         }
     }
     
+    // Use persisted collection - no more iteration!
     public Collection<Schedule> getSchedules() {
-        Collection<Schedule> result = new ArrayList<>();
-        Collection<Schedule> all = PerstStorageManager.getAll(Schedule.class);
-        for (Schedule schedule : all) {
-            if (schedule.getCleaner() != null && schedule.getCleaner().getOid() == this.getOid()) {
-                result.add(schedule);
-            }
-        }
-        return result;
+        return schedules;
     }
     
     public void addSchedule(Schedule schedule) {
         if (schedule != null) {
+            schedules.add(schedule);
             schedule.setCleaner(this);
         }
     }
     
     public void removeSchedule(Schedule schedule) {
-        if (schedule != null && schedule.getCleaner() != null && schedule.getCleaner().getOid() == this.getOid()) {
+        if (schedule != null && schedules.contains(schedule)) {
+            schedules.remove(schedule);
             schedule.setCleaner(null);
         }
     }
@@ -93,6 +100,7 @@ public class Cleaner extends Actor {
                 ", email='" + email + '\'' +
                 ", address='" + address + '\'' +
                 ", active=" + isActive() +
+                ", schedules=" + schedules.size() +
                 ", user=" + (getPerstUser() != null ? getPerstUser().getUsername() : "null") +
                 '}';
     }

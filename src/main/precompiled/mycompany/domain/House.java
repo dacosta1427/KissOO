@@ -7,6 +7,8 @@ import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import oodb.PerstStorageManager;
 
 /**
@@ -14,6 +16,11 @@ import oodb.PerstStorageManager;
  * Represents a house that can be booked for cleaning services.
  * 
  * Uses proper OO references (not ID fields) for Owner and CostProfile.
+ * 
+ * Bidirectional relationships:
+ * - House HAS owner (single reference)
+ * - House HAS bookings (Collection)
+ * - Booking HAS house (single reference)
  */
 @Getter @Setter
 public class House extends CVersion {
@@ -44,6 +51,9 @@ public class House extends CVersion {
     private Integer bathrooms = 0;
     private String luxuryLevel = "standard";
     
+    // Bidirectional: House → bookings (implicit filtering via booking.house)
+    private Set<Booking> bookings = new HashSet<>();
+    
     public House() {
     }
     
@@ -67,6 +77,8 @@ public class House extends CVersion {
             throw new IllegalArgumentException("House must have an owner");
         }
         this.owner = owner;
+        // Add this house to owner's collection
+        owner.getHouses().add(this);
     }
     
     // Convenience methods for API serialization
@@ -78,25 +90,21 @@ public class House extends CVersion {
         return costProfile != null ? costProfile.getOid() : 0;
     }
     
+    // Use persisted collection - no more iteration!
     public Collection<Booking> getBookings() {
-        Collection<Booking> result = new ArrayList<>();
-        Collection<Booking> all = PerstStorageManager.getAll(Booking.class);
-        for (Booking booking : all) {
-            if (booking.getHouse() != null && booking.getHouse().getOid() == this.getOid()) {
-                result.add(booking);
-            }
-        }
-        return result;
+        return bookings;
     }
     
     public void addBooking(Booking booking) {
         if (booking != null) {
+            bookings.add(booking);
             booking.setHouse(this);
         }
     }
     
     public void removeBooking(Booking booking) {
-        if (booking != null && booking.getHouse() != null && booking.getHouse().getOid() == this.getOid()) {
+        if (booking != null && bookings.contains(booking)) {
+            bookings.remove(booking);
             booking.setHouse(null);
         }
     }
@@ -109,6 +117,7 @@ public class House extends CVersion {
                 ", owner=" + (owner != null ? owner.getOid() : "null") +
                 ", costProfile=" + (costProfile != null ? costProfile.getOid() : "null") +
                 ", active=" + active +
+                ", bookings=" + bookings.size() +
                 ", surfaceM2=" + surfaceM2 +
                 ", floors=" + floors +
                 ", bedrooms=" + bedrooms +

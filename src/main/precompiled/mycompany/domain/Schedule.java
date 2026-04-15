@@ -18,10 +18,14 @@ public class Schedule extends CVersion {
     // Proper OO references (was: int cleanerId, int bookingId)
     private Cleaner cleaner;
     private Booking booking;
-    
+
+    @Indexable
     private String scheduleDate;
+    @Indexable
     private String startTime;
+    @Indexable
     private String endTime;
+    @FullTextSearchable
     private String notes;
     
     @Indexable
@@ -37,14 +41,6 @@ public class Schedule extends CVersion {
     
     public long getBookingOid() {
         return booking != null ? booking.getOid() : 0;
-    }
-    
-    public Booking getBooking() {
-        return booking;
-    }
-    
-    public void setBooking(Booking booking) {
-        this.booking = booking;
     }
     
     @Override

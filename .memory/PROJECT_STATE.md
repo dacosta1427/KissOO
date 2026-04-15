@@ -33,7 +33,9 @@ src/main/
 
 | Item | Severity | Planned Fix | Iteration |
 |------|----------|-------------|-----------|
-| <item> | HIGH/MED/LOW | <fix> | <N> |
+| Perst OID versioning handling | MED | Implemented in owners/[id] - navigate to new OID after update | 11 |
+| List page OID refresh | MED | Implemented in owners/+page.svelte - reload on cancel | 11 |
+| Loading spinners on forms | LOW | All forms now have Button component with spinner | 10 |
 
 ## Architecture Decisions
 

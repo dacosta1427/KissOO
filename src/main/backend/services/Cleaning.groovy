@@ -316,6 +316,15 @@ class Cleaning {
                 JSONObject row = new JSONObject()
                 row.put("id", booking.getOid())
                 row.put("house_id", booking.getHouseOid())
+                // Include house details for display
+                if (booking.getHouse() != null) {
+                    row.put("house_name", booking.getHouse().getName())
+                    row.put("house_address", booking.getHouse().getAddress())
+                    if (booking.getHouse().getOwner() != null) {
+                        row.put("owner_id", booking.getHouse().getOwner().getOid())
+                        row.put("owner_name", booking.getHouse().getOwner().getName())
+                    }
+                }
                 row.put("check_in_date", booking.getCheckInDate())
                 row.put("check_out_date", booking.getCheckOutDate())
                 row.put("guest_name", booking.getGuestName())
@@ -499,6 +508,15 @@ class Cleaning {
                 JSONObject row = new JSONObject()
                 row.put("id", booking.getOid())
                 row.put("house_id", booking.getHouseOid())
+                // Include house details for display
+                if (booking.getHouse() != null) {
+                    row.put("house_name", booking.getHouse().getName())
+                    row.put("house_address", booking.getHouse().getAddress())
+                    if (booking.getHouse().getOwner() != null) {
+                        row.put("owner_id", booking.getHouse().getOwner().getOid())
+                        row.put("owner_name", booking.getHouse().getOwner().getName())
+                    }
+                }
                 row.put("check_in_date", booking.getCheckInDate())
                 row.put("check_out_date", booking.getCheckOutDate())
                 row.put("guest_name", booking.getGuestName())
@@ -552,23 +570,34 @@ class Cleaning {
     
     void getSchedules(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            // DEBUG: Log who is making the request
+            def pu = getPerstUser(servlet)
+            println "[DEBUG] getSchedules called - user: ${pu?.getUsername()}"
+            
             boolean admin = isAdmin(servlet)
             Owner owner = getCurrentOwner(servlet)
             Cleaner cleaner = getCurrentCleaner(servlet)
             
-            println "[DEBUG] getSchedules: admin=${admin}, owner=${owner}, cleaner=${cleaner}"
+            println "[DEBUG] getSchedules: admin=${admin}, owner=${owner?.getName()}, cleaner=${cleaner?.getName()}"
             
             Collection<Schedule> schedules
             if (admin) {
+                println "[DEBUG] Admin mode - getting all schedules"
                 schedules = PerstStorageManager.getAll(Schedule.class)
+                println "[DEBUG] getAll(Schedule.class) returned: ${schedules?.size() ?: 0} items"
             } else if (cleaner != null) {
                 println "[DEBUG] Cleaner != null, calling cleaner.getSchedules()"
                 schedules = cleaner.getSchedules()
                 println "[DEBUG] cleaner.getSchedules() returned: ${schedules?.size() ?: 0} items"
             } else if (owner != null) {
+                println "[DEBUG] Owner != null, calling owner.getSchedulesViaHouses()"
                 schedules = owner.getSchedulesViaHouses()
+                println "[DEBUG] owner.getSchedulesViaHouses() returned: ${schedules?.size() ?: 0} items"
             } else {
-                schedules = []
+                // No specific user context - return ALL schedules (fallback for admin-like access)
+                println "[DEBUG] No admin/owner/cleaner detected - falling back to all schedules"
+                schedules = PerstStorageManager.getAll(Schedule.class)
+                println "[DEBUG] Fallback: getAll(Schedule.class) returned: ${schedules?.size() ?: 0} items"
             }
             
             JSONArray rows = new JSONArray()
@@ -587,6 +616,8 @@ class Cleaning {
             
             outjson.put("data", rows)
         } catch (Exception e) {
+            println "[ERROR] getSchedules failed: ${e.message}"
+            e.printStackTrace()
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
         }

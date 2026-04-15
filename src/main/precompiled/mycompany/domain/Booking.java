@@ -11,6 +11,11 @@ import org.garret.perst.continuous.FullTextSearchable;
  * Represents a booking for a house cleaning service.
  * 
  * Uses proper OO reference to House (not houseId).
+ * 
+ * Bidirectional relationships:
+ * - Booking HAS house (single reference)
+ * - Booking HAS schedule (single reference - one cleaning per booking)
+ * - Schedule HAS booking (single reference)
  */
 @Getter @Setter
 public class Booking extends CVersion {
@@ -18,14 +23,19 @@ public class Booking extends CVersion {
     // Proper OO reference to House (was: int houseId)
     private House house;
     
+    // One schedule per booking (the cleaning for this stay)
+    private Schedule schedule;
+    
     private String checkInDate;
     private String checkOutDate;
     
-    @FullTextSearchable
+    @Indexable
     private String guestName;
-    
+
+    @Indexable
     private String guestEmail;
     private String guestPhone;
+    @FullTextSearchable
     private String notes;
     private int dogsCount = 0;
     
@@ -45,11 +55,26 @@ public class Booking extends CVersion {
         this.guestEmail = guestEmail;
         this.guestPhone = guestPhone;
         this.notes = notes;
+        // Bidirectional: add this booking to house's collection
+        if (house != null) {
+            house.getBookings().add(this);
+        }
     }
     
     // Convenience method for API serialization
     public long getHouseOid() {
         return house != null ? house.getOid() : 0;
+    }
+    
+    public long getScheduleOid() {
+        return schedule != null ? schedule.getOid() : 0;
+    }
+    
+    public void setSchedule(Schedule schedule) {
+        this.schedule = schedule;
+        if (schedule != null && schedule.getBooking() != this) {
+            schedule.setBooking(this);
+        }
     }
     
     @Override
@@ -59,6 +84,7 @@ public class Booking extends CVersion {
                 ", guestName='" + guestName + '\'' +
                 ", dogsCount=" + dogsCount +
                 ", status='" + status + '\'' +
+                ", schedule=" + (schedule != null ? schedule.getOid() : "null") +
                 '}';
     }
 }

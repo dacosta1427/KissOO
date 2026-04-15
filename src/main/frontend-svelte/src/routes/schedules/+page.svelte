@@ -4,6 +4,7 @@
 	import { session } from '$lib/state/session.svelte';
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import ScheduleBoard from '$lib/components/ScheduleBoard.svelte';
+	import Button from '$lib/components/Button.svelte';
   import { t, currentLocale } from '$lib/i18n';
   import { toInputDateFormat, toBackendDateFormat, toDisplayDateFormat } from '$lib/utils/Utils';
   
@@ -23,6 +24,7 @@
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
 	let editingSchedule = $state<Schedule | null>(null);
+	let saving = $state(false);
 	let viewMode = $state<'calendar' | 'table'>('calendar');
 	
 	// Modal for showing house details to cleaner
@@ -122,6 +124,8 @@
 
 	async function handleFormSubmit(e: Event) {
 		e.preventDefault();
+		if (saving) return;
+		saving = true;
 		
 		const scheduleData = {
 			cleaner_id: parseInt(formData.cleaner_id),
@@ -145,6 +149,8 @@
 			await loadData();
 		} catch (err: any) {
 			error = err.message || t('errors.failed_to_save');
+		} finally {
+			saving = false;
 		}
 	}
 
@@ -371,12 +377,12 @@
 				</div>
 
 				<div class="form-actions">
-					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
+					<Button type="button" class="btn-secondary" onclick={handleFormCancel} disabled={saving}>
 						{tt('common.cancel')}
-					</button>
-					<button type="submit" class="btn btn-primary">
+					</Button>
+					<Button type="submit" class="btn-primary" loading={saving}>
 						{editingSchedule ? t('common.update') : t('common.add')} {tt('schedules.title')}
-					</button>
+					</Button>
 				</div>
 			</form>
 		</div>

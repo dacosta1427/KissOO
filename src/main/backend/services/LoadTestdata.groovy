@@ -1,19 +1,12 @@
 package services
 
 import org.kissweb.json.JSONObject
-import org.kissweb.json.JSONArray
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
 import oodb.PerstStorageManager
 import mycompany.domain.PerstUser
 import mycompany.domain.Owner
 import mycompany.domain.House
-import mycompany.domain.Cleaner
-import mycompany.domain.Booking
-import mycompany.domain.Schedule
-import java.util.Collections
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import mycompany.domain.Booking
 import mycompany.domain.Cleaner
 import mycompany.domain.Schedule
@@ -275,6 +268,8 @@ class LoadTestdata {
                         def checkOut = checkIn.plusDays(3)
                         def guestName = "Guest ${houseIdx * 2 + bookingIdx + 1}"
                         def booking = new Booking(house, checkIn.format(formatter), checkOut.format(formatter), guestName, "${guestName.toLowerCase().replace(' ', '.')}@email.com", "+31 6 ${String.format('%08d', houseIdx * 2 + bookingIdx)}", "Special requests: None")
+                        // Bidirectional: add to house's bookings collection
+                        house.getBookings().add(booking)
                         bookingTc.addInsert(booking)
                         bookings << booking
                     } catch (Exception e) {
@@ -299,25 +294,23 @@ class LoadTestdata {
                 def cleaner = cleaners[cleanerIdx % cleaners.size()]
                 def checkInDate = LocalDate.parse(booking.getCheckInDate(), formatter)
                 
-                // Create schedule for each day of the booking
-                3.times { dayIdx ->
-                    def scheduleDate = checkInDate.plusDays(dayIdx)
-                    def schedule = new Schedule()
-                    schedule.setCleaner(cleaner)
-                    schedule.setBooking(booking)
-                    schedule.setScheduleDate(scheduleDate.format(formatter))
-                    schedule.setStartTime("09:00")
-                    schedule.setEndTime("12:00")
-                    schedule.setStatus("scheduled")
-                    scheduleTc.addInsert(schedule)
-                    schedules << schedule
-                    scheduleCount++
-                    
-                    if (scheduleCount % BATCH_SIZE == 0) {
-                        PerstStorageManager.store(scheduleTc)
-                        scheduleTc = PerstStorageManager.createContainer()
-                    }
-                }
+                // Create ONE schedule for the entire booking (the cleaning)
+                def schedule = new Schedule()
+                schedule.setCleaner(cleaner)
+                schedule.setBooking(booking)
+                schedule.setScheduleDate(checkInDate.format(formatter))
+                schedule.setStartTime("09:00")
+                schedule.setEndTime("12:00")
+                schedule.setStatus("scheduled")
+                // Set bidirectional: also set on booking
+                booking.setSchedule(schedule)
+                // Add to cleaner's schedules collection
+                cleaner.getSchedules().add(schedule)
+                
+                scheduleTc.addInsert(schedule)
+                schedules << schedule
+                scheduleCount++
+                
                 cleanerIdx++
             }
             // Store remaining schedules

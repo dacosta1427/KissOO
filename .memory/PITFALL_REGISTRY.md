@@ -117,7 +117,42 @@ git show cleaners2:src/main/frontend-svelte/src/lib/i18n/messages/en.json > \
 
 **Related Classes:** Navbar.svelte, owners/+page.svelte, houses/+page.svelte
 
-**Evidence:** Click owner → URL stays /owners, no ownerId in path
+---
+
+**PIT-005: Blank Page After Navigating to New OID** [RESOLVED]
+- **Category:** NAVIGATION
+- **First Seen:** 2026-04-08
+- **Last Updated:** 2026-04-08
+- **Occurrences:** 1
+- **Status:** RESOLVED
+
+**Context:** After clicking Update Owner, if OID changed and we navigate to new OID URL, page goes blank
+
+**Symptom:**
+- Click owner with OID 2270
+- Make change, click Update
+- Navigate to /owners/2270 (or new OID)
+- Page shows "Invalid owner ID" or blank
+
+**Root Cause (5 Whys):**
+1. Why? → URL changed but page didn't load data properly
+2. Why? → urlOwnerId became 0 after navigation
+3. Why? → Navigation happened but data didn't reload
+4. Why? → Effect didn't trigger properly or editOwner was null
+5. Why? → List page didn't reload after update, so old OIDs still in list
+
+**Resolution:**
+1. Keep OID navigation code - it's correct for Perst versioning
+2. After update, if OID changed → goto('/owners/' + newId)
+3. If OID didn't change → stay on same page and call loadData()
+4. List page: on cancel, call loadOwners() to refresh OIDs
+
+**Prevention:**
+- Always navigate to returned OID after update
+- Ensure loadData() is called after navigation
+- List pages must reload after any form change
+
+**Related Files:** owners/[id]/+page.svelte, owners/+page.svelte
 
 ## Archived Pitfalls
 <resolved entries moved here after 10 iterations>
