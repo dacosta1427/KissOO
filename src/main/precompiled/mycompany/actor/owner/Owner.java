@@ -30,7 +30,7 @@ public class Owner extends ANaturalActor {
     private String address;
     
     public Owner(String name, String phone, String email, boolean active) {
-        super(name, "Owner", new Agreement(), ActorType.NATURAL);
+        super(name, new Agreement());
         this.email = email;
         this.phone = phone;
         this.setActive(active);

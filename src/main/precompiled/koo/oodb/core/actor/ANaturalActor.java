@@ -5,23 +5,23 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public abstract  class ANaturalActor extends AActor {
+public abstract class ANaturalActor extends AActor {
     private PerstUser perstUser;  // persisted - NATURAL actors have PU, CORPORATE don't
-
-    public ANaturalActor(String name, String cleaner1, Agreement agreement, ActorType actortype) {
-
-        super(name, "Cleaner", new Agreement());
-        actortype = ActorType.NATURAL;
+    
+    public ANaturalActor(String name, Agreement agreement) {
+        super(name, agreement);
+        // NATURAL actors automatically get a deactivated PerstUser
+        createPerstUser();
     }
-
+    
     private void createPerstUser() {
         String username = getName().toLowerCase().replaceAll("\\s+", "_") + "_" + getUuid().substring(0, 8);
         String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 16);
-        ((ANaturalActor) this).setPerstUser(new PerstUser(username, tempPassword, this));
-        ((ANaturalActor) this).getPerstUser().setActive(false);
-        ((ANaturalActor) this).getPerstUser().setEmailVerified(false);
+        this.perstUser = new PerstUser(username, tempPassword, this);
+        this.perstUser.setActive(false);
+        this.perstUser.setEmailVerified(false);
     }
-
+    
     public boolean isNatural() {
         return true;
     }

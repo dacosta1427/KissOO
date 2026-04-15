@@ -30,7 +30,7 @@ public class Cleaner extends ANaturalActor {
     private String address;
     
     public Cleaner(String name, String phone, String email, boolean active) {
-        super(name, "Cleaner", new Agreement(), ActorType.NATURAL);
+        super(name, new Agreement());
         this.phone = phone;
         this.email = email;
         setActive(active);

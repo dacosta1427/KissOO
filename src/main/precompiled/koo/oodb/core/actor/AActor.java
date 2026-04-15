@@ -48,12 +48,17 @@ public abstract class AActor extends CVersion {
     public AActor() {
     }
     
-    public AActor(String name, ActorType type, Agreement agreement) {
+    public AActor(String name, Agreement agreement) {
         this.createdDate = System.currentTimeMillis();
         this.name = name;
-        this.type = type.name();
         this.uuid = java.util.UUID.randomUUID().toString();
-        this.actorType = type;
+        
+        // Auto-detect ActorType from class hierarchy
+        if (this instanceof ACorporateActor) {
+            this.actorType = ActorType.CORPORATE;
+        } else {
+            this.actorType = ActorType.NATURAL; // default for all natural actors
+        }
         
         if (agreement == null) {
             throw new IllegalArgumentException("AActor MUST have an Agreement");
