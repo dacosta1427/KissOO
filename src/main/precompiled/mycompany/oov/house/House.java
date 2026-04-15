@@ -7,15 +7,17 @@ import mycompany.actor.owner.Owner;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
-import java.util.ArrayList;
+
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Collection;
-import koo.oodb.core.StorageManager;
 
 /**
  * House entity for cleaning scheduler.
  * Represents a house that can be booked for cleaning services.
  * 
  * Uses proper OO references (not ID fields) for Owner and CostProfile.
+ * Uses stored collections for Pure OO navigation.
  */
 @Getter @Setter
 public class House extends CVersion {
@@ -48,6 +50,9 @@ public class House extends CVersion {
     private Integer bathrooms = 0;
     private String luxuryLevel = "standard";
     
+    // Stored collection for Pure OO navigation
+    private Set<Booking> bookings = new HashSet<>();
+    
     public House() {
     }
     
@@ -71,25 +76,20 @@ public class House extends CVersion {
     }
     
     public Collection<Booking> getBookings() {
-        Collection<Booking> result = new ArrayList<>();
-        Collection<Booking> all = StorageManager.getAll(Booking.class);
-        for (Booking booking : all) {
-            if (booking.getHouse() != null && booking.getHouse().getOid() == this.getOid()) {
-                result.add(booking);
-            }
-        }
-        return result;
+        return bookings;
     }
     
     public void addBooking(Booking booking) {
         if (booking != null) {
             booking.setHouse(this);
+            bookings.add(booking);
         }
     }
     
     public void removeBooking(Booking booking) {
-        if (booking != null && booking.getHouse() != null && booking.getHouse().getOid() == this.getOid()) {
+        if (booking != null && bookings.contains(booking)) {
             booking.setHouse(null);
+            bookings.remove(booking);
         }
     }
     
@@ -101,6 +101,7 @@ public class House extends CVersion {
                 ", owner=" + (owner != null ? owner.getOid() : "null") +
                 ", costProfile=" + (costProfile != null ? costProfile.getOid() : "null") +
                 ", active=" + active +
+                ", bookings=" + bookings.size() +
                 ", surfaceM2=" + surfaceM2 +
                 ", floors=" + floors +
                 ", bedrooms=" + bedrooms +

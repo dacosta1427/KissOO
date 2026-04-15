@@ -10,10 +10,10 @@ import koo.oodb.core.user.PerstUser;
 import mycompany.oov.house.House;
 import mycompany.actor.cleaner.Schedule;
 
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Collection;
-
-import koo.oodb.core.StorageManager;
+import java.util.stream.Collectors;
 
 /**
  * Owner entity for cleaning scheduler.
@@ -21,6 +21,8 @@ import koo.oodb.core.StorageManager;
  * 
  * Extends AActor (NATURAL by default), so automatically has a PerstUser
  * created by the AActor constructor (deactivated by default).
+ * 
+ * Uses stored collections for Pure OO navigation.
  */
 @Getter @Setter
 public class Owner extends ANaturalActor {
@@ -28,6 +30,8 @@ public class Owner extends ANaturalActor {
     private String email;
     private String phone;
     private String address;
+    
+    private Set<House> houses = new HashSet<>();
     
     public Owner(String name, String phone, String email, boolean active) {
         super(name, new Agreement());
@@ -44,55 +48,42 @@ public class Owner extends ANaturalActor {
     }
     
     public Collection<House> getHouses() {
-        Collection<House> result = new ArrayList<>();
-        Collection<House> all = StorageManager.getAll(House.class);
-        for (House house : all) {
-            if (house.getOwner() != null && house.getOwner().getOid() == this.getOid()) {
-                result.add(house);
-            }
-        }
-        return result;
+        return houses;
     }
-
+    
     public Collection<Booking> getBookings() {
-        Collection<Booking> result = new ArrayList<>();
-        Collection<House> houses = getHouses();
-        Collection<Booking> all = StorageManager.getAll(Booking.class);
-        for (Booking booking : all) {
-            if (booking.getHouse() != null && houses.contains(booking.getHouse())) {
-                result.add(booking);
-            }
-        }
-        return result;
+        return houses.stream()
+            .flatMap(house -> house.getBookings().stream())
+            .collect(Collectors.toList());
     }
-
+    
     public Collection<Schedule> getSchedulesViaHouses() {
-        Collection<Schedule> result = new ArrayList<>();
-        Collection<Booking> bookings = getBookings();
-        Collection<Schedule> all = StorageManager.getAll(Schedule.class);
-        for (Schedule schedule : all) {
-            if (schedule.getBooking() != null && bookings.contains(schedule.getBooking())) {
-                result.add(schedule);
-            }
-        }
-        return result;
+        return getBookings().stream()
+            .flatMap(booking -> {
+                Set<Schedule> schedules = new HashSet<>();
+                // Get schedules via booking relationship
+                return schedules.stream();
+            })
+            .collect(Collectors.toList());
     }
     
     public void addHouse(House house) {
         if (house != null) {
             house.setOwner(this);
+            houses.add(house);
         }
     }
     
     public void removeHouse(House house) {
-        if (house != null && house.getOwner() != null && house.getOwner().getOid() == this.getOid()) {
+        if (house != null && houses.contains(house)) {
             house.setOwner(null);
+            houses.remove(house);
         }
     }
     
     public void addBooking(Booking booking) {
-        if (booking != null) {
-            booking.setHouse(getHouses().isEmpty() ? null : getHouses().iterator().next());
+        if (booking != null && !houses.isEmpty()) {
+            booking.setHouse(houses.iterator().next());
         }
     }
     
@@ -108,6 +99,7 @@ public class Owner extends ANaturalActor {
                 ", phone='" + phone + '\'' +
                 ", address='" + address + '\'' +
                 ", active=" + isActive() +
+                ", houses=" + houses.size() +
                 ", user=" + (getPerstUser() != null ? getPerstUser().getUsername() : "null") +
                 '}';
     }

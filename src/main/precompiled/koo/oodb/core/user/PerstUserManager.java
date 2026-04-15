@@ -1,7 +1,7 @@
 package koo.oodb.core.user;
 
 import koo.oodb.core.actor.AActor;
-import mycompany.database.BaseManager;
+import koo.oodb.BaseManager;
 import koo.oodb.core.StorageManager;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;

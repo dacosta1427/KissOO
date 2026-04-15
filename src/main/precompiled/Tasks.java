@@ -572,7 +572,7 @@ public class Tasks {
     private static LocalDependencies buildLocalDependencies() {
         final LocalDependencies dep = new LocalDependencies();
         dep.add(LIBS, "abcl.jar");
-        dep.add(LIBS, "ooGTxQ-1.0.1.jar");
+        dep.add(LIBS, "ooGTxQ-1.0.0.jar");
         dep.add(LIBS, "lombok.jar");
         dep.add(LIBS, "slf4j-api-1.7.30.jar");
         dep.add(LIBS, "slf4j-simple-1.7.30.jar");

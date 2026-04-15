@@ -1,6 +1,8 @@
 package koo.oodb.core;
 
 import koo.oodb.core.actor.AActor;
+import koo.oodb.core.actor.Agreement;
+import mycompany.actor.owner.Owner;
 import org.kissweb.json.JSONObject;
 import koo.oodb.core.user.PerstUserManager;
 import koo.oodb.core.user.PerstUser;
@@ -34,22 +36,22 @@ public class PerstInit {
                 return result;
             }
             
-            // Create superAdmin AActor with full Agreement
-            Agreement agreement = new Agreement("superAdmin");
-            AActor adminAActor = new AActor("System Admin", "superAdmin", agreement);
+            // Create superAdmin AActor using Owner (a concrete NATURAL actor)
+            Owner adminActor = new Owner("System Admin", "", "admin@localhost", true);
+            adminActor.getAgreement().setRole("superAdmin");
             
             // Replace auto-created PerstUser with one using "admin" as username
             String username = "admin";
             String tempPassword = "admin";
-            PerstUser adminUser = new PerstUser(username, tempPassword, adminAActor);
+            PerstUser adminUser = new PerstUser(username, tempPassword, adminActor);
             adminUser.setEmail("admin@localhost");
             adminUser.setActive(true);
             adminUser.setEmailVerified(true);
-            adminAActor.setPerstUser(adminUser);
+            // PerstUser already linked via ANaturalActor constructor
             
             // Store both together
             org.garret.perst.continuous.TransactionContainer tc = StorageManager.createContainer();
-            tc.addInsert(adminAActor);
+            tc.addInsert(adminActor);
             tc.addInsert(adminUser);
             StorageManager.store(tc);
             

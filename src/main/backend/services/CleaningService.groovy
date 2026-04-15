@@ -359,7 +359,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
-            int houseId = data.getInt("house_id")
+            long houseId = data.getLong("house_id")
             String checkInDate = data.getString("check_in_date")
             String checkOutDate = data.getString("check_out_date")
             String guestName = data.getString("guest_name")
@@ -368,8 +368,20 @@ class CleaningService {
             String notes = data.getString("notes", "")
             int dogsCount = data.has("dogs_count") ? data.getInt("dogs_count") : 0
             
-            Booking booking = new Booking(houseId, checkInDate, checkOutDate,
-                    guestName, guestEmail, guestPhone, notes, dogsCount)
+            // Pure OO: Get House by OID, then create Booking with House reference
+            House house = StorageManager.getByOid(House.class, houseId)
+            if (house == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "House not found")
+                return
+            }
+            
+            Booking booking = new Booking(house, checkInDate, checkOutDate,
+                    guestName, guestEmail, guestPhone, notes)
+            booking.setDogsCount(dogsCount)
+            
+            // Pure OO: Add to house's collection
+            house.addBooking(booking)
             def tc = StorageManager.createContainer()
             tc.addInsert(booking)
             if (!StorageManager.store(tc)) {
@@ -615,8 +627,8 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
-            int cleanerId = data.getInt("cleaner_id")
-            int bookingId = data.getInt("booking_id")
+            long cleanerId = data.getLong("cleaner_id")
+            long bookingId = data.getLong("booking_id")
             String date = data.getString("date")
             String startTime = data.getString("start_time")
             String endTime = data.getString("end_time")
@@ -626,8 +638,31 @@ class CleaningService {
                 status = "scheduled"
             }
             
-            def schedule = new Schedule(cleanerId, bookingId, date, startTime, endTime, notes)
+            // Pure OO: Get Cleaner and Booking by OID, then create Schedule with OO references
+            Cleaner cleaner = StorageManager.getByOid(Cleaner.class, cleanerId)
+            Booking booking = StorageManager.getByOid(Booking.class, bookingId)
+            if (cleaner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Cleaner not found")
+                return
+            }
+            if (booking == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Booking not found")
+                return
+            }
+            
+            def schedule = new Schedule()
+            schedule.setCleaner(cleaner)
+            schedule.setBooking(booking)
+            schedule.setScheduleDate(date)
+            schedule.setStartTime(startTime)
+            schedule.setEndTime(endTime)
+            schedule.setNotes(notes)
             schedule.setStatus(status)
+            
+            // Pure OO: Add to cleaner's collection
+            cleaner.addSchedule(schedule)
             
             def tc = StorageManager.createContainer()
             tc.addInsert(schedule)
@@ -939,22 +974,29 @@ class CleaningService {
     void getHousesByOwner(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             long ownerId = injson.getLong("owner_id")
-            Collection<House> houses = StorageManager.getAll(House.class)
+            
+            // Pure OO: Get Owner by OID, then ask for their houses
+            Owner owner = StorageManager.getByOid(Owner.class, ownerId)
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found")
+                return
+            }
+            
+            Collection<House> houses = owner.getHouses()
             JSONArray rows = new JSONArray()
             
             for (House house : houses) {
-                if (house.getOwnerOid() == ownerId) {
-                    JSONObject row = new JSONObject()
-                    row.put("id", house.getOid())
-                    row.put("name", house.getName())
-                    row.put("address", house.getAddress())
-                    row.put("description", house.getDescription())
-                    row.put("owner", house.getOwnerOid())
-                    row.put("active", house.isActive())
-                    row.put("check_in_time", house.getCheckInTime())
-                    row.put("check_out_time", house.getCheckOutTime())
-                    rows.put(row)
-                }
+                JSONObject row = new JSONObject()
+                row.put("id", house.getOid())
+                row.put("name", house.getName())
+                row.put("address", house.getAddress())
+                row.put("description", house.getDescription())
+                row.put("owner", house.getOwnerOid())
+                row.put("active", house.isActive())
+                row.put("check_in_time", house.getCheckInTime())
+                row.put("check_out_time", house.getCheckOutTime())
+                rows.put(row)
             }
             
             outjson.put("data", rows)
@@ -975,15 +1017,25 @@ class CleaningService {
             String checkInTime = data.getString("check_in_time", "16:00")
             String checkOutTime = data.getString("check_out_time", "10:00")
             
-            House house = new House(name, address, description, active)
+            // Set Owner from OID (OO reference)
+            long ownerOid = data.getLong("owner", 0)
+            Owner owner = null
+            if (ownerOid > 0) {
+                owner = StorageManager.getByOid(Owner.class, ownerOid)
+            }
+            
+            // If no owner provided, get current owner from session
+            if (owner == null) {
+                owner = getCurrentOwner(servlet)
+            }
+            
+            // Pure OO: Create house with owner, then add to owner's collection
+            House house = new House(owner, name, address, description, active)
             house.setCheckInTime(checkInTime)
             house.setCheckOutTime(checkOutTime)
             
-            // Set Owner from OID (OO reference)
-            long ownerOid = data.getLong("owner", 0)
-            if (ownerOid > 0) {
-                Owner owner = StorageManager.getByOid(Owner.class, ownerOid)
-                house.setOwner(owner)
+            if (owner != null) {
+                owner.addHouse(house)  // Bidirectional: adds to owner's houses collection
             }
             
             // Set CostProfile from OID (OO reference)

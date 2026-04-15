@@ -3,13 +3,13 @@ package mycompany.actor.cleaner;
 import koo.oodb.core.actor.ANaturalActor;
 import lombok.Getter;
 import lombok.Setter;
-import koo.oodb.core.actor.AActor;
 import koo.oodb.core.actor.ActorType;
 import koo.oodb.core.actor.Agreement;
 import koo.oodb.core.user.PerstUser;
-import koo.oodb.core.StorageManager;
 import org.garret.perst.continuous.FullTextSearchable;
-import java.util.ArrayList;
+
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Collection;
 
 /**
@@ -18,6 +18,8 @@ import java.util.Collection;
  * 
  * Extends AActor (NATURAL by default), so automatically has a PerstUser
  * created by the AActor constructor (deactivated by default).
+ * 
+ * Uses stored collections for Pure OO navigation.
  */
 @Getter @Setter
 public class Cleaner extends ANaturalActor {
@@ -28,6 +30,8 @@ public class Cleaner extends ANaturalActor {
     private String email;
     
     private String address;
+    
+    private Set<Schedule> schedules = new HashSet<>();
     
     public Cleaner(String name, String phone, String email, boolean active) {
         super(name, new Agreement());
@@ -42,27 +46,22 @@ public class Cleaner extends ANaturalActor {
             getPerstUser().setEmail(email);
         }
     }
-
+    
     public Collection<Schedule> getSchedules() {
-        Collection<Schedule> result = new ArrayList<>();
-        Collection<Schedule> all = StorageManager.getAll(Schedule.class);
-        for (Schedule schedule : all) {
-            if (schedule.getCleaner() != null && schedule.getCleaner().getOid() == this.getOid()) {
-                result.add(schedule);
-            }
-        }
-        return result;
+        return schedules;
     }
     
     public void addSchedule(Schedule schedule) {
         if (schedule != null) {
             schedule.setCleaner(this);
+            schedules.add(schedule);
         }
     }
     
     public void removeSchedule(Schedule schedule) {
-        if (schedule != null && schedule.getCleaner() != null && schedule.getCleaner().getOid() == this.getOid()) {
+        if (schedule != null && schedules.contains(schedule)) {
             schedule.setCleaner(null);
+            schedules.remove(schedule);
         }
     }
     
@@ -77,6 +76,7 @@ public class Cleaner extends ANaturalActor {
                 ", email='" + email + '\'' +
                 ", address='" + address + '\'' +
                 ", active=" + isActive() +
+                ", schedules=" + schedules.size() +
                 ", user=" + (getPerstUser() != null ? getPerstUser().getUsername() : "null") +
                 '}';
     }

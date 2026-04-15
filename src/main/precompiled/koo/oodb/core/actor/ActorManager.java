@@ -61,21 +61,9 @@ public class ActorManager extends BaseManager<AActor> {
     }
     
     public static AActor create(Object... args) {
-        if (args == null || args.length < 2) {
-            return null;
-        }
-        String name = args[0].toString();
-        String type = args[1].toString();
-        
-        AActor AActor = new AActor(name, type, new Agreement());
-        
-        TransactionContainer tc = StorageManager.createContainer();
-        assert tc != null;
-        tc.addInsert(AActor);
-        if (!StorageManager.store(tc)) {
-            return null;
-        }
-        return AActor;
+        // AActor is abstract - cannot be instantiated directly
+        // Use concrete implementations like Owner or Cleaner
+        throw new IllegalStateException("AActor is abstract - use Owner or Cleaner constructors");
     }
     
     public static boolean update(AActor AActor) {
