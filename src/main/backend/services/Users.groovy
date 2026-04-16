@@ -17,9 +17,15 @@ import mycompany.actor.owner.Owner
  *
  * Authorization:
  * - System admin only: getUsers, createUser, updateUser, deleteUser
+ * - Requires full activation (password changed AND email verified)
  */
 class Users {
 
+    private boolean isFullyActivated(ProcessServlet servlet) {
+        def activated = servlet.getUserData("isFullyActivated")
+        return activated == true
+    }
+    
     private boolean isSystemAdmin(ProcessServlet servlet) {
         try {
             PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
@@ -38,9 +44,28 @@ class Users {
             throw new Exception("System admin access required for: " + operation)
         }
     }
+    
+    private void requireFullActivation(JSONObject injson, JSONObject outjson, ProcessServlet servlet) {
+        if (!isFullyActivated(servlet)) {
+            boolean needsPwd = servlet.getUserData("needsPasswordChange") == true
+            boolean needsEmail = servlet.getUserData("needsEmailVerification") == true
+            outjson.put("_Success", false)
+            outjson.put("_ErrorCode", 3)
+            outjson.put("_ErrorMessage", "Please complete activation: " + 
+                (needsPwd ? "change password" : "") + 
+                (needsPwd && needsEmail ? " and " : "") + 
+                (needsEmail ? "verify email" : ""))
+        }
+    }
 
     void getUsers(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            // Check activation status first
+            requireFullActivation(injson, outjson, servlet)
+            if (outjson.has("_Success") && !outjson.getBoolean("_Success")) {
+                return
+            }
+            
             checkSystemAdmin(servlet, "getUsers")
 
             Collection<PerstUser> users = StorageManager.getAll(PerstUser.class)

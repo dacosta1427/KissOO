@@ -21,6 +21,11 @@ import java.time.format.DateTimeFormatter
 
 class LoadTestdata {
 
+    private boolean isFullyActivated(ProcessServlet servlet) {
+        def activated = servlet.getUserData("isFullyActivated")
+        return activated == true
+    }
+    
     private boolean isSystemAdmin(ProcessServlet servlet) {
         try {
             PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
@@ -100,6 +105,19 @@ class LoadTestdata {
     
     void load(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            // Check activation status first
+            if (!isFullyActivated(servlet)) {
+                boolean needsPwd = servlet.getUserData("needsPasswordChange") == true
+                boolean needsEmail = servlet.getUserData("needsEmailVerification") == true
+                outjson.put("_Success", false)
+                outjson.put("_ErrorCode", 3)
+                outjson.put("_ErrorMessage", "Please complete activation: " + 
+                    (needsPwd ? "change password" : "") + 
+                    (needsPwd && needsEmail ? " and " : "") + 
+                    (needsEmail ? "verify email" : ""))
+                return
+            }
+            
             checkSystemAdmin(servlet, "load")
             
             println "[LoadTestdata] Starting test data load..."

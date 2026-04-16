@@ -114,11 +114,35 @@ class CleaningService {
             throw new Exception("System admin access required for: " + operation)
         }
     }
+    
+    private boolean isFullyActivated(ProcessServlet servlet) {
+        def activated = servlet.getUserData("isFullyActivated")
+        return activated == true
+    }
+    
+    private void requireFullActivation(JSONObject injson, JSONObject outjson, ProcessServlet servlet) {
+        if (!isFullyActivated(servlet)) {
+            boolean needsPwd = servlet.getUserData("needsPasswordChange") == true
+            boolean needsEmail = servlet.getUserData("needsEmailVerification") == true
+            outjson.put("_Success", false)
+            outjson.put("_ErrorCode", 3)
+            outjson.put("_ErrorMessage", "Please complete activation: " + 
+                (needsPwd ? "change password" : "") + 
+                (needsPwd && needsEmail ? " and " : "") + 
+                (needsEmail ? "verify email" : ""))
+        }
+    }
 
     // ==================== CLEANERS ====================
     
     void getCleaners(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
+            // Check activation status
+            requireFullActivation(injson, outjson, servlet)
+            if (outjson.has("_Success") && !outjson.getBoolean("_Success")) {
+                return
+            }
+            
             // Only admins can see cleaners list
             if (!isAdmin(servlet)) {
                 outjson.put("_Success", false)

@@ -20,6 +20,9 @@ export interface LoginResult {
   cleanerOid?: number;
   email?: string;
   preferredLanguage?: string;
+  needsPasswordChange?: boolean;
+  needsEmailVerification?: boolean;
+  fullyActivated?: boolean;
   _ErrorMessage?: string;
   _ErrorCode?: number;
 }
@@ -63,11 +66,22 @@ export async function login(usernameInput: string, password: string): Promise<Lo
     if (res.email) {
       session.setEmail(res.email);
     }
-    if (res.preferredLanguage) {
+if (res.preferredLanguage) {
       session.setLanguage(res.preferredLanguage);
     }
+    
+    // Update activation status
+    if (res.needsPasswordChange !== undefined) {
+      session.setNeedsPasswordChange(res.needsPasswordChange);
+    }
+    if (res.needsEmailVerification !== undefined) {
+      session.setNeedsEmailVerification(res.needsEmailVerification);
+    }
+    if (res.fullyActivated !== undefined) {
+      session.setFullyActivated(res.fullyActivated);
+    }
   }
-  
+   
   return res;
 }
 
@@ -121,6 +135,75 @@ export async function signup(username: string, password: string, email: string =
  */
 export function isAuthenticated(): boolean {
   return session.isAuthenticated;
+}
+
+/**
+ * Change password for current user
+ * @param currentPassword - Current password
+ * @param newPassword - New password (min 8 chars, at least one digit)
+ */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<{_Success: boolean; _ErrorMessage?: string; fullyActivated?: boolean}> {
+  const res = await Server.call('services.auth.AuthService', 'changePassword', {
+    currentPassword: currentPassword,
+    newPassword: newPassword
+  }) as {_Success: boolean; _ErrorMessage?: string; fullyActivated?: boolean};
+  
+  if (res._Success) {
+    session.setNeedsPasswordChange(false);
+    if (res.fullyActivated) {
+      session.setFullyActivated(true);
+    }
+  }
+  
+  return res;
+}
+
+/**
+ * Request verification email
+ */
+export async function sendVerificationEmail(): Promise<{_Success: boolean; _ErrorMessage?: string; message?: string}> {
+  const res = await Server.call('services.auth.AuthService', 'sendVerificationEmail', {}) as {_Success: boolean; _ErrorMessage?: string; message?: string};
+  return res;
+}
+
+/**
+ * Verify email with token
+ * @param token - Verification token from email
+ */
+export async function verifyEmail(token: string): Promise<{_Success: boolean; _ErrorMessage?: string; fullyActivated?: boolean}> {
+  const res = await Server.call('services.auth.AuthService', 'verifyEmail', {
+    token: token
+  }) as {_Success: boolean; _ErrorMessage?: string; fullyActivated?: boolean};
+  
+  if (res._Success) {
+    session.setNeedsEmailVerification(false);
+    if (res.fullyActivated) {
+      session.setFullyActivated(true);
+    }
+  }
+  
+  return res;
+}
+
+/**
+ * Get activation status for current user
+ */
+export async function getActivationStatus(): Promise<{_Success: boolean; fullyActivated?: boolean; needsPasswordChange?: boolean; needsEmailVerification?: boolean}> {
+  const res = await Server.call('services.auth.AuthService', 'getActivationStatus', {}) as {_Success: boolean; fullyActivated?: boolean; needsPasswordChange?: boolean; needsEmailVerification?: boolean};
+  
+  if (res._Success) {
+    if (res.needsPasswordChange !== undefined) {
+      session.setNeedsPasswordChange(res.needsPasswordChange);
+    }
+    if (res.needsEmailVerification !== undefined) {
+      session.setNeedsEmailVerification(res.needsEmailVerification);
+    }
+    if (res.fullyActivated !== undefined) {
+      session.setFullyActivated(res.fullyActivated);
+    }
+  }
+  
+  return res;
 }
 
 /**

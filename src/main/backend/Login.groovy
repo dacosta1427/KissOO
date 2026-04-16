@@ -60,6 +60,12 @@ class Login {
             outjson.put("email", perstUser.getEmail() ?: "")
             outjson.put("preferredLanguage", perstUser.getPreferredLanguage() ?: "en")
             
+            // Add activation status
+            boolean fullyActivated = !perstUser.isMustChangePassword() && perstUser.isEmailVerified()
+            outjson.put("needsPasswordChange", perstUser.isMustChangePassword())
+            outjson.put("needsEmailVerification", !perstUser.isEmailVerified())
+            outjson.put("fullyActivated", fullyActivated)
+            
             // Add owner OID if available
             def actor = perstUser.getAActor()
             Owner owner = (actor instanceof Owner) ? (Owner) actor : null

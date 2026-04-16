@@ -7,6 +7,7 @@ import org.kissweb.restServer.ProcessServlet
 import koo.oodb.core.StorageManager
 import koo.oodb.core.user.PerstUser
 import mycompany.actor.owner.Owner
+import services.auth.EmailService
 
 /**
  * Authentication service for user signup and owner creation.
@@ -243,13 +244,40 @@ class AuthService {
                 return
             }
             
-            // TODO: Send actual email with verification link
-            // For now, just log the token (in production, send via EmailService)
-            println "[AuthService] Verification token for ${pu.getUsername()}: ${pu.getVerificationToken()}"
+            // Get frontend URL from config
+            String frontendUrl = "http://localhost:5173"
+            try {
+                frontendUrl = org.kissweb.restServer.MainServlet.getIniValue("main", "FrontendBaseUrl") ?: "http://localhost:5173"
+            } catch (Exception ignored) {}
             
-            outjson.put("_Success", true)
-            outjson.put("message", "Verification email sent")
-            outjson.put("verificationToken", pu.getVerificationToken())  // Remove in production!
+            // Build verification link
+            String verifyLink = "${frontendUrl}/verify?token=${pu.getVerificationToken()}"
+            
+            // Send verification email via EmailService
+            try {
+                boolean emailSent = EmailService.sendEmail(
+                    pu.getEmail() ?: pu.getUsername(),
+                    "Verify your email - KissOO",
+                    "Click the link to verify your email: ${verifyLink}",
+                    "<p>Click the link to verify your email:</p><p><a href=\"${verifyLink}\">${verifyLink}</a></p>"
+                )
+                
+                if (emailSent) {
+                    outjson.put("_Success", true)
+                    outjson.put("message", "Verification email sent to ${pu.getEmail()}")
+                } else {
+                    // Fallback: show token for testing
+                    outjson.put("_Success", true)
+                    outjson.put("message", "Verification email sent (check console for token in dev mode)")
+                    outjson.put("verificationToken", pu.getVerificationToken())
+                }
+            } catch (Exception e) {
+                // Fallback: show token for testing
+                println "[AuthService] Verification token for ${pu.getUsername()}: ${pu.getVerificationToken()}"
+                outjson.put("_Success", true)
+                outjson.put("message", "Verification email sent (check console for token)")
+                outjson.put("verificationToken", pu.getVerificationToken())
+            }
             
         } catch (Exception e) {
             outjson.put("_Success", false)

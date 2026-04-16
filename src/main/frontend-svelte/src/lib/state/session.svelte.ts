@@ -34,6 +34,11 @@ let email = $state('');
 // Language preference - stored locally for quick access
 let preferredLanguage = $state('en');
 
+// Activation status - for first-time setup
+let needsPasswordChange = $state(false);
+let needsEmailVerification = $state(false);
+let fullyActivated = $state(false);
+
 // Persistence configuration
 let persistToStorage = true;
 const STORAGE_KEY = 'kiss_session_uuid';
@@ -48,6 +53,8 @@ const KEY_STORAGE_KEY = 'kiss_encryption_key';
 const LANGUAGE_KEY = 'kiss_preferred_language';
 const IS_ADMIN_KEY = 'kiss_session_isadmin';
 const ADMIN_TYPE_KEY = 'kiss_session_admintype';
+const NEEDS_PASSWORD_KEY = 'kiss_needs_password';
+const NEEDS_EMAIL_KEY = 'kiss_needs_email';
 
 // Encryption/Decryption helpers (Web Crypto API)
 async function generateEncryptionKey(): Promise<CryptoKey> {
@@ -234,14 +241,62 @@ export const session = {
     return ownerName;
   },
   
-  /**
-   * Set the owner name
+/**
+   * Set the preferred language
    */
-  setOwnerName(name: string): void {
-    ownerName = name;
+  setLanguage(lang: string): void {
+    preferredLanguage = lang;
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(OWNERNAME_KEY, name);
+      localStorage.setItem(LANGUAGE_KEY, lang);
     }
+  },
+  
+  /**
+   * Check if user needs password change
+   */
+  get needsPasswordChange(): boolean {
+    return needsPasswordChange;
+  },
+  
+  /**
+   * Set password change required flag
+   */
+  setNeedsPasswordChange(required: boolean): void {
+    needsPasswordChange = required;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(NEEDS_PASSWORD_KEY, required.toString());
+    }
+  },
+  
+  /**
+   * Check if user needs email verification
+   */
+  get needsEmailVerification(): boolean {
+    return needsEmailVerification;
+  },
+  
+  /**
+   * Set email verification required flag
+   */
+  setNeedsEmailVerification(required: boolean): void {
+    needsEmailVerification = required;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(NEEDS_EMAIL_KEY, required.toString());
+    }
+  },
+  
+  /**
+   * Check if user is fully activated (password changed AND email verified)
+   */
+  get isFullyActivated(): boolean {
+    return fullyActivated;
+  },
+  
+  /**
+   * Set fully activated flag
+   */
+  setFullyActivated(activated: boolean): void {
+    fullyActivated = activated;
   },
   
   /**
