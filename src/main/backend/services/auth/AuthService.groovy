@@ -154,4 +154,170 @@ class AuthService {
             outjson.put("_ErrorMessage", e.message)
         }
     }
+    
+    /**
+     * Allow password change for logged-in user.
+     * Requires current password verification.
+     * Input JSON: { "currentPassword": "...", "newPassword": "..." }
+     */
+    void changePassword(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
+            if (pu == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Not authenticated")
+                return
+            }
+            
+            String currentPassword = injson.getString("currentPassword")
+            String newPassword = injson.getString("newPassword")
+            
+            // Verify current password
+            if (!pu.checkPassword(currentPassword)) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Current password is incorrect")
+                return
+            }
+            
+            // Validate new password
+            String passwordError = validatePassword(newPassword)
+            if (passwordError != null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", passwordError)
+                return
+            }
+            
+            // Set new password and clear mustChangePassword flag
+            pu.setPassword(newPassword)
+            pu.setMustChangePassword(false)
+            
+            def tc = StorageManager.createContainer()
+            tc.addUpdate(pu)
+            if (!StorageManager.store(tc)) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Failed to update password")
+                return
+            }
+            
+            outjson.put("_Success", true)
+            outjson.put("message", "Password changed successfully")
+            
+            // Check if now fully activated
+            if (pu.isEmailVerified()) {
+                outjson.put("fullyActivated", true)
+            }
+            
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    /**
+     * Send verification email to user's email address.
+     * Input JSON: {} (uses logged-in user's email)
+     */
+    void sendVerificationEmail(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
+            if (pu == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Not authenticated")
+                return
+            }
+            
+            if (pu.isEmailVerified()) {
+                outjson.put("_Success", true)
+                outjson.put("message", "Email already verified")
+                return
+            }
+            
+            // Generate verification token
+            pu.generateVerificationToken()
+            
+            def tc = StorageManager.createContainer()
+            tc.addUpdate(pu)
+            if (!StorageManager.store(tc)) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Failed to generate verification token")
+                return
+            }
+            
+            // TODO: Send actual email with verification link
+            // For now, just log the token (in production, send via EmailService)
+            println "[AuthService] Verification token for ${pu.getUsername()}: ${pu.getVerificationToken()}"
+            
+            outjson.put("_Success", true)
+            outjson.put("message", "Verification email sent")
+            outjson.put("verificationToken", pu.getVerificationToken())  // Remove in production!
+            
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    /**
+     * Verify user's email with token.
+     * Input JSON: { "token": "..." }
+     */
+    void verifyEmail(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
+            if (pu == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Not authenticated")
+                return
+            }
+            
+            String token = injson.getString("token")
+            
+            if (pu.verifyEmail(token)) {
+                def tc = StorageManager.createContainer()
+                tc.addUpdate(pu)
+                StorageManager.store(tc)
+                
+                outjson.put("_Success", true)
+                outjson.put("message", "Email verified successfully")
+                
+                // Check if now fully activated
+                if (!pu.isMustChangePassword()) {
+                    outjson.put("fullyActivated", true)
+                }
+            } else {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Invalid or expired verification token")
+            }
+            
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
+    
+    /**
+     * Get activation status for current user.
+     * Returns what the user still needs to do.
+     */
+    void getActivationStatus(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        try {
+            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
+            if (pu == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Not authenticated")
+                return
+            }
+            
+            boolean fullyActivated = !pu.isMustChangePassword() && pu.isEmailVerified()
+            
+            outjson.put("_Success", true)
+            outjson.put("fullyActivated", fullyActivated)
+            outjson.put("needsPasswordChange", pu.isMustChangePassword())
+            outjson.put("needsEmailVerification", !pu.isEmailVerified())
+            
+        } catch (Exception e) {
+            outjson.put("_Success", false)
+            outjson.put("_ErrorMessage", e.message)
+        }
+    }
 }

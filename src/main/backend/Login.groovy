@@ -116,10 +116,46 @@ class Login {
     }
 
     /**
+     * Check if user is fully activated (password changed AND email verified).
+     * @param ud UserData session
+     * @return true if fully activated, false otherwise
+     */
+    public static boolean isFullyActivated(UserData ud) {
+        PerstUser pu = (PerstUser) ud.getUserData("perstUser")
+        if (pu == null) return false
+        return !pu.isMustChangePassword() && pu.isEmailVerified()
+    }
+    
+    /**
+     * Check if user needs password change.
+     * @param ud UserData session
+     * @return true if password change required
+     */
+    public static boolean needsPasswordChange(UserData ud) {
+        PerstUser pu = (PerstUser) ud.getUserData("perstUser")
+        if (pu == null) return false
+        return pu.isMustChangePassword()
+    }
+    
+    /**
+     * Check if user needs email verification.
+     * @param ud UserData session
+     * @return true if email verification required
+     */
+    public static boolean needsEmailVerification(UserData ud) {
+        PerstUser pu = (PerstUser) ud.getUserData("perstUser")
+        if (pu == null) return false
+        return !pu.isEmailVerified()
+    }
+    
+    /**
      * Re-validate a user.
      *
      * Users get re-validated about once every two minutes. This assures that a user is logged out 
      * if their login gets disabled while they're in the system.
+     *
+     * Note: We allow login even if not fully activated (password change/email verification pending)
+     * so users can access the activation services. Services must check isFullyActivated() themselves.
      *
      * @param db - Connection (not used)
      * @param ud - UserData to validate
@@ -138,17 +174,14 @@ class Login {
             return false
         }
         
-        // Check if email is verified
-        if (!pu.isEmailVerified()) {
-            logger.warn("[PerstAuth] checkLogin FAILED: user {} email not verified", pu.getUsername())
-            return false
-        }
+        // Note: We do NOT fail login if email not verified or password needs change.
+        // Users need to stay logged in to complete activation.
+        // Services must check isFullyActivated() before allowing any action.
         
-        // Check if password needs change (first login)
-        if (pu.isMustChangePassword()) {
-            logger.info("[PerstAuth] checkLogin: user {} needs password change", pu.getUsername())
-            ud.putUserData("passwordChangeRequired", true)
-        }
+        // Store activation status flags in session for easy access
+        ud.putUserData("needsPasswordChange", pu.isMustChangePassword())
+        ud.putUserData("needsEmailVerification", !pu.isEmailVerified())
+        ud.putUserData("isFullyActivated", !pu.isMustChangePassword() && pu.isEmailVerified())
         
         return true
     }

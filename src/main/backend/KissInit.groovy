@@ -87,6 +87,12 @@ class KissInit {
         // Allow signup without authentication
         MainServlet.allowWithoutAuthentication("services.auth.AuthService", "signup")
         
+        // Allow activation services (requires valid session but no fully activated check)
+        MainServlet.allowWithoutAuthentication("services.auth.AuthService", "changePassword")
+        MainServlet.allowWithoutAuthentication("services.auth.AuthService", "sendVerificationEmail")
+        MainServlet.allowWithoutAuthentication("services.auth.AuthService", "verifyEmail")
+        MainServlet.allowWithoutAuthentication("services.auth.AuthService", "getActivationStatus")
+        
         println "[KissInit] init() COMPLETED"
         
         // Set up a global logout handler that runs whenever any user logs out
@@ -148,60 +154,56 @@ class KissInit {
     }
     
     /**
-     * Initialize default admin user if no users exist
+     * Initialize default admin users if no users exist.
+     * Creates both sysadmin (SUPER_ADMIN) and admin (ADMIN) with forced
+     * password change and email verification required on first login.
      */
     private static void initDefaultUser() {
         try {
             def users = StorageManager.getAll(PerstUser.class)
             if (!users || users.size() == 0) {
-                println "[KissInit] Creating default superAdmin user..."
+                println "[KissInit] Creating default sysadmin and admin users..."
                 
-                // Create superAdmin AActor with full Agreement
-                def agreement = new Agreement(Role.SUPER_ADMIN)
-                def adminActor = new AActor("System Admin", agreement)
+                // Create SYSTEM ADMIN (SUPER_ADMIN)
+                def sysAgreement = new Agreement(Role.SUPER_ADMIN)
+                def sysActor = new AActor("System Administrator", sysAgreement)
+                def sysUser = sysActor.getPerstUser()
+                sysUser.setUsername("sysadmin")
+                sysUser.setPassword("sysadmin")
+                sysUser.setEmail("sysadmin@localhost")
+                sysUser.setActive(true)
+                sysUser.setEmailVerified(false)  // Must verify email
+                sysUser.setMustChangePassword(true)  // Must change password
                 
-                // AActor constructor already created a deactivated PerstUser
-                // Configure it with admin credentials
+                // Create NORMAL ADMIN (ADMIN)
+                def adminAgreement = new Agreement(Role.ADMIN)
+                def adminActor = new AActor("Administrator", adminAgreement)
                 def adminUser = adminActor.getPerstUser()
                 adminUser.setUsername("admin")
                 adminUser.setPassword("admin")
                 adminUser.setEmail("admin@localhost")
                 adminUser.setActive(true)
-                adminUser.setEmailVerified(true)
+                adminUser.setEmailVerified(false)  // Must verify email
+                adminUser.setMustChangePassword(true)  // Must change password
                 
                 // Store both together
                 def tc = StorageManager.createContainer()
+                tc.addInsert(sysActor)
+                tc.addInsert(sysUser)
                 tc.addInsert(adminActor)
                 tc.addInsert(adminUser)
                 if (StorageManager.store(tc)) {
-                    println "[KissInit] Default superAdmin user created. CHANGE PASSWORD IMMEDIATELY!"
+                    println "[KissInit] Default users created:"
+                    println "  - sysadmin (SUPER_ADMIN) - password: sysadmin - MUST CHANGE PASSWORD & VERIFY EMAIL"
+                    println "  - admin (ADMIN) - password: admin - MUST CHANGE PASSWORD & VERIFY EMAIL"
                 } else {
-                    println "[KissInit] ERROR: Failed to create admin user"
+                    println "[KissInit] ERROR: Failed to create admin users"
                 }
             } else {
-                println "[KissInit] Users already exist (${users.size()}), checking admin user..."
-                // Ensure admin user has emailVerified = true
-                def admin = PerstUserManager.getByKey("admin")
-                if (admin != null && !admin.isEmailVerified()) {
-                    admin.setEmailVerified(true)
-                    PerstUserManager.update(admin)
-                    println "[KissInit] Admin user emailVerified set to true"
-                }
-                // Ensure all users have emailVerified = true (fix for existing users)
-                def updated = 0
-                users.each { user ->
-                    if (!user.isEmailVerified()) {
-                        user.setEmailVerified(true)
-                        PerstUserManager.update(user)
-                        updated++
-                    }
-                }
-                if (updated > 0) {
-                    println "[KissInit] Set emailVerified=true for ${updated} users"
-                }
+                println "[KissInit] Users already exist (${users.size()})"
             }
         } catch (Exception e) {
-            println "[KissInit] Error creating default user: ${e.message}"
+            println "[KissInit] Error creating default users: ${e.message}"
             e.printStackTrace()
         }
     }
