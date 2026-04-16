@@ -126,8 +126,30 @@ class Login {
      * @return true if the user is still valid, false if not
      */
     public static Boolean checkLogin(Object db, UserData ud, ProcessServlet servlet) {
-        // If using Perst only, we can check the user's active status
-        // For now, always return true to allow sessions
+        PerstUser pu = (PerstUser) ud.getUserData("perstUser")
+        if (pu == null) {
+            logger.warn("[PerstAuth] checkLogin FAILED: no PerstUser in session")
+            return false
+        }
+        
+        // Check if user is still active
+        if (!pu.isActive()) {
+            logger.warn("[PerstAuth] checkLogin FAILED: user {} is inactive", pu.getUsername())
+            return false
+        }
+        
+        // Check if email is verified
+        if (!pu.isEmailVerified()) {
+            logger.warn("[PerstAuth] checkLogin FAILED: user {} email not verified", pu.getUsername())
+            return false
+        }
+        
+        // Check if password needs change (first login)
+        if (pu.isMustChangePassword()) {
+            logger.info("[PerstAuth] checkLogin: user {} needs password change", pu.getUsername())
+            ud.putUserData("passwordChangeRequired", true)
+        }
+        
         return true
     }
 }

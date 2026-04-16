@@ -19,6 +19,25 @@ class AuthService {
      * Sign up a new user and create corresponding owner.
      * Input JSON: { "username": "...", "password": "...", "email": "...", "name": "...", "phone": "...", "address": "..." }
      */
+    /**
+     * Validate password meets minimum requirements.
+     * @return null if valid, error message if invalid
+     */
+    private static String validatePassword(String password) {
+        if (password == null || password.length() < 8) {
+            return "Password must be at least 8 characters"
+        }
+        // Check for at least one digit
+        if (!password.matches(".*\\d.*")) {
+            return "Password must contain at least one number"
+        }
+        return null
+    }
+    
+    /**
+     * Sign up a new user and create corresponding owner.
+     * Input JSON: { "username": "...", "password": "...", "email": "...", "name": "...", "phone": "...", "address": "..." }
+     */
     void signup(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             String username = injson.getString("username")
@@ -27,6 +46,14 @@ class AuthService {
             String name = injson.getString("name", username)
             String phone = injson.getString("phone", "")
             String address = injson.getString("address", "")
+            
+            // Validate password policy
+            String passwordError = validatePassword(password)
+            if (passwordError != null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", passwordError)
+                return
+            }
             
             // Check if username already exists
             Collection<PerstUser> existingUsers = StorageManager.getAll(PerstUser.class)
@@ -46,6 +73,8 @@ class AuthService {
             user.setEmail(email)
             user.setActive(true)
             user.setEmailVerified(true)
+            // Require password change on first login if using temp/default password
+            user.setMustChangePassword(true)
             
             def tc = StorageManager.createContainer()
             tc.addInsert(owner)
