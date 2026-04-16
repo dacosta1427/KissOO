@@ -161,53 +161,9 @@ class KissInit {
      * password change and email verification required on first login.
      */
     private static void initDefaultUser() {
-        try {
-            def users = StorageManager.getAll(PerstUser.class)
-            if (!users || users.size() == 0) {
-                println "[KissInit] Creating default sysadmin and admin users..."
-                
-                // Create SYSTEM ADMIN (SUPER_ADMIN) using Administrator class with enum
-                def sysActor = new Administrator("System Administrator", "sysadmin@localhost", AdministratorRole.SUPER_ADMIN)
-                sysActor.setActive(true)
-                def sysUser = sysActor.getPerstUser()
-                sysUser.setUsername("sysadmin")
-                sysUser.setPassword("sysadmin")
-                sysUser.setEmail("sysadmin@localhost")
-                sysUser.setActive(true)
-                sysUser.setEmailVerified(false)
-                sysUser.setMustChangePassword(true)
-                
-                // Create NORMAL ADMIN (ADMIN) using Cleaner with ADMIN role
-                def adminAgreement = new Agreement(Role.ADMIN)
-                def adminActor = new Cleaner("Administrator", "", "admin@localhost", "", adminAgreement)
-                def adminUser = adminActor.getPerstUser()
-                adminUser.setUsername("admin")
-                adminUser.setPassword("admin")
-                adminUser.setEmail("admin@localhost")
-                adminUser.setActive(true)
-                adminUser.setEmailVerified(false)
-                adminUser.setMustChangePassword(true)
-                
-                // Store both together
-                def tc = StorageManager.createContainer()
-                tc.addInsert(sysActor)
-                tc.addInsert(sysUser)
-                tc.addInsert(adminActor)
-                tc.addInsert(adminUser)
-                if (StorageManager.store(tc)) {
-                    println "[KissInit] Default users created:"
-                    println "  - sysadmin (SUPER_ADMIN) - password: sysadmin - MUST CHANGE PASSWORD & VERIFY EMAIL"
-                    println "  - admin (ADMIN) - password: admin - MUST CHANGE PASSWORD & VERIFY EMAIL"
-                } else {
-                    println "[KissInit] ERROR: Failed to create admin users"
-                }
-            } else {
-                println "[KissInit] Users already exist (${users.size()})"
-            }
-        } catch (Exception e) {
-            println "[KissInit] Error creating default users: ${e.message}"
-            e.printStackTrace()
-        }
+        // User creation temporarily disabled - needs investigation
+        // The Owner/Administrator constructors cause ExceptionInInitializerError at runtime
+        println "[KissInit] initDefaultUser() - DISABLED (see ExceptionInInitializerError)"
     }
     
     /**

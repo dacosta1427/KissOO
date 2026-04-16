@@ -93,6 +93,13 @@ public abstract class AActor extends CVersion {
         }
     }
     
+    public void setAgreement(Agreement agreement) {
+        if (agreement == null) {
+            throw new IllegalArgumentException("AActor MUST have an Agreement");
+        }
+        this.agreement = agreement;
+    }
+    
     public boolean belongsToGroup(String groupName) {
         return agreement != null && agreement.hasGroup(groupName);
     }
