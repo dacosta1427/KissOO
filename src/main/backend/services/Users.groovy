@@ -7,6 +7,7 @@ import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
 import koo.oodb.core.StorageManager
 import koo.oodb.core.user.PerstUser
+import koo.oodb.core.actor.Role
 import mycompany.actor.owner.Owner
 
 /**
@@ -26,7 +27,7 @@ class Users {
             def actor = pu.getAActor()
             if (actor == null) return false
             def role = actor.getAgreement()?.getRole()
-            return "superAdmin".equals(role)
+            return role == Role.SUPER_ADMIN
         } catch (Exception e) {
             return false
         }

@@ -54,7 +54,7 @@ public class PerstUser extends CVersion {
 
     private boolean mustChangePassword = false;
 
-    private AActor AActor;  // Persistent reference to the owning AActor
+    private AActor actor;  // Persistent reference to the owning AActor
     
     private String verificationToken;
     private long verificationExpiresAt;
@@ -68,11 +68,27 @@ public class PerstUser extends CVersion {
     /**
      * Create a PerstUser with username, password, and linked AActor.
      */
-    public PerstUser(String username, String password, AActor AActor) {
+    public PerstUser(String username, String password, AActor actor) {
         this();
         this.username = username;
         this.passwordHash = PasswordSecurity.hashPassword(password);
-        this.AActor = AActor;
+        this.actor = actor;
+    }
+    
+    /**
+     * @deprecated Use {@link #getActor()} instead
+     */
+    @Deprecated
+    public AActor getAActor() {
+        return actor;
+    }
+    
+    /**
+     * @deprecated Use {@link #setActor(AActor)} instead
+     */
+    @Deprecated
+    public void setAActor(AActor AActor) {
+        this.actor = AActor;
     }
     
     public boolean checkPassword(String password) {
@@ -112,7 +128,7 @@ public class PerstUser extends CVersion {
         return "PerstUser{" +
                 "username='" + username + '\'' +
                 ", active=" + active +
-                ", AActor=" + (AActor != null ? AActor.getName() + "(" + AActor.getType() + ")" : "null") +
+                ", actor=" + (actor != null ? actor.getName() + "(" + actor.getType() + ")" : "null") +
                 '}';
     }
 }

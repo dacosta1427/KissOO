@@ -40,10 +40,10 @@ public class PerstUserManager extends BaseManager<PerstUser> {
         return StorageManager.getByOid(PerstUser.class, oid);
     }
 
-    public static PerstUser getByActor(AActor AActor) {
-        // Iterate all PerstUsers to find the one linked to this AActor
+    public static PerstUser getByActor(AActor actor) {
+        // Iterate all PerstUsers to find the one linked to this actor
         for (PerstUser user : getAll()) {
-            if (user.getAActor() == AActor) {
+            if (user.getActor() == actor) {
                 return user;
             }
         }

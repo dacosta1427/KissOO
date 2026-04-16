@@ -4,6 +4,7 @@ package services
 import koo.oodb.core.actor.AActor
 import koo.oodb.core.actor.ActorType
 import koo.oodb.core.actor.Agreement
+import koo.oodb.core.actor.Role
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
@@ -27,7 +28,7 @@ class LoadTestdata {
             def actor = pu.getAActor()
             if (actor == null) return false
             def role = actor.getAgreement()?.getRole()
-            return "superAdmin".equals(role)
+            return role == Role.SUPER_ADMIN
         } catch (Exception e) { 
             return false 
         }
@@ -130,8 +131,8 @@ class LoadTestdata {
                 }
             }
             if (!admin) {
-                def agreement = new Agreement("superAdmin")
-                def adminActor = new AActor("System Admin", "superAdmin", agreement, ActorType.NATURAL)
+                def agreement = new Agreement(Role.SUPER_ADMIN)
+                def adminActor = new AActor("System Admin", agreement)
                 // AActor constructor already created a deactivated PerstUser
                 // Get it and configure it
                 admin = adminActor.getPerstUser()

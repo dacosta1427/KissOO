@@ -7,6 +7,7 @@ import koo.oodb.core.user.PerstUserManager
 import koo.oodb.core.user.PerstUser
 import mycompany.actor.owner.Owner
 import koo.oodb.core.PerstConnection
+import koo.oodb.core.actor.Role
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -84,20 +85,20 @@ class Login {
             outjson.put("cleanerOid", cleanerOid)
             
             // Determine admin role from AActor's Agreement
-            String role = null
+            Role role = null
             if (actor != null && actor.getAgreement() != null) {
                 role = actor.getAgreement().getRole()
             }
             
-            boolean isAdmin = "admin".equals(role) || "superAdmin".equals(role)
+            boolean isAdmin = role == Role.ADMIN || role == Role.SUPER_ADMIN
             outjson.put("isAdmin", isAdmin)
-            outjson.put("role", role ?: "none")
+            outjson.put("role", role?.name() ?: "none")
             
             // adminType: system (full access) or content (business only)
             String adminType = "none"
-            if ("superAdmin".equals(role)) {
+            if (role == Role.SUPER_ADMIN) {
                 adminType = "system"
-            } else if ("admin".equals(role)) {
+            } else if (role == Role.ADMIN) {
                 adminType = "content"
             }
             outjson.put("adminType", adminType)

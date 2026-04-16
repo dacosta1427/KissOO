@@ -12,6 +12,7 @@ import mycompany.actor.cleaner.Schedule
 import mycompany.oov.house.House
 import mycompany.actor.owner.Owner
 import mycompany.oov.house.CostProfile
+import koo.oodb.core.actor.Role
 import koo.oodb.core.user.PerstUser
 import koo.oodb.core.StorageManager
 
@@ -36,7 +37,7 @@ class CleaningService {
             def actor = pu.getAActor()
             if (actor == null) return false
             def role = actor.getAgreement()?.getRole()
-            return "admin".equals(role) || "superAdmin".equals(role)
+            return role == Role.ADMIN || role == Role.SUPER_ADMIN
         } catch (Exception e) { 
             println "isAdmin error: ${e.message}"
             return false 
@@ -85,8 +86,8 @@ class CleaningService {
             def actor = pu.getAActor()
             if (actor == null) return "none"
             def role = actor.getAgreement()?.getRole()
-            if ("superAdmin".equals(role)) return "system"
-            if ("admin".equals(role)) return "content"
+            if (role == Role.SUPER_ADMIN) return "system"
+            if (role == Role.ADMIN) return "content"
             return "none"
         } catch (Exception e) { 
             println "getAdminType error: ${e.message}"

@@ -9,15 +9,27 @@ public abstract class ANaturalActor extends AActor {
     private PerstUser perstUser;  // persisted - NATURAL actors have PU, CORPORATE don't
     
     public ANaturalActor(String name, Agreement agreement) {
-        super(name, agreement);
-        // NATURAL actors automatically get a deactivated PerstUser
-        createPerstUser();
+        this(name, agreement, null);
     }
     
-    private void createPerstUser() {
-        String username = getName().toLowerCase().replaceAll("\\s+", "_") + "_" + getUuid().substring(0, 8);
+    public ANaturalActor(String name, Agreement agreement, String email) {
+        super(name, agreement);
+        createPerstUser(email);
+    }
+    
+    private void createPerstUser(String email) {
+        String username;
         String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 16);
-        this.perstUser = new PerstUser(username, tempPassword, this);
+        
+        if (email != null && !email.isEmpty()) {
+            username = email;
+            this.perstUser = new PerstUser(username, tempPassword, this);
+            this.perstUser.setEmail(email);
+        } else {
+            username = getName().toLowerCase().replaceAll("\\s+", "_") + "_" + getUuid().substring(0, 8);
+            this.perstUser = new PerstUser(username, tempPassword, this);
+        }
+        
         this.perstUser.setActive(false);
         this.perstUser.setEmailVerified(false);
     }

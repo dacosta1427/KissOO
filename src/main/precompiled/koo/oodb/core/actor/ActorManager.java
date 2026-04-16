@@ -43,7 +43,7 @@ public class ActorManager extends BaseManager<AActor> {
     }
     
     public static AActor getByPerstUser(PerstUser user) {
-        return user != null ? user.getAActor() : null;
+        return user != null ? user.getActor() : null;
     }
     
     // ========== CRUD ==========

@@ -16,7 +16,7 @@ import java.util.Collection;
  * Cleaner entity for cleaning scheduler.
  * Represents a cleaner who can be assigned to cleaning tasks.
  * 
- * Extends AActor (NATURAL by default), so automatically has a PerstUser
+ * Extends ANaturalActor (NATURAL by default), so automatically has a PerstUser
  * created by the AActor constructor (deactivated by default).
  * 
  * Uses stored collections for Pure OO navigation.
@@ -34,17 +34,10 @@ public class Cleaner extends ANaturalActor {
     private Set<Schedule> schedules = new HashSet<>();
     
     public Cleaner(String name, String phone, String email, boolean active) {
-        super(name, new Agreement());
+        super(name, new Agreement(), email);
         this.phone = phone;
         this.email = email;
         setActive(active);
-        
-        // AActor constructor already created a deactivated PerstUser
-        // Update PU username/email if provided
-        if (email != null && !email.isEmpty()) {
-            getPerstUser().setUsername(email);
-            getPerstUser().setEmail(email);
-        }
     }
     
     public Collection<Schedule> getSchedules() {

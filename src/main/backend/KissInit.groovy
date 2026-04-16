@@ -1,5 +1,6 @@
 import koo.oodb.core.actor.ActorType
 import koo.oodb.core.actor.Agreement
+import koo.oodb.core.actor.Role
 import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
@@ -156,8 +157,8 @@ class KissInit {
                 println "[KissInit] Creating default superAdmin user..."
                 
                 // Create superAdmin AActor with full Agreement
-                def agreement = new Agreement("superAdmin")
-                def adminActor = new AActor("System Admin", "superAdmin", agreement, ActorType.NATURAL)
+                def agreement = new Agreement(Role.SUPER_ADMIN)
+                def adminActor = new AActor("System Admin", agreement)
                 
                 // AActor constructor already created a deactivated PerstUser
                 // Configure it with admin credentials

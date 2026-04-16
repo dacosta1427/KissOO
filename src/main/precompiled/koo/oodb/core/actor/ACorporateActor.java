@@ -7,7 +7,6 @@ import org.garret.perst.PersistentCollection;
 import org.garret.perst.impl.KDTree;
 
 @Getter @Setter
-@NoArgsConstructor
 public class ACorporateActor extends AActor {
     
     private java.util.Set<ANaturalActor> naturalActors;

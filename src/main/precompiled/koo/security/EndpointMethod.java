@@ -111,7 +111,7 @@ public abstract class EndpointMethod {
             return null;
         }
         PerstUser pu = (PerstUser) ud.getUserData("perstUser");
-        return pu != null ? pu.getAActor() : null;
+        return pu != null ? pu.getActor() : null;
     }
     
     /**

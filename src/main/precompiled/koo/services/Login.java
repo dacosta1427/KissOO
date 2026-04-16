@@ -34,7 +34,7 @@ public class Login {
             perstUser.setLastLoginDate(System.currentTimeMillis());
             PerstUserManager.update(perstUser);
             
-            logger.info("[PerstAuth] Login SUCCESS for user: {} (AActor: {})", user, perstUser.getAActor().getName());
+            logger.info("[PerstAuth] Login SUCCESS for user: {} (AActor: {})", user, perstUser.getActor().getName());
             
             return ud;
             

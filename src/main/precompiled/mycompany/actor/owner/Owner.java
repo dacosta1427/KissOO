@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * Owner entity for cleaning scheduler.
  * Represents an owner who can own multiple houses.
  * 
- * Extends AActor (NATURAL by default), so automatically has a PerstUser
+ * Extends ANaturalActor (NATURAL by default), so automatically has a PerstUser
  * created by the AActor constructor (deactivated by default).
  * 
  * Uses stored collections for Pure OO navigation.
@@ -34,17 +34,10 @@ public class Owner extends ANaturalActor {
     private Set<House> houses = new HashSet<>();
     
     public Owner(String name, String phone, String email, boolean active) {
-        super(name, new Agreement());
+        super(name, new Agreement(), email);
         this.email = email;
         this.phone = phone;
-        this.setActive(active);
-        
-        // AActor constructor already created a deactivated PerstUser
-        // Update the PU username to use email if provided
-        if (email != null && !email.isEmpty()) {
-            getPerstUser().setUsername(email);
-            getPerstUser().setEmail(email);
-        }
+        setActive(active);
     }
     
     public Collection<House> getHouses() {

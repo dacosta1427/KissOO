@@ -66,6 +66,16 @@ public abstract class AActor extends CVersion {
         this.agreement = agreement;
     }
     
+    // Convenience constructor with Role
+    public AActor(String name, Role role, Agreement agreement) {
+        this(name, agreement);
+        if (this.agreement == null) {
+            this.agreement = new Agreement(role);
+        } else {
+            this.agreement.setRole(role);
+        }
+    }
+    
     public abstract boolean isNatural();
     
     public abstract boolean isCorporate();

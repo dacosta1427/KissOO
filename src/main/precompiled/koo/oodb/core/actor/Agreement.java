@@ -42,7 +42,7 @@ public class Agreement extends CVersion {
     
     @FullTextSearchable
     @Indexable
-    private String role;
+    private Role role;
     
     private Set<String> crudPermissions;
     private Set<EndpointMethod> methodPermissions;
@@ -58,17 +58,29 @@ public class Agreement extends CVersion {
         this.crudPermissions = new HashSet<>();
         this.methodPermissions = new HashSet<>();
         this.groups = new HashSet<>();
+        this.role = Role.MEMBER; // Default role
     }
     
-    public Agreement(String role) {
+    public Agreement(Role role) {
         this();
         this.role = role;
     }
     
+    // For backward compatibility - convert string to Role
+    public Agreement(String role) {
+        this();
+        this.role = Role.valueOf(role.toUpperCase());
+    }
+    
     // ========== CRUD Permissions (Type-Safe) ==========
     
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+    
+    // For backward compatibility - convert string to Role
+    public void setRole(String role) { 
+        this.role = Role.valueOf(role.toUpperCase()); 
+    }
     
     /**
      * Grant CRUD permission using Class (type-safe!)

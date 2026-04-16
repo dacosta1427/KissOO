@@ -17,7 +17,7 @@ public class OwnerManager extends BaseManager<Owner> {
     }
     
     public static Owner getByUser(PerstUser user) {
-        return user != null ? user.getAActor() instanceof Owner ? (Owner) user.getAActor() : null : null;
+        return user != null ? user.getActor() instanceof Owner ? (Owner) user.getActor() : null : null;
     }
     
     public static Owner getByKey(String key) {
