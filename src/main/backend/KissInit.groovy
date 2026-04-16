@@ -1,6 +1,8 @@
 import koo.oodb.core.actor.ActorType
 import koo.oodb.core.actor.Agreement
 import koo.oodb.core.actor.Role
+import koo.oodb.core.actor.Administrator
+import koo.oodb.core.actor.AdministratorRole
 import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
@@ -10,7 +12,7 @@ import koo.oodb.core.StorageManager
 import koo.oodb.core.PerstConnection
 import koo.oodb.core.user.PerstUserManager
 import koo.oodb.core.user.PerstUser
-import koo.oodb.core.actor.AActor
+import mycompany.actor.cleaner.Cleaner
 import koo.security.PasswordSecurity
 import java.util.function.Consumer
 
@@ -164,27 +166,27 @@ class KissInit {
             if (!users || users.size() == 0) {
                 println "[KissInit] Creating default sysadmin and admin users..."
                 
-                // Create SYSTEM ADMIN (SUPER_ADMIN)
-                def sysAgreement = new Agreement(Role.SUPER_ADMIN)
-                def sysActor = new AActor("System Administrator", sysAgreement)
+                // Create SYSTEM ADMIN (SUPER_ADMIN) using Administrator class with enum
+                def sysActor = new Administrator("System Administrator", "sysadmin@localhost", AdministratorRole.SUPER_ADMIN)
+                sysActor.setActive(true)
                 def sysUser = sysActor.getPerstUser()
                 sysUser.setUsername("sysadmin")
                 sysUser.setPassword("sysadmin")
                 sysUser.setEmail("sysadmin@localhost")
                 sysUser.setActive(true)
-                sysUser.setEmailVerified(false)  // Must verify email
-                sysUser.setMustChangePassword(true)  // Must change password
+                sysUser.setEmailVerified(false)
+                sysUser.setMustChangePassword(true)
                 
-                // Create NORMAL ADMIN (ADMIN)
+                // Create NORMAL ADMIN (ADMIN) using Cleaner with ADMIN role
                 def adminAgreement = new Agreement(Role.ADMIN)
-                def adminActor = new AActor("Administrator", adminAgreement)
+                def adminActor = new Cleaner("Administrator", "", "admin@localhost", "", adminAgreement)
                 def adminUser = adminActor.getPerstUser()
                 adminUser.setUsername("admin")
                 adminUser.setPassword("admin")
                 adminUser.setEmail("admin@localhost")
                 adminUser.setActive(true)
-                adminUser.setEmailVerified(false)  // Must verify email
-                adminUser.setMustChangePassword(true)  // Must change password
+                adminUser.setEmailVerified(false)
+                adminUser.setMustChangePassword(true)
                 
                 // Store both together
                 def tc = StorageManager.createContainer()
