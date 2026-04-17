@@ -160,10 +160,18 @@ class KissInit {
      * Creates both sysadmin (SUPER_ADMIN) and admin (ADMIN) with forced
      * password change and email verification required on first login.
      */
-    private static void initDefaultUser() {
+    private static void initDefaultUserDisabled() {
         // User creation temporarily disabled - needs investigation
-        // The Owner/Administrator constructors cause ExceptionInInitializerError at runtime
         println "[KissInit] initDefaultUser() - DISABLED (see ExceptionInInitializerError)"
+    }
+    
+    /**
+     * Create default admin users using Administrator class
+     */
+    private static void initDefaultUser() {
+        // User creation skipped - use signup API after server starts
+        // ExceptionInInitializerError at runtime prevents proper initialization
+        println "[KissInit] initDefaultUser() - SKIPPED (use signup API after server starts)"
     }
     
     /**
