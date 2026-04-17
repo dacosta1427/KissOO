@@ -64,8 +64,10 @@ class KissInit {
                     MainServlet.putEnvironment("PerstConnection", perstConn)
                     println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
                     
-                    // DO NOT create users here - init2() runs AFTER Perst is fully initialized
-                    // User creation is handled in init2() with proper open→close→re-open cycle
+                    // Initialize default admin user if none exists (like cleaners2)
+                    initDefaultUser()
+                    indexPerstUsers()
+                    indexActors()
                 } else {
                     println "[KissInit] init() - NonSqlConnection already registered"
                 }
@@ -177,6 +179,61 @@ static void init2(Connection db) {
      * Initialize default admin users if no users exist.
      */
     private static void initDefaultUser() {
+        try {
+            def users = StorageManager.getAll(PerstUser.class)
+            if (!users || users.size() == 0) {
+                println "[KissInit] Creating default superAdmin user..."
+                
+                // Create superAdmin Actor with full Agreement (like cleaners2)
+                def agreement = new Agreement("superAdmin")
+                def adminActor = new mycompany.actor.owner.Owner("System Admin", "", "admin@localhost", true)
+                adminActor.getAgreement().setRole(Role.SUPER_ADMIN)
+                
+                // Owner constructor already created a deactivated PerstUser
+                // Configure it with admin credentials
+                def adminUser = adminActor.getPerstUser()
+                adminUser.setUsername("admin")
+                adminUser.setPassword("admin")
+                adminUser.setEmail("admin@localhost")
+                adminUser.setActive(true)
+                adminUser.setEmailVerified(true)
+                
+                // Store both together
+                def tc = StorageManager.createContainer()
+                tc.addInsert(adminActor)
+                tc.addInsert(adminUser)
+                if (StorageManager.store(tc)) {
+                    println "[KissInit] Default superAdmin user created. CHANGE PASSWORD IMMEDIATELY!"
+                } else {
+                    println "[KissInit] ERROR: Failed to create admin user"
+                }
+            } else {
+                println "[KissInit] Users already exist (${users.size()}), checking admin user..."
+                // Ensure admin user has emailVerified = true
+                def admin = PerstUserManager.getByKey("admin")
+                if (admin != null && !admin.isEmailVerified()) {
+                    admin.setEmailVerified(true)
+                    PerstUserManager.update(admin)
+                    println "[KissInit] Admin user emailVerified set to true"
+                }
+                // Ensure all users have emailVerified = true (fix for existing users)
+                def updated = 0
+                users.each { user ->
+                    if (!user.isEmailVerified()) {
+                        user.setEmailVerified(true)
+                        PerstUserManager.update(user)
+                        updated++
+                    }
+                }
+                if (updated > 0) {
+                    println "[KissInit] Set emailVerified=true for ${updated} users"
+                }
+            }
+        } catch (Exception e) {
+            println "[KissInit] ERROR in initDefaultUser: ${e.class.simpleName}: ${e.message}"
+            // Don't crash - just log and continue
+        }
+    }
         // User creation skipped - use signup API after server starts
         // ExceptionInInitializerError at runtime prevents proper initialization
         println "[KissInit] initDefaultUser() - SKIPPED (use signup API after server starts)"
