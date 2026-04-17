@@ -1,4 +1,4 @@
-package mycompany.database;
+package koo.oodb.core.database;
 
 import mycompany.actor.cleaner.Cleaner;
 import mycompany.actor.cleaner.Schedule;

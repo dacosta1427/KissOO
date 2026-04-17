@@ -1,5 +1,6 @@
-package koo.oodb.core;
+package koo.oodb.core.database;
 
+import koo.oodb.config.PerstConfig;
 import org.garret.perst.Storage;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.continuous.CDatabase;

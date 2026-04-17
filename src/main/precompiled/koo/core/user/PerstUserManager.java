@@ -2,7 +2,7 @@ package koo.oodb.core.user;
 
 import koo.oodb.core.actor.AActor;
 import koo.oodb.BaseManager;
-import koo.oodb.core.StorageManager;
+import koo.oodb.core.database.StorageManager;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 import java.util.List;

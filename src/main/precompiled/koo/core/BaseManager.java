@@ -2,7 +2,7 @@ package koo.oodb;
 
 import koo.oodb.core.actor.AActor;
 import koo.security.EndpointMethod;
-import koo.oodb.core.StorageManager;
+import koo.oodb.core.database.StorageManager;
 
 import java.util.Collection;
 

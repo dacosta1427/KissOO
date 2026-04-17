@@ -1,4 +1,4 @@
-package koo.oodb.core;
+package koo.oodb.core.database;
 
 import mycompany.actor.owner.Owner;
 import org.kissweb.json.JSONObject;
