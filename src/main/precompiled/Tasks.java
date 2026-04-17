@@ -192,6 +192,8 @@ public class Tasks {
         buildJava("src/main/precompiled/mycompany", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
         // Then oodb (depends on mycompany classes)
         buildJava("src/main/precompiled/oodb", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
+        // Also compile backend/koo for GroovyService classloader visibility
+        buildJava("src/main/backend/koo", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
         if (unitTest)
             buildJava("src/test/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         rm(explodedDir + "/WEB-INF/lib/jakarta.servlet-api-4.0.1.jar");

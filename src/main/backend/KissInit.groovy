@@ -1,18 +1,14 @@
-import koo.oodb.core.actor.ActorType
+import koo.PerstConnection
 import koo.oodb.core.actor.Agreement
 import koo.oodb.core.actor.Role
-import koo.oodb.core.actor.Administrator
-import koo.oodb.core.actor.AdministratorRole
 import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
 import koo.oodb.core.PerstConfig
 import koo.oodb.core.StorageManager
-import koo.oodb.core.PerstConnection
 import koo.oodb.core.user.PerstUserManager
 import koo.oodb.core.user.PerstUser
-import mycompany.actor.cleaner.Cleaner
 import koo.security.PasswordSecurity
 import java.util.function.Consumer
 
@@ -23,6 +19,7 @@ class KissInit {
      */
     static void init() {
         println "[KissInit] init() CALLED"
+        Thread.sleep(10000)
         
         MainServlet.readIniFile "application.ini", "main"
         MainServlet.readIniFile "application.ini", "PasswordSecurity"
@@ -58,10 +55,20 @@ class KissInit {
             try {
                 // Check if already registered
                 def existing = MainServlet.getEnvironment("NonSqlConnection")
+                println "[KissInit] Checking existing: " + existing
+                
                 if (existing == null) {
+                    println "[KissInit] Creating NEW PerstConnection..."
                     def perstConn = new PerstConnection()
+                    println "[KissInit] Created perstConn: " + perstConn
+                    
                     MainServlet.putEnvironment("NonSqlConnection", perstConn)
                     MainServlet.putEnvironment("PerstConnection", perstConn)
+                    
+                    // VERIFY it was stored
+                    def verify = MainServlet.getEnvironment("NonSqlConnection")
+                    println "[KissInit] Verified NonSqlConnection: " + verify
+                    
                     println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
                     
                     // Skip user creation - causes ExceptionInInitializerError
@@ -118,7 +125,7 @@ class KissInit {
      * Code to run once the database is open but before the app is running.
      * Note: No SQL database is configured - Perst is accessed via MainServlet environment.
      */
-static void init2(Connection db) {
+    static void init2(Connection db) {
         // If you use db, make sure you commit.
         if (!PasswordSecurity.initialise()) System.out.println("! X X X PasswordSecurity NOT initialised!");
         System.out.println("* * * PasswordSecurity initialised!");
@@ -240,8 +247,7 @@ static void init2(Connection db) {
         println "[KissInit] initDefaultUser() - SKIPPED (use signup API after server starts)"
     }
 
-
-/**
+    /**
      * Index all PerstUsers for fast lookup
      */
     private static void indexPerstUsers() {

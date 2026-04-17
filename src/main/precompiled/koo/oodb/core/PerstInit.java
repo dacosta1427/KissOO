@@ -1,12 +1,9 @@
 package koo.oodb.core;
 
-import koo.oodb.core.actor.AActor;
-import koo.oodb.core.actor.Agreement;
 import mycompany.actor.owner.Owner;
 import org.kissweb.json.JSONObject;
 import koo.oodb.core.user.PerstUserManager;
 import koo.oodb.core.user.PerstUser;
-import koo.oodb.core.actor.Agreement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

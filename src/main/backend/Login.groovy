@@ -6,7 +6,7 @@ import org.kissweb.restServer.UserData
 import koo.oodb.core.user.PerstUserManager
 import koo.oodb.core.user.PerstUser
 import mycompany.actor.owner.Owner
-import koo.oodb.core.PerstConnection
+import koo.PerstConnection
 import koo.oodb.core.actor.Role
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger

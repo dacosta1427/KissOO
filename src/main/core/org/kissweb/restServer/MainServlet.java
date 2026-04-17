@@ -225,11 +225,19 @@ public class MainServlet extends HttpServlet {
         // Only call init2 if there's a SQL database or a NonSqlConnection registered
         Connection db = MainServlet.openNewConnection();
         Object nonSqlConn = environment.get("NonSqlConnection");
+        
+        // DEBUG LOGGING
+        logger.info("DEBUG init2: hasDatabase=" + hasDatabase + ", db=" + db + ", nonSqlConn=" + nonSqlConn);
+        
         if (hasDatabase || nonSqlConn != null) {
             // Pass NonSqlConnection if no SQL DB but NonSqlConnection is registered
-            if (db == null && nonSqlConn instanceof Connection)
+            if (db == null && nonSqlConn instanceof Connection) {
                 db = (Connection) nonSqlConn;
-            (new GroovyService()).internalGroovy(null, "KissInit", "init2", db);
+                logger.info("DEBUG init2: Calling init2 with db=" + db);
+                (new GroovyService()).internalGroovy(null, "KissInit", "init2", (Connection) db);
+            } else {
+                logger.info("DEBUG init2: NOT calling init2 - db=" + db + ", nonSqlConn instanceof Connection=" + (nonSqlConn instanceof Connection));
+            }
         }
         if (db != null && !(nonSqlConn instanceof Connection))
             MainServlet.closeConnection(db);
