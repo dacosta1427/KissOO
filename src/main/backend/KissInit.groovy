@@ -64,10 +64,8 @@ class KissInit {
                     MainServlet.putEnvironment("PerstConnection", perstConn)
                     println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
                     
-                    // Initialize default admin user if none exists (only on first registration)
-                    initDefaultUser()
-                    indexPerstUsers()
-                    indexActors()
+                    // DO NOT create users here - init2() runs AFTER Perst is fully initialized
+                    // User creation is handled in init2() with proper open→close→re-open cycle
                 } else {
                     println "[KissInit] init() - NonSqlConnection already registered"
                 }
@@ -117,7 +115,7 @@ class KissInit {
      * Code to run once the database is open but before the app is running.
      * Note: No SQL database is configured - Perst is accessed via MainServlet environment.
      */
-    static void init2(Connection db) {
+static void init2(Connection db) {
         // If you use db, make sure you commit.
         if (!PasswordSecurity.initialise()) System.out.println("! X X X PasswordSecurity NOT initialised!");
         System.out.println("* * * PasswordSecurity initialised!");
@@ -136,37 +134,47 @@ class KissInit {
                 StorageManager.initialize()
                 println "[KissInit] Perst initialized, isAvailable=" + StorageManager.isAvailable()
             } else {
-                println "[KissInit] Perst is NOT enabled - check application.ini"
+                println "[KissInit] Perst is already available"
             }
 
-            // Initialize default admin user if none exists
+            // Initialize default admin user if none exists (run AFTER Perst is guaranteed ready)
             if (StorageManager.isAvailable()) {
-                initDefaultUser()
-                indexPerstUsers()
-                indexActors()
+                def users = StorageManager.getAll(PerstUser.class)
+                println "[KissInit] Found ${users?.size() ?: 0} users"
+                
+                if (!users || users.size() == 0) {
+                    println "[KissInit] No users found - performing close/re-open cycle..."
+                    
+                    // Close and re-open to ensure clean state
+                    StorageManager.close()
+                    
+                    // Re-initialize Perst
+                    if (PerstConfig.getInstance().isPerstEnabled()) {
+                        StorageManager.initialize()
+                    }
+                    
+                    println "[KissInit] Perst re-initialized, creating users..."
+                    
+                    // NOW create users - Perst is guaranteed ready
+                    initDefaultUser()
+                    indexPerstUsers()
+                    indexActors()
+                } else {
+                    println "[KissInit] Users already exist (${users.size()}), skipping user init"
+                }
             } else {
                 println "[KissInit] WARNING: Perst not available, skipping user init"
             }
             
             println "[KissInit] init2() COMPLETED"
         } catch (Exception e) {
-            println "[KissInit] ERROR in init2: " + e.message
+            println "[KissInit] ERROR in init2: ${e.class.simpleName}: ${e.message}"
             e.printStackTrace()
         }
     }
     
     /**
      * Initialize default admin users if no users exist.
-     * Creates both sysadmin (SUPER_ADMIN) and admin (ADMIN) with forced
-     * password change and email verification required on first login.
-     */
-    private static void initDefaultUserDisabled() {
-        // User creation temporarily disabled - needs investigation
-        println "[KissInit] initDefaultUser() - DISABLED (see ExceptionInInitializerError)"
-    }
-    
-    /**
-     * Create default admin users using Administrator class
      */
     private static void initDefaultUser() {
         // User creation skipped - use signup API after server starts
