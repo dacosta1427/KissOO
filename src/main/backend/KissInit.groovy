@@ -64,10 +64,11 @@ class KissInit {
                     MainServlet.putEnvironment("PerstConnection", perstConn)
                     println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
                     
-                    // Initialize default admin user if none exists (like cleaners2)
-                    initDefaultUser()
-                    indexPerstUsers()
-                    indexActors()
+                    // Skip user creation - causes ExceptionInInitializerError
+                    // initDefaultUser()
+                    // indexPerstUsers()
+                    // indexActors()
+                    println "[KissInit] User init SKIPPED (causes ExceptionInInitializerError)"
                 } else {
                     println "[KissInit] init() - NonSqlConnection already registered"
                 }
@@ -233,13 +234,14 @@ static void init2(Connection db) {
             println "[KissInit] ERROR in initDefaultUser: ${e.class.simpleName}: ${e.message}"
             // Don't crash - just log and continue
         }
-    }
+
         // User creation skipped - use signup API after server starts
         // ExceptionInInitializerError at runtime prevents proper initialization
         println "[KissInit] initDefaultUser() - SKIPPED (use signup API after server starts)"
     }
-    
-    /**
+
+
+/**
      * Index all PerstUsers for fast lookup
      */
     private static void indexPerstUsers() {
