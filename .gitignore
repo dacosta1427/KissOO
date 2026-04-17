@@ -160,3 +160,4 @@ manual/asciidoc/
 /target/classes/nl/dcg/gfe
 /libs
 data/
+node_modules/
