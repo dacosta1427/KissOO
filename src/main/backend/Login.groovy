@@ -3,11 +3,11 @@ import org.kissweb.json.JSONObject
 import org.kissweb.restServer.ProcessServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import koo.oodb.core.user.PerstUserManager
-import koo.oodb.core.user.PerstUser
+import koo.core.user.PerstUserManager
+import koo.core.user.PerstUser
 import mycompany.actor.owner.Owner
 import koo.PerstConnection
-import koo.oodb.core.actor.Role
+import koo.core.actor.Role
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 

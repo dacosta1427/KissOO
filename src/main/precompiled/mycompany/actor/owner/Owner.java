@@ -1,12 +1,11 @@
 package mycompany.actor.owner;
 
-import koo.oodb.core.actor.ANaturalActor;
-import koo.oodb.core.actor.ActorType;
+import koo.core.actor.ANaturalActor;
 import lombok.Getter;
 import lombok.Setter;
 import mycompany.oov.house.Booking;
-import koo.oodb.core.actor.Agreement;
-import koo.oodb.core.user.PerstUser;
+import koo.core.actor.Agreement;
+import koo.core.user.PerstUser;
 import mycompany.oov.house.House;
 import mycompany.actor.cleaner.Schedule;
 

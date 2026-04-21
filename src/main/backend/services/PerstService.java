@@ -1,6 +1,6 @@
 package services;
 
-import koo.oodb.core.StorageManager;
+import koo.core.database.StorageManager;
 import org.garret.perst.json.JSONObject;
 import org.kissweb.database.Connection;
 import org.kissweb.restServer.ProcessServlet;

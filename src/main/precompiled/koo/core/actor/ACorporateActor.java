@@ -1,7 +1,6 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.garret.perst.PersistentCollection;
 import org.garret.perst.impl.KDTree;

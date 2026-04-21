@@ -4,10 +4,9 @@ package services.auth
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import koo.oodb.core.StorageManager
-import koo.oodb.core.user.PerstUser
+import koo.core.database.StorageManager
+import koo.core.user.PerstUser
 import mycompany.actor.owner.Owner
-import services.auth.EmailService
 
 /**
  * Authentication service for user signup and owner creation.

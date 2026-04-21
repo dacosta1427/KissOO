@@ -1,11 +1,10 @@
 package mycompany.actor.cleaner;
 
-import koo.oodb.core.actor.ANaturalActor;
+import koo.core.actor.ANaturalActor;
 import lombok.Getter;
 import lombok.Setter;
-import koo.oodb.core.actor.ActorType;
-import koo.oodb.core.actor.Agreement;
-import koo.oodb.core.user.PerstUser;
+import koo.core.actor.Agreement;
+import koo.core.user.PerstUser;
 import org.garret.perst.continuous.FullTextSearchable;
 
 import java.util.HashSet;

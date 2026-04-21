@@ -284,7 +284,9 @@ public class GroovyService {
                 }
                 try {
                     ci.executing++;
+                    logger.info("DEBUG IN ProcessServlet.ExecutionReturn internalGroovy: Calling init2 with db=" + args);
                     methp.invoke(null, args);
+                    logger.info("DEBUG OUT ProcessServlet.ExecutionReturn internalGroovy: Calling init2 with db=" + args);
                 } catch (InvocationTargetException e) {
                     Throwable te = e.getTargetException();
                     logger.error(te);

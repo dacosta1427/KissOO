@@ -1,9 +1,9 @@
 package mycompany.actor;
 
-import koo.oodb.BaseManager;
+import koo.core.BaseManager;
 import mycompany.actor.cleaner.Schedule;
 import mycompany.actor.cleaner.Cleaner;
-import koo.oodb.core.StorageManager;
+import koo.core.database.StorageManager;
 import mycompany.oov.house.Booking;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;

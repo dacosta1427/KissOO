@@ -1,7 +1,7 @@
 package mycompany.database;
 
 import mycompany.Phone;
-import koo.oodb.core.StorageManager;
+import koo.core.database.StorageManager;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 

@@ -1,8 +1,10 @@
-package mycompany.database;
+package core.oodb;
 
-import koo.oodb.BaseManager;
+import koo.core.BaseManager;
 import koo.core.actor.ActorManager;
 import org.junit.jupiter.api.Test;
+
+import static org.armedbear.lisp.Debug.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

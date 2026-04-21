@@ -1,8 +1,8 @@
 package mycompany.actor;
 
-import koo.oodb.BaseManager;
-import koo.oodb.core.user.PerstUser;
-import koo.oodb.core.StorageManager;
+import koo.core.BaseManager;
+import koo.core.user.PerstUser;
+import koo.core.database.StorageManager;
 import mycompany.actor.owner.Owner;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;

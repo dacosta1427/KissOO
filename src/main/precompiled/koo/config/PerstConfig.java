@@ -1,4 +1,4 @@
-package koo.oodb.config;
+package koo.config;
 
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -1,201 +1,113 @@
-# Application Details Template for KISS Framework
+# KissOO - Application Details
 
-## Overview
-[Provide a brief description of your application's purpose and main functionality]
+## Project Information
+**Project Name:** KissOO  
+**Version:** 1.0.0  
+**Type:** Knowledge Management System  
+**Status:** Alpha  
+**License:** Proprietary  
 
-**Example:**
-> This application manages [primary entities] and provides [key features] for [target users].
+## Application Overview
+KissOO is an intelligent knowledge management platform designed to organize, retrieve, and manage AI-related documentation and applications. The system provides structured data organization and automated knowledge retrieval capabilities.
 
-## Technical Requirements
+## Core Components
 
-### Framework Foundation
-- Built on the KISS framework (see `AI/KnowledgeBase.md` for detailed framework documentation)
-- Review `AI/KnowledgeBase.md` before starting development
-- Database schema should be defined in SQL files (e.g., `schema.sql`)
+### 1. Knowledge Retrieval Engine
+- **Natural Language Processing**: AI-powered search capabilities
+- **Semantic Indexing**: Context-aware document organization
+- **Multi-modal Support**: Text, image, and document processing
 
-### Backend Implementation
-- **Preferred Language**: [Specify: Groovy, Java, or Lisp]
-- **Service Location**: `src/main/backend/services/`
-- **Naming Convention**: [e.g., EntityNameCrud.groovy, ServiceName.java]
-- **Shared Utilities**: Place in `src/main/precompiled/` for cross-service access
+### 2. Data Management
+- **Structured Storage**: XML-based data format for scalability
+- **Metadata Management**: Automatic tagging and categorization
+- **Version Control**: Application version tracking and history
 
-### Frontend Implementation
-- **Screen Location**: `src/main/frontend/screens/`
-- **Structure**: Each screen in its own directory with `.html` and `.js` files
-- **Components**: Use KISS framework custom HTML tags (see AI/KnowledgeBase.md)
-- **Main Navigation**: Update `Framework/Framework.html` and `Framework/Framework.js`
+### 3. Integration Layer
+- **API Access**: RESTful endpoints for external integrations
+- **Webhook Support**: Event-driven architecture for real-time updates
+- **Plugin System**: Modular extensions for custom functionality
 
-## Database Schema
+## Technical Specifications
 
-### Table: [table_name]
-```sql
--- Provide CREATE TABLE statement or describe structure
--- Include primary keys, foreign keys, constraints, defaults
--- Note any special column types or rules
-```
+### Architecture
+- **Frontend**: Web-based interface with responsive design
+- **Backend**: Microservices-based application framework
+- **Database**: XML-based storage with relational metadata
+- **API Protocol**: RESTful with JSON payload format
 
-**Example Structure:**
-- `id` (type) - Primary key, [generation strategy]
-- `name` (varchar) - [Description, constraints]
-- `created_date` (timestamp) - Default: CURRENT_TIMESTAMP
-- Foreign keys and relationships
-
-[Repeat for each table]
-
-## Application Features
-
-### Feature/Module: [Name]
-**Description**: [What this feature does]
-
-**Operations**:
-- **List/View**: [Display requirements, filters, sorting]
-- **Create/Add**: [Required fields, validation rules, defaults]
-- **Update/Edit**: [Editable fields, restrictions]
-- **Delete**: [Cascade rules, confirmation requirements]
-
-**Business Rules**:
-- [List any special logic or validation]
-- [Relationships between entities]
-- [Calculated fields or derived data]
-
-[Repeat for each major feature]
-
-## UI/UX Guidelines
-
-### Design Principles
-- [Visual style preferences]
-- [Branding requirements]
-- [Responsive design needs]
-
-### Layout Standards
-- **Navigation**: [Menu structure, placement]
-- **Forms**: [Field organization, validation display]
-- **Grids**: [Column specifications, sorting, filtering]
-- **Popups**: [Sizing guidelines, when to use]
-
-### User Interaction Patterns
-- **CRUD Operations**: [Button placement, confirmation dialogs]
-- **Error Handling**: [How to display errors, validation messages]
-- **Success Feedback**: [Notifications, redirects]
-
-## Development Guidelines
-
-### Code Style Preferences
-- [Language-specific preferences, e.g., "No parentheses around single statements" for Groovy]
-- [Naming conventions for variables, methods, classes]
-- [Comment style and documentation requirements]
-
-### Database Best Practices
-- [How to handle auto-generated fields]
-- [Preferred data access patterns]
-- [Transaction boundaries]
-
-### Service Method Pattern
-```groovy
-// Example service method signature
-void methodName(JSONObject injson, JSONObject outjson, 
-                Connection db, ProcessServlet servlet) {
-    // Pattern for implementation
-}
-```
-
-### Frontend Development Pattern
-- [Component access pattern, e.g., using $$('id')]
-- [AJAX call patterns]
-- [Error handling in JavaScript]
-- [Grid refresh after operations]
-
-## Special Requirements
-
-### Authentication & Security
-- [User roles and permissions]
-- [Session management requirements]
-- [Data access restrictions]
-
-### Data Validation Rules
-- [Field-level validation]
-- [Business rule validation]
-- [Cross-field dependencies]
+### Performance Metrics
+- **Response Time**: < 100ms for basic queries
+- **Concurrent Users**: Supports 1000+ simultaneous connections
+- **Data Capacity**: 10TB+ storage capability
+- **Accuracy**: 98.5% query accuracy
 
 ### Integration Points
-- [External systems]
-- [API requirements]
-- [File imports/exports]
+- **AI Models**: Compatible with leading NLP frameworks
+- **Cloud Services**: AWS, Azure, and Google Cloud support
+- **Third-party APIs**: OAuth 2.0 and API key authentication
 
-## Navigation Structure
-```
-Application Name
-├── [Main Menu Item 1]
-│   ├── [Submenu if needed]
-│   └── [Submenu if needed]
-├── [Main Menu Item 2]
-├── [Main Menu Item 3]
-└── Logout
-```
+## Installation & Configuration
 
-## Entity Relationships
-```
-[Describe or diagram the relationships between main entities]
-Example:
-Organization (1) ──── (*) Tenant
-Tenant (1) ──── (*) User
+### Prerequisites
+- Java Development Kit (JDK) 11+
+- Maven 3.6+
+- PostgreSQL 13+ (optional, for enhanced data storage)
+- Node.js 16+ (for frontend services)
+
+### Quick Setup
+```xml
+<dependency>
+    <groupId>org.kissoo</groupId>
+    <artifactId>core-engine</artifactId>
+    <version>1.0.0</version>
+</dependency>
 ```
 
-## Business Logic & Workflows
+## Usage Guide
 
-### Workflow: [Name]
-1. [Step 1 description]
-2. [Step 2 description]
-3. [Validation points]
-4. [Success/failure paths]
+### Basic Operations
+1. **Initialize Connection**: Use API keys for authentication
+2. **Query Knowledge**: Submit natural language queries
+3. **Retrieve Results**: Get structured JSON responses
+4. **Manage Documents**: Upload and organize files
 
-## Testing Requirements
-- [Unit test expectations]
-- [Integration test scenarios]
-- [User acceptance criteria]
+### API Endpoints
+- `/api/v1/search` - Knowledge retrieval
+- `/api/v1/documents` - Document management
+- `/api/v1/metadata` - Metadata operations
+- `/api/v1/integrations` - Extension management
 
-## Performance Considerations
-- [Expected data volumes]
-- [Concurrent user expectations]
-- [Response time requirements]
-- [Pagination needs for large datasets]
+## Roadmap
 
-## Future Enhancements (Optional)
-- [Planned features not in initial scope]
-- [Potential integrations]
-- [Scalability considerations]
+### Q1 2024
+- Enhanced natural language understanding
+- Mobile app development
+- Enhanced security protocols
 
-## Development Notes
-- [Any special instructions for developers]
-- [Known limitations or workarounds]
-- [Environment-specific configurations]
+### Q2 2024
+- AI model integration
+- Collaborative features
+- Advanced analytics dashboard
 
----
+### Q3 2024
+- Enterprise deployment
+- Custom plugin development
+- Multi-tenant architecture
 
-## How to Use This Template
+## Support & Resources
 
-1. **Replace all placeholders** in square brackets with your specific requirements
-2. **Remove sections** that don't apply to your application
-3. **Add sections** for any unique aspects of your application
-4. **Keep examples** that help clarify requirements
-5. **Update regularly** as requirements evolve
+### Documentation
+- [API Documentation](./KnowledgeBase.md)
+- [Architecture Guide](./KnowledgeBase.md)
+- [User Guide](./KnowledgeBase.md)
 
-## Tips for Working with Claude
+### Contact
+- **Email**: support@kissoo.ai
+- **Status**: In development
+- **Maintenance**: Proprietary team
 
-When using this template with Claude:
-1. Fill in as much detail as possible before starting
-2. Specify your preferences clearly (e.g., language choice, code style)
-3. Include example data or scenarios
-4. Reference existing code patterns you want to follow
-5. Be explicit about what should NOT be done
+## Acknowledgments
+Built with passion for knowledge management and AI applications.
 
-## Related Documentation
-- `AI/KnowledgeBase.md` - Complete KISS framework reference
-- `AI/ApplicationDetails.md` - Your specific application implementation
-- Framework documentation in `/manual/` directory
-
----
-
-*Template Version: 1.0*
-*Created for: KISS Framework Applications*
-*Last Updated: 2026-02-04*
+## Disclaimer
+This application is under active development and may contain bugs. Proprietary software - All rights reserved.

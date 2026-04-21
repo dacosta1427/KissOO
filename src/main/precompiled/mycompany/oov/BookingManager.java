@@ -1,7 +1,7 @@
 package mycompany.oov;
 
-import koo.oodb.BaseManager;
-import koo.oodb.core.StorageManager;
+import koo.core.BaseManager;
+import koo.core.database.StorageManager;
 import mycompany.oov.house.Booking;
 import mycompany.oov.house.House;
 import org.garret.perst.continuous.TransactionContainer;

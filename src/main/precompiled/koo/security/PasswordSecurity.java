@@ -10,16 +10,28 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class PasswordSecurity {
-    // Singleton instance, loaded once at class initialization
-    private static final Argon2Function ARGON2_FUNCTION;
-
-    static {
-        // This block runs ONCE when the class is first loaded
-        ARGON2_FUNCTION = loadArgon2Function();
-    }
+    // Lazy-initialized to avoid ExceptionInInitializerError at class load time
+    private static Argon2Function ARGON2_FUNCTION;
+    private static boolean initialized = false;
+    private static final Object lock = new Object();
 
     public static boolean initialise() {
-        return ARGON2_FUNCTION != null;
+        if (initialized) {
+            return ARGON2_FUNCTION != null;
+        }
+        synchronized (lock) {
+            if (initialized) {
+                return ARGON2_FUNCTION != null;
+            }
+            try {
+                ARGON2_FUNCTION = loadArgon2Function();
+            } catch (Exception e) {
+                System.err.println("* * * PasswordSecurity init failed: " + e.getMessage());
+                ARGON2_FUNCTION = null;
+            }
+            initialized = true;
+            return ARGON2_FUNCTION != null;
+        }
     }
 
     private static Argon2Function loadArgon2Function() {
@@ -53,18 +65,23 @@ public class PasswordSecurity {
 
     // Load the Argon parameters via the application.ini for a web-app
     private static Argon2Function loadProperties() {
-        var mem = Integer.valueOf((String) MainServlet.getEnvironment("argon2.memory"));
+        try {
+            String memStr = (String) MainServlet.getEnvironment("argon2.memory");
+            if (memStr == null || memStr.isEmpty()) {
+                return Argon2Function.getInstance(15360, 2, 1, 32, Argon2.ID);
+            }
+            
+            int mem = Integer.parseInt(memStr);
+            int it = Integer.parseInt((String) MainServlet.getEnvironment("argon2.iterations"));
+            int par = Integer.parseInt((String) MainServlet.getEnvironment("argon2.parallelism"));
+            int len = Integer.parseInt((String) MainServlet.getEnvironment("argon2.length"));
 
-        if (mem == null)
+            return Argon2Function.getInstance(mem, it, par, len, Argon2.ID);
+        } catch (Exception e) {
+            System.err.println("* * * ! Failed to load password config from ini, using defaults: " + e.getMessage());
             return Argon2Function.getInstance(15360, 2, 1, 32, Argon2.ID);
-
-        var it = Integer.valueOf((String) MainServlet.getEnvironment("argon2.iterations"));
-        var par = Integer.valueOf((String) MainServlet.getEnvironment("argon2.parallelism"));
-        var len = Integer.valueOf((String) MainServlet.getEnvironment("argon2.length"));
-
-        Argon2Function func = Argon2Function.getInstance(mem, it, par, len, Argon2.ID);
-
-        return func;
+        }
+    }
     }
 
     // Public method to get the pre-configured function
@@ -79,6 +96,13 @@ public class PasswordSecurity {
      * @return The hash string to store in the database.
      */
     public static String hashPassword(String plainPassword) {
+        // Auto-initialize if not done yet
+        if (!initialized) {
+            initialise();
+        }
+        if (ARGON2_FUNCTION == null) {
+            throw new IllegalStateException("PasswordSecurity not initialized");
+        }
         // The salt is automatically generated and managed by Password4j
         Hash hash = Password.hash(plainPassword)
                 .with(ARGON2_FUNCTION); // Use the pre-configured function
@@ -94,6 +118,13 @@ public class PasswordSecurity {
      * @return true if the password matches the hash.
      */
     public static boolean verifyPassword(String enteredPassword, String storedHash) {
+        // Auto-initialize if not done yet
+        if (!initialized) {
+            initialise();
+        }
+        if (ARGON2_FUNCTION == null) {
+            throw new IllegalStateException("PasswordSecurity not initialized");
+        }
         // Password4j automatically extracts salt and parameters from the stored hash
         return Password.check(enteredPassword, storedHash)
                 .with(ARGON2_FUNCTION);

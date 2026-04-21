@@ -1,4 +1,4 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
 import mycompany.CRUD;
 import koo.security.EndpointMethod;

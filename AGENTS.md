@@ -527,3 +527,24 @@ For now, keep the explicit pattern as it's clear and self-documenting.
   - `src/main/frontend-svelte/src/lib/i18n/messages/de.json`
 - Common keys should go under "common" section
 - Page-specific keys go under their respective section (e.g., "verify", "auth", "owners")
+
+---
+
+## MCP Ollama Bridge
+
+For local AI with file system and web access capabilities:
+
+- **Location:** `/home/dacosta/Projects/mcpOllama/`
+- **Start:** `./start.sh` or `source .venv/bin/activate && ollama-mcp-bridge --port 7777`
+- **API:** `http://localhost:7777/api/chat` (Ollama-compatible with tools)
+- **Available models:** `qwen3.5:4b`, `qwen3.5:2b`
+
+### MCP Tools Enabled
+- **filesystem**: Read/write files in `/home/dacosta/Projects`
+- **fetch**: Fetch web content
+- **memory**: Knowledge graph (9 tools for persistent context)
+
+### Adding More Servers
+Edit `mcp-config.json` to add GitHub, Brave Search, PostgreSQL, etc.
+
+See `../mcpOllama/HOWTO.md` for full documentation.

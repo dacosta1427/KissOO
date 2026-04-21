@@ -1,14 +1,14 @@
 import koo.PerstConnection
-import koo.oodb.core.actor.Agreement
-import koo.oodb.core.actor.Role
+import koo.config.PerstConfig
+import koo.core.database.StorageManager
+import koo.core.user.PerstUserManager
+import koo.core.user.PerstUser
+import koo.core.actor.Agreement
+import koo.core.actor.Role
 import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import koo.oodb.core.PerstConfig
-import koo.oodb.core.StorageManager
-import koo.oodb.core.user.PerstUserManager
-import koo.oodb.core.user.PerstUser
 import koo.security.PasswordSecurity
 import java.util.function.Consumer
 
@@ -19,8 +19,7 @@ class KissInit {
      */
     static void init() {
         println "[KissInit] init() CALLED"
-        Thread.sleep(10000)
-        
+
         MainServlet.readIniFile "application.ini", "main"
         MainServlet.readIniFile "application.ini", "PasswordSecurity"
         
@@ -72,9 +71,9 @@ class KissInit {
                     println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
                     
                     // Skip user creation - causes ExceptionInInitializerError
-                    // initDefaultUser()
-                    // indexPerstUsers()
-                    // indexActors()
+                    initDefaultUser()
+                    indexPerstUsers()
+                    indexActors()
                     println "[KissInit] User init SKIPPED (causes ExceptionInInitializerError)"
                 } else {
                     println "[KissInit] init() - NonSqlConnection already registered"
@@ -125,7 +124,7 @@ class KissInit {
      * Code to run once the database is open but before the app is running.
      * Note: No SQL database is configured - Perst is accessed via MainServlet environment.
      */
-    static void init2(Connection db) {
+    static void init2(PerstConnection db) {
         // If you use db, make sure you commit.
         if (!PasswordSecurity.initialise()) System.out.println("! X X X PasswordSecurity NOT initialised!");
         System.out.println("* * * PasswordSecurity initialised!");
@@ -193,7 +192,6 @@ class KissInit {
                 println "[KissInit] Creating default superAdmin user..."
                 
                 // Create superAdmin Actor with full Agreement (like cleaners2)
-                def agreement = new Agreement("superAdmin")
                 def adminActor = new mycompany.actor.owner.Owner("System Admin", "", "admin@localhost", true)
                 adminActor.getAgreement().setRole(Role.SUPER_ADMIN)
                 

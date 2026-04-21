@@ -1,8 +1,8 @@
 package koo.security;
 
-import koo.oodb.core.actor.AActor;
+import koo.core.actor.AActor;
 import mycompany.CRUD;
-import koo.oodb.core.user.PerstUser;
+import koo.core.user.PerstUser;
 import org.kissweb.json.JSONObject;
 import org.kissweb.database.Connection;
 import org.kissweb.restServer.ProcessServlet;

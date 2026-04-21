@@ -1,11 +1,10 @@
-package koo.oodb.config;
+package koo.config;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * AppConfig - Utility to read configuration from application.ini

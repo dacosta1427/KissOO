@@ -5,9 +5,9 @@ import org.kissweb.json.JSONArray
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import koo.oodb.core.StorageManager
-import koo.oodb.core.user.PerstUser
-import koo.oodb.core.actor.Role
+import koo.core.database.StorageManager
+import koo.core.user.PerstUser
+import koo.core.actor.Role
 import mycompany.actor.owner.Owner
 
 /**

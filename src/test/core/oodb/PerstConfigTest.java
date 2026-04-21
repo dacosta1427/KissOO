@@ -1,7 +1,9 @@
-package oodb;
+package core.oodb;
 
-import koo.oodb.core.PerstConfig;
+import koo.config.PerstConfig;
 import org.junit.jupiter.api.Test;
+
+import static org.armedbear.lisp.Debug.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

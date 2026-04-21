@@ -1,4 +1,4 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
 /**
  * Role - Defines the role of an AActor in the system.

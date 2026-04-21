@@ -1,18 +1,14 @@
 package services
 
-import org.kissweb.json.JSONArray
+import koo.core.database.StorageManager
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
 import koo.security.EndpointRegistry
 import koo.security.RolePermissions
-import koo.oodb.core.actor.Role
-import koo.oodb.core.actor.Agreement
-import koo.oodb.core.actor.ActorManager
-import koo.oodb.core.actor.AdministratorManager
-import koo.oodb.core.actor.AdministratorRole
-import koo.oodb.core.user.PerstUser
-import java.math.BigInteger
+import koo.core.actor.Role
+import koo.core.actor.ActorManager
+import koo.core.user.PerstUser
 
 /**
  * PermissionService - Manages endpoint permissions via REST API.
@@ -281,9 +277,9 @@ class PermissionService {
             agreement.grantEndpoint(endpointName)
             
             // Save the actor
-            def tc = koo.oodb.core.StorageManager.createContainer()
+            def tc = StorageManager.createContainer()
             tc.addUpdate(actor)
-            koo.oodb.core.StorageManager.store(tc)
+            StorageManager.store(tc)
             
             outjson.put("_Success", true)
             outjson.put("message", "Granted ${endpointName} to actor ${actor.getName()}")
@@ -325,9 +321,9 @@ class PermissionService {
             agreement.revokeEndpoint(endpointName)
             
             // Save the actor
-            def tc = koo.oodb.core.StorageManager.createContainer()
+            def tc = StorageManager.createContainer()
             tc.addUpdate(actor)
-            koo.oodb.core.StorageManager.store(tc)
+            StorageManager.store(tc)
             
             outjson.put("_Success", true)
             outjson.put("message", "Revoked ${endpointName} from actor ${actor.getName()}")

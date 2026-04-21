@@ -1,8 +1,7 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
 import lombok.Getter;
 import lombok.Setter;
-import koo.oodb.core.user.PerstUser;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;

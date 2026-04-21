@@ -183,6 +183,12 @@ public class MainServlet extends HttpServlet {
      * @see StartupListener#contextInitialized(ServletContextEvent)
      */
     static void initializeSystem(String path) {
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         Level level = logger.getLevel();
         Configurator.setLevel(logger, Level.ALL);
         final String osName = System.getProperty("os.name");
@@ -234,7 +240,7 @@ public class MainServlet extends HttpServlet {
             if (db == null && nonSqlConn instanceof Connection) {
                 db = (Connection) nonSqlConn;
                 logger.info("DEBUG init2: Calling init2 with db=" + db);
-                (new GroovyService()).internalGroovy(null, "KissInit", "init2", (Connection) db);
+                (new GroovyService()).internalGroovy(null, "KissInit", "init2", db);
             } else {
                 logger.info("DEBUG init2: NOT calling init2 - db=" + db + ", nonSqlConn instanceof Connection=" + (nonSqlConn instanceof Connection));
             }

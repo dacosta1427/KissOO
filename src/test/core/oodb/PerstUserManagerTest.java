@@ -1,4 +1,4 @@
-package mycompany.database;
+package core.oodb;
 
 import koo.core.user.PerstUser;
 import koo.core.user.PerstUserManager;

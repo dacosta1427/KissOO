@@ -12,9 +12,9 @@ import mycompany.actor.cleaner.Schedule
 import mycompany.oov.house.House
 import mycompany.actor.owner.Owner
 import mycompany.oov.house.CostProfile
-import koo.oodb.core.actor.Role
-import koo.oodb.core.user.PerstUser
-import koo.oodb.core.StorageManager
+import koo.core.actor.Role
+import koo.core.user.PerstUser
+import koo.core.database.StorageManager
 
 /**
  * CleaningService service for CRUD operations on cleaning scheduler entities.

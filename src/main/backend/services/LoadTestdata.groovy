@@ -1,15 +1,14 @@
 package services
 
 
-import koo.oodb.core.actor.AActor
-import koo.oodb.core.actor.ActorType
-import koo.oodb.core.actor.Agreement
-import koo.oodb.core.actor.Role
+import koo.core.actor.AActor
+import koo.core.actor.Agreement
+import koo.core.actor.Role
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import koo.oodb.core.StorageManager
-import koo.oodb.core.user.PerstUser
+import koo.core.database.StorageManager
+import koo.core.user.PerstUser
 import mycompany.actor.owner.Owner
 import mycompany.oov.house.House
 import mycompany.oov.house.Booking

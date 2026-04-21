@@ -4,8 +4,8 @@ package services
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import koo.oodb.core.StorageManager
-import koo.oodb.core.user.PerstUser
+import koo.core.database.StorageManager
+import koo.core.user.PerstUser
 
 /**
  * Initialize Perst users.

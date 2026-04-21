@@ -1,4 +1,4 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
 /**
  * AdministratorRole - Defines the type of Administrator.

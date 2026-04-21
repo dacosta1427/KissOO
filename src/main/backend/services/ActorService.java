@@ -1,8 +1,8 @@
 package services;
 
-import koo.oodb.core.actor.AActor;
-import koo.oodb.core.actor.ActorManager;
-import koo.oodb.core.user.PerstUser;
+import koo.core.actor.AActor;
+import koo.core.actor.ActorManager;
+import koo.core.user.PerstUser;
 import koo.security.EndpointMethod;
 import org.garret.perst.json.JSONObject;
 import org.kissweb.restServer.ProcessServlet;
