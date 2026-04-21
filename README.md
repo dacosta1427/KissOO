@@ -75,6 +75,12 @@ Run all tests with:
 
 See [docs/TestingGuide.md](docs/TestingGuide.md) for detailed testing instructions.
 
+## Book
+
+For a comprehensive, tutorial-style guide, see
+[Kiss: A Complete Guide to the Web Application Framework](https://a.co/d/035V1VEl)
+by Blake McBride, available on Amazon.
+
 ## Documentation
 
 - **Testing Guide**: [docs/TestingGuide.md](docs/TestingGuide.md)
