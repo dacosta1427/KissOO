@@ -125,9 +125,12 @@ class KissInit {
      * Code to run once the database is open but before the app is running.
      * Note: No SQL database is configured - Perst is accessed via MainServlet environment.
      */
-    static void init2(Connection db) {
+    static void init2(PerstConnection db) {
         // If you use db, make sure you commit.
         if (!PasswordSecurity.initialise()) System.out.println("! X X X PasswordSecurity NOT initialised!");
+        else {
+            println "[KissInit] init2() PWSEC failed";
+        }
         System.out.println("* * * PasswordSecurity initialised!");
 
         try {

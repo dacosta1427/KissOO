@@ -3,7 +3,7 @@ package mycompany.actor;
 import koo.oodb.BaseManager;
 import mycompany.actor.cleaner.Schedule;
 import mycompany.actor.cleaner.Cleaner;
-import koo.oodb.core.StorageManager;
+import koo.oodb.core.database.StorageManager;
 import mycompany.oov.house.Booking;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;

@@ -1,7 +1,7 @@
 package mycompany.database;
 
 import koo.oodb.BaseManager;
-import koo.core.actor.ActorManager;
+import koo.oodb.core.actor.ActorManager;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

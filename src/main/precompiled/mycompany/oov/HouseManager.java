@@ -2,7 +2,7 @@ package mycompany.oov;
 
 import koo.oodb.BaseManager;
 import mycompany.actor.owner.Owner;
-import koo.oodb.core.StorageManager;
+import koo.oodb.core.database.StorageManager;
 import mycompany.oov.house.House;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;

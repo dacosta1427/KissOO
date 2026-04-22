@@ -1,6 +1,6 @@
 package oodb;
 
-import koo.oodb.core.PerstConfig;
+import koo.oodb.config.PerstConfig;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,6 +1,6 @@
 package koo.security;
 
-import koo.oodb.core.StorageManager;
+import koo.oodb.core.database.StorageManager;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import java.io.Serializable;

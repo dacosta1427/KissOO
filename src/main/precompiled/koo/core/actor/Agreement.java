@@ -2,9 +2,11 @@ package koo.oodb.core.actor;
 
 import mycompany.CRUD;
 import koo.security.EndpointMethod;
+import koo.security.EndpointRegistry;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
+import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
 
