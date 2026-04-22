@@ -82,7 +82,6 @@ public class PasswordSecurity {
             return Argon2Function.getInstance(15360, 2, 1, 32, Argon2.ID);
         }
     }
-    }
 
     // Public method to get the pre-configured function
     public static Argon2Function getArgon2Function() {
