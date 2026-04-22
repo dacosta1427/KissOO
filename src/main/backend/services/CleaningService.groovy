@@ -137,12 +137,6 @@ class CleaningService {
     
     void getCleaners(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Check activation status
-            requireFullActivation(injson, outjson, servlet)
-            if (outjson.has("_Success") && !outjson.getBoolean("_Success")) {
-                return
-            }
-            
             // Only admins can see cleaners list
             if (!isAdmin(servlet)) {
                 outjson.put("_Success", false)

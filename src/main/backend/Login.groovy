@@ -50,6 +50,12 @@ class Login {
             UserData ud = UserCache.newUser(user, password, null)
             ud.putUserData("perstUser", perstUser)
             
+            // Store activation status flags in session immediately after login
+            // This fixes services that check requireFullActivation()
+            ud.putUserData("needsPasswordChange", perstUser.isMustChangePassword())
+            ud.putUserData("needsEmailVerification", !perstUser.isEmailVerified())
+            ud.putUserData("isFullyActivated", !perstUser.isMustChangePassword() && perstUser.isEmailVerified())
+            
             // Update last login date
             perstUser.setLastLoginDate(System.currentTimeMillis())
             PerstUserManager.update(perstUser)

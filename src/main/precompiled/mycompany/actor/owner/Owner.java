@@ -39,6 +39,14 @@ public class Owner extends ANaturalActor {
         setActive(active);
     }
     
+    public Owner(String name, String phone, String email, String address, boolean active) {
+        super(name, new Agreement(), email);
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        setActive(active);
+    }
+    
     public Collection<House> getHouses() {
         return houses;
     }

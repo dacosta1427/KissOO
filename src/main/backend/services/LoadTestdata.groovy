@@ -1,8 +1,5 @@
 package services
 
-
-import koo.core.actor.AActor
-import koo.core.actor.Agreement
 import koo.core.actor.Role
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
@@ -104,19 +101,7 @@ class LoadTestdata {
     
     void load(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Check activation status first
-            if (!isFullyActivated(servlet)) {
-                boolean needsPwd = servlet.getUserData("needsPasswordChange") == true
-                boolean needsEmail = servlet.getUserData("needsEmailVerification") == true
-                outjson.put("_Success", false)
-                outjson.put("_ErrorCode", 3)
-                outjson.put("_ErrorMessage", "Please complete activation: " + 
-                    (needsPwd ? "change password" : "") + 
-                    (needsPwd && needsEmail ? " and " : "") + 
-                    (needsEmail ? "verify email" : ""))
-                return
-            }
-            
+            // Check for system admin - skip activation check for admin user
             checkSystemAdmin(servlet, "load")
             
             println "[LoadTestdata] Starting test data load..."
@@ -148,21 +133,7 @@ class LoadTestdata {
                 }
             }
             if (!admin) {
-                def agreement = new Agreement(Role.SUPER_ADMIN)
-                def adminActor = new AActor("System Admin", agreement)
-                // AActor constructor already created a deactivated PerstUser
-                // Get it and configure it
-                admin = adminActor.getPerstUser()
-                admin.setUsername("admin")
-                admin.setPassword("admin")
-                admin.setEmail("admin@kissoo.local")
-                admin.setActive(true)
-                admin.setEmailVerified(true)
-                def tc = StorageManager.createContainer()
-                tc.addInsert(adminActor)
-                tc.addInsert(admin)
-                StorageManager.store(tc)
-                results.admin = "created"
+                results.admin = "ERROR: admin not found!"
             } else {
                 results.admin = "exists"
             }
@@ -187,7 +158,10 @@ class LoadTestdata {
             def owners = []
             ownerData.each { d ->
                 try {
-                    def owner = new Owner(d.name, d.phone, d.email, "123 ${d.name.split(' ')[1]} Street, Amsterdam")
+                    def owner = new Owner(d.name, d.phone, d.email, "123 ${d.name.split(' ')[1]} Street, Amsterdam", true)
+                    // Activate the owner user
+                    owner.getPerstUser().setActive(true)
+                    owner.getPerstUser().setEmailVerified(true)
                     def tc = StorageManager.createContainer()
                     tc.addInsert(owner)
                     tc.addInsert(owner.getPerstUser())
@@ -230,8 +204,10 @@ class LoadTestdata {
                 houseData.each { d ->
                     try {
                         def randomOwner = owners[new Random().nextInt(owners.size())]
-                        println "[LoadTestdata] Assigning house ${d.name} to owner ${randomOwner.getName()} (OID: ${randomOwner.getOid()})"
-                        def house = new House(d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true, randomOwner)
+                        def houseName = d.name.toString()
+                        def houseAddr = "123 Street"
+                        def houseDesc = d.desc?.toString() ?: ""
+                        def house = new House(randomOwner, houseName, houseAddr, houseDesc, true)
                         houseTc.addInsert(house)
                         houses << house
                     } catch (Exception e) {
@@ -261,19 +237,23 @@ class LoadTestdata {
             ]
             
             def cleaners = []
+            def tc = StorageManager.createContainer()
             cleanerData.each { d ->
                 try {
-                    def cleaner = new Cleaner(d.name, d.phone, d.email, "45 Cleaner Street, Amsterdam", true)
-                    def tc = StorageManager.createContainer()
+                    def cleaner = new Cleaner(d.name, d.phone, d.email, true)
+                    // Activate the cleaner user 
+                    cleaner.getPerstUser().setActive(true)
+                    cleaner.getPerstUser().setEmailVerified(true)
                     tc.addInsert(cleaner)
                     tc.addInsert(cleaner.getPerstUser())
-                    def storeResult = StorageManager.store(tc)
-                    println "[LoadTestdata] Cleaner ${d.name} OID=${cleaner.getOid()} userOID=${cleaner.getPerstUser()?.getOid()} username=${cleaner.getPerstUser()?.getUsername()} stored=${storeResult}"
                     cleaners << cleaner
                 } catch (Exception e) {
                     println "[LoadTestdata] Error creating cleaner ${d.name}: ${e.message}"
-                    throw e
                 }
+            }
+            def storeResult = StorageManager.store(tc)
+            cleaners.each { c ->
+                println "[LoadTestdata] Cleaner ${c.getName()} OID=${c.getOid()} stored=${storeResult}"
             }
             results.cleaners = "created ${cleaners.size()}"
             println "[LoadTestdata] Created ${cleaners.size()} cleaners"
