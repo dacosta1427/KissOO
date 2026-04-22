@@ -28,8 +28,8 @@ import java.util.Set;
  *   agreement.grant(AActor.class, CRUD.CREATE);
  *   agreement.grant(AActor.class, CRUD.READ);
  *   
- *   // Type-safe endpoint
- *   agreement.grant(ActorService.GET_ACTOR);
+ *   // Bitmap-based endpoint permission
+ *   agreement.grantEndpoint("services.CleaningService.getCleaners");
  *   
  *   // Via group
  *   agreement.addGroup(admins);
@@ -45,8 +45,12 @@ public class Agreement extends CVersion {
     private Role role;
     
     private Set<String> crudPermissions;
-    private Set<EndpointMethod> methodPermissions;
     private Set<Group> groups;
+    
+    // Bitmap-based endpoint permissions (replaces Set<EndpointMethod>)
+    // Each bit represents permission to execute a specific endpoint
+    private String endpointPermissions;  // Stored as String for Perst
+    
     private long validFrom;
     private Long validTo;
     
@@ -56,9 +60,9 @@ public class Agreement extends CVersion {
     public Agreement() {
         this.validFrom = System.currentTimeMillis();
         this.crudPermissions = new HashSet<>();
-        this.methodPermissions = new HashSet<>();
         this.groups = new HashSet<>();
         this.role = Role.MEMBER; // Default role
+        this.endpointPermissions = "0";
     }
     
     public Agreement(Role role) {
@@ -72,7 +76,7 @@ public class Agreement extends CVersion {
         this.role = Role.valueOf(role.toUpperCase());
     }
     
-    // ========== CRUD Permissions (Type-Safe) ==========
+    // ========== Role ==========
     
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
@@ -81,6 +85,8 @@ public class Agreement extends CVersion {
     public void setRole(String role) { 
         this.role = Role.valueOf(role.toUpperCase()); 
     }
+    
+    // ========== CRUD Permissions (Type-Safe) ==========
     
     /**
      * Grant CRUD permission using Class (type-safe!)
@@ -162,30 +168,102 @@ public class Agreement extends CVersion {
     
     public Set<String> getCrudPermissions() { return crudPermissions; }
     
-    // ========== EndpointMethod Permissions ==========
+    // ========== Endpoint Permissions (Bitmap-based) ==========
     
     /**
-     * Grant permission to execute an endpoint (type-safe!)
+     * Get endpoint permissions as BigInteger
      */
-    public void grant(EndpointMethod endpoint) {
-        methodPermissions.add(endpoint);
+    public BigInteger getEndpointPermissions() {
+        if (endpointPermissions == null || endpointPermissions.isEmpty()) {
+            return BigInteger.ZERO;
+        }
+        try {
+            return new BigInteger(endpointPermissions);
+        } catch (NumberFormatException e) {
+            return BigInteger.ZERO;
+        }
     }
     
     /**
-     * Revoke endpoint permission
+     * Set endpoint permissions from BigInteger
      */
-    public void revoke(EndpointMethod endpoint) {
-        methodPermissions.remove(endpoint);
+    public void setEndpointPermissions(BigInteger permissions) {
+        this.endpointPermissions = permissions != null ? permissions.toString() : "0";
     }
     
     /**
-     * Check if can execute this endpoint
+     * Set endpoint permissions from String (for Perst)
+     */
+    public void setEndpointPermissions(String permissions) {
+        this.endpointPermissions = permissions != null ? permissions : "0";
+    }
+    
+    public String getEndpointPermissionsString() { return endpointPermissions; }
+    
+    /**
+     * Grant permission to execute an endpoint by name
+     * 
+     *   agreement.grantEndpoint("services.CleaningService.getCleaners");
+     */
+    public void grantEndpoint(String endpointName) {
+        BigInteger bit = EndpointRegistry.getEndpointBit(endpointName);
+        if (bit == null || bit.signum() == 0) {
+            // Register the endpoint first
+            bit = EndpointRegistry.registerEndpoint(endpointName);
+        }
+        
+        BigInteger current = getEndpointPermissions();
+        setEndpointPermissions(current.or(bit));
+    }
+    
+    /**
+     * Grant permission to multiple endpoints
+     */
+    public void grantEndpoints(String... endpointNames) {
+        for (String name : endpointNames) {
+            grantEndpoint(name);
+        }
+    }
+    
+    /**
+     * Revoke permission to execute an endpoint by name
+     */
+    public void revokeEndpoint(String endpointName) {
+        BigInteger bit = EndpointRegistry.getEndpointBit(endpointName);
+        if (bit != null && bit.signum() > 0) {
+            BigInteger current = getEndpointPermissions();
+            BigInteger negated = current.andNot(bit);
+            setEndpointPermissions(negated);
+        }
+    }
+    
+    /**
+     * Check if can execute this endpoint by name
+     */
+    public boolean hasEndpointPermission(String endpointName) {
+        BigInteger bit = EndpointRegistry.getEndpointBit(endpointName);
+        if (bit == null || bit.signum() == 0) {
+            return false;
+        }
+        BigInteger current = getEndpointPermissions();
+        return current.and(bit).signum() > 0;
+    }
+    
+    /**
+     * Check if can execute endpoint (compatibility method)
+     * Uses the endpoint's name to check bitmap
      */
     public boolean canExecute(EndpointMethod endpoint) {
-        return methodPermissions.contains(endpoint);
+        if (endpoint == null) return false;
+        return hasEndpointPermission(endpoint.getName());
     }
     
-    public Set<EndpointMethod> getMethodPermissions() { return methodPermissions; }
+    /**
+     * Check if can execute endpoint by string name
+     */
+    public boolean canExecute(String endpointName) {
+        return hasEndpointPermission(endpointName);
+    }
     
     // ========== Group Permissions ==========
     
@@ -235,7 +313,7 @@ public class Agreement extends CVersion {
     
     /**
      * Check if this agreement grants permission for an action.
-     * Checks in order: CRUD → EndpointMethod → Groups
+     * Checks in order: CRUD → Endpoint Bitmap → Groups
      * Everything is denied by default.
      */
     public boolean grants(EndpointMethod endpoint, Class<?> resource, String action) {
@@ -248,8 +326,8 @@ public class Agreement extends CVersion {
             return true;
         }
         
-        // 2. Check EndpointMethod permission
-        if (endpoint != null && methodPermissions.contains(endpoint)) {
+        // 2. Check endpoint permission (bitmap)
+        if (endpoint != null && canExecute(endpoint)) {
             return true;
         }
         
