@@ -294,24 +294,22 @@ class LoadTestdata {
                 def cleaner = cleaners[cleanerIdx % cleaners.size()]
                 def checkInDate = LocalDate.parse(booking.getCheckInDate(), formatter)
                 
-                // Create schedule for each day of the booking
-                3.times { dayIdx ->
-                    def scheduleDate = checkInDate.plusDays(dayIdx)
-                    def schedule = new Schedule()
-                    schedule.setCleaner(cleaner)
-                    schedule.setBooking(booking)
-                    schedule.setScheduleDate(scheduleDate.format(formatter))
-                    schedule.setStartTime("09:00")
-                    schedule.setEndTime("12:00")
-                    schedule.setStatus("scheduled")
-                    scheduleTc.addInsert(schedule)
-                    schedules << schedule
-                    scheduleCount++
-                    
-                    if (scheduleCount % BATCH_SIZE == 0) {
-                        StorageManager.store(scheduleTc)
-                        scheduleTc = StorageManager.createContainer()
-                    }
+                // Create ONE schedule for cleaning day (AFTER guest checkout = next day)
+                def scheduleDate = checkInDate.plusDays(1)  // Day AFTER checkout
+                def schedule = new Schedule()
+                schedule.setCleaner(cleaner)
+                schedule.setBooking(booking)
+                schedule.setScheduleDate(scheduleDate.format(formatter))
+                schedule.setStartTime("09:00")
+                schedule.setEndTime("12:00")
+                schedule.setStatus("scheduled")
+                scheduleTc.addInsert(schedule)
+                schedules << schedule
+                scheduleCount++
+                
+                if (scheduleCount % BATCH_SIZE == 0) {
+                    StorageManager.store(scheduleTc)
+                    scheduleTc = StorageManager.createContainer()
                 }
                 cleanerIdx++
             }
