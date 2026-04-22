@@ -23,6 +23,7 @@
 	let dates = $derived(generateDateRange(dateRange.start, dateRange.end));
 	let scheduleMatrix = $derived(buildScheduleMatrix(schedules, cleaners, dates));
 	let filteredCleaners = $derived(selectedCleanerId ? cleaners.filter(c => c.id === selectedCleanerId) : cleaners);
+	let dateCount = $derived(dates.length);
 
 	function generateDateRange(start, end) {
 		if (!start || !end) return [];
@@ -51,7 +52,14 @@
 		});
 
 		schedules.forEach((schedule) => {
-			const dateString = schedule.date;
+			// Convert YYYYMMDD to YYYY-MM-DD for matching
+			const scheduleDate = schedule.date;
+			let dateString;
+			if (scheduleDate && scheduleDate.length === 8) {
+				dateString = scheduleDate.substring(0,4) + '-' + scheduleDate.substring(4,6) + '-' + scheduleDate.substring(6,8);
+			} else {
+				dateString = scheduleDate;
+			}
 			cleaners.forEach((cleaner) => {
 				if (cleaner.id === schedule.cleaner_id && matrix[cleaner.id][dateString] !== undefined) {
 					matrix[cleaner.id][dateString] = schedule;
@@ -128,7 +136,7 @@
 	}
 </script>
 
-<div class="schedule-board">
+<div class="schedule-board" style="--date-count: {dateCount}">
 	<div class="status-legend">
 		<span class="legend-item"><span class="legend-color status-scheduled"></span> Scheduled</span>
 		<span class="legend-item"><span class="legend-color status-completed"></span> Completed</span>
@@ -268,7 +276,7 @@
 
 	.board-header {
 		display: grid;
-		grid-template-columns: 200px repeat(7, 150px);
+		grid-template-columns: 200px repeat(var(--date-count, 7), 150px);
 		background: var(--table-header-bg);
 		color: var(--table-header-text);
 		position: sticky;
@@ -304,7 +312,7 @@
 
 	.board-row {
 		display: grid;
-		grid-template-columns: 200px repeat(7, 150px);
+		grid-template-columns: 200px repeat(var(--date-count, 7), 150px);
 		border-bottom: 1px solid var(--border-color);
 	}
 

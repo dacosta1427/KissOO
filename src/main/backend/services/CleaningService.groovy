@@ -600,12 +600,26 @@ class CleaningService {
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
                 row.put("cleaner_id", schedule.getCleanerOid())
+                row.put("cleaner_name", schedule.getCleaner()?.getName())
                 row.put("booking_id", schedule.getBookingOid())
                 row.put("date", schedule.getScheduleDate())
                 row.put("start_time", schedule.getStartTime())
                 row.put("end_time", schedule.getEndTime())
                 row.put("notes", schedule.getNotes())
                 row.put("status", schedule.getStatus())
+                
+                // Add house details from booking
+                def booking = schedule.getBooking()
+                if (booking != null) {
+                    def house = booking.getHouse()
+                    row.put("house_id", house?.getOid())
+                    row.put("house_name", house?.getName())
+                    row.put("house_address", house?.getAddress())
+                    row.put("booking_checkin", booking.getCheckInDate())
+                    row.put("booking_checkout", booking.getCheckOutDate())
+                    row.put("guest_name", booking.getGuestName())
+                }
+                
                 rows.put(row)
             }
             
