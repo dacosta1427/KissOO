@@ -161,7 +161,7 @@ class LoadTestdata {
                     def owner = new Owner(d.name, d.phone, d.email, "123 ${d.name.split(' ')[1]} Street, Amsterdam", true)
                     // Activate the owner user
                     owner.getPerstUser().setActive(true)
-                    owner.getPerstUser().setEmailVerified(true)
+                    owner.getPerstUser().setEmailVerified(false)
                     def tc = StorageManager.createContainer()
                     tc.addInsert(owner)
                     tc.addInsert(owner.getPerstUser())
@@ -196,7 +196,7 @@ class LoadTestdata {
             ]
             
             def houses = []
-            def houseTc = StorageManager.createContainer()
+            def houseInsertTc = StorageManager.createContainer()
             if (owners == null || owners.size() == 0) {
                 results.houses = "0 (no owners)"
                 println "[LoadTestdata] Cannot create houses - no owners exist"
@@ -208,25 +208,29 @@ class LoadTestdata {
                         def houseAddr = "123 Street"
                         def houseDesc = d.desc?.toString() ?: ""
                         def house = new House(randomOwner, houseName, houseAddr, houseDesc, true)
-                        houseTc.addInsert(house)
+                        // Bidirectional link: owner → house (Perst Link)
+                        randomOwner.addHouse(house)
+                        houseInsertTc.addInsert(house)
                         houses << house
                     } catch (Exception e) {
-                        println "[LoadTestdata] Error creating house ${d.name}: ${e.message}"
+                        println "[LoadTestdata] Error creating house " + d.name + ": " + e.message
                         throw e
                     }
                 }
-                StorageManager.store(houseTc)
-                results.houses = "created ${houses.size()}"
-                println "[LoadTestdata] Created ${houses.size()} houses with owners"
+                // Store all houses AND their owners (to persist owner's Link)
+                def insertTc = StorageManager.createContainer()
+                houses.each { house -> insertTc.addInsert(house) }
+                owners.each { owner -> insertTc.addUpdate(owner) }
+                StorageManager.store(insertTc)
+                results.houses = "created " + houses.size()
+                println "[LoadTestdata] Created " + houses.size() + " houses with owners"
                 
-                // Verify each owner has at least one house
+                // Verify each owner has houses
                 for (def owner : owners) {
                     def ownerHouses = houses.findAll { h -> h.getOwner() != null && h.getOwner().getOid() == owner.getOid() }
-                    println "[LoadTestdata] Owner ${owner.getName()} has ${ownerHouses.size()} house(s)"
+                    println "[LoadTestdata] Owner " + owner.getName() + " has " + ownerHouses.size() + " house(s)"
                 }
             }
-            
-            // Create 6 Cleaners
             def cleanerData = [
                 [name: 'Lisa Smit', phone: '+31 6 11112222', email: 'lisa.cleaner@example.com'],
                 [name: 'Emma de Jong', phone: '+31 6 22223333', email: 'emma.cleaner@example.com'],
@@ -237,7 +241,7 @@ class LoadTestdata {
             ]
             
             def cleaners = []
-            def tc = StorageManager.createContainer()
+            def cleanerInsertTc = StorageManager.createContainer()
             cleanerData.each { d ->
                 try {
                     def cleaner = new Cleaner(d.name, d.phone, d.email, true)
@@ -253,49 +257,73 @@ class LoadTestdata {
             }
             def storeResult = StorageManager.store(tc)
             cleaners.each { c ->
-                println "[LoadTestdata] Cleaner ${c.getName()} OID=${c.getOid()} stored=${storeResult}"
+                println "[LoadTestdata] Cleaner " + c.getName() + " OID=" + c.getOid() + " stored=" + storeResult
             }
-            results.cleaners = "created ${cleaners.size()}"
-            println "[LoadTestdata] Created ${cleaners.size()} cleaners"
+            results.cleaners = "created " + cleaners.size()
+            println "[LoadTestdata] Created " + cleaners.size() + " cleaners"
             
             // Create bookings for each house (next 6 months)
             def bookings = []
             def today = LocalDate.now()
             def formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-            def bookingTc = StorageManager.createContainer()
+            
+            // Create bookings first
             houses.eachWithIndex { house, houseIdx ->
                 2.times { bookingIdx ->
                     try {
                         def checkIn = today.plusDays((houseIdx * 7) + (bookingIdx * 30))
                         def checkOut = checkIn.plusDays(3)
-                        def guestName = "Guest ${houseIdx * 2 + bookingIdx + 1}"
-                        def booking = new Booking(house, checkIn.format(formatter), checkOut.format(formatter), guestName, "${guestName.toLowerCase().replace(' ', '.')}@email.com", "+31 6 ${String.format('%08d', houseIdx * 2 + bookingIdx)}", "Special requests: None")
-                        bookingTc.addInsert(booking)
+                        def guestName = "Guest " + (houseIdx * 2 + bookingIdx + 1)
+                        def booking = new Booking(house, house.getOwner(), checkIn.format(formatter), checkOut.format(formatter), guestName, guestName.toLowerCase().replace(' ', '.') + "@email.com", "+31 6 " + String.format('%08d', houseIdx * 2 + bookingIdx), "Special requests: None")
                         bookings << booking
                     } catch (Exception e) {
-                        println "[LoadTestdata] Error creating booking for house ${houseIdx}: ${e.message}"
+                        println "[LoadTestdata] Error creating booking: " + e.message
                         throw e
                     }
                 }
             }
-            StorageManager.store(bookingTc)
-            results.bookings = "created ${bookings.size()}"
-            println "[LoadTestdata] Created ${bookings.size()} bookings"
+            
+            // Create bookings linked to houses first
+            def bookings = []
+            def today = LocalDate.now()
+            def formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+            
+            houses.eachWithIndex { house, houseIdx ->
+                2.times { bookingIdx ->
+                    try {
+                        def checkIn = today.plusDays((houseIdx * 7) + (bookingIdx * 30))
+                        def checkOut = checkIn.plusDays(3)
+                        def guestName = "Guest " + (houseIdx * 2 + bookingIdx + 1)
+                        def booking = new Booking(house, house.getOwner(), checkIn.format(formatter), checkOut.format(formatter), guestName, guestName.toLowerCase().replace(' ', '.') + "@email.com", "+31 6 " + String.format('%08d', houseIdx * 2 + bookingIdx), "Special requests: None")
+                        // Link booking to house (adds to house.bookings Link)
+                        house.addBooking(booking)
+                        bookings << booking
+                    } catch (Exception e) {
+                        println "[LoadTestdata] Error creating booking: " + e.message
+                        throw e
+                    }
+                }
+            }
+            
+            // Store houses (with their bookings Links) and bookings together
+            def insertTc = StorageManager.createContainer()
+            houses.each { house -> insertTc.addInsert(house) }
+            bookings.each { booking -> insertTc.addInsert(booking) }
+            StorageManager.store(insertTc)
+            println "[LoadTestdata] Created " + bookings.size() + " bookings linked to houses"
+            results.bookings = "created " + bookings.size()
+            println "[LoadTestdata] Created " + bookings.size() + " bookings"
             
             // Create schedules from today to 6 months (for each booking)
-            // Use batched transaction containers (15 per batch) to reduce lock contention
             def schedules = []
-            def cleanerIdx = 0
-            def BATCH_SIZE = 15
-            def scheduleTc = StorageManager.createContainer()
-            def scheduleCount = 0
+            def scheduleInsertTc = StorageManager.createContainer()
             
             bookings.eachWithIndex { booking, bookingIdx ->
-                def cleaner = cleaners[cleanerIdx % cleaners.size()]
+                def cleaner = cleaners[bookingIdx % cleaners.size()]
                 def checkInDate = LocalDate.parse(booking.getCheckInDate(), formatter)
                 
                 // Create ONE schedule for cleaning day (AFTER guest checkout = next day)
-                def scheduleDate = checkInDate.plusDays(1)  // Day AFTER checkout
+                def scheduleDate = checkInDate.plusDays(1)
                 def schedule = new Schedule()
                 schedule.setCleaner(cleaner)
                 schedule.setBooking(booking)
@@ -303,21 +331,26 @@ class LoadTestdata {
                 schedule.setStartTime("09:00")
                 schedule.setEndTime("12:00")
                 schedule.setStatus("scheduled")
-                scheduleTc.addInsert(schedule)
+                // Bidirectional links
+                cleaner.addSchedule(schedule)
+                booking.setSchedule(schedule)
+                scheduleInsertTc.addInsert(schedule)
                 schedules << schedule
-                scheduleCount++
-                
-                if (scheduleCount % BATCH_SIZE == 0) {
-                    StorageManager.store(scheduleTc)
-                    scheduleTc = StorageManager.createContainer()
-                }
-                cleanerIdx++
             }
-            // Store remaining schedules
-            if (scheduleCount % BATCH_SIZE != 0) {
-                StorageManager.store(scheduleTc)
+            // Store schedules
+            StorageManager.store(scheduleInsertTc)
+            // Update cleaners and bookings with their Links
+            cleaners.each { c ->
+                def updateTc = StorageManager.createContainer()
+                updateTc.addUpdate(c)
+                StorageManager.store(updateTc)
             }
-            results.schedules = "created ${schedules.size()}"
+            bookings.each { b ->
+                def updateTc = StorageManager.createContainer()
+                updateTc.addUpdate(b)
+                StorageManager.store(updateTc)
+            }
+            results.schedules = "created " + schedules.size()
             
             outjson.put("_Success", true)
             outjson.put("results", results)

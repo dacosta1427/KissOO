@@ -4,20 +4,18 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import mycompany.actor.owner.Owner;
+import koo.core.database.StorageManager;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
+import org.garret.perst.Link;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * House entity for cleaning scheduler.
- * Represents a house that can be booked for cleaning services.
- * 
- * Uses proper OO references (not ID fields) for Owner and CostProfile.
- * Uses stored collections for Pure OO navigation.
+ * Uses Perst Link for one-to-many relationships.
  */
 @Getter @Setter
 public class House extends CVersion {
@@ -31,10 +29,8 @@ public class House extends CVersion {
     @FullTextSearchable
     private String description;
     
-    // Proper OO reference to Owner (was: long ownerId)
     private Owner owner;
     
-    // Cost profile for this house (null = use standard)
     private CostProfile costProfile;
     
     @Indexable
@@ -43,30 +39,29 @@ public class House extends CVersion {
     private String checkInTime = "16:00";
     private String checkOutTime = "10:00";
     
-    // Cost calculation fields
     private Double surfaceM2;
     private Integer floors = 1;
     private Integer bedrooms = 0;
     private Integer bathrooms = 0;
     private String luxuryLevel = "standard";
     
-    // Stored collection for Pure OO navigation
-    private Set<Booking> bookings = new HashSet<>();
+    private Link bookings;  // Perst Link - initialized in constructor
     
     public House() {
+        super();
+        this.bookings = StorageManager.getStorage().createLink();
     }
     
     public House(@NonNull Owner owner, @NonNull String name, @NonNull String address, String description, boolean active) {
+        super();
         this.owner = owner;
         this.name = name;
         this.address = address;
         this.description = description;
         this.active = active;
-        this.checkInTime = "16:00";
-        this.checkOutTime = "10:00";
+        this.bookings = StorageManager.getStorage().createLink();
     }
     
-    // Convenience methods for API serialization
     public long getOwnerOid() {
         return owner != null ? owner.getOid() : 0;
     }
@@ -75,38 +70,34 @@ public class House extends CVersion {
         return costProfile != null ? costProfile.getOid() : 0;
     }
     
-    public Collection<Booking> getBookings() {
+    public List<Booking> getBookings() {
+        if (bookings == null || bookings.isEmpty()) return List.of();
+        return Arrays.asList((Booking[])bookings.toArray(new Booking[0]));
+    }
+    
+    public Link getBookingsLink() {
         return bookings;
     }
     
     public void addBooking(Booking booking) {
-        if (booking != null) {
+        if (booking != null && bookings != null) {
             booking.setHouse(this);
             bookings.add(booking);
         }
     }
     
     public void removeBooking(Booking booking) {
-        if (booking != null && bookings.contains(booking)) {
+        if (booking != null && bookings != null) {
             booking.setHouse(null);
-            bookings.remove(booking);
+            int idx = bookings.indexOf(booking);
+            if (idx >= 0) {
+                bookings.remove(idx);
+            }
         }
     }
     
     @Override
     public String toString() {
-        return "House{" +
-                "name='" + name + '\'' +
-                ", address='" + address + '\'' +
-                ", owner=" + (owner != null ? owner.getOid() : "null") +
-                ", costProfile=" + (costProfile != null ? costProfile.getOid() : "null") +
-                ", active=" + active +
-                ", bookings=" + bookings.size() +
-                ", surfaceM2=" + surfaceM2 +
-                ", floors=" + floors +
-                ", bedrooms=" + bedrooms +
-                ", bathrooms=" + bathrooms +
-                ", luxuryLevel='" + luxuryLevel + '\'' +
-                '}';
+        return "House{name=" + name + ", owner=" + (owner != null ? owner.getOid() : "null") + ", bookings=" + (bookings != null ? bookings.size() : 0) + "}";
     }
 }

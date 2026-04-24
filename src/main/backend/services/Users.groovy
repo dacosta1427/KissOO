@@ -480,7 +480,7 @@ class Users {
                         tc.addUpdate(user)
                         StorageManager.store(tc)
                         
-                        services.auth.EmailService.sendLoginCredentialsEmail(
+                        EmailService.sendLoginCredentials(
                             user.getEmail(), 
                             actorName, 
                             user.getUsername(), 
@@ -494,7 +494,7 @@ class Users {
                         tc.addUpdate(user)
                         StorageManager.store(tc)
                         
-                        services.auth.EmailService.sendVerificationEmail(
+                        EmailService.sendVerification(
                             user.getEmail(),
                             actorName,
                             user.getVerificationToken(),

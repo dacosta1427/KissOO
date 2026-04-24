@@ -9,6 +9,9 @@ let ownerName = "";
 let cleanerOid = 0;
 let email = "";
 let preferredLanguage = "en";
+let needsPasswordChange = false;
+let needsEmailVerification = false;
+let fullyActivated = false;
 let persistToStorage = true;
 const STORAGE_KEY = "kiss_session_uuid";
 const USERNAME_KEY = "kiss_session_username";
@@ -22,6 +25,8 @@ const KEY_STORAGE_KEY = "kiss_encryption_key";
 const LANGUAGE_KEY = "kiss_preferred_language";
 const IS_ADMIN_KEY = "kiss_session_isadmin";
 const ADMIN_TYPE_KEY = "kiss_session_admintype";
+const NEEDS_PASSWORD_KEY = "kiss_needs_password";
+const NEEDS_EMAIL_KEY = "kiss_needs_email";
 async function generateEncryptionKey() {
   return await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
 }
@@ -158,13 +163,55 @@ const session = {
     return ownerName;
   },
   /**
-   * Set the owner name
-   */
-  setOwnerName(name) {
-    ownerName = name;
+     * Set the preferred language
+     */
+  setLanguage(lang) {
+    preferredLanguage = lang;
     if (typeof localStorage !== "undefined") {
-      localStorage.setItem(OWNERNAME_KEY, name);
+      localStorage.setItem(LANGUAGE_KEY, lang);
     }
+  },
+  /**
+   * Check if user needs password change
+   */
+  get needsPasswordChange() {
+    return needsPasswordChange;
+  },
+  /**
+   * Set password change required flag
+   */
+  setNeedsPasswordChange(required) {
+    needsPasswordChange = required;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(NEEDS_PASSWORD_KEY, required.toString());
+    }
+  },
+  /**
+   * Check if user needs email verification
+   */
+  get needsEmailVerification() {
+    return needsEmailVerification;
+  },
+  /**
+   * Set email verification required flag
+   */
+  setNeedsEmailVerification(required) {
+    needsEmailVerification = required;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(NEEDS_EMAIL_KEY, required.toString());
+    }
+  },
+  /**
+   * Check if user is fully activated (password changed AND email verified)
+   */
+  get isFullyActivated() {
+    return fullyActivated;
+  },
+  /**
+   * Set fully activated flag
+   */
+  setFullyActivated(activated) {
+    fullyActivated = activated;
   },
   /**
    * Get the cleaner OID (for cleaner-specific views)

@@ -1,8 +1,7 @@
-package services
+package services.koo
 
 import org.kissweb.json.JSONObject
 import org.kissweb.restServer.ProcessServlet
-import org.kissweb.restServer.UserData
 
 /**
  * Helper for checking user activation status.

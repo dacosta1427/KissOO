@@ -53,16 +53,20 @@ public class PerstUserManager extends BaseManager<PerstUser> {
     // ========== AUTHENTICATION ==========
     
     public static PerstUser authenticate(String username, String password) {
-        PerstUser user = getByKey(username);
-        if (user != null && user.checkPassword(password) && user.canLogin()) {
-            user.setLastLoginDate(System.currentTimeMillis());
-            TransactionContainer tc = StorageManager.createContainer();
-            tc.addUpdate(user);
-            StorageManager.store(tc);
-            return user;
-        }
-        return null;
-    }
+         PerstUser user = getByKey(username);
+         if (user != null && user.checkPassword(password) && user.canLogin()) {
+             // Check password expiration
+             if (user.isPasswordExpired()) {
+                 return null;
+             }
+             user.setLastLoginDate(System.currentTimeMillis());
+             TransactionContainer tc = StorageManager.createContainer();
+             tc.addUpdate(user);
+             StorageManager.store(tc);
+             return user;
+         }
+         return null;
+     }
     
     // ========== CRUD ==========
     

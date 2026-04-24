@@ -131,7 +131,7 @@ function _page($$renderer, $$props) {
           $$renderer3.push(`<div class="user-card svelte-9fk07v"><div class="user-info svelte-9fk07v"><div class="user-main svelte-9fk07v"><span class="font-medium">${escape_html(user.userName)}</span> `);
           if (user.actorType) {
             $$renderer3.push("<!--[0-->");
-            $$renderer3.push(`<span${attr_class("actor-badge svelte-9fk07v", void 0, {
+            $$renderer3.push(`<span${attr_class("AActor-badge svelte-9fk07v", void 0, {
               "owner": user.actorType === "Owner",
               "cleaner": user.actorType === "Cleaner"
             })}>${escape_html(user.actorType)}</span>`);

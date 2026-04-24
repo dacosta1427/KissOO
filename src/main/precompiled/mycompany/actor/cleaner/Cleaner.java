@@ -1,24 +1,20 @@
 package mycompany.actor.cleaner;
 
 import koo.core.actor.ANaturalActor;
+import koo.core.database.StorageManager;
 import lombok.Getter;
 import lombok.Setter;
 import koo.core.actor.Agreement;
 import koo.core.user.PerstUser;
 import org.garret.perst.continuous.FullTextSearchable;
+import org.garret.perst.Link;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Cleaner entity for cleaning scheduler.
- * Represents a cleaner who can be assigned to cleaning tasks.
- * 
- * Extends ANaturalActor (NATURAL by default), so automatically has a PerstUser
- * created by the AActor constructor (deactivated by default).
- * 
- * Uses stored collections for Pure OO navigation.
+ * Uses Perst Link for schedules collection.
  */
 @Getter @Setter
 public class Cleaner extends ANaturalActor {
@@ -30,46 +26,47 @@ public class Cleaner extends ANaturalActor {
     
     private String address;
     
-    private Set<Schedule> schedules = new HashSet<>();
+    private Link schedules;  // Perst Link - initialized in constructor
     
     public Cleaner(String name, String phone, String email, boolean active) {
         super(name, new Agreement(), email);
         this.phone = phone;
         this.email = email;
         setActive(active);
+        this.schedules = StorageManager.getStorage().createLink();
     }
     
-    public Collection<Schedule> getSchedules() {
+    public List<Schedule> getSchedules() {
+        if (schedules == null || schedules.isEmpty()) return List.of();
+        return Arrays.asList((Schedule[])schedules.toArray(new Schedule[0]));
+    }
+    
+    public Link getSchedulesLink() {
         return schedules;
     }
     
     public void addSchedule(Schedule schedule) {
-        if (schedule != null) {
+        if (schedule != null && schedules != null) {
             schedule.setCleaner(this);
             schedules.add(schedule);
         }
     }
     
     public void removeSchedule(Schedule schedule) {
-        if (schedule != null && schedules.contains(schedule)) {
+        if (schedule != null && schedules != null) {
             schedule.setCleaner(null);
-            schedules.remove(schedule);
+            int idx = schedules.indexOf(schedule);
+            if (idx >= 0) {
+                schedules.remove(idx);
+            }
         }
     }
     
-    // Convenience delegate
     public PerstUser getUser() { return getPerstUser(); }
     public void setUser(PerstUser user) { setPerstUser(user); }
     
     @Override
     public String toString() {
-        return "Cleaner{" +
-                "name='" + getName() + '\'' +
-                ", email='" + email + '\'' +
-                ", address='" + address + '\'' +
-                ", active=" + isActive() +
-                ", schedules=" + schedules.size() +
-                ", user=" + (getPerstUser() != null ? getPerstUser().getUsername() : "null") +
-                '}';
+        return "Cleaner{name=" + getName() + ", schedules=" + (schedules != null ? schedules.size() : 0) + "}";
     }
 }

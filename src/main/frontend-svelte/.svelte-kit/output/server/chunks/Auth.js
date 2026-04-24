@@ -51,8 +51,8 @@ class Server {
       _method: meth,
       _class: cls
     };
-    if (cls === "services.Cleaning") {
-      console.log("[Server] Cleaning service call:", meth, "UUID:", Server.uuid);
+    if (cls === "services.CleaningService") {
+      console.log("[Server] CleaningService service call:", meth, "UUID:", Server.uuid);
     }
     try {
       Server.incCount();
@@ -380,6 +380,15 @@ async function login(usernameInput, password) {
     }
     if (res.preferredLanguage) {
       session.setLanguage(res.preferredLanguage);
+    }
+    if (res.needsPasswordChange !== void 0) {
+      session.setNeedsPasswordChange(res.needsPasswordChange);
+    }
+    if (res.needsEmailVerification !== void 0) {
+      session.setNeedsEmailVerification(res.needsEmailVerification);
+    }
+    if (res.fullyActivated !== void 0) {
+      session.setFullyActivated(res.fullyActivated);
     }
   }
   return res;

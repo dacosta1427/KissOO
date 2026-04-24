@@ -71,10 +71,6 @@ class KissInit {
                     println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
                     
                     // Skip user creation - causes ExceptionInInitializerError
-                    initDefaultUser()
-                    indexPerstUsers()
-                    indexActors()
-                    println "[KissInit] User init SKIPPED (causes ExceptionInInitializerError)"
                 } else {
                     println "[KissInit] init() - NonSqlConnection already registered"
                 }
@@ -85,6 +81,7 @@ class KissInit {
         }
         
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
+        MainServlet.allowWithoutAuthentication("koo/services/Login", "Login")
         MainServlet.allowWithoutAuthentication("", "Login")
         
         // Allow koo.services.Login (for clients calling koo.services.Login.Login)
@@ -165,98 +162,3 @@ class KissInit {
                     println "[KissInit] Perst re-initialized, creating users..."
                     
                     // NOW create users - Perst is guaranteed ready
-                    initDefaultUser()
-                    indexPerstUsers()
-                    indexActors()
-                } else {
-                    println "[KissInit] Users already exist (${users.size()}), skipping user init"
-                }
-            } else {
-                println "[KissInit] WARNING: Perst not available, skipping user init"
-            }
-            
-            println "[KissInit] init2() COMPLETED"
-        } catch (Exception e) {
-            println "[KissInit] ERROR in init2: ${e.class.simpleName}: ${e.message}"
-            e.printStackTrace()
-        }
-    }
-    
-    /**
-     * Initialize default admin users if no users exist.
-     */
-    private static void initDefaultUser() {
-        try {
-            def users = StorageManager.getAll(PerstUser.class)
-            if (!users || users.size() == 0) {
-                println "[KissInit] Creating default superAdmin user..."
-                
-                // Create superAdmin Actor with full Agreement (like cleaners2)
-                def adminActor = new mycompany.actor.owner.Owner("System Admin", "", "admin@localhost", true)
-                adminActor.getAgreement().setRole(Role.SUPER_ADMIN)
-                
-                // Owner constructor already created a deactivated PerstUser
-                // Configure it with admin credentials
-                def adminUser = adminActor.getPerstUser()
-                adminUser.setUsername("admin")
-                adminUser.setPassword("admin")
-                adminUser.setEmail("admin@localhost")
-                adminUser.setActive(true)
-                adminUser.setEmailVerified(true)
-                
-                // Store both together
-                def tc = StorageManager.createContainer()
-                tc.addInsert(adminActor)
-                tc.addInsert(adminUser)
-                if (StorageManager.store(tc)) {
-                    println "[KissInit] Default superAdmin user created. CHANGE PASSWORD IMMEDIATELY!"
-                } else {
-                    println "[KissInit] ERROR: Failed to create admin user"
-                }
-            } else {
-                println "[KissInit] Users already exist (${users.size()}), checking admin user..."
-                // Ensure admin user has emailVerified = true
-                def admin = PerstUserManager.getByKey("admin")
-                if (admin != null && !admin.isEmailVerified()) {
-                    admin.setEmailVerified(true)
-                    PerstUserManager.update(admin)
-                    println "[KissInit] Admin user emailVerified set to true"
-                }
-                // Ensure all users have emailVerified = true (fix for existing users)
-                def updated = 0
-                users.each { user ->
-                    if (!user.isEmailVerified()) {
-                        user.setEmailVerified(true)
-                        PerstUserManager.update(user)
-                        updated++
-                    }
-                }
-                if (updated > 0) {
-                    println "[KissInit] Set emailVerified=true for ${updated} users"
-                }
-            }
-        } catch (Exception e) {
-            println "[KissInit] ERROR in initDefaultUser: ${e.class.simpleName}: ${e.message}"
-            // Don't crash - just log and continue
-        }
-
-        // User creation skipped - use signup API after server starts
-        // ExceptionInInitializerError at runtime prevents proper initialization
-        println "[KissInit] initDefaultUser() - SKIPPED (use signup API after server starts)"
-    }
-
-    /**
-     * Index all PerstUsers for fast lookup
-     */
-    private static void indexPerstUsers() {
-        println "[KissInit] Skipping PerstUser indexing (not required for CDatabase)"
-    }
-    
-    /**
-     * Index all Actors for fast lookup
-     */
-    private static void indexActors() {
-        println "[KissInit] Skipping AActor indexing (not required for CDatabase)"
-    }
-    
-}

@@ -22,7 +22,9 @@
 	{#if loading}
 		<span class="spinner"></span>
 	{/if}
-	{@render children?.() || ''}
+	{#if children}
+		{@render children()}
+	{/if}
 </button>
 
 <style>

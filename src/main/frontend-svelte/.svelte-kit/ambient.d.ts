@@ -44,6 +44,7 @@ declare module '$env/static/private' {
 	export const USER: string;
 	export const LC_TIME: string;
 	export const npm_config_user_agent: string;
+	export const AGENT: string;
 	export const XDG_SEAT: string;
 	export const SSH_AGENT_PID: string;
 	export const XDG_SESSION_TYPE: string;
@@ -52,6 +53,7 @@ declare module '$env/static/private' {
 	export const SHLVL: string;
 	export const BROWSER: string;
 	export const npm_config_noproxy: string;
+	export const OPENCODE_PROCESS_ROLE: string;
 	export const HOME: string;
 	export const OLDPWD: string;
 	export const DESKTOP_SESSION: string;
@@ -62,11 +64,13 @@ declare module '$env/static/private' {
 	export const LC_MONETARY: string;
 	export const npm_config_userconfig: string;
 	export const npm_config_local_prefix: string;
+	export const OPENCODE_RUN_ID: string;
 	export const DBUS_SESSION_BUS_ADDRESS: string;
 	export const COLORTERM: string;
 	export const COLOR: string;
 	export const NVM_DIR: string;
 	export const DEBUGINFOD_URLS: string;
+	export const npm_config_progress: string;
 	export const QT_QPA_PLATFORMTHEME: string;
 	export const GTK_IM_MODULE: string;
 	export const LOGNAME: string;
@@ -81,6 +85,7 @@ declare module '$env/static/private' {
 	export const XDG_SESSION_ID: string;
 	export const npm_config_cache: string;
 	export const SAL_USE_VCLPLUGIN: string;
+	export const OPENCODE: string;
 	export const npm_config_node_gyp: string;
 	export const PATH: string;
 	export const NODE: string;
@@ -90,6 +95,7 @@ declare module '$env/static/private' {
 	export const LC_ADDRESS: string;
 	export const XDG_RUNTIME_DIR: string;
 	export const DISPLAY: string;
+	export const OPENCODE_PID: string;
 	export const LANG: string;
 	export const XDG_CURRENT_DESKTOP: string;
 	export const LC_TELEPHONE: string;
@@ -222,6 +228,7 @@ declare module '$env/dynamic/private' {
 		USER: string;
 		LC_TIME: string;
 		npm_config_user_agent: string;
+		AGENT: string;
 		XDG_SEAT: string;
 		SSH_AGENT_PID: string;
 		XDG_SESSION_TYPE: string;
@@ -230,6 +237,7 @@ declare module '$env/dynamic/private' {
 		SHLVL: string;
 		BROWSER: string;
 		npm_config_noproxy: string;
+		OPENCODE_PROCESS_ROLE: string;
 		HOME: string;
 		OLDPWD: string;
 		DESKTOP_SESSION: string;
@@ -240,11 +248,13 @@ declare module '$env/dynamic/private' {
 		LC_MONETARY: string;
 		npm_config_userconfig: string;
 		npm_config_local_prefix: string;
+		OPENCODE_RUN_ID: string;
 		DBUS_SESSION_BUS_ADDRESS: string;
 		COLORTERM: string;
 		COLOR: string;
 		NVM_DIR: string;
 		DEBUGINFOD_URLS: string;
+		npm_config_progress: string;
 		QT_QPA_PLATFORMTHEME: string;
 		GTK_IM_MODULE: string;
 		LOGNAME: string;
@@ -259,6 +269,7 @@ declare module '$env/dynamic/private' {
 		XDG_SESSION_ID: string;
 		npm_config_cache: string;
 		SAL_USE_VCLPLUGIN: string;
+		OPENCODE: string;
 		npm_config_node_gyp: string;
 		PATH: string;
 		NODE: string;
@@ -268,6 +279,7 @@ declare module '$env/dynamic/private' {
 		LC_ADDRESS: string;
 		XDG_RUNTIME_DIR: string;
 		DISPLAY: string;
+		OPENCODE_PID: string;
 		LANG: string;
 		XDG_CURRENT_DESKTOP: string;
 		LC_TELEPHONE: string;

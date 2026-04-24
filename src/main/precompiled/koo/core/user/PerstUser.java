@@ -108,9 +108,14 @@ public class PerstUser extends CVersion {
     }
     
     public boolean verifyEmail(String token) {
-        if (verificationToken == null || !verificationToken.equals(token)) {
-            return false;
-        }
+     public boolean verifyEmail(String token) {
+         if (verificationToken == null) return false;
+         // Use constant-time comparison to prevent timing attacks
+         return MessageDigest.isEqual(
+             verificationToken.getBytes(StandardCharsets.UTF_8),
+             token.getBytes(StandardCharsets.UTF_8)
+         ) && System.currentTimeMillis() <= verificationExpiresAt;
+     }
         if (System.currentTimeMillis() > verificationExpiresAt) {
             return false;
         }

@@ -1,5 +1,5 @@
 import "../../../chunks/async.js";
-import { c as ensure_array_like, f as attr_class, g as stringify, e as escape_html, a as attr, d as derived, u as unsubscribe_stores, s as store_get } from "../../../chunks/index2.js";
+import { j as attr_style, g as stringify, c as ensure_array_like, f as attr_class, e as escape_html, a as attr, d as derived, u as unsubscribe_stores, s as store_get } from "../../../chunks/index2.js";
 import "@sveltejs/kit/internal";
 import "../../../chunks/exports.js";
 import "../../../chunks/utils.js";
@@ -23,6 +23,7 @@ function ScheduleBoard($$renderer, $$props) {
     let dates = derived(() => generateDateRange(dateRange.start, dateRange.end));
     let scheduleMatrix = derived(() => buildScheduleMatrix(schedules, cleaners, dates()));
     let filteredCleaners = derived(() => selectedCleanerId ? cleaners.filter((c) => c.id === selectedCleanerId) : cleaners);
+    let dateCount = derived(() => dates().length);
     function generateDateRange(start, end) {
       if (!start || !end) return [];
       const dates2 = [];
@@ -44,7 +45,13 @@ function ScheduleBoard($$renderer, $$props) {
         });
       });
       schedules2.forEach((schedule) => {
-        const dateString = schedule.date;
+        const scheduleDate = schedule.date;
+        let dateString;
+        if (scheduleDate && scheduleDate.length === 8) {
+          dateString = scheduleDate.substring(0, 4) + "-" + scheduleDate.substring(4, 6) + "-" + scheduleDate.substring(6, 8);
+        } else {
+          dateString = scheduleDate;
+        }
         cleaners2.forEach((cleaner) => {
           if (cleaner.id === schedule.cleaner_id && matrix[cleaner.id][dateString] !== void 0) {
             matrix[cleaner.id][dateString] = schedule;
@@ -63,7 +70,7 @@ function ScheduleBoard($$renderer, $$props) {
       const day = date.getDay();
       return day === 0 || day === 6;
     }
-    $$renderer2.push(`<div class="schedule-board svelte-16jlk9j"><div class="status-legend svelte-16jlk9j"><span class="legend-item svelte-16jlk9j"><span class="legend-color status-scheduled svelte-16jlk9j"></span> Scheduled</span> <span class="legend-item svelte-16jlk9j"><span class="legend-color status-completed svelte-16jlk9j"></span> Completed</span> <span class="legend-item svelte-16jlk9j"><span class="legend-color status-cancelled svelte-16jlk9j"></span> Cancelled</span> <span class="legend-item svelte-16jlk9j"><span class="legend-color status-pending svelte-16jlk9j"></span> Pending</span></div> <div class="board-header svelte-16jlk9j"><div class="cleaner-header svelte-16jlk9j">Cleaners</div> <!--[-->`);
+    $$renderer2.push(`<div class="schedule-board svelte-16jlk9j"${attr_style(`--date-count: ${stringify(dateCount())}`)}><div class="status-legend svelte-16jlk9j"><span class="legend-item svelte-16jlk9j"><span class="legend-color status-scheduled svelte-16jlk9j"></span> Scheduled</span> <span class="legend-item svelte-16jlk9j"><span class="legend-color status-completed svelte-16jlk9j"></span> Completed</span> <span class="legend-item svelte-16jlk9j"><span class="legend-color status-cancelled svelte-16jlk9j"></span> Cancelled</span> <span class="legend-item svelte-16jlk9j"><span class="legend-color status-pending svelte-16jlk9j"></span> Pending</span></div> <div class="board-header svelte-16jlk9j"><div class="cleaner-header svelte-16jlk9j">Cleaners</div> <!--[-->`);
     const each_array = ensure_array_like(dates());
     for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
       let date = each_array[$$index];
@@ -116,7 +123,7 @@ function _page($$renderer, $$props) {
     let viewMode = "calendar";
     let dateRange = {
       start: (/* @__PURE__ */ new Date()).toISOString().split("T")[0],
-      end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1e3).toISOString().split("T")[0]
+      end: new Date(Date.now() + 60 * 24 * 60 * 60 * 1e3).toISOString().split("T")[0]
     };
     let selectedCleanerId = null;
     let selectedCleanerName = derived(() => "");

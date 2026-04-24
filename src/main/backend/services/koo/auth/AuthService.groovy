@@ -1,5 +1,4 @@
-package services.auth
-
+package services.koo.auth
 
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
@@ -19,20 +18,30 @@ class AuthService {
      * Sign up a new user and create corresponding owner.
      * Input JSON: { "username": "...", "password": "...", "email": "...", "name": "...", "phone": "...", "address": "..." }
      */
-    /**
-     * Validate password meets minimum requirements.
-     * @return null if valid, error message if invalid
-     */
-    private static String validatePassword(String password) {
-        if (password == null || password.length() < 8) {
-            return "Password must be at least 8 characters"
-        }
-        // Check for at least one digit
-        if (!password.matches(".*\\d.*")) {
-            return "Password must contain at least one number"
-        }
-        return null
-    }
+     /**
+      * Validate password meets minimum requirements.
+      * Uses Role enum for role-based permissions.
+      * @return null if valid, error message if invalid
+      */
+     private static String validatePassword(String password) {
+         if (password == null || password.length() < 8) {
+             return "Password must be at least 8 characters"
+         }
+         // Check for at least one digit
+         if (!password.matches(".*\\d.*")) {
+             return "Password must contain at least one number"
+         }
+         return null
+     }
+     
+     /**
+      * Check if role has admin permissions using Role enum methods.
+      * @param role Role enum value
+      * @return true if role has admin access
+      */
+     private static boolean hasAdminAccess(Role role) {
+         return role != null && role.isAdmin()
+     }
     
     /**
      * Sign up a new user and create corresponding owner.
@@ -254,7 +263,7 @@ class AuthService {
             
             // Send verification email via EmailService
             try {
-                boolean emailSent = EmailService.sendEmail(
+                boolean emailSent = EmailService.sendVerification(
                     pu.getEmail() ?: pu.getUsername(),
                     "Verify your email - KissOO",
                     "Click the link to verify your email: ${verifyLink}",

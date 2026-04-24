@@ -327,7 +327,9 @@ class CleaningService {
             for (Booking booking : bookings) {
                 JSONObject row = new JSONObject()
                 row.put("id", booking.getOid())
-                row.put("house_id", booking.getHouseOid())
+                row.put("house", booking.getHouseOid())
+                row.put("owner", booking.getOwnerOid())
+                row.put("schedule", booking.getScheduleOid())
                 row.put("check_in_date", booking.getCheckInDate())
                 row.put("check_out_date", booking.getCheckOutDate())
                 row.put("guest_name", booking.getGuestName())
@@ -358,7 +360,7 @@ class CleaningService {
             }
             JSONObject data = new JSONObject()
             data.put("id", booking.getOid())
-            data.put("house_id", booking.getHouseOid())
+            data.put("house", booking.getHouseOid())
             data.put("check_in_date", booking.getCheckInDate())
             data.put("check_out_date", booking.getCheckOutDate())
             data.put("guest_name", booking.getGuestName())
@@ -376,9 +378,9 @@ class CleaningService {
     
     void createBooking(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Using PerstStorageManager directly
             JSONObject data = injson.getJSONObject("data")
-            long houseId = data.getLong("house_id")
+            long houseOid = data.getLong("house")
+            long ownerOid = data.has("owner") ? data.getLong("owner") : 0
             String checkInDate = data.getString("check_in_date")
             String checkOutDate = data.getString("check_out_date")
             String guestName = data.getString("guest_name")
@@ -387,15 +389,23 @@ class CleaningService {
             String notes = data.getString("notes", "")
             int dogsCount = data.has("dogs_count") ? data.getInt("dogs_count") : 0
             
-            // Pure OO: Get House by OID, then create Booking with House reference
-            House house = StorageManager.getByOid(House.class, houseId)
+            // Pure OO: Get House and Owner by OID
+            House house = StorageManager.getByOid(House.class, houseOid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
                 return
             }
+            // Get owner from house or parameter
+            Owner owner = ownerOid > 0 ? StorageManager.getByOid(Owner.class, ownerOid) : house.getOwner()
+            if (owner == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Owner not found")
+                return
+            }
             
-            Booking booking = new Booking(house, checkInDate, checkOutDate,
+            // Pure OO: Create Booking with House AND Owner
+            Booking booking = new Booking(house, owner, checkInDate, checkOutDate,
                     guestName, guestEmail, guestPhone, notes)
             booking.setDogsCount(dogsCount)
             
@@ -410,7 +420,8 @@ class CleaningService {
             }
             JSONObject result = new JSONObject()
             result.put("id", booking.getOid())
-            result.put("house_id", booking.getHouseOid())
+            result.put("house", booking.getHouseOid())
+            result.put("owner", booking.getOwnerOid())
             result.put("check_in_date", booking.getCheckInDate())
             result.put("check_out_date", booking.getCheckOutDate())
             result.put("guest_name", booking.getGuestName())
@@ -437,7 +448,16 @@ class CleaningService {
                 outjson.put("_ErrorMessage", "Booking not found")
                 return
             }
-            if (data.has("house_id")) booking.setHouseId(data.getInt("house_id"))
+            if (data.has("house")) {
+                long houseOid = data.getLong("house")
+                House house = StorageManager.getByOid(House.class, houseOid)
+                booking.setHouse(house)
+            }
+            if (data.has("owner")) {
+                long ownerOid = data.getLong("owner")
+                Owner owner = StorageManager.getByOid(Owner.class, ownerOid)
+                booking.setOwner(owner)
+            }
             if (data.has("check_in_date")) booking.setCheckInDate(data.getString("check_in_date"))
             if (data.has("check_out_date")) booking.setCheckOutDate(data.getString("check_out_date"))
             if (data.has("guest_name")) booking.setGuestName(data.getString("guest_name"))
@@ -456,7 +476,8 @@ class CleaningService {
             }
             JSONObject result = new JSONObject()
             result.put("id", booking.getOid())
-            result.put("house_id", booking.getHouseOid())
+            result.put("house", booking.getHouseOid())
+            result.put("owner", booking.getOwnerOid())
             result.put("check_in_date", booking.getCheckInDate())
             result.put("check_out_date", booking.getCheckOutDate())
             result.put("guest_name", booking.getGuestName())
@@ -498,7 +519,8 @@ class CleaningService {
     
     void getBookingsByHouse(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            int houseId = injson.getInt("houseId")
+            // Pure OO: Get House by OID, then use house.getBookings()
+            long houseOid = injson.has("house") ? injson.getLong("house") : 0
             boolean admin = isAdmin(servlet)
             Owner owner = getCurrentOwner(servlet)
             
@@ -522,7 +544,9 @@ class CleaningService {
             for (Booking booking : bookings) {
                 JSONObject row = new JSONObject()
                 row.put("id", booking.getOid())
-                row.put("house_id", booking.getHouseOid())
+                row.put("house", booking.getHouseOid())
+                row.put("owner", booking.getOwnerOid())
+                row.put("schedule", booking.getScheduleOid())
                 row.put("check_in_date", booking.getCheckInDate())
                 row.put("check_out_date", booking.getCheckOutDate())
                 row.put("guest_name", booking.getGuestName())
@@ -554,7 +578,7 @@ class CleaningService {
             for (Booking booking : bookings) {
                 JSONObject row = new JSONObject()
                 row.put("id", booking.getOid())
-                row.put("house_id", booking.getHouseOid())
+                row.put("owner", booking.getOwnerOid())
                 row.put("check_in_date", booking.getCheckInDate())
                 row.put("check_out_date", booking.getCheckOutDate())
                 row.put("guest_name", booking.getGuestName())
@@ -599,9 +623,9 @@ class CleaningService {
             for (Schedule schedule : schedules) {
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
-                row.put("cleaner_id", schedule.getCleanerOid())
+                row.put("cleaner", schedule.getCleanerOid())
                 row.put("cleaner_name", schedule.getCleaner()?.getName())
-                row.put("booking_id", schedule.getBookingOid())
+                row.put("booking", schedule.getBookingOid())
                 row.put("date", schedule.getScheduleDate())
                 row.put("start_time", schedule.getStartTime())
                 row.put("end_time", schedule.getEndTime())
@@ -732,8 +756,16 @@ class CleaningService {
                 outjson.put("_ErrorMessage", "Schedule not found")
                 return
             }
-            if (data.has("cleaner_id")) schedule.setCleanerId(data.getInt("cleaner_id"))
-            if (data.has("booking_id")) schedule.setBookingId(data.getInt("booking_id"))
+            if (data.has("cleaner")) {
+                long cleanerOid = data.getLong("cleaner")
+                Cleaner cleaner = StorageManager.getByOid(Cleaner.class, cleanerOid)
+                schedule.setCleaner(cleaner)
+            }
+            if (data.has("booking")) {
+                long bookingOid = data.getLong("booking")
+                Booking booking = StorageManager.getByOid(Booking.class, bookingOid)
+                schedule.setBooking(booking)
+            }
             if (data.has("date")) schedule.setScheduleDate(data.getString("date"))
             if (data.has("start_time")) schedule.setStartTime(data.getString("start_time"))
             if (data.has("end_time")) schedule.setEndTime(data.getString("end_time"))
@@ -749,8 +781,8 @@ class CleaningService {
             }
             JSONObject result = new JSONObject()
             result.put("id", schedule.getOid())
-            result.put("cleaner_id", schedule.getCleanerOid())
-            result.put("booking_id", schedule.getBookingOid())
+            result.put("cleaner", schedule.getCleanerOid())
+            result.put("booking", schedule.getBookingOid())
             result.put("date", schedule.getScheduleDate())
             result.put("start_time", schedule.getStartTime())
             result.put("end_time", schedule.getEndTime())
@@ -811,8 +843,8 @@ class CleaningService {
             for (Schedule schedule : schedules) {
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
-                row.put("cleaner_id", schedule.getCleanerOid())
-                row.put("booking_id", schedule.getBookingOid())
+                row.put("cleaner", schedule.getCleanerOid())
+                row.put("booking", schedule.getBookingOid())
                 row.put("date", schedule.getScheduleDate())
                 row.put("start_time", schedule.getStartTime())
                 row.put("end_time", schedule.getEndTime())
@@ -829,16 +861,21 @@ class CleaningService {
     
     void getSchedulesByBooking(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Using PerstStorageManager directly
-            int bookingId = injson.getInt("bookingId")
-            Collection<Schedule> allSchedules = StorageManager.getAll(Schedule.class)
-            Collection<Schedule> schedules = allSchedules.findAll { it.getBookingId() == bookingId }
+            // Pure OO: use booking.getSchedules() navigation
+            long bookingOid = injson.getLong("bookingOid")
+            Booking booking = StorageManager.getByOid(Booking.class, bookingOid)
+            if (booking == null) {
+                outjson.put("_Success", false)
+                outjson.put("_ErrorMessage", "Booking not found")
+                return
+            }
+            Collection<Schedule> schedules = booking.getSchedules()
             JSONArray rows = new JSONArray()
             for (Schedule schedule : schedules) {
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
-                row.put("cleaner_id", schedule.getCleanerOid())
-                row.put("booking_id", schedule.getBookingOid())
+                row.put("cleaner", schedule.getCleanerOid())
+                row.put("booking", schedule.getBookingOid())
                 row.put("date", schedule.getScheduleDate())
                 row.put("start_time", schedule.getStartTime())
                 row.put("end_time", schedule.getEndTime())
@@ -866,8 +903,8 @@ class CleaningService {
             for (Schedule schedule : schedules) {
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
-                row.put("cleaner_id", schedule.getCleanerOid())
-                row.put("booking_id", schedule.getBookingOid())
+                row.put("cleaner", schedule.getCleanerOid())
+                row.put("booking", schedule.getBookingOid())
                 row.put("date", schedule.getScheduleDate())
                 row.put("start_time", schedule.getStartTime())
                 row.put("end_time", schedule.getEndTime())
@@ -966,10 +1003,10 @@ class CleaningService {
     
     void getOwnerHouses(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Pure OO: Get Owner first, then ask for their houses
-            long ownerId = injson.getLong("owner_id")
-            println "[CleaningService] getOwnerHouses: fetching owner with id=${ownerId}"
-            Owner owner = StorageManager.getByOid(Owner.class, ownerId)
+            // Pure OO: Get Owner by OID
+            long ownerOid = injson.has("owner") ? injson.getLong("owner") : 0
+            println "[CleaningService] getOwnerHouses: ownerOid=${ownerOid}"
+            Owner owner = StorageManager.getByOid(Owner.class, ownerOid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -1489,7 +1526,7 @@ class CleaningService {
                         tc.addUpdate(freshUser)
                         StorageManager.store(tc)
                         
-                        services.auth.EmailService.sendLoginCredentialsEmail(
+                        EmailService.sendLoginCredentials(
                             freshUser.getEmail(), 
                             owner.getName(), 
                             freshUser.getUsername(), 
@@ -1504,7 +1541,7 @@ class CleaningService {
                         tc.addUpdate(freshUser)
                         StorageManager.store(tc)
                         
-                        services.auth.EmailService.sendVerificationEmail(
+                        EmailService.sendVerification(
                             freshUser.getEmail(),
                             owner.getName(),
                             freshUser.getVerificationToken(),
@@ -1578,7 +1615,7 @@ class CleaningService {
                         tc.addUpdate(freshUser)
                         StorageManager.store(tc)
                         
-                        services.auth.EmailService.sendLoginCredentialsEmail(
+                        EmailService.sendLoginCredentials(
                             freshUser.getEmail(), 
                             cleaner.getName(), 
                             freshUser.getUsername(), 
@@ -1593,7 +1630,7 @@ class CleaningService {
                         tc.addUpdate(freshUser)
                         StorageManager.store(tc)
                         
-                        services.auth.EmailService.sendVerificationEmail(
+                        EmailService.sendVerification(
                             freshUser.getEmail(),
                             cleaner.getName(),
                             freshUser.getVerificationToken(),
