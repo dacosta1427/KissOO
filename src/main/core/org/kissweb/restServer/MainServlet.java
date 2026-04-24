@@ -83,7 +83,7 @@ public class MainServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (queueManager == null) {
-            Integer maxWorkerThreads = getEnvironmentInt("MaxWorkerThreads");
+            Integer maxWorkerThreads = getEnvironmentInt("MaxWorkerThreads", 30);
             queueManager = new org.kissweb.restServer.QueueManager(maxWorkerThreads);
         }
         ServletOutputStream out = response.getOutputStream();
@@ -183,11 +183,6 @@ public class MainServlet extends HttpServlet {
      * @see StartupListener#contextInitialized(ServletContextEvent)
      */
     static void initializeSystem(String path) {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
 
         Level level = logger.getLevel();
         Configurator.setLevel(logger, Level.ALL);
