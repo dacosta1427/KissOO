@@ -108,14 +108,9 @@ public class PerstUser extends CVersion {
     }
     
     public boolean verifyEmail(String token) {
-     public boolean verifyEmail(String token) {
-         if (verificationToken == null) return false;
-         // Use constant-time comparison to prevent timing attacks
-         return MessageDigest.isEqual(
-             verificationToken.getBytes(StandardCharsets.UTF_8),
-             token.getBytes(StandardCharsets.UTF_8)
-         ) && System.currentTimeMillis() <= verificationExpiresAt;
-     }
+        if (verificationToken == null || !verificationToken.equals(token)) {
+            return false;
+        }
         if (System.currentTimeMillis() > verificationExpiresAt) {
             return false;
         }
@@ -123,7 +118,7 @@ public class PerstUser extends CVersion {
         this.verificationToken = null;
         return true;
     }
-    
+
     public boolean canLogin() {
         return active && emailVerified && !isDeleted();
     }

@@ -1,4 +1,4 @@
-package koo;
+package koo.core.database;
 
 import koo.core.database.StorageManager;
 import org.garret.perst.continuous.CVersion;

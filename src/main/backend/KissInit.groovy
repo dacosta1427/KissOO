@@ -1,4 +1,4 @@
-import koo.PerstConnection
+import koo.core.database.PerstConnection
 import koo.config.PerstConfig
 import koo.core.database.StorageManager
 import koo.core.user.PerstUserManager

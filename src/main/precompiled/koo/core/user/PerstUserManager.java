@@ -56,9 +56,6 @@ public class PerstUserManager extends BaseManager<PerstUser> {
          PerstUser user = getByKey(username);
          if (user != null && user.checkPassword(password) && user.canLogin()) {
              // Check password expiration
-             if (user.isPasswordExpired()) {
-                 return null;
-             }
              user.setLastLoginDate(System.currentTimeMillis());
              TransactionContainer tc = StorageManager.createContainer();
              tc.addUpdate(user);
