@@ -11,8 +11,8 @@ type EnsureDefined<T> = T extends null | undefined ? {} : T;
 type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;
 export type Snapshot<T = any> = Kit.Snapshot<T>;
 type PageParentData = EnsureDefined<LayoutData>;
-type LayoutRouteId = RouteId | "/" | "/benchmark" | "/bookings" | "/cleaners" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/login" | "/ollama" | "/owners" | "/owners/[id]" | "/report" | "/rest-services" | "/schedules" | "/signup" | "/sql-access" | "/users" | "/verify-email" | null
-type LayoutParams = RouteParams & { id?: string }
+type LayoutRouteId = RouteId | "/" | "/benchmark" | "/bookings" | "/bookings/[bookingId]" | "/cleaners" | "/cleaners/[cleanerId]" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/houses/[houseId]" | "/login" | "/ollama" | "/owners" | "/owners/[id]" | "/report" | "/rest-services" | "/schedules" | "/schedules/[scheduleId]" | "/signup" | "/sql-access" | "/users" | "/verify-email" | null
+type LayoutParams = RouteParams & { bookingId?: string; cleanerId?: string; houseId?: string; id?: string; scheduleId?: string }
 type LayoutParentData = EnsureDefined<{}>;
 
 export type PageServerData = null;

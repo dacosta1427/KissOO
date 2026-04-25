@@ -29,35 +29,43 @@ declare module "$app/types" {
 	type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;
 
 	export interface AppTypes {
-		RouteId(): "/" | "/api" | "/benchmark" | "/bookings" | "/cleaners" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/login" | "/ollama" | "/owners" | "/owners/[id]" | "/report" | "/rest-services" | "/schedules" | "/signup" | "/sql-access" | "/users" | "/verify-email";
+		RouteId(): "/" | "/api" | "/benchmark" | "/bookings" | "/bookings/[bookingId]" | "/cleaners" | "/cleaners/[cleanerId]" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/houses/[houseId]" | "/login" | "/ollama" | "/owners" | "/owners/[id]" | "/report" | "/rest-services" | "/schedules" | "/schedules/[scheduleId]" | "/signup" | "/sql-access" | "/users" | "/verify-email";
 		RouteParams(): {
-			"/owners/[id]": { id: string }
+			"/bookings/[bookingId]": { bookingId: string };
+			"/cleaners/[cleanerId]": { cleanerId: string };
+			"/houses/[houseId]": { houseId: string };
+			"/owners/[id]": { id: string };
+			"/schedules/[scheduleId]": { scheduleId: string }
 		};
 		LayoutParams(): {
-			"/": { id?: string };
+			"/": { bookingId?: string; cleanerId?: string; houseId?: string; id?: string; scheduleId?: string };
 			"/api": Record<string, never>;
 			"/benchmark": Record<string, never>;
-			"/bookings": Record<string, never>;
-			"/cleaners": Record<string, never>;
+			"/bookings": { bookingId?: string };
+			"/bookings/[bookingId]": { bookingId: string };
+			"/cleaners": { cleanerId?: string };
+			"/cleaners/[cleanerId]": { cleanerId: string };
 			"/controls": Record<string, never>;
 			"/cost-profiles": Record<string, never>;
 			"/crud": Record<string, never>;
 			"/export": Record<string, never>;
 			"/file-upload": Record<string, never>;
-			"/houses": Record<string, never>;
+			"/houses": { houseId?: string };
+			"/houses/[houseId]": { houseId: string };
 			"/login": Record<string, never>;
 			"/ollama": Record<string, never>;
 			"/owners": { id?: string };
 			"/owners/[id]": { id: string };
 			"/report": Record<string, never>;
 			"/rest-services": Record<string, never>;
-			"/schedules": Record<string, never>;
+			"/schedules": { scheduleId?: string };
+			"/schedules/[scheduleId]": { scheduleId: string };
 			"/signup": Record<string, never>;
 			"/sql-access": Record<string, never>;
 			"/users": Record<string, never>;
 			"/verify-email": Record<string, never>
 		};
-		Pathname(): "/" | "/benchmark" | "/bookings" | "/cleaners" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/login" | "/ollama" | "/owners" | `/owners/${string}` & {} | "/report" | "/rest-services" | "/schedules" | "/signup" | "/sql-access" | "/users" | "/verify-email";
+		Pathname(): "/" | "/benchmark" | "/bookings" | `/bookings/${string}` & {} | "/cleaners" | `/cleaners/${string}` & {} | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | `/houses/${string}` & {} | "/login" | "/ollama" | "/owners" | `/owners/${string}` & {} | "/report" | "/rest-services" | "/schedules" | `/schedules/${string}` & {} | "/signup" | "/sql-access" | "/users" | "/verify-email";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): string & {};
 	}

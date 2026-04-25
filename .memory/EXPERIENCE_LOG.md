@@ -155,3 +155,20 @@ None
 - Outcome: success - Navbar now uses client-side SPA navigation
 - Commits: none (in progress)
 - Reflections: Major improvement - no page reloads on navigation
+
+### Iteration 14 - 2026-04-25 14:15
+- Task: Complete Phase 0 - Navbar fixes, commit and tag
+- Problem: Navbar critical issues (debug span, page reloads)
+- Solution: 
+  - Removed DEBUG span from Navbar.svelte
+  - Added goto() navigation, replaced all <a href>
+  - Created comprehensive Phase 0-5 implementation plan
+- Changes: 
+  - src/main/frontend-svelte/src/lib/components/Navbar.svelte (77+ lines modified)
+  - .currentPLAN/FEAT_svelte5-dynamic-routes-navbar.md (plan)
+  - .currentPLAN/todo_*.md (37 tasks)
+  - .currentPLAN/progress_*.md (tracker)
+- Commits: dd2ddb93 feat: Svelte 5 dynamic routes + goto() navbar
+- Tags: v1.1.1-20260425
+- Outcome: Complete - Phase 0 done, ready for Phase 1 (dynamic routes)
+- Reflections: Navbar now performs correctly, no page reloads, no debug leaks

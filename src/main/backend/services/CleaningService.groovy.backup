@@ -10,7 +10,6 @@ import mycompany.actor.cleaner.Cleaner
 import mycompany.oov.house.Booking
 import mycompany.actor.cleaner.Schedule
 import mycompany.oov.house.House
-import mycompany.actor.Actor
 import mycompany.actor.owner.Owner
 import mycompany.oov.house.CostProfile
 import koo.core.actor.Role
@@ -359,24 +358,6 @@ class CleaningService {
                 outjson.put("_ErrorMessage", "Booking not found")
                 return
             }
-            
-            // Authorization: Check if current actor can access this booking via Pure OO navigation
-            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
-            if (pu != null) {
-                Actor actor = pu.getActor()
-                if (actor != null) {
-                    boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
-                    if (!isAdmin) {
-                        // Pure OO: check via actor.getBookings()
-                        if (!actor.getBookings().contains(booking)) {
-                            outjson.put("_Success", false)
-                            outjson.put("_ErrorMessage", "Not authorized")
-                            outjson.put("_ErrorCode", 3)
-                            return
-                        }
-                    }
-                }
-            }
             JSONObject data = new JSONObject()
             data.put("id", booking.getOid())
             data.put("house", booking.getHouseOid())
@@ -682,24 +663,6 @@ class CleaningService {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Schedule not found")
                 return
-            }
-            
-            // Authorization: Check if current actor can access this schedule via Pure OO navigation
-            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
-            if (pu != null) {
-                Actor actor = pu.getActor()
-                if (actor != null) {
-                    boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
-                    if (!isAdmin) {
-                        // Pure OO: check via actor.getSchedules()
-                        if (!actor.getSchedules().contains(schedule)) {
-                            outjson.put("_Success", false)
-                            outjson.put("_ErrorMessage", "Not authorized")
-                            outjson.put("_ErrorCode", 3)
-                            return
-                        }
-                    }
-                }
             }
             JSONObject data = new JSONObject()
             data.put("id", schedule.getOid())
@@ -1015,24 +978,6 @@ class CleaningService {
                 outjson.put("_ErrorMessage", "House not found")
                 return
             }
-            
-            // Authorization: Check if current actor can access this house via Pure OO navigation
-            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
-            if (pu != null) {
-                Actor actor = pu.getActor()
-                if (actor != null) {
-                    boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
-                    if (!isAdmin) {
-                        // Pure OO: check via actor.getHouses()
-                        if (!actor.getHouses().contains(house)) {
-                            outjson.put("_Success", false)
-                            outjson.put("_ErrorMessage", "Not authorized")
-                            outjson.put("_ErrorCode", 3)
-                            return
-                        }
-                    }
-                }
-            }
             JSONObject data = new JSONObject()
             data.put("id", house.getOid())
             data.put("name", house.getName())
@@ -1320,24 +1265,6 @@ class CleaningService {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
                 return
-            }
-            
-            // Authorization: Check if current actor can access this owner via Pure OO navigation
-            PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
-            if (pu != null) {
-                Actor actor = pu.getActor()
-                if (actor != null) {
-                    boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
-                    if (!isAdmin) {
-                        // Owners can only access their own data
-                        if (actor.getOid() != owner.getOid()) {
-                            outjson.put("_Success", false)
-                            outjson.put("_ErrorMessage", "Not authorized")
-                            outjson.put("_ErrorCode", 3)
-                            return
-                        }
-                    }
-                }
             }
             JSONObject data = new JSONObject()
             data.put("id", owner.getOid())

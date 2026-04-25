@@ -26,10 +26,10 @@ Implement proper Svelte 5 dynamic route segments (`[id]`) for all entity detail 
 
 **Affected Entities:**
 1. ✅ `owners/[id]` — Dynamic route EXISTS (reference implementation)
-2. ❌ `houses/[houseId]` — MISSING (flat list only)
-3. ❌ `bookings/[bookingId]` — MISSING (flat list only)
-4. ❌ `cleaners/[cleanerId]` — MISSING (flat list only)
-5. ❌ `schedules/[scheduleId]` — MISSING (flat list only)
+2. ❌ `houses/[houseOid]` — MISSING (flat list only)
+3. ❌ `bookings/[bookingOid]` — MISSING (flat list only)
+4. ❌ `cleaners/[cleanerOid]` — MISSING (flat list only)
+5. ❌ `schedules/[scheduleOid]` — MISSING (flat list only)
 
 ---
 
@@ -209,7 +209,7 @@ The owners pattern is the gold standard — replicate for houses, bookings, clea
 src/main/frontend-svelte/src/routes/
 └── houses/
     ├── +page.svelte          # List (keep existing)
-    └── [houseId]/            # NEW
+    └── [houseOid]/            # NEW
         └── +page.svelte      # Detail (NEW)
 ```
 
@@ -218,7 +218,7 @@ src/main/frontend-svelte/src/routes/
 src/main/frontend-svelte/src/routes/
 └── bookings/
     ├── +page.svelte          # List (keep existing)
-    └── [bookingId]/          # NEW
+    └── [bookingOid]/          # NEW
         └── +page.svelte      # Detail (NEW)
 ```
 
@@ -227,7 +227,7 @@ src/main/frontend-svelte/src/routes/
 src/main/frontend-svelte/src/routes/
 └── cleaners/
     ├── +page.svelte          # List (keep existing)
-    └── [cleanerId]/          # NEW
+    └── [cleanerOid]/          # NEW
         └── +page.svelte      # Detail (NEW)
 ```
 
@@ -236,7 +236,7 @@ src/main/frontend-svelte/src/routes/
 src/main/frontend-svelte/src/routes/
 └── schedules/
     ├── +page.svelte          # List (keep existing)
-    └── [scheduleId]/         # NEW
+    └── [scheduleOid]/         # NEW
         └── +page.svelte      # Detail (NEW)
 ```
 
@@ -251,11 +251,11 @@ src/main/frontend-svelte/src/routes/
 
 **Fixed:**
 - `houses/+page.svelte` → List only (show all houses)
-- `houses/[houseId]/+page.svelte` → Detail only (show one house)
+- `houses/[houseOid]/+page.svelte` → Detail only (show one house)
 
 **Pattern (from owners):**
 ```typescript
-// Detail page: houses/[houseId]/+page.svelte
+// Detail page: houses/[houseOid]/+page.svelte
 <script lang="ts">
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
@@ -537,7 +537,7 @@ npm run build  # Must build successfully
 - Problem: Flat routes, state-based navigation, debug code in production
 - Solution: Dynamic routes for all entities + goto()-based navbar
 - Changes: 
-  - Created [houseId]/, [bookingId]/, [cleanerId]/, [scheduleId]/ pages
+  - Created [houseOid]/, [bookingOid]/, [cleanerOid]/, [scheduleOid]/ pages
   - Fixed navbar to use goto() instead of <a href>
   - Removed debug span
 - Outcome: success
