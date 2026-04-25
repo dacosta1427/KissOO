@@ -636,7 +636,7 @@ public class MainServlet extends HttpServlet {
      *
      * @return true if authentication is required
      */
-    public static boolean requiresAuthentication() {
+public static boolean requiresAuthentication() {
         if (hasDatabase)
             return true;
         String requireAuth = (String) environment.get("RequireAuthentication");

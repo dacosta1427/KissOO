@@ -917,21 +917,45 @@ public class ProcessServlet implements Runnable {
             logger.error(str, e);
     }
 
-    private String login(String user, String password, JSONObject outjson) throws Exception {
+private String login(String user, String password, JSONObject outjson) throws Exception {
+        System.out.println(">>> PROCESS_SERVLET.login() CALLED for: " + user);
+        System.out.flush();
         UserData ud = null;
         if (MainServlet.requiresAuthentication()) {
+            System.out.println(">>> requiresAuthentication = TRUE, invoking GroovyClass");
+            System.out.println(">>> outjson BEFORE GroovyClass.invoke: " + outjson.keySet());
+            System.out.flush();
             try {
                 // DB may be null when using Perst-only auth - GroovyClass now handles null params
+                System.out.println(">>> ABOUT TO CALL GroovyClass.invoke(Login, login, ...)");
+                System.out.flush();
                 ud = (UserData) GroovyClass.invoke(true, "Login", "login", null, DB, user, password, outjson, this);
+                System.out.println(">>> GroovyClass.invoke COMPLETED");
+                System.out.flush();
             } catch (InvocationTargetException e) {
+                System.out.println(">>> InvocationTargetException: " + e.getTargetException());
+                e.getTargetException().printStackTrace(System.out);
+                System.out.flush();
                 logger.error("Login error", e.getTargetException());
             } catch (Exception e) {
+                System.out.println(">>> GENERAL Exception: " + e.getClass().getName() + " - " + e.getMessage());
+                e.printStackTrace(System.out);
+                System.out.flush();
                 logger.error(e);
             }
-            if (ud == null)
+            if (ud == null) {
+                System.out.println(">>> ud is NULL after GroovyClass.invoke");
+                System.out.flush();
                 throw new LogException("Invalid login.");
-        } else
+            }
+System.out.println(">>> ud obtained: " + ud.getUuid());
+        System.out.println(">>> Returning uuid");
+        System.out.flush();
+        } else {
+            System.out.println(">>> NO AUTH REQUIRED - direct UserCache");
+            System.out.flush();
             ud = UserCache.newUser(user, password, null);
+        }
         return ud.getUuid();
     }
 

@@ -2,6 +2,7 @@
   import { session } from '$lib/state/session.svelte';
   import { logout } from '$lib/api/Auth';
   import { t, currentLocale } from '$lib/i18n';
+  import { goto } from '$app/navigation';
   import LanguageSwitcher from './LanguageSwitcher.svelte';
   
   // Helper for reactive translations
@@ -9,6 +10,12 @@
 
   async function handleLogout() {
     await logout();
+  }
+  
+  // Client-side navigation helper (no page reload)
+  function navigateTo(path: string) {
+    goto(path);
+    mobileMenuOpen = false;
   }
   
   // Menu state
@@ -19,9 +26,9 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
       <div class="flex items-center">
-        <a href="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700">
+        <button onclick={() => navigateTo('/')} class="text-2xl font-bold text-gray-900 hover:text-gray-700">
           KissOO Svelte 5
-        </a>
+        </button>
       </div>
       
       <!-- Desktop Navigation -->
@@ -35,77 +42,69 @@
           {/if}
         </div>
         
-        <a href="/" class="text-gray-600 hover:text-gray-900 font-medium">
+        <button onclick={() => navigateTo('/')} class="text-gray-600 hover:text-gray-900 font-medium">
           {tt('nav.home')}
-        </a>
+        </button>
         
         {#if session.isAuthenticated}
-          <!-- DEBUG -->
-          <span class="text-xs text-red-500 mr-2">isAdmin={session.isAdmin} ownerOid={session.ownerOid} cleanerOid={session.cleanerOid}</span>
           <!-- Admin sees all links -->
           {#if session.isAdmin}
-            <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">
+            <button onclick={() => navigateTo('/houses')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.houses')}
-            </a>
-            <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">
+            </button>
+            <button onclick={() => navigateTo('/owners')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.owners')}
-            </a>
-            <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">
+            </button>
+            <button onclick={() => navigateTo('/cleaners')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.cleaners')}
-            </a>
-            <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">
+            </button>
+            <button onclick={() => navigateTo('/bookings')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.bookings')}
-            </a>
-            <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">
+            </button>
+            <button onclick={() => navigateTo('/schedules')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.schedules')}
-            </a>
-            <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">
+            </button>
+            <button onclick={() => navigateTo('/users')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.users')}
-            </a>
+            </button>
           <!-- Owner sees their own houses, bookings, schedules -->
           {:else if session.ownerOid > 0}
-            <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">
+            <button onclick={() => navigateTo('/houses')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.houses')}
-            </a>
-            <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">
+            </button>
+            <button onclick={() => navigateTo('/bookings')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.bookings')}
-            </a>
-            <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">
+            </button>
+            <button onclick={() => navigateTo('/schedules')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.schedules')}
-            </a>
+            </button>
           <!-- Cleaner sees their own schedules -->
           {:else if session.cleanerOid > 0}
-            <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">
+            <button onclick={() => navigateTo('/schedules')} class="text-gray-600 hover:text-gray-900 font-medium">
               {tt('nav.schedules')}
-            </a>
+            </button>
           {/if}
           
           <LanguageSwitcher />
           
-          <button
-            onclick={handleLogout}
-            class="text-red-600 hover:text-red-800 font-medium"
-          >
+          <button onclick={handleLogout} class="text-red-600 hover:text-red-800 font-medium">
             {tt('nav.logout')}
           </button>
           <span class="text-green-600 text-sm">{session.username || 'User'}</span>
         {:else}
           <LanguageSwitcher />
-          <a href="/login" class="text-gray-600 hover:text-gray-900 font-medium">
+          <button onclick={() => navigateTo('/login')} class="text-gray-600 hover:text-gray-900 font-medium">
             {tt('auth.login_button')}
-          </a>
-          <a href="/signup" class="text-gray-600 hover:text-gray-900 font-medium">
+          </button>
+          <button onclick={() => navigateTo('/signup')} class="text-gray-600 hover:text-gray-900 font-medium">
             {tt('auth.signup_button')}
-          </a>
+          </button>
         {/if}
       </nav>
       
       <!-- Mobile menu button -->
       <div class="md:hidden">
-        <button 
-          onclick={() => mobileMenuOpen = !mobileMenuOpen}
-          class="text-gray-600 hover:text-gray-900"
-        >
+        <button onclick={() => mobileMenuOpen = !mobileMenuOpen} class="text-gray-600 hover:text-gray-900">
           <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {#if mobileMenuOpen}
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -132,39 +131,62 @@
             {/if}
           </div>
           
-          <a href="/" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.home')}</a>
+          <button onclick={() => navigateTo('/')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+            {tt('nav.home')}
+          </button>
           
           {#if session.isAuthenticated}
             <!-- Admin sees all links -->
             {#if session.isAdmin}
-              <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.houses')}</a>
-              <a href="/owners" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.owners')}</a>
-              <a href="/cleaners" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.cleaners')}</a>
-              <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.bookings')}</a>
-              <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.schedules')}</a>
-              <a href="/users" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.users')}</a>
+              <button onclick={() => navigateTo('/houses')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.houses')}
+              </button>
+              <button onclick={() => navigateTo('/owners')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.owners')}
+              </button>
+              <button onclick={() => navigateTo('/cleaners')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.cleaners')}
+              </button>
+              <button onclick={() => navigateTo('/bookings')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.bookings')}
+              </button>
+              <button onclick={() => navigateTo('/schedules')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.schedules')}
+              </button>
+              <button onclick={() => navigateTo('/users')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.users')}
+              </button>
             <!-- Owner sees their own houses, bookings, schedules -->
             {:else if session.ownerOid > 0}
-              <a href="/houses" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.houses')}</a>
-              <a href="/bookings" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.bookings')}</a>
-              <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.schedules')}</a>
+              <button onclick={() => navigateTo('/houses')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.houses')}
+              </button>
+              <button onclick={() => navigateTo('/bookings')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.bookings')}
+              </button>
+              <button onclick={() => navigateTo('/schedules')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.schedules')}
+              </button>
             <!-- Cleaner sees their own schedules -->
             {:else if session.cleanerOid > 0}
-              <a href="/schedules" class="text-gray-600 hover:text-gray-900 font-medium">{tt('nav.schedules')}</a>
+              <button onclick={() => navigateTo('/schedules')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+                {tt('nav.schedules')}
+              </button>
             {/if}
             <div class="border-t border-gray-200 my-2"></div>
             <div class="py-2"><LanguageSwitcher /></div>
-            <button
-              onclick={handleLogout}
-              class="text-red-600 hover:text-red-800 font-medium text-left"
-            >
+            <button onclick={handleLogout} class="text-red-600 hover:text-red-800 font-medium text-left">
               {tt('nav.logout')}
             </button>
             <span class="text-green-600 text-sm mt-2">{session.username || 'User'}</span>
           {:else}
             <div class="py-2"><LanguageSwitcher /></div>
-            <a href="/login" class="text-gray-600 hover:text-gray-900 font-medium">{tt('auth.login_button')}</a>
-            <a href="/signup" class="text-gray-600 hover:text-gray-900 font-medium">{tt('auth.signup_button')}</a>
+            <button onclick={() => navigateTo('/login')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+              {tt('auth.login_button')}
+            </button>
+            <button onclick={() => navigateTo('/signup')} class="text-gray-600 hover:text-gray-900 font-medium text-left">
+              {tt('auth.signup_button')}
+            </button>
           {/if}
         </div>
       </div>

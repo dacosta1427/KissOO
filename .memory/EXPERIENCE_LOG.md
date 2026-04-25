@@ -118,3 +118,40 @@ None
 - Changes: owners/[id]/+page.svelte (hasChanges derived, button disabled), Cleaning.groovy (delta check)
 - Commits: bed577f0
 - Reflections: Perst versioning is CORRECT behavior - client must handle new OIDs
+### Iteration 11 - 2026-04-25 12:25
+- Task: Plan Svelte 5 dynamic routes implementation for all entity types
+- Problem: Only `owners/[id]` uses dynamic routes; other entities (houses, bookings, cleaners, schedules) use flat list-only structure with state-based navigation
+- Impact: Browser navigation broken, URLs not bookmarkable, navbar doesn't highlight correctly on detail pages
+- Decision: Create comprehensive plan per protocol (READ-ACT-WRITE) before implementation
+- Rationale: PIT-001 (Missing Svelte 5 Dynamic Route Segments) affects 4/5 entity types
+- Action: Created FEAT_svelte5-dynamic-routes.md in .currentPLAN/ with detailed 6-phase plan
+- Next: Create feature branch and begin Phase 1 implementation
+- Outcome: plan_created
+- Changes: .currentPLAN/FEAT_svelte5-dynamic-routes.md, todo_*.md, progress_*.md
+- Commits: none (planning phase)
+- Reflections: Following protocol - thorough planning prevents rework. Owner pattern serves as proven reference implementation.
+
+### Iteration 12 - 2026-04-25 13:30
+- Task: Create detailed plan for Svelte 5 dynamic routes + navbar fixes (PIT-001)
+- Problem: Navbar uses <a href> (causes page reloads) + DEBUG span visible in production
+- Solution: Convert all navbar links to goto(); remove debug span; create [id] routes for all entities
+- Changes: 
+  - .currentPLAN/FEAT_svelte5-dynamic-routes-navbar.md (comprehensive plan)
+  - .currentPLAN/todo_*.md, progress_*.md tracking files
+- Next: Execute Phase 0 (navbar fixes) immediately
+- Outcome: plan_created
+- Commits: none (planning)
+- Reflections: Navbar critical path - must fix before dynamic routes
+
+### Iteration 13 - 2026-04-25 14:00
+- Task: Execute Phase 0 - Navbar fixes (remove debug, goto() navigation)
+- Problem: Navbar uses <a href> (page reloads) + DEBUG span in production
+- Solution: Converted all nav links to use goto(); removed debug span
+- Changes: src/main/frontend-svelte/src/lib/components/Navbar.svelte
+  - Added import { goto } from '$app/navigation'
+  - Added navigateTo(path) helper function
+  - Replaced all <a href> with <button onclick={() => navigateTo(path)}>
+  - Removed DEBUG span exposing session state
+- Outcome: success - Navbar now uses client-side SPA navigation
+- Commits: none (in progress)
+- Reflections: Major improvement - no page reloads on navigation

@@ -6,6 +6,9 @@
         </Console>
     </Appenders>
     <Loggers>
+        <Logger name="koo.services.Login" level="info" additivity="false">
+            <AppenderRef ref="Console" />
+        </Logger>
         <Root level="info">
             <AppenderRef ref="Console" />
         </Root>
