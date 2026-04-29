@@ -154,6 +154,9 @@ src/main/frontend/lib/jquery*
 src/main/frontend-svelte/.svelte-kit/
 src/main/frontend-svelte/node_modules/
 
+# Hermes
+.hermes/
+
 /build/
 manual/asciidoc/
 /*.class
