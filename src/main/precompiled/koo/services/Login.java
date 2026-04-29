@@ -22,18 +22,24 @@ import org.apache.logging.log4j.Logger;
 public class Login {
     private static final Logger logger = LogManager.getLogger(Login.class);
 
-    public static UserData login(Connection db, String user, String password, JSONObject outjson, ProcessServlet servlet) {
-        System.out.println("[PerstAuth-DIRECT] Login called directly from ProcessServlet for user: " + user);
+    public static UserData login(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        System.out.println("[PerstAuth-DIRECT] Login called with username: " + (injson != null ? injson.getString("username") : "null"));
         
         try {
-            PerstUser perstUser = PerstUserManager.authenticate(user, password);
+            String username = injson.getString("username");
+            String password = injson.getString("password");
+            
+            PerstUser perstUser = PerstUserManager.authenticate(username, password);
             
             if (perstUser == null) {
-                logger.warn("[PerstAuth] Login FAILED: invalid credentials for user: {}", user);
+                logger.warn("[PerstAuth] Login FAILED: invalid credentials for user: {}", username);
+                outjson.put("_Success", false);
+                outjson.put("_ErrorCode", 2);
+                outjson.put("_ErrorMessage", "Invalid login.");
                 return null;
             }
             
-            UserData ud = UserCache.newUser(user, password, null);
+            UserData ud = UserCache.newUser(username, password, null);
             ud.putUserData("perstUser", perstUser);
             
             perstUser.setLastLoginDate(System.currentTimeMillis());
@@ -95,17 +101,18 @@ public class Login {
             
             logger.info("[PerstAuth] outjson AFTER: {}", outjson.keySet());
             logger.info("[PerstAuth] Login SUCCESS for user: {} (Role: {}, Actor: {})",
-                    user, roleName, actor != null ? actor.getName() : "none");
+                    username, roleName, actor != null ? actor.getName() : "none");
             
             return ud;
             
         } catch (Exception e) {
             outjson.put("error", "Login failed: " + e.getMessage());
-            logger.warn("[PerstAuth] Login FAILED: exception for user: {} - {}", user, e.getMessage());
+            logger.warn("[PerstAuth] Login FAILED: exception for user: {} - {}", 
+                    injson != null ? injson.getString("username") : "unknown", e.getMessage());
             return null;
         }
     }
-
+    
     public static void checkLogin(Connection db, UserData ud, ProcessServlet servlet) {
         if (ud != null)
             ud.setLastAccessDate(java.time.LocalDateTime.now());
