@@ -86,11 +86,9 @@
           {/if}
           
           <LanguageSwitcher />
-          
-          <button onclick={handleLogout} class="text-red-600 hover:text-red-800 font-medium">
-            {tt('nav.logout')}
-          </button>
-          <span class="text-green-600 text-sm">{session.username || 'User'}</span>
+            <button onclick={handleLogout} class="text-red-600 hover:text-red-800 font-medium">
+              {tt('nav.logout')}
+            </button>
         {:else}
           <LanguageSwitcher />
           <button onclick={() => navigateTo('/login')} class="text-gray-600 hover:text-gray-900 font-medium">
@@ -124,10 +122,8 @@
           <div class="flex items-center py-2" title={session.isAuthenticated ? 'Logged in' : 'Not logged in'}>
             {#if session.isAuthenticated}
               <span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
-              <span class="text-sm text-gray-600">{session.username || 'User'}</span>
             {:else}
               <span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
-              <span class="text-sm text-gray-600">Not logged in</span>
             {/if}
           </div>
           
@@ -174,11 +170,10 @@
               </button>
             {/if}
             <div class="border-t border-gray-200 my-2"></div>
-            <div class="py-2"><LanguageSwitcher /></div>
-            <button onclick={handleLogout} class="text-red-600 hover:text-red-800 font-medium text-left">
+            <LanguageSwitcher />
+            <button onclick={handleLogout} class="text-red-600 hover:text-red-800 font-medium">
               {tt('nav.logout')}
             </button>
-            <span class="text-green-600 text-sm mt-2">{session.username || 'User'}</span>
           {:else}
             <div class="py-2"><LanguageSwitcher /></div>
             <button onclick={() => navigateTo('/login')} class="text-gray-600 hover:text-gray-900 font-medium text-left">

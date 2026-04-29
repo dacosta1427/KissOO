@@ -17,6 +17,13 @@ import koo.core.actor.Role
 import koo.core.user.PerstUser
 import koo.core.database.StorageManager
 
+// Manager imports
+import mycompany.actor.OwnerManager
+import mycompany.actor.CleanerManager
+import mycompany.oov.HouseManager
+import mycompany.oov.BookingManager
+import mycompany.actor.ScheduleManager
+
 /**
  * CleaningService service for CRUD operations on cleaning scheduler entities.
  * 
@@ -145,7 +152,7 @@ class CleaningService {
                 return
             }
             
-            Collection<Cleaner> cleaners = StorageManager.getAll(Cleaner.class)
+            Collection<Cleaner> cleaners = CleanerManager.getAll()
             JSONArray rows = new JSONArray()
             
             for (Cleaner cleaner : cleaners) {
@@ -185,7 +192,7 @@ class CleaningService {
             }
             
             long oid = injson.getLong("id")
-            Cleaner cleaner = StorageManager.getByOid(Cleaner.class, oid)
+            Cleaner cleaner = CleanerManager.getByOid(oid)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Cleaner not found")
@@ -249,7 +256,7 @@ class CleaningService {
             
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            Cleaner cleaner = StorageManager.getByOid(Cleaner.class, oid)
+            Cleaner cleaner = CleanerManager.getByOid(oid)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Cleaner not found")
@@ -288,7 +295,7 @@ class CleaningService {
             checkAdminOnly(servlet, "deleteCleaner")
             
             long oid = injson.getLong("id")
-            Cleaner cleaner = StorageManager.getByOid(Cleaner.class, oid)
+            Cleaner cleaner = CleanerManager.getByOid(oid)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Cleaner not found")
@@ -318,7 +325,7 @@ class CleaningService {
             
             Collection<Booking> bookings
             if (admin) {
-                bookings = StorageManager.getAll(Booking.class)
+                bookings = BookingManager.getAll()
             } else if (owner != null) {
                 bookings = owner.getBookings()
             } else {
@@ -353,7 +360,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Booking booking = StorageManager.getByOid(Booking.class, oid)
+            Booking booking = BookingManager.getByOid(oid)
             if (booking == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Booking not found")
@@ -367,8 +374,15 @@ class CleaningService {
                 if (actor != null) {
                     boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
                     if (!isAdmin) {
-                        // Pure OO: check via actor.getBookings()
-                        if (!actor.getBookings().contains(booking)) {
+                        // Pure OO: check via actor type-specific navigation
+                        boolean hasAccess = false
+                        if (actor instanceof Owner) {
+                            hasAccess = actor.getBookings().contains(booking)
+                        } else if (actor instanceof Cleaner) {
+                            // Cleaner can access booking if it's linked to their schedule
+                            hasAccess = actor.getSchedules().any { it.getBookingOid() == booking.getOid() }
+                        }
+                        if (!hasAccess) {
                             outjson.put("_Success", false)
                             outjson.put("_ErrorMessage", "Not authorized")
                             outjson.put("_ErrorCode", 3)
@@ -409,14 +423,14 @@ class CleaningService {
             int dogsCount = data.has("dogs_count") ? data.getInt("dogs_count") : 0
             
             // Pure OO: Get House and Owner by OID
-            House house = StorageManager.getByOid(House.class, houseOid)
+            House house = HouseManager.getByOid(houseOid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
                 return
             }
             // Get owner from house or parameter
-            Owner owner = ownerOid > 0 ? StorageManager.getByOid(Owner.class, ownerOid) : house.getOwner()
+            Owner owner = ownerOid > 0 ? OwnerManager.getByOid(ownerOid) : house.getOwner()
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -461,7 +475,7 @@ class CleaningService {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            Booking booking = StorageManager.getByOid(Booking.class, oid)
+            Booking booking = BookingManager.getByOid(oid)
             if (booking == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Booking not found")
@@ -469,12 +483,12 @@ class CleaningService {
             }
             if (data.has("house")) {
                 long houseOid = data.getLong("house")
-                House house = StorageManager.getByOid(House.class, houseOid)
+                House house = HouseManager.getByOid(houseOid)
                 booking.setHouse(house)
             }
             if (data.has("owner")) {
                 long ownerOid = data.getLong("owner")
-                Owner owner = StorageManager.getByOid(Owner.class, ownerOid)
+                Owner owner = OwnerManager.getByOid(ownerOid)
                 booking.setOwner(owner)
             }
             if (data.has("check_in_date")) booking.setCheckInDate(data.getString("check_in_date"))
@@ -516,7 +530,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Booking booking = StorageManager.getByOid(Booking.class, oid)
+            Booking booking = BookingManager.getByOid(oid)
             if (booking == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Booking not found")
@@ -543,7 +557,7 @@ class CleaningService {
             boolean admin = isAdmin(servlet)
             Owner owner = getCurrentOwner(servlet)
             
-            House house = StorageManager.getByOid(House.class, houseId)
+            House house = HouseManager.getByOid(houseId)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
@@ -589,7 +603,7 @@ class CleaningService {
             String startDate = injson.getString("startDate")
             String endDate = injson.getString("endDate")
             // Filter bookings by date range
-            Collection<Booking> allBookings = StorageManager.getAll(Booking.class)
+            Collection<Booking> allBookings = BookingManager.getAll()
             Collection<Booking> bookings = allBookings.findAll { 
                 it.getCheckInDate() >= startDate && it.getCheckInDate() <= endDate 
             }
@@ -627,7 +641,7 @@ class CleaningService {
             
             Collection<Schedule> schedules
             if (admin) {
-                schedules = StorageManager.getAll(Schedule.class)
+                schedules = ScheduleManager.getAll()
             } else if (cleaner != null) {
                 println "[DEBUG] Cleaner != null, calling cleaner.getSchedules()"
                 schedules = cleaner.getSchedules()
@@ -677,7 +691,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Schedule schedule = StorageManager.getByOid(Schedule.class, oid)
+            Schedule schedule = ScheduleManager.getByOid(oid)
             if (schedule == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Schedule not found")
@@ -691,8 +705,14 @@ class CleaningService {
                 if (actor != null) {
                     boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
                     if (!isAdmin) {
-                        // Pure OO: check via actor.getSchedules()
-                        if (!actor.getSchedules().contains(schedule)) {
+                        // Pure OO: check via actor type-specific navigation
+                        boolean hasAccess = false
+                        if (actor instanceof Cleaner) {
+                            hasAccess = actor.getSchedules().contains(schedule)
+                        } else if (actor instanceof Owner) {
+                            hasAccess = actor.getSchedulesViaHouses().contains(schedule)
+                        }
+                        if (!hasAccess) {
                             outjson.put("_Success", false)
                             outjson.put("_ErrorMessage", "Not authorized")
                             outjson.put("_ErrorCode", 3)
@@ -733,8 +753,8 @@ class CleaningService {
             }
             
             // Pure OO: Get Cleaner and Booking by OID, then create Schedule with OO references
-            Cleaner cleaner = StorageManager.getByOid(Cleaner.class, cleanerId)
-            Booking booking = StorageManager.getByOid(Booking.class, bookingId)
+            Cleaner cleaner = CleanerManager.getByOid(cleanerId)
+            Booking booking = BookingManager.getByOid(bookingId)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Cleaner not found")
@@ -787,7 +807,7 @@ class CleaningService {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            Schedule schedule = StorageManager.getByOid(Schedule.class, oid)
+            Schedule schedule = ScheduleManager.getByOid(oid)
             if (schedule == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Schedule not found")
@@ -795,12 +815,12 @@ class CleaningService {
             }
             if (data.has("cleaner")) {
                 long cleanerOid = data.getLong("cleaner")
-                Cleaner cleaner = StorageManager.getByOid(Cleaner.class, cleanerOid)
+                Cleaner cleaner = CleanerManager.getByOid(cleanerOid)
                 schedule.setCleaner(cleaner)
             }
             if (data.has("booking")) {
                 long bookingOid = data.getLong("booking")
-                Booking booking = StorageManager.getByOid(Booking.class, bookingOid)
+                Booking booking = BookingManager.getByOid(bookingOid)
                 schedule.setBooking(booking)
             }
             if (data.has("date")) schedule.setScheduleDate(data.getString("date"))
@@ -836,7 +856,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Schedule schedule = StorageManager.getByOid(Schedule.class, oid)
+            Schedule schedule = ScheduleManager.getByOid(oid)
             if (schedule == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Schedule not found")
@@ -862,7 +882,7 @@ class CleaningService {
             boolean admin = isAdmin(servlet)
             Cleaner currentCleaner = getCurrentCleaner(servlet)
             
-            Cleaner cleaner = StorageManager.getByOid(Cleaner.class, cleanerId)
+            Cleaner cleaner = CleanerManager.getByOid(cleanerId)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Cleaner not found")
@@ -898,17 +918,17 @@ class CleaningService {
     
     void getSchedulesByBooking(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            // Pure OO: use booking.getSchedules() navigation
+            // Pure OO: use booking.getSchedule() navigation (1:1 relationship)
             long bookingOid = injson.getLong("bookingOid")
-            Booking booking = StorageManager.getByOid(Booking.class, bookingOid)
+            Booking booking = BookingManager.getByOid(bookingOid)
             if (booking == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Booking not found")
                 return
             }
-            Collection<Schedule> schedules = booking.getSchedules()
+            Schedule schedule = booking.getSchedule()
             JSONArray rows = new JSONArray()
-            for (Schedule schedule : schedules) {
+            if (schedule != null) {
                 JSONObject row = new JSONObject()
                 row.put("id", schedule.getOid())
                 row.put("cleaner", schedule.getCleanerOid())
@@ -932,7 +952,7 @@ class CleaningService {
             // Using PerstStorageManager directly
             String startDate = injson.getString("startDate")
             String endDate = injson.getString("endDate")
-            Collection<Schedule> allSchedules = StorageManager.getAll(Schedule.class)
+            Collection<Schedule> allSchedules = ScheduleManager.getAll()
             Collection<Schedule> schedules = allSchedules.findAll { 
                 it.getScheduleDate() >= startDate && it.getScheduleDate() <= endDate 
             }
@@ -965,7 +985,7 @@ class CleaningService {
             
             Collection<House> houses
             if (admin) {
-                houses = StorageManager.getAll(House.class)
+                houses = HouseManager.getAll()
             } else if (owner != null) {
                 houses = owner.getHouses()
             } else {
@@ -1009,7 +1029,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            House house = StorageManager.getByOid(House.class, oid)
+            House house = HouseManager.getByOid(oid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
@@ -1061,7 +1081,7 @@ class CleaningService {
             // Pure OO: Get Owner by OID
             long ownerOid = injson.has("owner") ? injson.getLong("owner") : 0
             println "[CleaningService] getOwnerHouses: ownerOid=${ownerOid}"
-            Owner owner = StorageManager.getByOid(Owner.class, ownerOid)
+            Owner owner = OwnerManager.getByOid(ownerOid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -1101,7 +1121,7 @@ class CleaningService {
             long ownerId = injson.getLong("owner_id")
             
             // Pure OO: Get Owner by OID, then ask for their houses
-            Owner owner = StorageManager.getByOid(Owner.class, ownerId)
+            Owner owner = OwnerManager.getByOid(ownerId)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -1146,7 +1166,7 @@ class CleaningService {
             long ownerOid = data.getLong("owner", 0)
             Owner owner = null
             if (ownerOid > 0) {
-                owner = StorageManager.getByOid(Owner.class, ownerOid)
+                owner = OwnerManager.getByOid(ownerOid)
             }
             
             // If no owner provided, get current owner from session
@@ -1166,7 +1186,7 @@ class CleaningService {
             // Set CostProfile from OID (OO reference)
             long costProfileOid = data.getLong("cost_profile", 0)
             if (costProfileOid > 0) {
-                CostProfile costProfile = StorageManager.getByOid(CostProfile.class, costProfileOid)
+                CostProfile costProfile = CostProfileManager.getByOid(costProfileOid)
                 house.setCostProfile(costProfile)
             }
             
@@ -1197,7 +1217,7 @@ class CleaningService {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            House house = StorageManager.getByOid(House.class, oid)
+            House house = HouseManager.getByOid(oid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
@@ -1214,7 +1234,7 @@ class CleaningService {
             if (data.has("owner")) {
                 long ownerOid = data.getLong("owner")
                 if (ownerOid > 0) {
-                    Owner owner = StorageManager.getByOid(Owner.class, ownerOid)
+                    Owner owner = OwnerManager.getByOid(ownerOid)
                     house.setOwner(owner)
                 } else {
                     house.setOwner(null)
@@ -1225,7 +1245,7 @@ class CleaningService {
             if (data.has("cost_profile")) {
                 long costProfileOid = data.getLong("cost_profile")
                 if (costProfileOid > 0) {
-                    CostProfile costProfile = StorageManager.getByOid(CostProfile.class, costProfileOid)
+                    CostProfile costProfile = CostProfileManager.getByOid(costProfileOid)
                     house.setCostProfile(costProfile)
                 } else {
                     house.setCostProfile(null)
@@ -1258,7 +1278,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            House house = StorageManager.getByOid(House.class, oid)
+            House house = HouseManager.getByOid(oid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
@@ -1283,7 +1303,7 @@ class CleaningService {
     void getOwners(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             // Using PerstStorageManager directly
-            Collection<Owner> owners = StorageManager.getAll(Owner.class)
+            Collection<Owner> owners = OwnerManager.getAll()
             println "[CleaningService] getOwners: found ${owners.size()} owners"
             JSONArray rows = new JSONArray()
             
@@ -1315,7 +1335,7 @@ class CleaningService {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
             println "[CleaningService] getOwner: fetching owner with id=${oid}"
-            Owner owner = StorageManager.getByOid(Owner.class, oid)
+            Owner owner = OwnerManager.getByOid(oid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -1360,7 +1380,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             long userId = injson.getLong("userId")
-            Collection<Owner> allOwners = StorageManager.getAll(Owner.class)
+            Collection<Owner> allOwners = OwnerManager.getAll()
             Owner found = null
             for (Owner owner : allOwners) {
                 PerstUser user = owner.getPerstUser()
@@ -1393,7 +1413,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             long ownerId = injson.getLong("ownerId")
-            Owner owner = StorageManager.getByOid(Owner.class, ownerId)
+            Owner owner = OwnerManager.getByOid(ownerId)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -1471,7 +1491,7 @@ class CleaningService {
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
             println "[CleaningService] updateOwner: oid=${oid}, data=${data}"
-            Owner owner = StorageManager.getByOid(Owner.class, oid)
+            Owner owner = OwnerManager.getByOid(oid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -1518,7 +1538,7 @@ class CleaningService {
                 return
             }
             // Verify after store
-            Owner verifyOwner = StorageManager.getByOid(Owner.class, oid)
+            Owner verifyOwner = OwnerManager.getByOid(oid)
             println "[CleaningService] updateOwner: verify after store - active=${verifyOwner.isActive()}, houses count=${verifyOwner.getHouses().size()}"
             
             JSONObject result = new JSONObject()
@@ -1547,7 +1567,7 @@ class CleaningService {
         try {
             long oid = injson.getLong("id")
             boolean canLogin = injson.getBoolean("canLogin")
-            Owner owner = StorageManager.getByOid(Owner.class, oid)
+            Owner owner = OwnerManager.getByOid(oid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -1564,7 +1584,7 @@ class CleaningService {
 
             // Simply toggle the PerstUser active state
             // Get fresh reference and update
-            PerstUser freshUser = StorageManager.getByOid(PerstUser.class, user.getOid())
+            PerstUser freshUser = PerstUserManager.getByOid(user.getOid())
             freshUser.setActive(canLogin)
             println "[CleaningService] toggleOwnerLogin: fresh user OID=${freshUser.getOid()}, active=${freshUser.isActive()}"
             
@@ -1641,7 +1661,7 @@ class CleaningService {
         try {
             long oid = injson.getLong("id")
             boolean canLogin = injson.getBoolean("canLogin")
-            Cleaner cleaner = StorageManager.getByOid(Cleaner.class, oid)
+            Cleaner cleaner = CleanerManager.getByOid(oid)
             if (cleaner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Cleaner not found")
@@ -1657,7 +1677,7 @@ class CleaningService {
             }
 
             // Toggle the PerstUser active state
-            PerstUser freshUser = StorageManager.getByOid(PerstUser.class, user.getOid())
+            PerstUser freshUser = PerstUserManager.getByOid(user.getOid())
             freshUser.setActive(canLogin)
             println "[CleaningService] toggleCleanerLogin: fresh user OID=${freshUser.getOid()}, active=${freshUser.isActive()}"
             
@@ -1730,7 +1750,7 @@ class CleaningService {
         try {
             // Using PerstStorageManager directly
             long oid = injson.getLong("id")
-            Owner owner = StorageManager.getByOid(Owner.class, oid)
+            Owner owner = OwnerManager.getByOid(oid)
             if (owner == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Owner not found")
@@ -1844,7 +1864,7 @@ class CleaningService {
             // Set owner if provided
             long ownerOid = data.getLong("owner", 0)
             if (ownerOid > 0) {
-                Owner owner = StorageManager.getByOid(Owner.class, ownerOid)
+                Owner owner = OwnerManager.getByOid(ownerOid)
                 profile.setOwner(owner)
             }
             
@@ -1894,7 +1914,7 @@ class CleaningService {
             if (data.has("owner")) {
                 long ownerOid = data.getLong("owner")
                 if (ownerOid > 0) {
-                    Owner owner = StorageManager.getByOid(Owner.class, ownerOid)
+                    Owner owner = OwnerManager.getByOid(ownerOid)
                     profile.setOwner(owner)
                 } else {
                     profile.setOwner(null)
@@ -1951,7 +1971,7 @@ class CleaningService {
                 return
             }
             
-            Owner owner = ownerOid > 0 ? StorageManager.getByOid(Owner.class, ownerOid) : null
+            Owner owner = ownerOid > 0 ? OwnerManager.getByOid(ownerOid) : null
             CostProfile copy = CostProfileManager.copyFrom(source, newName, owner)
             
             if (copy == null) {
@@ -1977,14 +1997,14 @@ class CleaningService {
             Long bookingOid = injson.has("booking_id") ? injson.getLong("booking_id") : null
             Long profileOid = injson.has("cost_profile_id") ? injson.getLong("cost_profile_id") : null
             
-            House house = StorageManager.getByOid(House.class, houseOid)
+            House house = HouseManager.getByOid(houseOid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
                 return
             }
             
-            Booking booking = bookingOid ? StorageManager.getByOid(Booking.class, bookingOid) : null
+            Booking booking = bookingOid ? BookingManager.getByOid(bookingOid) : null
             CostProfile profile = profileOid ? CostProfileManager.getByOid(profileOid) : house.getCostProfile()
             
             koo.services.CostService.CostResult result = koo.services.CostService.calculateCost(house, booking, profile)
@@ -2016,7 +2036,7 @@ class CleaningService {
             // Using PerstStorageManager directly
             long houseOid = injson.getLong("house_id")
             
-            House house = StorageManager.getByOid(House.class, houseOid)
+            House house = HouseManager.getByOid(houseOid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")

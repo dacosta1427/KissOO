@@ -22,7 +22,6 @@
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
-	let editingSchedule = $state<Schedule | null>(null);
 	let viewMode = $state<'calendar' | 'table'>('calendar');
 	
 	// Modal for showing house details to cleaner
@@ -30,14 +29,7 @@
 	let selectedHouseForModal = $state<House | null>(null);
 
 	// Form section ref for scroll on small screens
-	let formSection = $state<HTMLElement | null>(null);
 
-	function scrollToEditForm() {
-		// Scroll to edit form on small screens (mobile/tablet)
-		if (window.innerWidth < 1024 && formSection) {
-			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}
-	}
 
 	let dateRange = $state({
 		start: new Date().toISOString().split('T')[0],
@@ -133,14 +125,8 @@
 		};
 
 		try {
-			if (editingSchedule) {
-				await schedulesAPI.update(editingSchedule.id, scheduleData);
-			} else {
-				await schedulesAPI.create(scheduleData);
-			}
-
+			await schedulesAPI.create(scheduleData);
 			showForm = false;
-			editingSchedule = null;
 			resetForm();
 			await loadData();
 		} catch (err: any) {
@@ -148,68 +134,7 @@
 		}
 	}
 
-	function resetForm() {
-		formData = {
-			cleaner_id: '',
-			booking_id: '',
-			date: '',
-			start_time: '09:00',
-			end_time: '12:00',
-			status: 'scheduled'
-		};
-	}
-
-	function handleFormCancel() {
-		showForm = false;
-		editingSchedule = null;
-		resetForm();
-	}
-
-	function openAddForm() {
-		editingSchedule = null;
-		resetForm();
-		showForm = true;
-		scrollToEditForm();
-	}
-
-	function handleScheduleClick(schedule: Schedule) {
-		editingSchedule = schedule;
-		formData = {
-			cleaner_id: String(schedule.cleaner_id),
-			booking_id: String(schedule.booking_id),
-			date: schedule.date,
-			start_time: schedule.start_time || '09:00',
-			end_time: schedule.end_time || '12:00',
-			status: schedule.status || 'scheduled'
-		};
-		showForm = true;
-		scrollToEditForm();
-	}
-
-	// For cleaner: show house details in modal
-	function showHouseDetailsForCleaner(schedule: Schedule) {
-		const booking = bookings.find(b => b.id === schedule.booking_id);
-		if (booking && booking.house_id) {
-			selectedHouseForModal = houses.find(h => h.id === booking.house_id) || null;
-			showHouseModal = true;
-		}
-	}
-
-	function closeHouseModal() {
-		showHouseModal = false;
-		selectedHouseForModal = null;
-	}
-	
-	function handleCleanerClick(cleanerId: number) {
-		if (selectedCleanerId === cleanerId) {
-			selectedCleanerId = null;
-		} else {
-			selectedCleanerId = cleanerId;
-		}
-	}
-
 	function handleEmptyCellClick(cleanerId: number, date: Date) {
-		editingSchedule = null;
 		formData = {
 			cleaner_id: String(cleanerId),
 			booking_id: '',
@@ -260,6 +185,11 @@
 	$effect(() => {
 		loadData();
 	});
+
+	function handleFormCancel() {
+		showForm = false;
+		editingSchedule = null;
+	}
 </script>
 
 <div class="schedules-page">
@@ -309,8 +239,8 @@
 	{/if}
 
 	{#if showForm}
-		<div class="form-section" bind:this={formSection}>
-			<h3 class="form-title">{editingSchedule ? t('schedules.edit_schedule') : t('schedules.add_new_schedule')}</h3>
+		<div class="form-section">
+			<h3 class="form-title">t('schedules.add_new_schedule')</h3>
 			
 			<form onsubmit={handleFormSubmit}>
 				<div class="form-grid">
@@ -375,7 +305,7 @@
 						{tt('common.cancel')}
 					</button>
 					<button type="submit" class="btn btn-primary">
-						{editingSchedule ? t('common.update') : t('common.add')} {tt('schedules.title')}
+						{t('common.add')} {tt('schedules.title')}
 					</button>
 				</div>
 			</form>
@@ -401,9 +331,7 @@
 			{error}
 			onScheduleChange={async (newSchedule: any) => {
 				try {
-					if (editingSchedule) {
-						await schedulesAPI.update(editingSchedule.id, newSchedule);
-					}
+					await schedulesAPI.update(newSchedule.id, newSchedule);
 					await loadData();
 				} catch (err: any) {
 					error = err.message || t('errors.failed_to_save');
@@ -433,7 +361,7 @@
 						{@const booking = bookings.find(b => b.id === schedule.booking_id)}
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<!-- svelte-ignore a11y_no_static_element_interactions -->
-						<tr class={isAdmin ? "clickable" : ""} onclick={isAdmin ? () => handleScheduleClick(schedule) : undefined} onkeydown={isAdmin ? (e) => e.key === 'Enter' && handleScheduleClick(schedule) : undefined}>
+						<tr class={isAdmin ? "clickable" : ""} onclick={isAdmin ? () => goto('/schedules/' + schedule.id) : undefined} onkeydown={isAdmin ? (e) => e.key === 'Enter' && goto('/schedules/' + schedule.id) : undefined}>
 							<td>{cleaner?.name || t('houses.unknown')}</td>
 							<td>{booking?.guest_name || t('schedules.guest')}</td>
 							<td>{schedule.date}</td>
@@ -443,11 +371,11 @@
 							</td>
 							<td>
 								{#if isAdmin}
-									<button class="btn btn-sm btn-secondary" onclick={(e) => { e.stopPropagation(); handleScheduleClick(schedule); }} title={tt('hints.edit_item')}>
+									<button class="btn btn-sm btn-secondary" onclick={(e) => { e.stopPropagation(); goto('/schedules/' + schedule.id); }} title={tt('hints.edit_item')}>
 										{tt('common.edit')}
 									</button>
 								{:else if isCleaner}
-									<button class="btn btn-sm btn-info" onclick={(e) => { e.stopPropagation(); showHouseDetailsForCleaner(schedule); }} title={tt('houses.view_house')}>
+									<button class="btn btn-sm btn-info" onclick={(e) => { e.stopPropagation(); goto('/schedules/' + schedule.id); }} title={tt('houses.view_house')}>
 										{tt('houses.view_house')}
 									</button>
 									{#if schedule.status !== 'completed'}

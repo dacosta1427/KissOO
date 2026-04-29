@@ -180,7 +180,7 @@
 						<label for="owner">{tt('common.owner')}</label>
 						<select id="owner" bind:value={formData.owner}>
 							<option value={0}>{tt('common.select_owner')}</option>
-							{#each $ownersAPI.getAll ? [] as Owner[] : [] as Owner[]}
+							{#each owners as owner}
 								<option value={owner.id}>{owner.name}</option>
 							{/each}
 						</select>
@@ -245,7 +245,7 @@
 
 			{#if owner}
 				<div class="owner-info">
-					h3>{tt('common.owner')}</h3>
+					<h3>{tt('common.owner')}</h3>
 					<p><strong>{owner.name}</strong></p>
 					{#if owner.email}<p>{owner.email}</p>{/if}
 					{#if owner.phone}<p>{owner.phone}</p>{/if}
@@ -255,7 +255,7 @@
 
 			{#if bookings.length > 0}
 				<div class="bookings-section">
-					h3>{tt('bookings.title')} ({bookings.length})</h3>
+					<h3>{tt('bookings.title')} ({bookings.length})</h3>
 					<table class="data-table">
 						<thead>
 							<tr>
@@ -281,7 +281,7 @@
 
 			{#if schedules.length > 0}
 				<div class="schedules-section">
-					h3>{tt('schedules.title')} ({schedules.length})</h3>
+					<h3>{tt('schedules.title')} ({schedules.length})</h3>
 					<table class="data-table">
 						<thead>
 							<tr>
@@ -311,7 +311,7 @@
 {#if showDeleteConfirm}
 <div class="modal-overlay" onclick={() => showDeleteConfirm = false}>
 	<div class="modal-content" onclick={(e) => e.stopPropagation()}>
-		h3>{tt('common.confirm')}</h3>
+		<h3>{tt('common.confirm')}</h3>
 		<p>{tt('houses.delete_confirm').replace('"${house.name}"', `"${editingHouse?.name}"`)}</p>
 		<div class="modal-actions">
 			<Button type="button" class="btn-secondary" onclick={() => showDeleteConfirm = false}>

@@ -142,7 +142,7 @@
 
 	{#if schedule}
 		<div class="form-section">
-			h3 class="form-title">{tt('schedules.edit_schedule')}</h3>
+			<h3 class="form-title">{tt('schedules.edit_schedule')}</h3>
 
 			<form onsubmit={handleFormSubmit}>
 				<div class="form-grid">
@@ -188,21 +188,21 @@
 				<div class="related-info">
 					{#if house}
 						<div class="info-card">
-							h4>{tt('common.house')}</h4>
+							<h4>{tt('common.house')}</h4>
 							<p><strong>{house.name}</strong></p>
 							{#if house.address}<p>{house.address}</p>{/if}
 						</div>
 					{/if}
 					{#if booking}
 						<div class="info-card">
-							h4>{tt('bookings.booking')}</h4>
+							<h4>{tt('bookings.booking')}</h4>
 							<p><strong>{booking.guest_name}</strong></p>
 							<p>{formatDate(booking.check_in_date)} → {formatDate(booking.check_out_date)}</p>
 						</div>
 					{/if}
 					{#if cleaner}
 						<div class="info-card">
-							h4>{tt('schedules.cleaner')}</h4>
+							<h4>{tt('schedules.cleaner')}</h4>
 							<p><strong>{cleaner.name}</strong></p>
 							{#if cleaner.phone}<p>{cleaner.phone}</p>{/if}
 						</div>
@@ -225,7 +225,7 @@
 {#if showDeleteConfirm}
 <div class="modal-overlay" onclick={() => showDeleteConfirm = false}>
 	<div class="modal-content" onclick={(e) => e.stopPropagation()}>
-		h3>{tt('common.confirm')}</h3>
+		<h3>{tt('common.confirm')}</h3>
 		<p>{tt('schedules.delete_confirm').replace('${id}', schedule?.id || '')}</p>
 		<div class="modal-actions">
 			<Button type="button" class="btn-secondary" onclick={() => showDeleteConfirm = false}>
@@ -238,39 +238,41 @@
 	</div>
 </div>
 
+	{/if}
+
 <style>
-	.schedule-page {{ padding: 2rem; max-width: 900px; margin: 0 auto; }}
-	.page-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; }}
-	.page-header h1 {{ margin: 0; }}
-	.loading-spinner {{ position: fixed; top: 1rem; right: 1rem; background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }}
-	.spinner {{ width: 1rem; height: 1rem; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }}
-	@keyframes spin {{ to {{ transform: rotate(360deg); }} }}
-	.form-section {{ background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-	.form-title {{ margin: 0 0 1.5rem 0; font-size: 1.125rem; font-weight: 600; }}
-	.form-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }}
-	.form-field {{ display: flex; flex-direction: column; gap: 0.25rem; }}
-	.form-field.full-width {{ grid-column: 1 / -1; }}
-	.form-field label {{ font-size: 0.875rem; font-weight: 500; color: #374151; }}
-	.form-field .required {{ color: #ef4444; }}
-	.form-field input, .form-field select, .form-field textarea {{ padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; font-family: inherit; }}
-	.form-field textarea {{ resize: vertical; }}
-	.form-field input:focus, .form-field select:focus, .form-field textarea:focus {{ outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }}
-	.form-actions {{ display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }}
-	.btn {{ padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }}
-	.btn-primary {{ background: #3b82f6; color: white; }}
-	.btn-primary:hover {{ background: #2563eb; }}
-	.btn-primary:disabled {{ background: #93c5fd; cursor: not-allowed; }}
-	.btn-secondary {{ background: #6b7280; color: white; }}
-	.btn-secondary:hover {{ background: #4b5563; }}
-	.btn-danger {{ background: #ef4444; color: white; }}
-	.btn-danger:hover {{ background: #dc2626; }}
-	.related-info {{ margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb; }}
-	.info-card {{ margin-bottom: 1rem; padding: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; }}
-	.info-card h4 {{ margin: 0 0 0.5rem 0; font-size: 0.875rem; font-weight: 600; color: #374151; }}
-	.info-card p {{ margin: 0.25rem 0; color: #6b7280; }}
-	.form-actions {{ display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }}
-	.modal-overlay {{ position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }}
-	.modal-content {{ background: white; border-radius: 8px; padding: 1.5rem; max-width: 400px; width: 90%; }}
-	.modal-content h3 {{ margin: 0 0 1rem 0; font-size: 1.125rem; font-weight: 600; }}
-	.modal-actions {{ display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }}
+	.schedule-page { padding: 2rem; max-width: 900px; margin: 0 auto; }
+	.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; }
+	.page-header h1 { margin: 0; }
+	.loading-spinner { position: fixed; top: 1rem; right: 1rem; background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }
+	.spinner { width: 1rem; height: 1rem; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+	@keyframes spin { to { transform: rotate(360deg); } }
+	.form-section { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+	.form-title { margin: 0 0 1.5rem 0; font-size: 1.125rem; font-weight: 600; }
+	.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+	.form-field { display: flex; flex-direction: column; gap: 0.25rem; }
+	.form-field.full-width { grid-column: 1 / -1; }
+	.form-field label { font-size: 0.875rem; font-weight: 500; color: #374151; }
+	.form-field .required { color: #ef4444; }
+	.form-field input, .form-field select, .form-field textarea { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; font-family: inherit; }
+	.form-field textarea { resize: vertical; }
+	.form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+	.form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
+	.btn { padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+	.btn-primary { background: #3b82f6; color: white; }
+	.btn-primary:hover { background: #2563eb; }
+	.btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+	.btn-secondary { background: #6b7280; color: white; }
+	.btn-secondary:hover { background: #4b5563; }
+	.btn-danger { background: #ef4444; color: white; }
+	.btn-danger:hover { background: #dc2626; }
+	.related-info { margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb; }
+	.info-card { margin-bottom: 1rem; padding: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; }
+	.info-card h4 { margin: 0 0 0.5rem 0; font-size: 0.875rem; font-weight: 600; color: #374151; }
+	.info-card p { margin: 0.25rem 0; color: #6b7280; }
+	.form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
+	.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+	.modal-content { background: white; border-radius: 8px; padding: 1.5rem; max-width: 400px; width: 90%; }
+	.modal-content h3 { margin: 0 0 1rem 0; font-size: 1.125rem; font-weight: 600; }
+	.modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
 </style>

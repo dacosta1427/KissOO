@@ -240,8 +240,18 @@ export const session = {
   get ownerName(): string {
     return ownerName;
   },
-  
-/**
+
+  /**
+   * Set the owner name
+   */
+  setOwnerName(name: string): void {
+    ownerName = name;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(OWNERNAME_KEY, name);
+    }
+  },
+
+  /**
    * Set the preferred language
    */
   setLanguage(lang: string): void {
@@ -530,20 +540,6 @@ export const session = {
     return preferredLanguage;
   },
   
-  /**
-   * Set the preferred language
-   * @param lang - Language code (en, nl, de)
-   */
-  setLanguage(lang: string): void {
-    preferredLanguage = lang;
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(LANGUAGE_KEY, lang);
-    }
-  },
-  
-  /**
-   * Restore language preference from localStorage
-   */
   restoreLanguage(): string {
     if (typeof localStorage === 'undefined') return preferredLanguage;
     

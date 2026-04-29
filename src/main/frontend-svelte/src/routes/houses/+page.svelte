@@ -20,15 +20,13 @@
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
-	let editingHouse = $state<House | null>(null);
-	let showNewOwnerModal = $state(false);
+		let showNewOwnerModal = $state(false);
 	
 	// View toggle: 'card' or 'table'
 	let viewMode = $state<'card' | 'table'>('card');
 
 	// Form section ref for scroll on small screens
-	let formSection = $state<HTMLElement | null>(null);
-
+	
 	// Load houses - backend now filters by actor automatically
 	async function loadHouses() {
 		loading = true;
@@ -104,8 +102,7 @@
 	}
 
 	function openAddForm() {
-		editingHouse = null;
-		formData = { 
+			formData = { 
 			name: '', 
 			address: '', 
 			description: '', 
@@ -144,8 +141,7 @@
 
 	function handleFormCancel() {
 		showForm = false;
-		editingHouse = null;
-		formData = { name: '', address: '', description: '', owner: 0, cost_profile: 0, check_in_time: '16:00', check_out_time: '10:00', surface_m2: null, floors: 1, bedrooms: 0, bathrooms: 0, luxury_level: 'standard' };
+			formData = { name: '', address: '', description: '', owner: 0, cost_profile: 0, check_in_time: '16:00', check_out_time: '10:00', surface_m2: null, floors: 1, bedrooms: 0, bathrooms: 0, luxury_level: 'standard' };
 	}
 
 	function handleOwnerChange() {
@@ -260,7 +256,7 @@
 	{/if}
 
 	{#if showForm}
-		<div class="form-section" bind:this={formSection}>
+		<div class="form-section">
 			<h3 class="form-title">{editingHouse ? t('houses.edit_house') : t('houses.add_new_house')}</h3>
 			
 			<form onsubmit={handleFormSubmit}>

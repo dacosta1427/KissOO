@@ -176,7 +176,7 @@ export const cleanersAPI = {
     await callCleaningService('deleteCleaner', { id }, 'Delete cleaner');
   },
   
-  toggleLogin: async (id: number, canLogin: boolean): Promise<Cleaner> => {
+  toggleLogin: async (id: number, canLogin: boolean): Promise<CleaningResult> => {
     const res = await callCleaningService('toggleCleanerLogin', { id, canLogin }, canLogin ? 'Enable cleaner login' : 'Disable cleaner login');
     return res;
   }

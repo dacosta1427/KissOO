@@ -14,20 +14,12 @@
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
-	let editingCleaner = $state<Cleaner | null>(null);
 
 	// View toggle: 'card' or 'table'
 	let viewMode = $state<'card' | 'table'>('card');
 
 	// Form section ref for scroll on small screens
-	let formSection = $state<HTMLElement | null>(null);
 
-	function scrollToEditForm() {
-		// Scroll to edit form on small screens (mobile/tablet)
-		if (window.innerWidth < 1024 && formSection) {
-			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}
-	}
 
 	// Load data on mount
 	$effect(() => {
@@ -138,9 +130,7 @@
 
 	async function handleAction({ action, row }: { action: any; row: any }) {
 		if (action.label === t('common.edit')) {
-			editingCleaner = row;
-			showForm = true;
-			scrollToEditForm();
+		    goto(`/cleaners/${row.id}`);
 		} else if (action.label === t('common.delete')) {
 			if (confirm(t('cleaners.delete_confirm'))) {
 				try {
@@ -155,14 +145,8 @@
 
 	async function handleFormSubmit(data: any) {
 		try {
-			if (editingCleaner) {
-				await cleanersAPI.update(editingCleaner.id, data);
-			} else {
-				await cleanersAPI.create(data);
-			}
 
 			showForm = false;
-			editingCleaner = null;
 			await loadCleaners();
 		} catch (err: any) {
 			error = err.message || t('errors.failed_to_save');
@@ -171,8 +155,9 @@
 
 	function handleFormCancel() {
 		showForm = false;
-		editingCleaner = null;
 	}
+
+
 </script>
 
 <div class="cleaners-page">
@@ -182,13 +167,13 @@
 	</div>
 
 	{#if showForm}
-		<div class="form-section" bind:this={formSection}>
+		<div class="form-section">
 			<Form
 				fields={cleanerFields}
-				data={editingCleaner || {}}
+				data={{}}
 				{loading}
-				title={editingCleaner ? t('cleaners.edit_cleaner') : t('cleaners.add_new_cleaner')}
-				submitLabel={editingCleaner ? t('cleaners.edit_cleaner') : t('cleaners.add_cleaner')}
+				title={t('cleaners.add_new_cleaner')}
+				submitLabel={t('cleaners.add_cleaner')}
 				onSubmit={handleFormSubmit}
 				onCancel={handleFormCancel}
 			/>
@@ -222,7 +207,7 @@
 				{#each cleaners as cleaner}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<div class="cleaner-card clickable" onclick={() => { editingCleaner = cleaner; showForm = true; scrollToEditForm(); }} onkeydown={(e) => e.key === 'Enter' && (editingCleaner = cleaner, showForm = true, scrollToEditForm())}>
+					<div class="cleaner-card clickable" onclick={() => { goto(`/cleaners/${cleaner.id}`) }}>
 						<div class="card-header">
 							<h3 class="cleaner-name">
 								{cleaner.name}
@@ -256,7 +241,7 @@
 						{#if cleaner.phone}<p class="cleaner-detail">{cleaner.phone}</p>{/if}
 						{#if cleaner.address}<p class="cleaner-detail">{cleaner.address}</p>{/if}
 						<div class="cleaner-actions">
-							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); editingCleaner = cleaner; showForm = true; scrollToEditForm(); }}>
+							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); goto(`/cleaners/${cleaner.id}`) }}>
 								{tt('common.edit')}
 							</button>
 							<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); if (confirm(t('cleaners.delete_confirm'))) { cleanersAPI.delete(cleaner.id).then(() => loadCleaners()); } }}>

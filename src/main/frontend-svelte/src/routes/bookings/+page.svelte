@@ -22,20 +22,12 @@
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
-	let editingBooking = $state<Booking | null>(null);
 	
 	// View toggle: 'card' or 'table'
 	let viewMode = $state<'card' | 'table'>('table');
 
 	// Form section ref for scroll on small screens
-	let formSection = $state<HTMLElement | null>(null);
 
-	function scrollToEditForm() {
-		// Scroll to edit form on small screens (mobile/tablet)
-		if (window.innerWidth < 1024 && formSection) {
-			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}
-	}
 	
 	// Get user's house IDs for filtering
 	let userHouseIds = $derived(houses.filter(h => h.owner_id === session.ownerOid).map(h => h.id));
@@ -190,9 +182,7 @@
 
 	async function handleAction({ action, row }: { action: any; row: any }) {
 		if (action.label === t('common.edit')) {
-			editingBooking = row;
-			showForm = true;
-			scrollToEditForm();
+		    goto(`/bookings/${row.id}`);
 		} else if (action.label === t('common.delete')) {
 			if (confirm(t('bookings.delete_confirm'))) {
 				try {
@@ -207,14 +197,9 @@
 
 	async function handleFormSubmit(data: any) {
 		try {
-			if (editingBooking) {
-				await bookingsAPI.update(editingBooking.id, data);
-			} else {
-				await bookingsAPI.create(data);
-			}
+			await bookingsAPI.create(data);
 
 			showForm = false;
-			editingBooking = null;
 			await loadData();
 		} catch (err: any) {
 			error = err.message || t('errors.failed_to_save');
@@ -223,8 +208,9 @@
 
 	function handleFormCancel() {
 		showForm = false;
-		editingBooking = null;
 	}
+
+
 
 	// Svelte 5: Use $effect for lifecycle management
 	$effect(() => {
@@ -264,13 +250,13 @@
 	</div>
 
 	{#if showForm}
-		<div class="form-section" bind:this={formSection}>
+		<div class="form-section">
 			<Form
 				fields={bookingFields}
-				data={editingBooking || {}}
+				data={{}}
 				{loading}
-				title={editingBooking ? t('bookings.edit_booking') : t('bookings.add_new_booking')}
-				submitLabel={editingBooking ? t('bookings.edit_booking') : t('bookings.add_booking')}
+				title={t('bookings.add_booking')}
+				submitLabel={t('bookings.add_booking')}
 				onSubmit={handleFormSubmit}
 				onCancel={handleFormCancel}
 			/>
@@ -296,14 +282,14 @@
 				{#each filteredBookings as booking}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<div class="booking-card clickable" onclick={() => { editingBooking = booking; showForm = true; scrollToEditForm(); }} onkeydown={(e) => e.key === 'Enter' && (editingBooking = booking, showForm = true, scrollToEditForm())}>
+					<div class="booking-card clickable" onclick={() => { goto(`/bookings/${booking.id}`) }} >
 						<h3 class="booking-guest">{booking.guest_name}</h3>
 						<p class="booking-dates">{toDisplayDateFormat(booking.check_in_date)} → {toDisplayDateFormat(booking.check_out_date)}</p>
 						<p class="booking-house">House: {houses.find(h => h.id === booking.house_id)?.name || booking.house_id}</p>
 						{#if booking.guest_email}<p class="booking-detail">{booking.guest_email}</p>{/if}
 						<span class="status-badge status-{booking.status}">{booking.status}</span>
 						<div class="booking-actions">
-							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); editingBooking = booking; showForm = true; scrollToEditForm(); }}>
+							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); goto(`/bookings/${booking.id}`) }}>
 								{tt('common.edit')}
 							</button>
 							<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); if (confirm(t('bookings.delete_confirm'))) { bookingsAPI.delete(booking.id).then(() => loadData()); } }}>
