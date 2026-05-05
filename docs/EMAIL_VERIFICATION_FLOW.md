@@ -112,7 +112,7 @@ curl -s -X POST http://localhost:8080/rest \
 # 5. Verify with password
 curl -s -X POST http://localhost:8080/rest \
   -H "Content-Type: application/json" \
-  -d '{"_class":"services.Users","_method":"verifyEmail","token":"<token>","password":"mysecurepassword"}'
+  -d '{"_class":"services.koo.Users","_method":"verifyEmail","token":"<token>","password":"mysecurepassword"}'
 
 # 6. Login as owner
 curl -s -X POST http://localhost:8080/rest \

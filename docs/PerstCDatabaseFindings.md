@@ -127,24 +127,24 @@ public static CDatabase getDatabase() {
 Create your own `DBManager` class that wraps `CDatabase`:
 
 ```java
-package oodb;
+package koo;
 
 import org.garret.perst.continuous.CDatabase;
 
 public class DBManager {
     private CDatabase db;
-    
+
     public void initialize(Storage storage, String indexPath) {
         db = new CDatabase();
         db.open(storage, indexPath);
     }
-    
+
     public void insert(Object obj) {
         db.beginTransaction();
         db.insert(obj);
         db.commitTransaction();
     }
-    
+
     // ... wrap other methods as needed
 }
 ```

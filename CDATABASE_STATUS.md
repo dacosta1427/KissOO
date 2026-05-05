@@ -5,7 +5,7 @@
 ## What Works
 
 1. **Build system** - Fixed classpath separator issue (`;` → `:`) in `bld` script for Linux
-2. **Lucene index path fix** - Changed from `data/oodb/idx` (subdirectory) to `data/oodb.idx` (adjacent)
+2. **Lucene index path fix** - Changed from `data/koo/idx` (subdirectory) to `data/koo.idx` (adjacent)
 3. **CDatabase initialization** - Added code to initialize CDatabase when enabled in PerstStorageManager
 4. **Build order fix** - Changed Tasks.java to compile `precompiled` before `test`
 5. **Missing methods** - Added `ActorManager.getByUserId(int)` method
@@ -16,7 +16,7 @@
 
 **Error:**
 ```
-java.lang.ClassCastException: class mycompany.domain.CDatabaseRoot cannot be cast to class org.garret.perst.continuous.RootObject
+java.lang.ClassCastException: class domain.domain.CDatabaseRoot cannot be cast to class org.garret.perst.continuous.RootObject
 ```
 
 **Root Cause:** Perst CDatabase's `open()` method does:
@@ -30,7 +30,7 @@ This fails because our `CDatabaseRoot extends Persistent`, not `RootObject`.
 
 1. **CDatabaseRoot extends RootObject** - FAILED: `RootObject` is package-private in `org.garret.perst.continuous`
 
-2. **Created CDatabaseRootWrapper** - Partially created in `oodb/` package to extend RootObject, but this created cascading issues with PerstStorageManager and other code expecting CDatabaseRoot
+2. **Created CDatabaseRootWrapper** - Partially created in `koo/` package to extend RootObject, but this created cascading issues with PerstStorageManager and other code expecting CDatabaseRoot
 
 ## Key Learnings
 
@@ -71,19 +71,19 @@ Disable CDatabase temporarily and test with standard Storage to verify the basic
 
 ## Files Modified
 
-- `src/main/precompiled/oodb/PerstStorageManager.java` - CDatabase init logic (may need rollback)
+- `src/main/precompiled/koo/PerstStorageManager.java` - CDatabase init logic (may need rollback)
 - `src/main/backend/application.ini` - PerstUseCDatabase = true
-- `src/main/precompiled/mycompany/database/ActorManager.java` - Added getByUserId()
-- `src/test/core/oodb/CDatabaseVersioningTest.java` - Test (needs Perst running)
+- `src/main/precompiled/domain/database/ActorManager.java` - Added getByUserId()
+- `src/test/core/koo/CDatabaseVersioningTest.java` - Test (needs Perst running)
 - `bld` - Fixed classpath for Linux
-- `src/main/precompiled/oodb/CDatabaseRootWrapper.java` - NEW (may need deletion)
+- `src/main/precompiled/koo/CDatabaseRootWrapper.java` - NEW (may need deletion)
 
 ## Testing
 
 To test when fixed:
 ```bash
 ./bld develop  # Start server
-# Check logs for: "[PerstStorageManager] CDatabase initialized with Lucene index at: data/oodb.idx"
+# Check logs for: "[PerstStorageManager] CDatabase initialized with Lucene index at: data/koo.idx"
 ```
 
 Or run test manually:
@@ -91,7 +91,7 @@ Or run test manually:
 # Copy application.ini to work/exploded/
 cp src/main/backend/application.ini work/exploded/
 cd work/exploded
-java -cp "WEB-INF/classes:../../libs/*" oodb.CDatabaseVersioningTest
+java -cp "WEB-INF/classes:../../libs/*" koo.CDatabaseVersioningTest
 ```
 
 ## Notes for Next Agent

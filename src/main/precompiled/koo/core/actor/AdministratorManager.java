@@ -1,7 +1,7 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
-import koo.oodb.config.AppConfig;
-import koo.oodb.core.database.StorageManager;
+import koo.config.AppConfig;
+import koo.core.database.StorageManager;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.ArrayList;
 import java.util.Collection;

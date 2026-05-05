@@ -60,9 +60,9 @@ Both commands download the latest `perst-dcg.jar` to the `libs/` directory.
 ```
 src/main/
 ├── precompiled/          # Code that doesn't change often
-│   ├── mycompany/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
-│   ├── mycompany/database/   # Manager classes (ActorManager, PerstHelper)
-│   └── oodb/                 # Perst configuration (PerstConfig, PerstContext)
+│   ├── domain/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
+│   ├── domain/database/   # Manager classes (ActorManager, PerstHelper)
+│   └── koo/                 # Perst configuration (PerstConfig, PerstContext)
 └── backend/
     └── services/            # REST services (frequently changing)
 ```
@@ -71,7 +71,7 @@ src/main/
 
 Run all tests with:
 
-    java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissweb
+    java -jar work/KissUnitTest.jar --select-package=koo --select-package=org.kissweb
 
 See [docs/TestingGuide.md](docs/TestingGuide.md) for detailed testing instructions.
 

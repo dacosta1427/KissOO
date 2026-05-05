@@ -46,15 +46,15 @@ Implement generic JSON serialization for all Perst entities using reflection-bas
 
 | File | Purpose |
 |------|---------|
-| `src/main/precompiled/oodb/annotations/JsonIgnore.java` | Exclude field from JSON |
-| `src/main/precompiled/oodb/annotations/JsonIncludeObject.java` | Serialize OO reference inline |
+| `src/main/precompiled/koo/annotations/JsonIgnore.java` | Exclude field from JSON |
+| `src/main/precompiled/koo/annotations/JsonIncludeObject.java` | Serialize OO reference inline |
 
 ### 2. Core Classes
 
 | File | Purpose |
 |------|---------|
-| `src/main/precompiled/oodb/KissCVersion.java` | Base class with toJSON()/fromJSON() |
-| `src/main/precompiled/oodb/JsonSerializationCache.java` | Reflection cache & serialization |
+| `src/main/precompiled/koo/KissCVersion.java` | Base class with toJSON()/fromJSON() |
+| `src/main/precompiled/koo/JsonSerializationCache.java` | Reflection cache & serialization |
 
 ---
 
@@ -72,39 +72,44 @@ Implement generic JSON serialization for all Perst entities using reflection-bas
 ### Step 1: Create Annotations
 
 ```java
-// oodb/annotations/JsonIgnore.java
-package oodb.annotations;
+// koo/annotations/JsonIgnore.java
+package koo.annotations;
 
 import java.lang.annotation.*;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface JsonIgnore {}
+public @interface JsonIgnore {
+}
 ```
 
 ```java
-// oodb/annotations/JsonIncludeObject.java
-package oodb.annotations;
+// koo/annotations/JsonIncludeObject.java
+package koo.annotations;
 
 import java.lang.annotation.*;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface JsonIncludeObject {}
+public @interface JsonIncludeObject {
+}
 ```
 
 ### Step 2: Create JsonSerializationCache
 
 ```java
-// oodb/JsonSerializationCache.java
-package oodb;
+// koo/JsonSerializationCache.java
+package koo;
 
 public class JsonSerializationCache {
     private static final Map<Class<?>, EntityMetadata> cache = new ConcurrentHashMap<>();
-    
+
     public static void initialize(Class<?>... entityClasses)
+
     public static JSONObject toJSON(Object entity)
+
     public static <T> T fromJSON(T entity, JSONObject json)
+
     public static JSONArray toJSONArray(Collection<?> entities)
 }
 ```
@@ -217,8 +222,8 @@ public class House extends CVersion {  // No change!
 
 ## Migration Order
 
-1. ✅ Create annotations (JsonIgnore, JsonIncludeObject) in oodb.annotations
-2. ✅ Create JsonSerializationCache in oodb package
+1. ✅ Create annotations (JsonIgnore, JsonIncludeObject) in koo.annotations
+2. ✅ Create JsonSerializationCache in koo package
 3. ✅ Update KissInit.groovy with initialization
 4. ⏳ Simplify Cleaning.groovy methods (can be done incrementally)
 

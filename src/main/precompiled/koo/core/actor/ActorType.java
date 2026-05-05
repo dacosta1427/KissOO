@@ -1,4 +1,4 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
 /**
  * ActorType - Defines the type of AActor in the system.

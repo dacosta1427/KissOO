@@ -72,7 +72,7 @@
 		loginToggleLoading = true;
 		loginInfo = null;
 		try {
-			const res = await Server.call('services.CleaningService', 'toggleOwnerLogin', {
+			const res = await Server.call('services.koo.CleaningService', 'toggleOwnerLogin', {
 				id: editingOwner.id,
 				canLogin: !ownerCanLogin
 			});
@@ -104,7 +104,7 @@
 		togglingOwners = new Set([...togglingOwners, ownerId]);
 
 		try {
-			const res = await Server.call('services.CleaningService', 'toggleOwnerLogin', {
+			const res = await Server.call('services.koo.CleaningService', 'toggleOwnerLogin', {
 				id: ownerId,
 				canLogin
 			});

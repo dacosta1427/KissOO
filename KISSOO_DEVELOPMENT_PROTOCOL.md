@@ -245,34 +245,35 @@ Maintain these documents in a `.memory/` folder:
 All domain entities MUST extend `CVersion` (not `Persistent`) for versioning support.
 
 ```java
-package mycompany.domain;
+package domain.domain;
 
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.continuous.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
 
 public class MyEntity extends CVersion {
-    
+
     // Indexed field for fast lookup (unique constraint)
-    @Indexable(unique=true)
+    @Indexable(unique = true)
     private String name;
-    
+
     // Full-text searchable for Lucene queries
     @FullTextSearchable
     private String description;
-    
+
     // Regular field - persisted but not indexed
     private int value;
-    
+
     // Required no-arg constructor for Perst
-    public MyEntity() {}
-    
+    public MyEntity() {
+    }
+
     public MyEntity(String name, String description, int value) {
         this.name = name;
         this.description = description;
         this.value = value;
     }
-    
+
     // Getters and setters (or use Lombok @Getter @Setter)
 }
 ```

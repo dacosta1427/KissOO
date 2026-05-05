@@ -15,7 +15,7 @@ public class PerstConfig {
     private static PerstConfig instance;
     
     private boolean perstEnabled = false;
-    private String databasePath = "oodb";
+    private String databasePath = "koo";
     private int pagePoolSize = 512 * 1024 * 1024; // 512MB default
     
     private PerstConfig() {
@@ -35,7 +35,7 @@ public class PerstConfig {
             props.load(fis);
             
             this.perstEnabled = "true".equalsIgnoreCase(props.getProperty("PerstEnabled", "false"));
-            this.databasePath = props.getProperty("PerstDatabasePath", "oodb");
+            this.databasePath = props.getProperty("PerstDatabasePath", "koo");
             this.pagePoolSize = Integer.parseInt(props.getProperty("PerstPagePoolSize", "536870912"));
             
             System.out.println("[PerstConfig] Perst Enabled: " + perstEnabled);

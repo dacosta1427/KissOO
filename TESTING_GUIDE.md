@@ -6,7 +6,7 @@
 
 ```
 src/main/precompiled/
-├── mycompany/
+├── domain/
 │   ├── domain/           # Domain entities (Perst persistent objects)
 │   │   ├── Actor.java
 │   │   ├── PerstUser.java
@@ -18,7 +18,7 @@ src/main/precompiled/
 │       ├── BaseManager.java
 │       └── ...
 │
-└── oodb/                # Perst infrastructure
+└── koo/                # Perst infrastructure
     ├── PerstConfig.java
     ├── PerstContext.java
     └── PerstStorageManager.java
@@ -26,7 +26,7 @@ src/main/precompiled/
 
 ### Key Principles
 
-1. **Managers in precompiled** - All Manager classes go in `src/main/precompiled/mycompany/database/`
+1. **Managers in precompiled** - All Manager classes go in `src/main/precompiled/domain/database/`
 2. **Services in backend** - REST services go in `src/main/backend/services/`
 3. **Static methods** - Managers use static methods, not singletons
 4. **Storage delegation** - Managers delegate storage to `PerstStorageManager`
@@ -37,15 +37,16 @@ src/main/precompiled/
 
 ### Test Location
 
-Tests go in: `src/test/core/mycompany/database/`
+Tests go in: `src/test/core/domain/database/`
 
 ### Example: ActorManagerTest
 
 ```java
-package mycompany.database;
+package domain.database;
 
-import mycompany.domain.Actor;
+import domain.domain.Actor;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -64,7 +65,7 @@ public class ActorManagerTest {
         Actor actor = new Actor("testActor", "RETAIL");
         assertTrue(ActorManager.validate(actor));
     }
-    
+
     // ... more tests
 }
 ```
@@ -91,43 +92,48 @@ public class ActorManagerTest {
 All storage operations go through `PerstStorageManager`:
 
 ```java
-import oodb.PerstStorageManager;
+import koo.PerstStorageManager;
 
 // Get all entities
 Collection<Object> results = PerstStorageManager.getAll(MyEntity.class);
 
-// Get by UUID
-Object entity = PerstStorageManager.getByUuid(uuid);
+        // Get by UUID
+        Object entity = PerstStorageManager.getByUuid(uuid);
 
 // Save
-PerstStorageManager.save(entity);
+PerstStorageManager.
+
+        save(entity);
 
 // Delete
-PerstStorageManager.delete(entity);
+PerstStorageManager.
+
+        delete(entity);
 ```
 
 ### Manager Pattern
 
 ```java
-package mycompany.database;
+package domain.database;
 
-import mycompany.domain.MyEntity;
+import domain.domain.MyEntity;
+
 import java.util.*;
 
 public class MyEntityManager extends BaseManager<MyEntity> {
-    
+
     // ========== Authorization-Aware Methods ==========
     // These check permissions before performing operations
-    
+
     public static Collection<MyEntity> getAll(MyEntity actor) {
         if (!checkPermission(actor, ACTION_READ, MyEntity.class)) {
             return null;
         }
         return getAll();
     }
-    
+
     // ========== CRUD Methods (delegate to PSM) ==========
-    
+
     public static Collection<MyEntity> getAll() {
         Collection<MyEntity> result = new ArrayList<>();
         for (Object obj : PerstStorageManager.getAll(MyEntity.class)) {
@@ -135,19 +141,19 @@ public class MyEntityManager extends BaseManager<MyEntity> {
         }
         return result;
     }
-    
+
     public static MyEntity getByUuid(String uuid) {
         return (MyEntity) PerstStorageManager.getByUuid(uuid);
     }
-    
+
     public static boolean create(MyEntity entity) {
         if (!validate(entity)) return false;
         PerstStorageManager.save(entity);
         return true;
     }
-    
+
     // ========== Business Logic ==========
-    
+
     public static boolean validate(MyEntity entity) {
         if (entity == null) return false;
         // validation logic
@@ -225,7 +231,7 @@ RequireAuthentication = true
 # Perst OODBMS Settings
 PerstEnabled = true
 PerstUseCDatabase = false
-PerstDatabasePath = ../../../data/oodb
+PerstDatabasePath = ../../../data/koo
 PerstPagePoolSize = 536870912
 ```
 

@@ -1,9 +1,9 @@
-package koo.oodb.core.database;
+package koo.core.database;
 
-import mycompany.actor.owner.Owner;
+import domain.actor.owner.Owner;
+import koo.core.user.PerstUser;
+import koo.core.user.PerstUserManager;
 import org.kissweb.json.JSONObject;
-import koo.oodb.core.user.PerstUserManager;
-import koo.oodb.core.user.PerstUser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

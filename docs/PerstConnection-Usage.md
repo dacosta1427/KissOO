@@ -10,13 +10,13 @@
 
 ```groovy
 import org.kissweb.restServer.MainServlet
-import oodb.PerstConnection
+import services.koo.PerstConnection
 
 class MyService {
     private PerstConnection getPerst() {
         return (PerstConnection) MainServlet.getEnvironment("PerstConnection")
     }
-    
+
     void myMethod(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         PerstConnection perst = getPerst()
         if (perst == null || !perst.isAvailable()) {
@@ -220,14 +220,14 @@ import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
 import org.kissweb.restServer.MainServlet
-import oodb.PerstConnection
+import services.koo.PerstConnection
 
 class MyService {
-    
+
     private PerstConnection getPerst() {
         return (PerstConnection) MainServlet.getEnvironment("PerstConnection")
     }
-    
+
     void getItems(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             PerstConnection perst = getPerst()
@@ -238,71 +238,71 @@ class MyService {
             outjson.put("_ErrorMessage", e.message)
         }
     }
-    
+
     void createItem(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             PerstConnection perst = getPerst()
             JSONObject data = injson.getJSONObject("data")
-            
+
             MyItem item = new MyItem(data.getString("name"))
             def tc = perst.perstCreateContainer()
             tc.addInsert(item)
-            
+
             if (!perst.perstStore(tc)) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Failed to create")
                 return
             }
-            
+
             outjson.put("data", [id: item.getOid(), name: item.getName()])
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
         }
     }
-    
+
     void updateItem(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             PerstConnection perst = getPerst()
             long oid = injson.getLong("id")
             JSONObject data = injson.getJSONObject("data")
-            
+
             MyItem item = perst.getByOid(MyItem, oid)
             if (item == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Not found")
                 return
             }
-            
+
             if (data.has("name")) item.setName(data.getString("name"))
-            
+
             def tc = perst.perstCreateContainer()
             tc.addUpdate(item)
             perst.perstStore(tc)
-            
+
             outjson.put("data", [id: item.getOid(), name: item.getName()])
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("_ErrorMessage", e.message)
         }
     }
-    
+
     void deleteItem(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             PerstConnection perst = getPerst()
             long oid = injson.getLong("id")
-            
+
             MyItem item = perst.getByOid(MyItem, oid)
             if (item == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "Not found")
                 return
             }
-            
+
             def tc = perst.perstCreateContainer()
             tc.addDelete(item)
             perst.perstStore(tc)
-            
+
             outjson.put("_Success", true)
         } catch (Exception e) {
             outjson.put("_Success", false)

@@ -158,7 +158,7 @@ KissOO is a fork of the Kiss web framework with **Perst OODBMS** integration. It
 │  │  │                         PERST OODBMS                                     │  │  │
 │  │  │                                                                          │  │  │
 │  │  │   ┌─────────────────────┐    ┌─────────────────────┐                   │  │  │
-│  │  │   │   data/oodb         │    │   data/oodb.idx/    │                   │  │  │
+│  │  │   │   data/koo         │    │   data/koo.idx/    │                   │  │  │
 │  │  │   │   (Database File)   │    │   (Lucene Index)    │                   │  │  │
 │  │  │   └─────────────────────┘    └─────────────────────┘                   │  │  │
 │  │  │                                                                          │  │  │
@@ -237,7 +237,7 @@ KissOO is a fork of the Kiss web framework with **Perst OODBMS** integration. It
 │  1. HTTP REQUEST RECEIVED                                                            │
 │  ┌─────────────────────────────────────────────────────────────────────────────────┐│
 │  │  POST /rest                                                                     ││
-│  │  Body: { "_class":"services.Users", "_method":"getRecords", "_uuid":"abc" }   ││
+│  │  Body: { "_class":"services.koo.Users", "_method":"getRecords", "_uuid":"abc" }   ││
 │  └─────────────────────────────────────────┬───────────────────────────────────────┘│
 │                                            │                                         │
 │                                            ▼                                         │
@@ -338,7 +338,7 @@ PerstEnabled = true
 PerstUseCDatabase = true
 
 # Database file path (can be relative to app root)
-PerstDatabasePath = data/oodb
+PerstDatabasePath = data/koo
 
 # Page pool size in bytes (512MB recommended)
 PerstPagePoolSize = 536870912
@@ -411,7 +411,7 @@ public class PerstConfig {
 │   │  │  │                                                                  │    │   │
 │   │  │  │ 2. Open Database                                                │    │   │
 │   │  │  │    storage.open(path, pagePoolSize)                             │    │   │
-│   │  │  │    - Creates data/oodb file if not exists                       │    │   │
+│   │  │  │    - Creates data/koo file if not exists                       │    │   │
 │   │  │  │                                                                  │    │   │
 │   │  │  │ 3. Create CDatabase (Perst 5.1.0)                                │    │   │
 │   │  │  │    cdb = CDatabase.instance                                      │    │   │
@@ -456,14 +456,14 @@ public class PerstConfig {
 
 ```
 data/
-├── oodb                    # Main database file (single file)
-├── oodb.idx/              # Lucene full-text index directory
+├── koo                    # Main database file (single file)
+├── koo.idx/              # Lucene full-text index directory
 │   ├── _0.cfe             # Compound file entries
 │   ├── _0.cfs             # Compound file segments
 │   ├── _0.si              # Segment info
 │   ├── segments_2         # Segment file
 │   └── write.lock         # Lock file (when writing)
-└── oodb.idx.lex/          # Version history index
+└── koo.idx.lex/          # Version history index
     ├── lexicon_*.txt      # Lexicon files
     └── ...                # Other index files
 ```
@@ -517,7 +517,7 @@ data/
 #### CVersion (Base for Versioned Entities)
 
 ```java
-// src/main/precompiled/mycompany/domain/CVersion.java
+// src/main/precompiled/domain/domain/CVersion.java
 
 @Indexable                    // Enables Perst indexing
 @FullTextSearchable          // Enables Lucene full-text search
@@ -546,7 +546,7 @@ public class CVersion extends Persistent {
 #### Actor Entity
 
 ```java
-// src/main/precompiled/mycompany/domain/Actor.java
+// src/main/precompiled/domain/domain/Actor.java
 
 @Indexable
 @FullTextSearchable
@@ -589,7 +589,7 @@ public class Actor extends CVersion {
 #### PerstUser Entity
 
 ```java
-// src/main/precompiled/mycompany/domain/PerstUser.java
+// src/main/precompiled/domain/domain/PerstUser.java
 
 @Indexable
 public class PerstUser extends CVersion {
@@ -640,7 +640,7 @@ public class PerstUser extends CVersion {
 #### Agreement Entity
 
 ```java
-// src/main/precompiled/mycompany/domain/Agreement.java
+// src/main/precompiled/domain/domain/Agreement.java
 
 public class Agreement extends CVersion {
     
@@ -866,7 +866,7 @@ if (PerstUserManager.getAll().isEmpty()) {
     
     // Allow endpoints without auth for setup
     MainServlet.allowWithoutAuthentication("", "Login")
-    MainServlet.allowWithoutAuthentication("services.Users", "addRecord")
+    MainServlet.allowWithoutAuthentication("services.koo.Users", "addRecord")
     
     // Admin permissions (full access)
     agreement.addCrudPermission("Actor", "GET", "POST", "PUT", "DELETE")
@@ -886,10 +886,10 @@ if (PerstUserManager.getAll().isEmpty()) {
 | Endpoint | Actor | Has Endpoint Permission? | Has CRUD Permission? | Result |
 |----------|-------|-------------------------|---------------------|--------|
 | `""` (Login) | Any | Not required | N/A | ALLOW |
-| `services.Users.getRecords` | Admin | ✅ Yes (GET) | ✅ Yes (User:GET) | ALLOW |
-| `services.Users.addRecord` | Admin | ✅ Yes (POST) | ✅ Yes (User:POST) | ALLOW |
-| `services.Users.getRecords` | Guest | ❌ No | ❌ No | DENY |
-| `services.ActorService.delete` | Limited | ✅ Yes | ❌ No (missing DELETE) | DENY |
+| `services.koo.Users.getRecords` | Admin | ✅ Yes (GET) | ✅ Yes (User:GET) | ALLOW |
+| `services.koo.Users.addRecord` | Admin | ✅ Yes (POST) | ✅ Yes (User:POST) | ALLOW |
+| `services.koo.Users.getRecords` | Guest | ❌ No | ❌ No | DENY |
+| `services.koo.ActorService.delete` | Limited | ✅ Yes | ❌ No (missing DELETE) | DENY |
 
 ---
 
@@ -902,12 +902,12 @@ if (PerstUserManager.getAll().isEmpty()) {
 │                         SERVICE DISCOVERY FLOW                                       │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                      │
-│   Request: { _class: "services.Users", _method: "getRecords", ... }               │
+│   Request: { _class: "services.koo.Users", _method: "getRecords", ... }               │
 │                                                                                      │
 │   ┌────────────────────────────────────────────────────────────────────────────────┐│
 │   │  ProcessServlet.run2()                                                        ││
 │   │  │                                                                            ││
-│   │  │  String className = "services.Users";                                    ││
+│   │  │  String className = "services.koo.Users";                                    ││
 │   │  │  String methodName = "getRecords";                                       ││
 │   │  │                                                                            ││
 │   │  │  // Try Groovy                                                            ││
@@ -1064,8 +1064,8 @@ class Users {
 
 | Service | File | Methods | Description |
 |---------|------|---------|-------------|
-| `services.Users` | `Users.groovy` | `getRecords`, `addRecord`, `updateRecord`, `deleteRecord` | User CRUD |
-| `services.ActorService` | `ActorService.java` | `getAll`, `create`, `update`, `delete`, `search` | Actor CRUD |
+| `services.koo.Users` | `Users.groovy` | `getRecords`, `addRecord`, `updateRecord`, `deleteRecord` | User CRUD |
+| `services.koo.ActorService` | `ActorService.java` | `getAll`, `create`, `update`, `delete`, `search` | Actor CRUD |
 | `services.Benchmark` | `Benchmark.groovy` | `run`, `getResults` | Performance testing |
 | `services.Login` | (built-in) | `Login`, `Logout`, `checkLogin` | Authentication |
 
@@ -1086,7 +1086,7 @@ class Users {
 │   │  REQUEST FORMAT (JSON)                                                       ││
 │   │  ┌─────────────────────────────────────────────────────────────────────────┐ ││
 │   │  │ {                                                                       │ ││
-│   │  │   "_class": "services.Users",     // Service class (required)          │ ││
+│   │  │   "_class": "services.koo.Users",     // Service class (required)          │ ││
 │   │  │   "_method": "getRecords",        // Method name (required)            │ ││
 │   │  │   "_uuid": "abc-123-def",         // Session UUID (for auth)           │ ││
 │   │  │   "param1": "value1",             // Additional parameters             │ ││
@@ -1155,12 +1155,12 @@ curl -X POST http://localhost:8080/rest \
 # Get Users (with UUID)
 curl -X POST http://localhost:8080/rest \
   -H "Content-Type: application/json" \
-  -d '{"_class":"services.Users","_method":"getRecords","_uuid":"abc-123"}'
+  -d '{"_class":"services.koo.Users","_method":"getRecords","_uuid":"abc-123"}'
 
 # Add User
 curl -X POST http://localhost:8080/rest \
   -H "Content-Type: application/json" \
-  -d '{"_class":"services.Users","_method":"addRecord","userName":"test","userPassword":"pass123","userActive":"Y"}'
+  -d '{"_class":"services.koo.Users","_method":"addRecord","userName":"test","userPassword":"pass123","userActive":"Y"}'
 ```
 
 ---
@@ -1211,7 +1211,7 @@ curl -X POST http://localhost:8080/rest \
 │             │ ─────────────────────────────────────────────────────────────────────│
 │             │                              │                          │              │
 │             │ 8. POST /rest               │                          │              │
-│             │    { "services.Users",       │                          │              │
+│             │    { "services.koo.Users",       │                          │              │
 │             │      "getRecords",          │                          │              │
 │             │      "_uuid": "abc-123" }   │                          │              │
 │             └─────────────────────────────>│                          │              │
@@ -1415,7 +1415,7 @@ class Login {
 import { Server } from '$lib/services/Server';
 
 export async function getUsers(): Promise<User[]> {
-  const res = await Server.call('services.Users', 'getRecords', {});
+  const res = await Server.call('services.koo.Users', 'getRecords', {});
   return res.rows || [];
 }
 ```
@@ -1454,11 +1454,11 @@ class Users {
 │  4. Users.ts: getUsers()                                                            │
 │     │                                                                                │
 │     ▼                                                                                │
-│  5. Server.call('services.Users', 'getRecords', {})                                │
+│  5. Server.call('services.koo.Users', 'getRecords', {})                                │
 │     │                                                                                │
 │     ▼                                                                                │
 │  6. POST http://localhost:8080/rest                                                │
-│     { "_class": "services.Users", "_method": "getRecords", "_uuid": "abc" }       │
+│     { "_class": "services.koo.Users", "_method": "getRecords", "_uuid": "abc" }       │
 │     │                                                                                │
 │     ▼                                                                                │
 │  7. ProcessServlet receives request                                                 │
@@ -1516,7 +1516,7 @@ RequireAuthentication = true
 # === Perst OODB Settings ===
 PerstEnabled = true
 PerstUseCDatabase = true
-PerstDatabasePath = /path/to/data/oodb
+PerstDatabasePath = /path/to/data/koo
 PerstPagePoolSize = 536870912
 PerstNoflush = false
 PerstOptimizeInterval = 86400
@@ -1531,7 +1531,7 @@ PerstOptimizeInterval = 86400
 | `RequireAuthentication` | boolean | true | Require auth for all endpoints |
 | `PerstEnabled` | boolean | false | Enable Perst OODBMS |
 | `PerstUseCDatabase` | boolean | true | Use CDatabase for versioning |
-| `PerstDatabasePath` | string | data/oodb | Database file path |
+| `PerstDatabasePath` | string | data/koo | Database file path |
 | `PerstPagePoolSize` | long | 536870912 | Page cache (512MB) |
 | `PerstNoflush` | boolean | false | Disable flushing |
 | `PerstOptimizeInterval` | int | 86400 | Lucene optimize interval (seconds) |
@@ -1651,7 +1651,7 @@ cd KissOO
 2. **Configure Perst** in `src/main/backend/application.ini`:
 ```ini
 PerstEnabled = true
-PerstDatabasePath = data/oodb
+PerstDatabasePath = data/koo
 ```
 
 3. **Start backend** (if not auto-started):
@@ -1694,7 +1694,7 @@ npm run dev
 │  │  Scenario 2: Modify a Domain Entity (Precompiled)                            │ │
 │  │  ──────────────────────────────────────────────────────────────────────────── │ │
 │  │                                                                               │ │
-│  │  1. Edit file in src/main/precompiled/mycompany/domain/                      │ │
+│  │  1. Edit file in src/main/precompiled/domain/domain/                      │ │
 │  │     e.g., Actor.java                                                          │ │
 │  │                                                                               │ │
 │  │  2. Save file                                                                 │ │
@@ -1728,7 +1728,7 @@ npm run dev
 java -jar work/KissUnitTest.jar
 
 # Run Perst-specific tests
-java -jar work/KissUnitTest.jar --select-package=oodb
+java -jar work/KissUnitTest.jar --select-package=koo
 
 # Run KISS core tests
 java -jar work/KissUnitTest.jar --select-package=org.kissweb
@@ -1736,7 +1736,7 @@ java -jar work/KissUnitTest.jar --select-package=org.kissweb
 
 ### Adding New Domain Classes
 
-1. **Create entity** in `src/main/precompiled/mycompany/domain/`:
+1. **Create entity** in `src/main/precompiled/domain/domain/`:
 ```java
 public class MyEntity extends CVersion {
     @Indexable
@@ -1745,7 +1745,7 @@ public class MyEntity extends CVersion {
 }
 ```
 
-2. **Create manager** in `src/main/precompiled/mycompany/database/`:
+2. **Create manager** in `src/main/precompiled/domain/database/`:
 ```java
 public class MyEntityManager extends BaseManager<MyEntity> {
     public static Collection<MyEntity> getAll() {
@@ -1809,7 +1809,7 @@ curl -X POST http://localhost:8080/rest \
 
 3. **Check Perst database**:
 ```bash
-ls -la data/oodb*  # Should show database file and index directories
+ls -la data/koo*  # Should show database file and index directories
 ```
 
 4. **Verify configuration**:
@@ -1825,11 +1825,11 @@ cat src/main/backend/application.ini | grep Perst
 
 | Class | Location | Purpose |
 |-------|----------|---------|
-| `PerstStorageManager` | `precompiled/oodb/` | Perst operations |
-| `PerstConfig` | `precompiled/oodb/` | Configuration |
-| `BaseManager<T>` | `precompiled/mycompany/database/` | CRUD base |
-| `Actor` | `precompiled/mycompany/domain/` | Main entity |
-| `PerstUser` | `precompiled/mycompany/domain/` | User entity |
+| `PerstStorageManager` | `precompiled/koo/` | Perst operations |
+| `PerstConfig` | `precompiled/koo/` | Configuration |
+| `BaseManager<T>` | `precompiled/domain/database/` | CRUD base |
+| `Actor` | `precompiled/domain/domain/` | Main entity |
+| `PerstUser` | `precompiled/domain/domain/` | User entity |
 | `ProcessServlet` | `core/org/kissweb/restServer/` | Request handler |
 | `UserCache` | `core/org/kissweb/restServer/` | Session storage |
 

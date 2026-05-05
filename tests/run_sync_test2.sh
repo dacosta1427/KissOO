@@ -52,7 +52,7 @@ echo "Owner seed: $RESP_OWNER" | tee -a "$LOGDIR/run.log"
 echo "Cleaner seed: $RESP_CLEANER" | tee -a "$LOGDIR/run.log"
 
 echo "[TEST] Pulling data..." | tee -a "$LOGDIR/run.log"
-USERS_JSON='{"_class":"services.Users","_method":"getUsers","_uuid":"test"}'
+USERS_JSON='{"_class":"services.koo.Users","_method":"getUsers","_uuid":"test"}'
 RESP_USERS=$(curl -s -X POST http://localhost:8000/rest -H 'Content-Type: application/json' -d "$USERS_JSON")
 echo "Users: $RESP_USERS" | tee -a "$LOGDIR/run.log"
 

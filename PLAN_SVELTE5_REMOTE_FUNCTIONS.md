@@ -27,7 +27,7 @@ This plan implements a Svelte 5 foundation for KissOO using **Remote Functions**
 │              Remote Functions (.remote.ts)                   │
 │                                                             │
 │   export const getUsers = query(async () => {               │
-│     return await kissClient.call('services.Users', ...);    │
+│     return await kissClient.call('services.koo.Users', ...);    │
 │   });                                                       │
 └─────────────────────────────────────────────────────────────┘
                             ↓
@@ -230,7 +230,7 @@ export const signupForm = form(
       return;
     }
     
-    const res = await kissCall('services.Users', 'addRecord', {
+    const res = await kissCall('services.koo.Users', 'addRecord', {
       userName: data.username,
       userPassword: data.password,
       userActive: 'Y'
@@ -266,7 +266,7 @@ export interface User {
 }
 
 export const getUsers = query(async (): Promise<User[]> => {
-  const res = await kissCall('services.Users', 'getRecords');
+  const res = await kissCall('services.koo.Users', 'getRecords');
   return res.rows || [];
 });
 
@@ -276,7 +276,7 @@ export const addUserForm = form(
     userPassword: v.pipe(v.string(), v.minLength(3))
   }),
   async (data, issue) => {
-    const res = await kissCall('services.Users', 'addRecord', {
+    const res = await kissCall('services.koo.Users', 'addRecord', {
       ...data,
       userActive: 'Y'
     });
@@ -293,7 +293,7 @@ export const addUserForm = form(
 export const deleteUserForm = form(
   v.object({ id: v.number() }),
   async (data) => {
-    await kissCall('services.Users', 'deleteRecord', { id: data.id });
+    await kissCall('services.koo.Users', 'deleteRecord', { id: data.id });
     getUsers().refresh();
   }
 );

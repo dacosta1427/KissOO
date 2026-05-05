@@ -116,7 +116,7 @@ describe('Auth API', () => {
 
       await signup('newuser', 'password123');
 
-      expect(Server.call).toHaveBeenCalledWith('services.Users', 'addRecord', {
+      expect(Server.call).toHaveBeenCalledWith('services.koo.Users', 'addRecord', {
         userName: 'newuser',
         userPassword: 'password123',
         userActive: 'Y'
@@ -133,7 +133,7 @@ describe('Auth API', () => {
 
       await signup('NewUser', 'password123');
 
-      expect(Server.call).toHaveBeenCalledWith('services.Users', 'addRecord', {
+      expect(Server.call).toHaveBeenCalledWith('services.koo.Users', 'addRecord', {
         userName: 'newuser',
         userPassword: 'password123',
         userActive: 'Y'

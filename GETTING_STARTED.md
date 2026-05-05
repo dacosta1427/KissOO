@@ -34,7 +34,7 @@ Edit `backend/application.ini`:
 
 ```ini
 PerstEnabled = true
-PerstDatabasePath = oodb
+PerstDatabasePath = koo
 ```
 
 ## Architecture
@@ -158,16 +158,16 @@ public class MyService {
 
 | Class | Package | Purpose |
 |-------|---------|---------|
-| `PerstConfig` | `oodb` | Reads Perst settings from application.ini |
-| `PerstContext` | `oodb` | Perst database operations (thread-local) |
-| `Actor` | `mycompany.domain` | Domain entity linked to users |
-| `Agreement` | `mycompany.domain` | Authorization permissions |
-| `Group` | `mycompany.domain` | Group-based permissions |
-| `PerstUser` | `mycompany.domain` | User entity for authentication |
-| `PerstHelper` | `mycompany.database` | Static helper for Perst operations |
-| `BaseManager` | `mycompany.database` | Abstract base with authorization |
-| `ActorManager` | `mycompany.database` | Manages Actor entities |
-| `PerstUserManager` | `mycompany.database` | Manages users + authentication |
+| `PerstConfig` | `koo` | Reads Perst settings from application.ini |
+| `PerstContext` | `koo` | Perst database operations (thread-local) |
+| `Actor` | `domain.domain` | Domain entity linked to users |
+| `Agreement` | `domain.domain` | Authorization permissions |
+| `Group` | `domain.domain` | Group-based permissions |
+| `PerstUser` | `domain.domain` | User entity for authentication |
+| `PerstHelper` | `domain.database` | Static helper for Perst operations |
+| `BaseManager` | `domain.database` | Abstract base with authorization |
+| `ActorManager` | `domain.database` | Manages Actor entities |
+| `PerstUserManager` | `domain.database` | Manages users + authentication |
 
 ## Authorization Flow
 
@@ -194,7 +194,7 @@ Each endpoint is an `EndpointMethod` that checks its own authorization:
 public class ActorService {
     
     public static final EndpointMethod GET_ACTOR = 
-        new EndpointMethod("services.ActorService.getActor", Actor.class) {
+        new EndpointMethod("services.koo.ActorService.getActor", Actor.class) {
             @Override
             protected boolean doExecute(JSONObject in, JSONObject out, 
                                        Connection db, ProcessServlet servlet) {

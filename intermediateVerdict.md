@@ -120,17 +120,17 @@ PerstStorageManager   PerstHelper   PerstContext
 
 | Class | Package | Risk |
 |-------|---------|------|
-| `BaseManager<T>` | `mycompany.database` | Cannot modify permission checks or CRUD logic |
-| `ActorManager` | `mycompany.database` | Cannot change Actor CRUD behavior |
-| `PerstUserManager` | `mycompany.database` | Cannot modify authentication or user management |
-| `PhoneManager` | `mycompany.database` | Cannot modify phone entity CRUD |
-| `BenchmarkDataManager` | `mycompany.database` | Cannot modify benchmark operations |
-| `PerstHelper` | `mycompany.database` | Cannot modify Perst facade operations |
-| `CDatabaseRoot` | `mycompany.domain` | Cannot modify Perst root object with FieldIndexes |
-| `PerstContext` | `oodb` | Cannot modify Perst context (only backup exists) |
-| `PerstConnection` | `mycompany.database` | Cannot modify DB connection (only backup exists) |
+| `BaseManager<T>` | `domain.database` | Cannot modify permission checks or CRUD logic |
+| `ActorManager` | `domain.database` | Cannot change Actor CRUD behavior |
+| `PerstUserManager` | `domain.database` | Cannot modify authentication or user management |
+| `PhoneManager` | `domain.database` | Cannot modify phone entity CRUD |
+| `BenchmarkDataManager` | `domain.database` | Cannot modify benchmark operations |
+| `PerstHelper` | `domain.database` | Cannot modify Perst facade operations |
+| `CDatabaseRoot` | `domain.domain` | Cannot modify Perst root object with FieldIndexes |
+| `PerstContext` | `koo` | Cannot modify Perst context (only backup exists) |
+| `PerstConnection` | `domain.database` | Cannot modify DB connection (only backup exists) |
 
-The `mycompany/database/` package has **zero source files**. This is the entire business logic layer.
+The `domain/database/` package has **zero source files**. This is the entire business logic layer.
 
 **Impact:** You cannot maintain, debug, understand, or extend your own application code. Any bug fix or feature addition requires reverse-engineering from bytecode.
 
@@ -192,7 +192,7 @@ public static PerstUser create(Object... args) {
 
 ### 4.4 CRITICAL — Source vs Compiled Mismatch (PerstStorageManager)
 
-The source file at `src/main/precompiled/oodb/PerstStorageManager.java` is **severely outdated** compared to the compiled class:
+The source file at `src/main/precompiled/koo/PerstStorageManager.java` is **severely outdated** compared to the compiled class:
 
 | Method | In Source? | In Compiled? |
 |--------|-----------|-------------|
@@ -312,7 +312,7 @@ Unlike `initialize()` and `close()`, the `beginTransaction()` method is NOT sync
 ### Perst-Specific Observations
 - Uses `Storage.beginThreadTransaction(0)` (mode 0 = SHARED_TRANSACTION) when CDatabase is disabled
 - Uses `CDatabase.beginTransaction()/commitTransaction()` when CDatabase is enabled
-- Lucene index stored at `data/oodb.idx` (adjacent to database file)
+- Lucene index stored at `data/koo.idx` (adjacent to database file)
 - 4.0.1 adds History/Lex APIs (`flushHistory()`, `setHistoryBufferSize()`, etc.) not yet used
 
 ---
@@ -336,24 +336,24 @@ Unlike `initialize()` and `close()`, the `beginTransaction()` method is NOT sync
 ## 8. Files Reference
 
 ### Key Source Files
-- `src/main/precompiled/oodb/PerstStorageManager.java` — outdated source
-- `src/main/precompiled/oodb/PerstConfig.java` — config reader
-- `src/main/precompiled/mycompany/domain/Actor.java` — non-thread-safe indexes
-- `src/main/precompiled/mycompany/domain/PerstUser.java` — non-thread-safe indexes
+- `src/main/precompiled/koo/PerstStorageManager.java` — outdated source
+- `src/main/precompiled/koo/PerstConfig.java` — config reader
+- `src/main/precompiled/domain/domain/Actor.java` — non-thread-safe indexes
+- `src/main/precompiled/domain/domain/PerstUser.java` — non-thread-safe indexes
 - `src/main/backend/services/ActorService.java` — REST endpoints
 - `src/main/backend/Login.groovy` — authentication
 - `src/main/backend/application.ini` — main config
 
 ### Missing Source (Compiled Only)
-- `mycompany.database.BaseManager` — abstract base manager
-- `mycompany.database.ActorManager` — Actor CRUD
-- `mycompany.database.PerstUserManager` — user CRUD + auth
-- `mycompany.database.PhoneManager` — phone CRUD
-- `mycompany.database.BenchmarkDataManager` — benchmark ops
-- `mycompany.database.PerstHelper` — Perst facade
-- `mycompany.database.PerstConnection` — DB connection
-- `mycompany.domain.CDatabaseRoot` — root object with FieldIndexes
-- `oodb.PerstContext` — Perst context
+- `domain.database.BaseManager` — abstract base manager
+- `domain.database.ActorManager` — Actor CRUD
+- `domain.database.PerstUserManager` — user CRUD + auth
+- `domain.database.PhoneManager` — phone CRUD
+- `domain.database.BenchmarkDataManager` — benchmark ops
+- `domain.database.PerstHelper` — Perst facade
+- `domain.database.PerstConnection` — DB connection
+- `domain.domain.CDatabaseRoot` — root object with FieldIndexes
+- `koo.PerstContext` — Perst context
 
 ### Backups
 - `Perst_backup/PerstContext.java`

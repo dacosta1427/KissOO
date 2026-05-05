@@ -145,8 +145,8 @@ import org.garret.perst.continuous.FullTextSearchable;
 **Fixed:** Static HashMap → ConcurrentHashMap in domain classes
 
 **Files modified:**
-- `src/main/precompiled/mycompany/domain/Actor.java` - lines 43-44
-- `src/main/precompiled/mycompany/domain/PerstUser.java` - lines 59-61
+- `src/main/precompiled/domain/domain/Actor.java` - lines 43-44
+- `src/main/precompiled/domain/domain/PerstUser.java` - lines 59-61
 
 **Changes:**
 ```java
@@ -171,13 +171,13 @@ private static ConcurrentMap<String, Actor> uuidIndex = new ConcurrentHashMap<>(
 
 | File | Package | Methods |
 |------|---------|---------|
-| `BaseManager.java` | mycompany.database | 15 - abstract CRUD with permission checks |
-| `ActorManager.java` | mycompany.database | 14 - Actor CRUD operations |
-| `PerstUserManager.java` | mycompany.database | 19 - User CRUD + auth |
-| `PhoneManager.java` | mycompany.database | 6 - Phone CRUD |
-| `BenchmarkDataManager.java` | mycompany.database | 12 - Benchmark operations |
-| `PerstHelper.java` | mycompany.database | 26 - Perst facade |
-| `PerstConnection.java` | mycompany.database | 1 - Connection wrapper |
+| `BaseManager.java` | domain.database | 15 - abstract CRUD with permission checks |
+| `ActorManager.java` | domain.database | 14 - Actor CRUD operations |
+| `PerstUserManager.java` | domain.database | 19 - User CRUD + auth |
+| `PhoneManager.java` | domain.database | 6 - Phone CRUD |
+| `BenchmarkDataManager.java` | domain.database | 12 - Benchmark operations |
+| `PerstHelper.java` | domain.database | 26 - Perst facade |
+| `PerstConnection.java` | domain.database | 1 - Connection wrapper |
 
 **NOT created (unnecessary):**
 - `CDatabaseRoot.java` - Perst 4.0.1 CDatabase handles indexing via `@Indexable` automatically

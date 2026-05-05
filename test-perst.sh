@@ -52,23 +52,23 @@ do_clean() {
     
     # Find and remove Perst database files
     if [ -f "data/oodb" ]; then
-        rm -f data/oodb
+        rm -f data/koo
         echo_perst "Removed: data/oodb"
     fi
     
     if [ -d "data/oodb.idx" ]; then
-        rm -rf data/oodb.idx
+        rm -rf data/koo.idx
         echo_perst "Removed: data/oodb.idx/"
     fi
     
     # Also check relative path from backend
     if [ -f "src/main/backend/data/oodb" ]; then
-        rm -f src/main/backend/data/oodb
+        rm -f src/main/backend/data/koo
         echo_perst "Removed: src/main/backend/data/oodb"
     fi
     
     if [ -d "src/main/backend/data/oodb.idx" ]; then
-        rm -rf src/main/backend/data/oodb.idx
+        rm -rf src/main/backend/data/koo.idx
         echo_perst "Removed: src/main/backend/data/oodb.idx/"
     fi
     
@@ -83,11 +83,11 @@ do_cversion() {
     if [ ! -f "work/exploded/WEB-INF/classes/oodb/CDatabaseVersioningTest.class" ]; then
         echo_perst "Compiling test..."
         mkdir -p work/exploded/WEB-INF/classes
-        javac -cp "$CP" src/test/core/oodb/CDatabaseVersioningTest.java -d work/exploded/WEB-INF/classes
+        javac -cp "$CP" src/test/core/koo/CDatabaseVersioningTest.java -d work/exploded/WEB-INF/classes
     fi
     
     # Run the test
-    java -cp "$CP" oodb.CDatabaseVersioningTest
+    java -cp "$CP" koo.CDatabaseVersioningTest
 }
 
 # Run unit tests via JAR
@@ -99,7 +99,7 @@ do_unit() {
         exit 1
     fi
     
-    java -jar work/KissUnitTest.jar --select-package=oodb
+    java -jar work/KissUnitTest.jar --select-package=koo
 }
 
 # Run all Perst tests (unit + integration)
@@ -126,7 +126,7 @@ do_status() {
     echo ""
     echo "Database file:"
     if [ -f "data/oodb" ]; then
-        echo -e "  ${GREEN}data/oodb${NC} - EXISTS ($(stat -c%s data/oodb 2>/dev/null || stat -f%z data/oodb 2>/dev/null) bytes)"
+        echo -e "  ${GREEN}data/oodb${NC} - EXISTS ($(stat -c%s data/koo 2>/dev/null || stat -f%z data/koo 2>/dev/null) bytes)"
     else
         echo -e "  data/oodb - NOT FOUND"
     fi
@@ -136,7 +136,7 @@ do_status() {
     if [ -d "data/oodb.idx" ]; then
         echo -e "  ${GREEN}data/oodb.idx/${NC} - EXISTS"
         echo "  Files:"
-        ls -la data/oodb.idx/ 2>/dev/null | head -10 | sed 's/^/    /'
+        ls -la data/koo.idx/ 2>/dev/null | head -10 | sed 's/^/    /'
     else
         echo "  data/oodb.idx/ - NOT FOUND"
     fi

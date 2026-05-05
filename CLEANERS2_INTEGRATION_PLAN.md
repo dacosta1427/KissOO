@@ -83,7 +83,7 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 | 4.0.9 | Owner Entity Backend | ✅ Completed | - | Created Owner.java, OwnerManager.java, added Owner CRUD to Cleaning.groovy |
 | 4.0.10 | Owner Frontend Integration | ✅ Completed | - | Added Owner type, ownersAPI, functional owners page |
 | 4.0.11 | Update Perst to 5.1.0 | ✅ Completed | - | Copied perst-dcg-5.1.0.jar from Maven repo, removed 4.0.1 |
-| 4.0.12 | JSON Serialization System | ✅ Completed | - | Created JsonSerializationCache, minimal JSON lib (oodb.json), annotations |
+| 4.0.12 | JSON Serialization System | ✅ Completed | - | Created JsonSerializationCache, minimal JSON lib (koo.json), annotations |
 | 4.0.13 | OO Reference Refactoring | ✅ Completed | - | Fixed House.ownerId→Owner, Booking.houseId→House, Schedule cleanerId/bookingId refs |
 | 4.0.14 | CostProfile Feature | ✅ Completed | - | Full implementation: entity, manager, service, backend CRUD, frontend page |
 | 4.0.15 | Cost Calculation | ✅ Completed | - | CostService with breakdown, frontend API integration |
@@ -154,7 +154,7 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 ### Manager Patterns
 | Approach | KissOO Master | Manager-at-the-Gate Branch |
 |----------|---------------|----------------------------|
-| **Entry Point** | `oodb.PerstStorageManager` | `PerstContext` → `PerstHelper` |
+| **Entry Point** | `koo.PerstStorageManager` | `PerstContext` → `PerstHelper` |
 | **Manager Style** | Static methods | Static methods (via helper) |
 | **Layers** | 1 (StorageManager → CDatabase) | 3 (PerstHelper → PerstContext → Storage) |
 | **Permission** | Integrated in BaseManager | Not implemented |
@@ -188,7 +188,7 @@ Create a **master2** branch (copy of current master) and a **cleaners2** branch 
 - Single entry point (PerstStorageManager) already acts as "librarian"
 
 **Implementation**:
-- Keep `oodb.PerstStorageManager` as main entry point
+- Keep `koo.PerstStorageManager` as main entry point
 - Add optional `PerstHelper` only for convenience methods
 - No major refactoring needed
 
@@ -304,7 +304,7 @@ export const notificationActions = {
 ## Phase 2: Manager Pattern Decision
 
 ### Recommended Approach: Minimal Wrapper
-**Keep** `oodb.PerstStorageManager` as the single entry point (librarian).
+**Keep** `koo.PerstStorageManager` as the single entry point (librarian).
 
 **Optional additions** (only if they reduce boilerplate):
 ```java
@@ -736,7 +736,7 @@ export const cleaningApi = {
 - **Observation**: LoadTestdata service works correctly when called with valid UUID. The real issue was Issue 20 - admin buttons weren't showing, so user couldn't click "Load Test Data".
 - **Verification**: Backend service confirmed working via curl:
   ```bash
-  curl -X POST http://localhost:8080/rest -d '{"_class": "services.LoadTestdata", "_method": "load", "_uuid": "..."}'
+  curl -X POST http://localhost:8080/rest -d '{"_class": "services.koo.LoadTestdata", "_method": "load", "_uuid": "..."}'
   ```
 - **Result**: Service creates 3 owners, 5 houses, 10 bookings, 4 cleaners, 8 schedules.
 

@@ -1,7 +1,8 @@
-package koo.oodb.core.database;
+package koo.core.database;
 
-import koo.oodb.config.PerstConfig;
+import koo.config.PerstConfig;
 import org.garret.perst.Storage;
+import org.garret.perst.StorageFactory;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.continuous.CDatabase;
 import org.garret.perst.continuous.StoreResult;
@@ -68,7 +69,7 @@ public class StorageManager {
             
             if (dbFile.exists()) {
                 try {
-                    Storage testStorage = org.garret.perst.StorageFactory.getInstance().createStorage();
+                    Storage testStorage = StorageFactory.getInstance().createStorage();
                     testStorage.open(dbPath, 536870912);
                     Object root = testStorage.getRoot();
                     testStorage.close();

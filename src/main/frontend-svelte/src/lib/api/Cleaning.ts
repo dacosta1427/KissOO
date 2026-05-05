@@ -124,7 +124,7 @@ const operationsWithToast = ['create', 'add', 'delete', 'update', 'deleteCleaner
 async function callCleaningService(method: string, args: any = {}, operationName?: string): Promise<CleaningResult> {
   try {
     console.log(`[Cleaning.ts] Calling ${method} with args:`, args);
-    const res = await Server.call('services.CleaningService', method, args) as CleaningResult;
+    const res = await Server.call('services.koo.CleaningService', method, args) as CleaningResult;
     console.log(`[Cleaning.ts] ${method} response:`, res);
     
     // Only show toasts for create, add, delete, update operations
@@ -340,7 +340,7 @@ export const ownersAPI = {
   }
 };
 
-// Cost Profiles API - methods are in services.CleaningService.groovy
+// Cost Profiles API - methods are in services.koo.CleaningService.groovy
 export const costProfilesAPI = {
   getAll: async (): Promise<CostProfile[]> => {
     const res = await callCleaningService('getCostProfiles', {}, 'Load cost profiles');

@@ -4,10 +4,10 @@
 
 ```bash
 # Run Perst tests
-java -jar work/KissUnitTest.jar --select-package=oodb
+java -jar work/KissUnitTest.jar --select-package=koo
 
 # Run all tests
-java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissweb
+java -jar work/KissUnitTest.jar --select-package=koo --select-package=org.kissweb
 ```
 
 **For detailed testing instructions, see [docs/TestingGuide.md](docs/TestingGuide.md).**
@@ -28,9 +28,9 @@ Added to `libs/`:
 ```
 src/main/
 ├── precompiled/
-│   ├── mycompany/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
-│   ├── mycompany/database/   # Manager classes (ActorManager, PerstHelper)
-│   └── oodb/                 # Perst config (PerstConfig, PerstContext)
+│   ├── domain/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
+│   ├── domain/database/   # Manager classes (ActorManager, PerstHelper)
+│   └── koo/                 # Perst config (PerstConfig, PerstContext)
 └── backend/
     └── services/             # REST services (ActorService, etc.)
 ```
@@ -39,9 +39,9 @@ src/main/
 
 | Package | Location | Purpose |
 |---------|----------|---------|
-| `oodb` | `precompiled/oodb/` | Perst configuration and context |
-| `mycompany.domain` | `precompiled/mycompany/domain/` | Domain entities |
-| `mycompany.database` | `precompiled/mycompany/database/` | Manager classes |
+| `koo` | `precompiled/koo/` | Perst configuration and context |
+| `domain.domain` | `precompiled/domain/domain/` | Domain entities |
+| `domain.database` | `precompiled/domain/database/` | Manager classes |
 | `services` | `backend/services/` | REST endpoints |
 
 ## Quick Start
@@ -52,35 +52,40 @@ Edit `backend/application.ini`:
 
 ```ini
 PerstEnabled = true
-PerstDatabasePath = oodb
+PerstDatabasePath = koo
 ```
 
 ### Basic Usage
 
 ```java
-import mycompany.domain.Actor;
-import mycompany.domain.Agreement;
-import mycompany.database.PerstHelper;
+import domain.domain.Actor;
+import domain.domain.Agreement;
+import domain.database.PerstHelper;
 
 // Create
 Agreement agreement = new Agreement("USER");
-agreement.grant(Actor.class, "read");
-Actor actor = new Actor("John", "USER", agreement);
-PerstHelper.storeNewObject(actor);
+agreement.
 
-// Retrieve
-Actor found = PerstHelper.retrieveObject(Actor.class, "name", "John");
+        grant(Actor .class, "read");
+
+        Actor actor = new Actor("John", "USER", agreement);
+PerstHelper.
+
+        storeNewObject(actor);
+
+        // Retrieve
+        Actor found = PerstHelper.retrieveObject(Actor.class, "name", "John");
 ```
 
 ## Configuration
 
-`src/main/precompiled/oodb/PerstConfig.java`:
+`src/main/precompiled/koo/PerstConfig.java`:
 
 ```java
 // Default values
 perstEnabled = false        // Disabled by default
 useCDatabase = true         // Use CDatabase for versioning + Lucene
-databasePath = "oodb"       // Database file location
+databasePath = "koo"       // Database file location
 pagePoolSize = 512MB        // Memory cache size
 ```
 
@@ -95,21 +100,21 @@ Perst CDatabase provides:
 The Lucene index must be **adjacent** to the Perst database file, NOT a subdirectory:
 
 ```
-data/oodb        <- Perst database FILE
-data/oodb.idx    <- Lucene index DIRECTORY (auto-created by FSDirectory)
+data/koo        <- Perst database FILE
+data/koo.idx    <- Lucene index DIRECTORY (auto-created by FSDirectory)
 ```
 
-**Why this matters:** Perst creates `oodb` as a file, not a directory. The original bug tried to create the Lucene index at `data/oodb/idx` (subdirectory inside the file path), which fails. The fix places it at `data/oodb.idx` (adjacent).
+**Why this matters:** Perst creates `koo` as a file, not a directory. The original bug tried to create the Lucene index at `data/koo/idx` (subdirectory inside the file path), which fails. The fix places it at `data/koo.idx` (adjacent).
 
 #### Enabling CDatabase
 
 In `backend/application.ini`:
 ```ini
 PerstUseCDatabase = true
-PerstDatabasePath = ../../../data/oodb
+PerstDatabasePath = ../../../data/koo
 ```
 
-The database and index are stored outside the source tree at `data/oodb` and `data/oodb.idx`.
+The database and index are stored outside the source tree at `data/koo` and `data/koo.idx`.
 
 #### CRITICAL: Lucene Index Segment Management
 
@@ -147,8 +152,8 @@ if (transactionCount % 1000 == 0) {
 PerstConfig (singleton)
     └── PerstContext (singleton)
             ├── Storage / CDatabase (Perst database)
-            └── mycompany.domain (Actor, Agreement, Group, PerstUser)
-                    └── mycompany.database (ActorManager, PerstHelper)
+            └── domain.domain (Actor, Agreement, Group, PerstUser)
+                    └── domain.database (ActorManager, PerstHelper)
 ```
 
 ## See Also

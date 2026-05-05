@@ -51,8 +51,8 @@ This loads ALL records then filters in memory - works for admin but violates Pur
 
 ## Files to Modify
 
-1. `src/main/precompiled/mycompany/domain/Owner.java`
-2. `src/main/precompiled/mycompany/domain/Cleaner.java`
+1. `src/main/precompiled/domain/domain/Owner.java`
+2. `src/main/precompiled/domain/domain/Cleaner.java`
 3. `src/main/backend/services/Cleaning.groovy`
 
 ## Notes

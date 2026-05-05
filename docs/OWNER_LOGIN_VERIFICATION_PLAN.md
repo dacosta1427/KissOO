@@ -114,7 +114,7 @@ Output: { "_Success": true, "message": "Verification email sent to owner@email.c
 
 ### verifyEmail
 ```
-POST services.Users.verifyEmail
+POST services.koo.Users.verifyEmail
 Input:  { "token": "xxx", "password": "myPassword123" }
 Output: { "_Success": true, "message": "Email verified. You can now login." }
 ```
@@ -164,7 +164,7 @@ EmailService.sendVerificationEmail(
 - `src/main/backend/services/Users.groovy` - verifyEmail method  
 - `src/main/backend/services/EmailService.java` - Email sending (exists)
 - `src/main/frontend-svelte/src/routes/verify-email/+page.svelte` - Verification page
-- `src/main/precompiled/mycompany/domain/PerstUser.java` - Token methods
+- `src/main/precompiled/domain/domain/PerstUser.java` - Token methods
 - `src/main/backend/KissInit.groovy` - EmailService initialization (configured)
 
 ## References

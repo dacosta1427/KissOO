@@ -1,6 +1,6 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
-import mycompany.CRUD;
+import domain.CRUD;
 import koo.security.EndpointMethod;
 import koo.security.EndpointRegistry;
 import org.garret.perst.continuous.CVersion;
@@ -31,7 +31,7 @@ import java.util.Set;
  *   agreement.grant(AActor.class, CRUD.READ);
  *   
  *   // Bitmap-based endpoint permission
- *   agreement.grantEndpoint("services.CleaningService.getCleaners");
+ *   agreement.grantEndpoint("services.koo.CleaningService.getCleaners");
  *   
  *   // Via group
  *   agreement.addGroup(admins);
@@ -205,7 +205,7 @@ public class Agreement extends CVersion {
     /**
      * Grant permission to execute an endpoint by name
      * 
-     *   agreement.grantEndpoint("services.CleaningService.getCleaners");
+     *   agreement.grantEndpoint("services.koo.CleaningService.getCleaners");
      */
     public void grantEndpoint(String endpointName) {
         BigInteger bit = EndpointRegistry.getEndpointBit(endpointName);

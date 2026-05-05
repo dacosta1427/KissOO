@@ -82,7 +82,7 @@ if (user.getPassword() == null || user.getPassword().isEmpty())  // Same issue
 ### PHASE 1: Fix ActorManager.java (11 errors)
 
 #### Task 1.1: Fix checkPermission calls (6 occurrences)
-**File:** `src/main/precompiled/mycompany/database/ActorManager.java`
+**File:** `src/main/precompiled/domain/database/ActorManager.java`
 
 | Line | Current | Change To |
 |------|---------|-----------|
@@ -94,7 +94,7 @@ if (user.getPassword() == null || user.getPassword().isEmpty())  // Same issue
 | 108 | `checkPermission(actor, ACTION_DELETE, "Actor")` | `checkPermission(actor, ACTION_DELETE, Actor.class)` |
 
 #### Task 1.2: Fix retrieveObject calls (2 occurrences)
-**File:** `src/main/precompiled/mycompany/database/ActorManager.java`
+**File:** `src/main/precompiled/domain/database/ActorManager.java`
 
 | Line | Current | Change To |
 |------|---------|-----------|
@@ -102,7 +102,7 @@ if (user.getPassword() == null || user.getPassword().isEmpty())  // Same issue
 | 143 | `return PerstHelper.retrieveObject(Actor.class, uuid);` | `return PerstHelper.retrieveActorByUuid(uuid);` |
 
 #### Task 1.3: Fix setUserId call (1 occurrence)
-**File:** `src/main/precompiled/mycompany/database/ActorManager.java`
+**File:** `src/main/precompiled/domain/database/ActorManager.java`
 
 **Option A:** Remove the line (if userId linking is handled elsewhere)
 **Option B:** Add userId field + setter to Actor class
@@ -119,7 +119,7 @@ if (user.getPassword() == null || user.getPassword().isEmpty())  // Same issue
 ### PHASE 2: Fix PerstUserManager.java (7 errors)
 
 #### Task 2.1: Fix checkPermission calls (5 occurrences)
-**File:** `src/main/precompiled/mycompany/database/PerstUserManager.java`
+**File:** `src/main/precompiled/domain/database/PerstUserManager.java`
 
 | Line | Current | Change To |
 |------|---------|-----------|
@@ -130,14 +130,14 @@ if (user.getPassword() == null || user.getPassword().isEmpty())  // Same issue
 | 82 | `checkPermission(actor, ACTION_DELETE, "PerstUser")` | `checkPermission(actor, ACTION_DELETE, PerstUser.class)` |
 
 #### Task 2.2: Fix retrieveObject return type (1 occurrence)
-**File:** `src/main/precompiled/mycompany/database/PerstUserManager.java`
+**File:** `src/main/precompiled/domain/database/PerstUserManager.java`
 
 | Line | Current | Change To |
 |------|---------|-----------|
 | 107 | `return PerstHelper.retrieveObject(PerstUser.class, "username", key);` | `return (PerstUser) PerstHelper.retrieveObject(PerstUser.class, "username", key);` |
 
 #### Task 2.3: Fix getPassword calls (1 occurrence - actually 2 lines)
-**File:** `src/main/precompiled/mycompany/database/PerstUserManager.java`
+**File:** `src/main/precompiled/domain/database/PerstUserManager.java`
 
 | Line | Current | Change To |
 |------|---------|-----------|
@@ -149,7 +149,7 @@ if (user.getPassword() == null || user.getPassword().isEmpty())  // Same issue
 ### PHASE 3: Add Missing Actor Methods (if needed)
 
 #### Task 3.1: Add userId field to Actor
-**File:** `src/main/precompiled/mycompany/domain/Actor.java`
+**File:** `src/main/precompiled/domain/domain/Actor.java`
 
 Add after line 21:
 ```java
@@ -194,9 +194,9 @@ public void setUserId(int userId) { this.userId = userId; }
 
 | File | Changes | Errors Fixed |
 |------|---------|--------------|
-| `src/main/precompiled/mycompany/database/ActorManager.java` | 9 changes | 11 |
-| `src/main/precompiled/mycompany/database/PerstUserManager.java` | 8 changes | 7 |
-| `src/main/precompiled/mycompany/domain/Actor.java` | Add userId (optional) | 1 |
+| `src/main/precompiled/domain/database/ActorManager.java` | 9 changes | 11 |
+| `src/main/precompiled/domain/database/PerstUserManager.java` | 8 changes | 7 |
+| `src/main/precompiled/domain/domain/Actor.java` | Add userId (optional) | 1 |
 
 ---
 

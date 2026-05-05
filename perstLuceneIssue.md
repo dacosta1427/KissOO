@@ -4,14 +4,14 @@
 
 ## Executive Summary
 
-When attempting to initialize Perst CDatabase (with versioning/full-text indexing), the application fails to create the required Lucene index directory. The database path (`data/oodb`) was being created as a FILE instead of a DIRECTORY, causing subsequent Lucene index initialization to fail with `NoSuchFileException`.
+When attempting to initialize Perst CDatabase (with versioning/full-text indexing), the application fails to create the required Lucene index directory. The database path (`data/koo`) was being created as a FILE instead of a DIRECTORY, causing subsequent Lucene index initialization to fail with `NoSuchFileException`.
 
 ## Root Cause
 
 The issue was in `PerstStorageManager.java`:
-1. The code tried to create `data/oodb` as a directory with `mkdirs()`
-2. The Lucene index path was set to `data/oodb/idx` (subdirectory inside the file path)
-3. Perst correctly creates `oodb` as a FILE, so `oodb/idx` is impossible
+1. The code tried to create `data/koo` as a directory with `mkdirs()`
+2. The Lucene index path was set to `data/koo/idx` (subdirectory inside the file path)
+3. Perst correctly creates `koo` as a FILE, so `koo/idx` is impossible
 
 ## Resolution
 
@@ -27,7 +27,7 @@ The issue was in `PerstStorageManager.java`:
 
 2. **`initialize()`** - Create CDatabase with correct index path:
    ```java
-   String indexPath = dbPath + ".idx";  // "data/oodb.idx" - adjacent to file
+   String indexPath = dbPath + ".idx";  // "data/koo.idx" - adjacent to file
    database.open(storage, indexPath);
    ```
 
@@ -42,37 +42,37 @@ The issue was in `PerstStorageManager.java`:
 |------|--------|
 | Perst Enabled | true |
 | Use CDatabase | true |
-| Configured Path | `data/oodb` |
-| Lucene Index | `data/oodb.idx` (adjacent directory) |
+| Configured Path | `data/koo` |
+| Lucene Index | `data/koo.idx` (adjacent directory) |
 
 ## Previous Issue Details (for reference)
 
-When attempting to initialize Perst CDatabase (with versioning/full-text indexing), the application failed to create the required Lucene index directory. The database path (`data/oodb`) is being created as a FILE instead of a DIRECTORY, causing subsequent Lucene index initialization to fail with `NoSuchFileException`.
+When attempting to initialize Perst CDatabase (with versioning/full-text indexing), the application failed to create the required Lucene index directory. The database path (`data/koo`) is being created as a FILE instead of a DIRECTORY, causing subsequent Lucene index initialization to fail with `NoSuchFileException`.
 
 ### Error Log (before fix)
 
 ```
-[PerstContext] Database path: C:\opt\Projects\KissOO\data\oodb
-[PerstContext] Checking idx dir: C:\opt\Projects\KissOO\data\oodb\idx exists=false
-[PerstContext] Created idx directory: false at C:\opt\Projects\KissOO\data\oodb\idx
+[PerstContext] Database path: C:\opt\Projects\KissOO\data\koo
+[PerstContext] Checking idx dir: C:\opt\Projects\KissOO\data\koo\idx exists=false
+[PerstContext] Created idx directory: false at C:\opt\Projects\KissOO\data\koo\idx
 [PerstContext] idx dir isWritable: false
-[PerstContext] Failed to initialize Perst CDatabase: java.nio.file.NoSuchFileException: C:\opt\Projects\KissOO\data\oodb\idx
+[PerstContext] Failed to initialize Perst CDatabase: java.nio.file.NoSuchFileException: C:\opt\Projects\KissOO\data\koo\idx
 ```
 
 ## Error Log
 
 ```
-[PerstContext] Database path: C:\opt\Projects\KissOO\data\oodb
-[PerstContext] Checking idx dir: C:\opt\Projects\KissOO\data\oodb\idx exists=false
-[PerstContext] Created idx directory: false at C:\opt\Projects\KissOO\data\oodb\idx
+[PerstContext] Database path: C:\opt\Projects\KissOO\data\koo
+[PerstContext] Checking idx dir: C:\opt\Projects\KissOO\data\koo\idx exists=false
+[PerstContext] Created idx directory: false at C:\opt\Projects\KissOO\data\koo\idx
 [PerstContext] idx dir isWritable: false
-[PerstContext] Failed to initialize Perst CDatabase: java.nio.file.NoSuchFileException: C:\opt\Projects\KissOO\data\oodb\idx
+[PerstContext] Failed to initialize Perst CDatabase: java.nio.file.NoSuchFileException: C:\opt\Projects\KissOO\data\koo\idx
 ```
 
 ## Observed Behavior
 
-1. `data/oodb` is created as a **FILE** (81920 bytes), not a directory
-2. `mkdirs()` returns `false` when attempting to create `data/oodb/idx`
+1. `data/koo` is created as a **FILE** (81920 bytes), not a directory
+2. `mkdirs()` returns `false` when attempting to create `data/koo/idx`
 3. Parent directory reports `isWritable: false` despite user having write permissions
 
 ## Current Code (PerstContext.java)
@@ -99,7 +99,7 @@ if (!idxDir.exists()) {
 
 // Open Perst
 int poolSize = PerstConfig.getInstance().getPagePoolSize();
-storage.open(dbPath, poolSize);  // Creates oodb as FILE?
+storage.open(dbPath, poolSize);  // Creates koo as FILE?
 
 // Open CDatabase with Lucene index
 database.open(storage, dbPath + java.io.File.separator + "idx");  // Fails
@@ -109,12 +109,12 @@ database.open(storage, dbPath + java.io.File.separator + "idx");  // Fails
 
 ### 1. File vs Directory
 Is Perst CDatabase supposed to receive:
-- A **FILE** path (e.g., `oodb.dbs`) - Perst creates the database file
-- A **DIRECTORY** path (e.g., `oodb/`) - Perst stores files in directory
+- A **FILE** path (e.g., `koo.dbs`) - Perst creates the database file
+- A **DIRECTORY** path (e.g., `koo/`) - Perst stores files in directory
 
 ### 2. Lucene Index Location
 What is the correct format for the Lucene index path?
-- Current: `dbPath + "/idx"` = `C:\opt\Projects\KissOO\data\oodb\idx`
+- Current: `dbPath + "/idx"` = `C:\opt\Projects\KissOO\data\koo\idx`
 - Expected by Perst: ???
 
 ### 3. Perst Configuration
@@ -150,14 +150,14 @@ Should we:
 
 | File | Changes |
 |------|---------|
-| `application.ini` | Set `PerstDatabasePath = ../../../data/oodb` |
+| `application.ini` | Set `PerstDatabasePath = ../../../data/koo` |
 | `PerstConfig.java` | Added path normalization, canonical path resolution |
 | `PerstContext.java` | Added directory pre-creation, debug logging |
 
 ## Next Steps
 
 1. Determine correct Perst CDatabase initialization approach
-2. Verify if `oodb` should be file path or directory path
+2. Verify if `koo` should be file path or directory path
 3. Test with standard Storage (non-CDatabase) to isolate issue
 4. Consider disabling Lucene indexing if not required for MVP
 

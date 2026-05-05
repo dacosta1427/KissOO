@@ -1,9 +1,9 @@
 package koo.security;
 
-import koo.oodb.core.actor.AActor;
-import mycompany.CRUD;
-import koo.oodb.core.user.PerstUser;
-import org.kissweb.json.JSONObject;
+import koo.core.actor.AActor;
+import koo.core.user.PerstUser;
+import domain.CRUD;
+import org.garret.perst.json.JSONObject;
 import org.kissweb.database.Connection;
 import org.kissweb.restServer.ProcessServlet;
 import org.kissweb.restServer.UserData;
@@ -48,7 +48,7 @@ public abstract class EndpointMethod {
     }
     
     /**
-     * Get the endpoint identifier (e.g., "services.ActorService.getAActor")
+     * Get the endpoint identifier (e.g., "services.koo.ActorService.getAActor")
      */
     public String getName() {
         return name;

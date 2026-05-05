@@ -1,6 +1,6 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
-import koo.oodb.core.user.PerstUser;
+import koo.core.user.PerstUser;
 import lombok.Getter;
 import lombok.Setter;
 

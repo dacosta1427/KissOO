@@ -187,13 +187,13 @@ public class Tasks {
      */
     private static void jar(boolean unitTest) {
         libs();
+        // Compile domain first (domain classes)
+        buildJava("src/main/precompiled", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
         buildJava("src/main/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
-        // Compile mycompany first (domain classes)
-        buildJava("src/main/precompiled/mycompany", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
-        // Then oodb (depends on mycompany classes)
-        buildJava("src/main/precompiled/koo", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
+        // Then koo (depends on domain classes)
+        //buildJava("src/main/precompiled/koo", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         // Also compile backend/koo for GroovyService classloader visibility
-        buildJava("src/main/backend/koo", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
+        buildJava("src/main/backend", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
         if (unitTest)
             buildJava("src/test/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         rm(explodedDir + "/WEB-INF/lib/jakarta.servlet-api-4.0.1.jar");
@@ -276,15 +276,18 @@ public class Tasks {
         libs();
         copyTree("src/main/frontend", explodedDir);
         writeToFile(explodedDir + "/META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n");
+
         copyTree("src/main/backend", explodedDir + "/WEB-INF/backend");
+        copyTree("src/main/precompiled", explodedDir + "/WEB-INF/precompiled");
         copyTree(LIBS, explodedDir + "/WEB-INF/lib");
+
         buildJava("src/main/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
         buildJava("src/main/precompiled", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         // Compile backend/koo after precompiled so PerstConnection extends Connection with proper classpath
-        buildJava("src/main/backend/koo", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
+        buildJava("src/main/backend", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         buildJava("src/test/core", explodedDir + "/WEB-INF/test-classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         rm(explodedDir + "/WEB-INF/lib/jakarta.servlet-api-4.0.1.jar");
-        copyRegex("src/main/core/org/kissweb/lisp", explodedDir + "/WEB-INF/classes/org/kissweb/lisp", ".*\\.lisp", null, false);
+        //copyRegex("src/main/core/org/kissweb/lisp", explodedDir + "/WEB-INF/classes/org/kissweb/lisp", ".*\\.lisp", null, false);
         copy("src/main/core/log4j2.xml", explodedDir + "/WEB-INF/classes");
         copyForce("src/main/core/WEB-INF/web-unsafe.xml", explodedDir + "/WEB-INF/web.xml");
     }

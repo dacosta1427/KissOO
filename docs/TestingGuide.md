@@ -7,7 +7,7 @@
 .\bld.cmd unit-tests
 
 # All tests via JAR
-java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissweb
+java -jar work/KissUnitTest.jar --select-package=koo --select-package=org.kissweb
 ```
 
 ## Running Tests
@@ -24,23 +24,23 @@ java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissw
 .\bld.cmd unit-tests
 
 # Run specific test class
-java -jar work/KissUnitTest.jar --select-class=oodb.PerstConfigTest
+java -jar work/KissUnitTest.jar --select-class=koo.PerstConfigTest
 ```
 
 ### Method 2: Using JAR directly (All Platforms)
 
 ```bash
 # All tests
-java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissweb
+java -jar work/KissUnitTest.jar --select-package=koo --select-package=org.kissweb
 
 # Perst tests only
-java -jar work/KissUnitTest.jar --select-package=oodb
+java -jar work/KissUnitTest.jar --select-package=koo
 
 # Kiss web tests only
 java -jar work/KissUnitTest.jar --select-package=org.kissweb
 
 # Specific test class
-java -jar work/KissUnitTest.jar --select-class=oodb.PerstConfigTest
+java -jar work/KissUnitTest.jar --select-class=koo.PerstConfigTest
 ```
 
 ## Test Results
@@ -74,7 +74,7 @@ If you modify test files:
 
 1. Place test files in `src/test/core/`:
    - Unit tests: `src/test/core/org/kissweb/`
-   - Perst tests: `src/test/core/oodb/`
+   - Perst tests: `src/test/core/koo/`
 
 2. Use JUnit 5:
 
@@ -94,7 +94,7 @@ class MyTest {
 
 ```bash
 .\bld.cmd unit-tests
-java -jar work/KissUnitTest.jar --select-class=oodb.MyTest
+java -jar work/KissUnitTest.jar --select-class=koo.MyTest
 ```
 
 ## Troubleshooting

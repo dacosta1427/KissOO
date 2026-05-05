@@ -79,7 +79,7 @@ Represents a callable method in a Service. Two types:
 ```java
 // External endpoint - callable via REST API
 public static final EndpointMethod GET_ACTOR = 
-    new EndpointMethod("services.ActorService.getActor") {
+    new EndpointMethod("services.koo.ActorService.getActor") {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, 
                                    Connection db, ProcessServlet servlet) {
@@ -90,7 +90,7 @@ public static final EndpointMethod GET_ACTOR =
 
 // Internal only - NOT callable via REST
 public static final EndpointMethod DO_INTERNAL = 
-    new EndpointMethod("services.ActorService.doInternal", false) {
+    new EndpointMethod("services.koo.ActorService.doInternal", false) {
         @Override
         protected boolean doExecute(...) { return true; }
     };
@@ -184,7 +184,7 @@ Each endpoint is an `EndpointMethod` that checks its own authorization:
 public class ActorService {
     
     public static final EndpointMethod GET_ACTOR = 
-        new EndpointMethod("services.ActorService.getActor") {
+        new EndpointMethod("services.koo.ActorService.getActor") {
             @Override
             protected boolean doExecute(JSONObject in, JSONObject out, 
                                        Connection db, ProcessServlet servlet) {

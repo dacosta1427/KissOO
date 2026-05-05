@@ -16,14 +16,14 @@ buildJava("src/main/precompiled", ...);  // Precompiled compiled LAST
 ```
 
 This caused test compilation to fail because:
-- Tests in `src/test/core/oodb/` reference classes from `mycompany.domain` (e.g., `Actor`, `PerstUser`)
-- These domain classes are in `src/main/precompiled/mycompany/domain/`
+- Tests in `src/test/core/koo/` reference classes from `domain.domain` (e.g., `Actor`, `PerstUser`)
+- These domain classes are in `src/main/precompiled/domain/domain/`
 - Since precompiled was built AFTER tests, the domain classes weren't available
 
 ### The Error
 ```
-src/test/core/oodb/CDatabaseVersioningTest.java:6: error: package mycompany.domain does not exist
-import mycompany.domain.Actor;
+src/test/core/koo/CDatabaseVersioningTest.java:6: error: package domain.domain does not exist
+import domain.domain.Actor;
 ```
 
 ### The Fix
@@ -40,8 +40,8 @@ This ensures domain classes are available when tests are compiled.
 ## Why This Matters
 
 The test code (`CDatabaseVersioningTest.java`) imports and uses domain classes:
-- `mycompany.domain.Actor`
-- `mycompany.domain.Agreement`
+- `domain.domain.Actor`
+- `domain.domain.Agreement`
 
 These classes are in the `precompiled` source tree, not `core`. Without this fix, tests cannot reference domain objects.
 

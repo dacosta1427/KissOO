@@ -53,7 +53,7 @@ public @interface Endpoint {
 
 Usage in Groovy services:
 ```groovy
-@Endpoint(name = "services.CleaningService.getCleaners",
+@Endpoint(name = "services.koo.CleaningService.getCleaners",
           description = "Get all cleaners",
           resource = Cleaner.class)
 def getCleaners(JSONObject injson, JSONObject outjson, ...) {
@@ -82,7 +82,7 @@ public static Map<String, BigInteger> getAllEndpoints()
 
 **Example:**
 ```java
-BigInteger bit = EndpointRegistry.registerEndpoint("services.CleaningService.getCleaners");
+BigInteger bit = EndpointRegistry.registerEndpoint("services.koo.CleaningService.getCleaners");
 // bit = 2 (binary: 10)
 ```
 
@@ -185,7 +185,7 @@ BigInteger effective = (explicit.signum() == 0) ? rolePerms : explicit.or(rolePe
 POST /permissions/role/ADMIN/grant
 {
   "roleName": "ADMIN",
-  "endpointName": "services.CleaningService.getCleaners"
+  "endpointName": "services.koo.CleaningService.getCleaners"
 }
 ```
 
@@ -194,7 +194,7 @@ POST /permissions/role/ADMIN/grant
 POST /permissions/actor/12345/grant
 {
   "actorOid": 12345,
-  "endpointName": "services.CleaningService.getCleaners"
+  "endpointName": "services.koo.CleaningService.getCleaners"
 }
 ```
 
@@ -225,10 +225,10 @@ When a Groovy service with @Endpoint annotations is first accessed, endpoints ar
 // CleaningService.groovy
 class CleaningService {
     
-    @Endpoint(name = "services.CleaningService.getCleaners")
+    @Endpoint(name = "services.koo.CleaningService.getCleaners")
     def getCleaners(...) { ... }
     
-    @Endpoint(name = "services.CleaningService.createCleaner")
+    @Endpoint(name = "services.koo.CleaningService.createCleaner")
     def createCleaner(...) { ... }
 }
 ```
@@ -238,10 +238,10 @@ On first call to `getCleaners`, the endpoint is registered with bit 1.
 ### 2. Grant permissions to role
 
 ```json
-POST /services.PermissionService.grantRoleEndpoint
+POST /services.koo.PermissionService.grantRoleEndpoint
 {
   "roleName": "ADMIN",
-  "endpointName": "services.CleaningService.getCleaners"
+  "endpointName": "services.koo.CleaningService.getCleaners"
 }
 ```
 
@@ -250,7 +250,7 @@ All actors with role ADMIN now have access to getCleaners.
 ### 3. Check actor permissions
 
 ```json
-GET /services.PermissionService.getActorPermissions
+GET /services.koo.PermissionService.getActorPermissions
 {
   "actorOid": 12345
 }
@@ -266,7 +266,7 @@ Returns:
   "rolePermissions": "2",
   "effectivePermissions": "2",
   "endpointCount": 1,
-  "endpoints": ["services.CleaningService.getCleaners"]
+  "endpoints": ["services.koo.CleaningService.getCleaners"]
 }
 ```
 

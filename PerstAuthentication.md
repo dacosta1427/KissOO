@@ -158,7 +158,7 @@ RequireAuthentication = true
 
 # Perst settings
 PerstEnabled = true
-PerstDatabasePath = ../../../data/oodb
+PerstDatabasePath = ../../../data/koo
 ```
 
 ## Behavior Matrix

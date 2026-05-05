@@ -13,14 +13,14 @@ This guide covers how to use Perst within the KissOO framework for building data
 │                   KissOO Framework                      │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
-│  mycompany.database.PerstHelper ───┐                    │
+│  domain.database.PerstHelper ───┐                    │
 │  (CRUD API)                        │                    │
 │                                    ▼                    │
-│                                oodb.PerstContext ───► Perst DB
-│  mycompany.domain.Actor,          (Management)         │
+│                                koo.PerstContext ───► Perst DB
+│  domain.domain.Actor,          (Management)         │
 │  Agreement, Group, PerstUser ──────────────────────────┘
 │                                                         │
-│  oodb.PerstConfig ──────► Reads application.ini         │
+│  koo.PerstConfig ──────► Reads application.ini         │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -30,9 +30,9 @@ This guide covers how to use Perst within the KissOO framework for building data
 ```
 src/main/
 ├── precompiled/
-│   ├── mycompany/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
-│   ├── mycompany/database/   # Manager classes (PerstHelper, ActorManager)
-│   └── oodb/                 # Perst configuration (PerstConfig, PerstContext)
+│   ├── domain/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
+│   ├── domain/database/   # Manager classes (PerstHelper, ActorManager)
+│   └── koo/                 # Perst configuration (PerstConfig, PerstContext)
 └── backend/
     └── services/             # REST services (ActorService, etc.)
 ```
@@ -47,58 +47,77 @@ Edit `backend/application.ini`:
 
 ```ini
 PerstEnabled = true
-PerstDatabasePath = oodb
+PerstDatabasePath = koo
 ```
 
 ### Basic CRUD Example
 
 ```java
 // In your service
-import mycompany.domain.Actor;
-import mycompany.domain.Agreement;
-import mycompany.database.PerstHelper;
+
+import domain.domain.Actor;
+import domain.domain.Agreement;
+import domain.database.PerstHelper;
 
 // Create
 Agreement agreement = new Agreement("USER");
-agreement.grant(Actor.class, "read");
-agreement.grant(Actor.class, "create");
+agreement.
 
-Actor actor = new Actor("John", "USER", agreement);
-PerstHelper.storeNewObject(actor);
+        grant(Actor .class, "read");
+agreement.
 
-// Retrieve
-Actor found = PerstHelper.retrieveObject(Actor.class, "name", "John");
+        grant(Actor .class, "create");
+
+        Actor actor = new Actor("John", "USER", agreement);
+PerstHelper.
+
+        storeNewObject(actor);
+
+        // Retrieve
+        Actor found = PerstHelper.retrieveObject(Actor.class, "name", "John");
 
 // Update
-found.setName("John Doe");
-PerstHelper.storeModifiedObject(found);
+found.
+
+        setName("John Doe");
+PerstHelper.
+
+        storeModifiedObject(found);
 
 // Delete
-PerstHelper.removeObject(found);
+PerstHelper.
+
+        removeObject(found);
 ```
 
 ---
 
 ## 3. Domain Entity Structure
 
-All domain entities are in `precompiled/mycompany/domain/`:
+All domain entities are in `precompiled/domain/domain/`:
 
 ```java
-package mycompany.domain;
+package domain.domain;
 
 import org.garret.perst.continuous.CVersion;
 
 public class YourEntity extends CVersion {
     private String name;
-    
-    public YourEntity() { }
-    
+
+    public YourEntity() {
+    }
+
     public YourEntity(String name) {
         this.name = name;
     }
-    
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }
 ```
 
@@ -149,7 +168,7 @@ Settings in `backend/application.ini`:
 PerstEnabled = true
 
 # Database file location (relative to working directory)
-PerstDatabasePath = oodb
+PerstDatabasePath = koo
 
 # Memory cache size in bytes (512MB default)
 PerstPagePoolSize = 536870912
@@ -165,17 +184,26 @@ PerstUseCDatabase = true
 When using CDatabase versioning, wrap writes in transactions:
 
 ```java
-import oodb.PerstContext;
+import koo.PerstContext;
 
 PerstContext context = PerstContext.getInstance();
-context.beginTransaction();
+context.
 
-try {
-    User user = new User("bob", "bob@example.com");
-    PerstHelper.storeNewObject(user);
-    context.commitTransaction();
-} catch (Exception e) {
-    context.rollbackTransaction();
+beginTransaction();
+
+try{
+User user = new User("bob", "bob@example.com");
+    PerstHelper.
+
+storeNewObject(user);
+    context.
+
+commitTransaction();
+}catch(
+Exception e){
+        context.
+
+rollbackTransaction();
 }
 ```
 

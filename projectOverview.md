@@ -98,7 +98,7 @@ KissOO is a **Perst OODBMS integration fork** of the KISS web application framew
 ```ini
 PerstEnabled = true
 PerstUseCDatabase = false  # Versioning enabled
-PerstDatabasePath = ../../../data/oodb
+PerstDatabasePath = ../../../data/koo
 PerstPagePoolSize = 536870912  # 512MB cache
 ```
 
@@ -133,9 +133,9 @@ PerstPagePoolSize = 536870912  # 512MB cache
 ```
 src/main/
 ├── precompiled/          # Core framework code
-│   ├── mycompany/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
-│   ├── mycompany/database/   # Manager classes (ActorManager, PerstHelper)
-│   └── oodb/                 # Perst configuration (PerstConfig, PerstContext)
+│   ├── domain/domain/     # Domain entities (Actor, Agreement, Group, PerstUser)
+│   ├── domain/database/   # Manager classes (ActorManager, PerstHelper)
+│   └── koo/                 # Perst configuration (PerstConfig, PerstContext)
 ├── backend/              # REST services (frequently changing)
 │   └── services/            # Service implementations
 ├── frontend/             # Web interface
@@ -192,13 +192,13 @@ src/main/
 ### **Test Execution**
 ```bash
 # Run all tests
-java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissweb
+java -jar work/KissUnitTest.jar --select-package=koo --select-package=org.kissweb
 
 # Run Perst tests only
-java -jar work/KissUnitTest.jar --select-package=oodb
+java -jar work/KissUnitTest.jar --select-package=koo
 
 # Run specific test class
-java -jar work/KissUnitTest.jar --select-class=oodb.PerstConfigTest
+java -jar work/KissUnitTest.jar --select-class=koo.PerstConfigTest
 ```
 
 ## Deployment & Operations

@@ -144,7 +144,7 @@ export class Server {
 
 // Dedicated API modules per service
 export async function getUsers(): Promise<User[]> {
-  const res = await Server.call('services.Users', 'getRecords', {});
+  const res = await Server.call('services.koo.Users', 'getRecords', {});
   return res.rows || [];
 }
 ```

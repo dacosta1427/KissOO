@@ -90,7 +90,7 @@ export async function logout() {
 }
 
 export async function signup(username: string, password: string) {
-  const res = await Server.call('services.Users', 'addRecord', {
+  const res = await Server.call('services.koo.Users', 'addRecord', {
     userName: username.toLowerCase(),
     userPassword: password,
     userActive: 'Y'

@@ -36,7 +36,7 @@ echo "Owner create response: $RESP_OWNER" | tee -a "$LOGDIR/run.log"
 echo "Cleaner create response: $RESP_CLEANER" | tee -a "$LOGDIR/run.log"
 
 echo "[TEST] Reading users, cleaners and owners..." | tee -a "$LOGDIR/run.log"
-USERS_JSON='{"_class":"services.Users","_method":"getUsers","_uuid":"test"}'
+USERS_JSON='{"_class":"services.koo.Users","_method":"getUsers","_uuid":"test"}'
 CLEANERS_JSON='{"_class":"services.Cleaning","_method":"getCleaners","_uuid":"test"}'
 OWNERS_JSON='{"_class":"services.Cleaning","_method":"getOwners","_uuid":"test"}'
 RESP_USERS=$(curl -s -X POST http://localhost:8000/rest -H 'Content-Type: application/json' -d "$USERS_JSON" | python3 -m json.tool 2>/dev/null || echo "NO_JSON")

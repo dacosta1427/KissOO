@@ -5,9 +5,9 @@
 ```
 src/main/
 ├── precompiled/
-│   ├── mycompany/domain/     # Domain entities (Actor, PerstUser, House, Booking, etc.)
-│   ├── mycompany/database/  # Manager classes (PerstUserManager, ActorManager, etc.)
-│   └── oodb/                 # Perst configuration (PerstConfig, PerstStorageManager)
+│   ├── domain/domain/     # Domain entities (Actor, PerstUser, House, Booking, etc.)
+│   ├── domain/database/  # Manager classes (PerstUserManager, ActorManager, etc.)
+│   └── koo/                 # Perst configuration (PerstConfig, PerstStorageManager)
 ├── backend/
 │   └── services/             # REST services (Groovy/Java)
 └── frontend-svelte/

@@ -47,7 +47,7 @@ Perst CDatabase (OODBMS)
 
 # Clear database (when schema changes)
 pkill -9 java
-rm -rf /home/dacosta/kissoo-data/oodb*
+rm -rf /home/dacosta/kissoo-data/koo*
 mkdir -p /home/dacosta/kissoo-data
 ./bld develop
 ```

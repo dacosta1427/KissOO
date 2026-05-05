@@ -1,9 +1,9 @@
-package koo.oodb.core.user;
+package koo.core.user;
 
 import koo.security.PasswordSecurity;
 import lombok.Getter;
 import lombok.Setter;
-import koo.oodb.core.actor.AActor;
+import koo.core.actor.AActor;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;

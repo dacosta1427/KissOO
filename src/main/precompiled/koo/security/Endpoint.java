@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * a unique bit position in the EndpointRegistry.
  * 
  * Usage:
- *   @Endpoint(name = "services.CleaningService.getCleaners",
+ *   @Endpoint(name = "services.koo.CleaningService.getCleaners",
  *             description = "Get all cleaners",
  *             resource = Cleaner.class,
  *             external = true)

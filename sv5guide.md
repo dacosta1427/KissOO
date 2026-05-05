@@ -384,7 +384,7 @@ export async function logout(): Promise<void> {
 }
 
 export async function signup(username: string, password: string): Promise<LoginResult> {
-  const res = await Server.call('services.Users', 'addRecord', {
+  const res = await Server.call('services.koo.Users', 'addRecord', {
     userName: username.toLowerCase(),
     userPassword: password,
     userActive: 'Y'
@@ -438,12 +438,12 @@ export interface ApiResult {
 }
 
 export async function getUsers(): Promise<User[]> {
-  const res = await Server.call('services.Users', 'getRecords', {});
+  const res = await Server.call('services.koo.Users', 'getRecords', {});
   return res.rows || [];
 }
 
 export async function addUser(userName: string, userPassword: string): Promise<ApiResult> {
-  const res = await Server.call('services.Users', 'addRecord', {
+  const res = await Server.call('services.koo.Users', 'addRecord', {
     userName: userName.toLowerCase(),
     userPassword,
     userActive: 'Y'
@@ -457,7 +457,7 @@ export async function addUser(userName: string, userPassword: string): Promise<A
 }
 
 export async function deleteUser(id: number): Promise<ApiResult> {
-  const res = await Server.call('services.Users', 'deleteRecord', { id });
+  const res = await Server.call('services.koo.Users', 'deleteRecord', { id });
   
   return {
     success: res._Success || res.success || false,
@@ -471,7 +471,7 @@ export async function updateUser(
   userPassword: string,
   userActive: 'Y' | 'N'
 ): Promise<ApiResult> {
-  const res = await Server.call('services.Users', 'updateRecord', {
+  const res = await Server.call('services.koo.Users', 'updateRecord', {
     id,
     userName: userName.toLowerCase(),
     userPassword,
@@ -561,18 +561,18 @@ export interface Actor {
 }
 
 export async function getActors(): Promise<Actor[]> {
-  const res = await Server.call('services.ActorService', 'getAll', {});
+  const res = await Server.call('services.koo.ActorService', 'getAll', {});
   return res.actors || [];
 }
 
 export async function createActor(name: string, type: string): Promise<Actor> {
-  const res = await Server.call('services.ActorService', 'create', { name, type });
+  const res = await Server.call('services.koo.ActorService', 'create', { name, type });
   if (!res._Success) throw new Error(res._ErrorMessage);
   return res;
 }
 
 export async function deleteActor(id: number): Promise<void> {
-  const res = await Server.call('services.ActorService', 'delete', { id });
+  const res = await Server.call('services.koo.ActorService', 'delete', { id });
   if (!res._Success) throw new Error(res._ErrorMessage);
 }
 ```
@@ -590,7 +590,7 @@ export async function deleteActor(id: number): Promise<void> {
 | `""` (empty) | `checkLogin` | ✅ Yes | Verify session is valid |
 | `""` (empty) | `LoginRequired` | ❌ No | Check if auth required |
 
-### Users Service (`services.Users`)
+### Users Service (`services.koo.Users`)
 
 | Method | Auth Required | Request Body | Response |
 |--------|---------------|--------------|----------|
@@ -606,7 +606,7 @@ export async function deleteActor(id: number): Promise<void> {
 **Request:**
 ```json
 {
-  "_class": "services.Users",
+  "_class": "services.koo.Users",
   "_method": "getRecords",
   "_uuid": "session-uuid-here",
   "param1": "value1"
@@ -1464,7 +1464,7 @@ Use `resolve()` from `$app/paths` for proper base path handling.
 
 export async function getUsers(): Promise<User[]> {
   try {
-    const res = await Server.call('services.Users', 'getRecords', {});
+    const res = await Server.call('services.koo.Users', 'getRecords', {});
     
     if (!res._Success) {
       throw new Error(res._ErrorMessage || 'Failed to fetch users');
@@ -1583,7 +1583,7 @@ goto('/login');
 ```typescript
 // Good - simple function
 export async function getUsers() {
-  return Server.call('services.Users', 'getRecords', {});
+  return Server.call('services.koo.Users', 'getRecords', {});
 }
 
 // Avoid - unnecessary complexity

@@ -32,15 +32,15 @@ static boolean shouldAllowWithoutAuthentication(String className, String methodN
 ```
 
 This causes a mismatch:
-- `KissInit.groovy` calls: `MainServlet.allowWithoutAuthentication("services.Users", "addRecord")`
+- `KissInit.groovy` calls: `MainServlet.allowWithoutAuthentication("services.koo.Users", "addRecord")`
 - This stores: `services/Users:addRecord` (slash)
-- `ProcessServlet` calls: `shouldAllowWithoutAuthentication("services.Users", "addRecord")`
-- This checks: `services.Users:addRecord` (dot) - **NO MATCH**
+- `ProcessServlet` calls: `shouldAllowWithoutAuthentication("services.koo.Users", "addRecord")`
+- This checks: `services.koo.Users:addRecord` (dot) - **NO MATCH**
 
 ## Impact
 
 - Authentication bypass via `allowWithoutAuthentication()` fails for non-empty class names containing dots
-- Methods like `services.Users.addRecord` cannot be called without authentication even when explicitly allowed
+- Methods like `services.koo.Users.addRecord` cannot be called without authentication even when explicitly allowed
 - Only affects Perst/NonSQL-only mode (where `hasDatabase = false` but `requiresAuthentication = true`)
 
 ## Root Cause
@@ -65,8 +65,8 @@ static boolean shouldAllowWithoutAuthentication(String className, String methodN
 ## Test Case
 
 1. Start backend with Perst-only mode (no SQL database)
-2. Call `MainServlet.allowWithoutAuthentication("services.Users", "addRecord")` in KissInit.groovy
-3. Attempt to call `services.Users.addRecord` without authentication
+2. Call `MainServlet.allowWithoutAuthentication("services.koo.Users", "addRecord")` in KissInit.groovy
+3. Attempt to call `services.koo.Users.addRecord` without authentication
 4. **Before fix:** Returns "You have been logged out due to inactivity"
 5. **After fix:** Method executes successfully
 

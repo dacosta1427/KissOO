@@ -96,13 +96,13 @@ The branch implements a clean **"Manager at the Gate"** pattern with three disti
 
 | Aspect | Master Branch | Manager-at-the-Gate Branch |
 |--------|---------------|----------------------------|
-| **Single Entry Point** | `oodb.PerstStorageManager` | `PerstContext` + `PerstHelper` |
+| **Single Entry Point** | `koo.PerstStorageManager` | `PerstContext` + `PerstHelper` |
 | **Manager Base Class** | Permission-aware (`checkPermission()`) | Simple CRUD only |
 | **Manager Implementation** | Static methods | Singleton instances |
 | **Service Pattern** | Static calls (`PerstUserManager.staticMethod()`) | Instance calls (`PerstUserManager.getInstance().method()`) |
 | **Transaction Support** | `TransactionContainer` for atomic batches | No-op (future) |
 | **Actor Integration** | Built into managers (`Actor actor` parameter) | Separate (Actor as domain object) |
-| **Package Structure** | `mycompany.database`, `oodb.*` | `domain.database`, `domain.kissweb` |
+| **Package Structure** | `domain.database`, `koo.*` | `domain.database`, `domain.kissweb` |
 | **Configuration** | `PerstConfig` (master) | `PerstConfig` (branch, different package) |
 
 ### Key Differences
@@ -120,13 +120,13 @@ The branch implements a clean **"Manager at the Gate"** pattern with three disti
    - **Branch**: No-op stubs only
 
 4. **Code Organization**:
-   - **Master**: Precompiled Java in `mycompany.*` packages
+   - **Master**: Precompiled Java in `domain.*` packages
    - **Branch**: Source Java in `domain.*` packages
 
 ### Integration Considerations
 
 **Conflicts to Address:**
-1. **Package Naming**: Different package structures (`mycompany` vs `domain`)
+1. **Package Naming**: Different package structures (`domain` vs `domain`)
 2. **Method Signatures**: Static vs instance methods require service refactoring
 3. **Missing Features**: Branch lacks permission checking and transaction support
 4. **Actor Model**: Different Actor class structures and relationships
@@ -263,7 +263,7 @@ export const validators = {
 ```typescript
 // api/Users.ts
 export async function getUsers(): Promise<User[]> {
-  const res = await Server.call('services.Users', 'getRecords', {});
+  const res = await Server.call('services.koo.Users', 'getRecords', {});
   return res.rows || [];
 }
 ```

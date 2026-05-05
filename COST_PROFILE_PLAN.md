@@ -18,7 +18,7 @@ This plan covers:
 
 ### A1. Create CostProfile.java Entity
 ```java
-// File: src/main/precompiled/mycompany/domain/CostProfile.java
+// File: src/main/precompiled/domain/domain/CostProfile.java
 public class CostProfile extends CVersion {
     @Indexable
     private String name;                    // "Standard", "Custom Beach House"
@@ -53,7 +53,7 @@ public class CostProfile extends CVersion {
 
 ### A2. Create CostProfileManager.java
 ```java
-// File: src/main/precompiled/mycompany/database/CostProfileManager.java
+// File: src/main/precompiled/domain/database/CostProfileManager.java
 // Standard manager pattern with:
 // - getById(Oid)
 // - getAll()
@@ -204,19 +204,19 @@ Add cost-related translations to en.json, nl.json, de.json.
 ### Backend (Java) - CREATE
 | File | Description |
 |------|-------------|
-| `src/main/precompiled/mycompany/domain/CostProfile.java` | CostProfile entity |
-| `src/main/precompiled/mycompany/database/CostProfileManager.java` | CRUD manager |
+| `src/main/precompiled/domain/domain/CostProfile.java` | CostProfile entity |
+| `src/main/precompiled/domain/database/CostProfileManager.java` | CRUD manager |
 | `src/main/backend/services/CostService.java` | Cost calculation |
 
 ### Backend (Java) - MODIFY
 | File | Changes |
 |------|---------|
-| `src/main/precompiled/mycompany/domain/House.java` | Add cost fields, fix owner ref |
-| `src/main/precompiled/mycompany/domain/Booking.java` | Fix house ref |
-| `src/main/precompiled/mycompany/domain/Schedule.java` | Fix cleaner/booking refs |
-| `src/main/precompiled/mycompany/database/HouseManager.java` | Update for new fields |
-| `src/main/precompiled/mycompany/database/BookingManager.java` | Update for ref |
-| `src/main/precompiled/mycompany/database/ScheduleManager.java` | Update for refs |
+| `src/main/precompiled/domain/domain/House.java` | Add cost fields, fix owner ref |
+| `src/main/precompiled/domain/domain/Booking.java` | Fix house ref |
+| `src/main/precompiled/domain/domain/Schedule.java` | Fix cleaner/booking refs |
+| `src/main/precompiled/domain/database/HouseManager.java` | Update for new fields |
+| `src/main/precompiled/domain/database/BookingManager.java` | Update for ref |
+| `src/main/precompiled/domain/database/ScheduleManager.java` | Update for refs |
 
 ### Backend (Groovy) - MODIFY
 | File | Changes |

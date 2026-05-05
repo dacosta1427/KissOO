@@ -34,7 +34,7 @@
 
     // Fetch user info using the token
     try {
-      const res = await Server.call('services.Users', 'getUserByToken', { token: token });
+      const res = await Server.call('services.koo.Users', 'getUserByToken', { token: token });
       
       if (res._Success) {
         userName = res.userName || '';
@@ -76,7 +76,7 @@
     status = 'loading';
     
     try {
-      const res = await Server.call('services.Users', 'verifyEmail', { 
+      const res = await Server.call('services.koo.Users', 'verifyEmail', {
         token: token,
         password: password 
       });

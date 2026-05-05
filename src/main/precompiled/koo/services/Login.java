@@ -1,12 +1,12 @@
 package koo.services;
 
+import koo.core.user.PerstUser;
+import koo.core.user.PerstUserManager;
 import org.kissweb.database.Connection;
 import org.kissweb.json.JSONObject;
 import org.kissweb.restServer.ProcessServlet;
 import org.kissweb.restServer.UserData;
 import org.kissweb.restServer.UserCache;
-import koo.oodb.core.user.PerstUserManager;
-import koo.oodb.core.user.PerstUser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

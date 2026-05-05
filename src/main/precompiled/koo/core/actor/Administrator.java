@@ -1,4 +1,4 @@
-package koo.oodb.core.actor;
+package koo.core.actor;
 
 import lombok.Getter;
 import lombok.Setter;

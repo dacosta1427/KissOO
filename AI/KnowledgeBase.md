@@ -854,7 +854,7 @@ Kiss can be extended to use Perst (an Object-Oriented Database) as an alternativ
 
 ```
 src/main/precompiled/
-├── mycompany/
+├── domain/
 │   ├── domain/           # Perst persistent classes
 │   │   ├── Actor.java
 │   │   ├── PerstUser.java
@@ -867,7 +867,7 @@ src/main/precompiled/
 │       ├── BaseManager.java
 │       └── ...
 │
-└── oodb/                # Perst infrastructure
+└── koo/                # Perst infrastructure
     ├── PerstConfig.java
     ├── PerstContext.java
     └── PerstStorageManager.java
@@ -875,7 +875,7 @@ src/main/precompiled/
 
 ### Key Principles
 
-1. **Managers in precompiled** - All Manager classes go in `src/main/precompiled/mycompany/database/`
+1. **Managers in precompiled** - All Manager classes go in `src/main/precompiled/domain/database/`
 2. **Services in backend** - REST services go in `src/main/backend/services/`
 3. **Static methods** - Managers use static methods, not singletons
 4. **Storage delegation** - Managers delegate storage to `PerstStorageManager`
@@ -894,7 +894,7 @@ RequireAuthentication = true
 # Perst OODBMS Settings
 PerstEnabled = true
 PerstUseCDatabase = false
-PerstDatabasePath = ../../../data/oodb
+PerstDatabasePath = ../../../data/koo
 PerstPagePoolSize = 536870912
 ```
 
@@ -924,14 +924,15 @@ boolean isAvailable();
 ### Manager Pattern
 
 ```java
-package mycompany.database;
+package domain.database;
 
-import mycompany.domain.MyEntity;
-import oodb.PerstStorageManager;
+import domain.domain.MyEntity;
+import koo.PerstStorageManager;
+
 import java.util.*;
 
 public class MyEntityManager extends BaseManager<MyEntity> {
-    
+
     // Authorization-aware methods check permissions first
     public static Collection<MyEntity> getAll(MyEntity actor) {
         if (!checkPermission(actor, ACTION_READ, MyEntity.class)) {
@@ -939,7 +940,7 @@ public class MyEntityManager extends BaseManager<MyEntity> {
         }
         return getAll();
     }
-    
+
     // CRUD delegates to PerstStorageManager
     public static Collection<MyEntity> getAll() {
         Collection<MyEntity> result = new ArrayList<>();
@@ -948,13 +949,13 @@ public class MyEntityManager extends BaseManager<MyEntity> {
         }
         return result;
     }
-    
+
     public static boolean create(MyEntity entity) {
         if (!validate(entity)) return false;
         PerstStorageManager.save(entity);
         return true;
     }
-    
+
     // Business logic validation
     public static boolean validate(MyEntity entity) {
         if (entity == null) return false;
@@ -986,7 +987,7 @@ public static UserData login(Connection db, String user, String password, JSONOb
 Domain classes must extend Perst's `Persistent` class:
 
 ```java
-package mycompany.domain;
+package domain.domain;
 
 import org.garret.perst.Persistent;
 
@@ -995,19 +996,28 @@ public class Actor extends Persistent {
     private String name;
     private String type;
     private Integer userId;
-    
-    public Actor() {}  // Required no-arg constructor
-    
+
+    public Actor() {
+    }  // Required no-arg constructor
+
     public Actor(String name, String type, Agreement agreement) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
         this.type = type;
     }
-    
+
     // Getters and setters
-    public String getUuid() { return uuid; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getUuid() {
+        return uuid;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
     // ... etc
 }
 ```
@@ -1016,7 +1026,7 @@ public class Actor extends Persistent {
 
 1. **Initialize in KissInit.groovy** - Perst must be initialized during application startup in the `init()` method
 2. **Use PerstStorageManager** - Don't access Perst directly; use the manager class for consistency
-3. **Keep Managers in precompiled** - Business logic goes in `src/main/precompiled/mycompany/database/`
+3. **Keep Managers in precompiled** - Business logic goes in `src/main/precompiled/domain/database/`
 4. **Handle null DB parameter** - Login.groovy must work when Connection is null
 5. **Use transactions** - Wrap multiple operations in transactions for data consistency
 
@@ -1038,9 +1048,9 @@ public class Actor extends Persistent {
 
 ### Code Organization
 
-1. **Business logic in Managers** - Keep CRUD and business logic in `src/main/precompiled/mycompany/database/`
+1. **Business logic in Managers** - Keep CRUD and business logic in `src/main/precompiled/domain/database/`
 2. **Services in backend** - REST endpoints go in `src/main/backend/services/`
-3. **Domain in precompiled** - Persistent classes go in `src/main/precompiled/mycompany/domain/`
+3. **Domain in precompiled** - Persistent classes go in `src/main/precompiled/domain/domain/`
 
 ### Testing
 

@@ -24,7 +24,7 @@ Created `PerstConnection` class that:
 ## Files Changed
 
 ### New Files
-- `src/main/precompiled/oodb/PerstConnection.java` - Connection subclass with Perst methods
+- `src/main/precompiled/koo/PerstConnection.java` - Connection subclass with Perst methods
 
 ### Modified Files
 - `src/main/backend/KissInit.groovy` - Register PerstConnection as NonSqlConnection after Perst initialization

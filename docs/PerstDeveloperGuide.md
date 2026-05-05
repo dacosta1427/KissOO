@@ -53,7 +53,7 @@ In `application.ini`:
 # Perst settings
 PerstEnabled = true
 PerstUseCDatabase = false
-PerstDatabasePath = ../../../data/oodb
+PerstDatabasePath = ../../../data/koo
 PerstPagePoolSize = 536870912
 
 # No SQL database configured - Perst-only mode
@@ -84,7 +84,7 @@ static void init() {
 First, extend your domain class from Perst's `Persistent`:
 
 ```java
-package mycompany.domain;
+package domain.domain;
 
 import org.garret.perst.Persistent;
 
@@ -92,19 +92,25 @@ public class MyEntity extends Persistent {
     private String name;
     private String type;
     private int value;
-    
+
     // Required no-arg constructor
-    public MyEntity() {}
-    
+    public MyEntity() {
+    }
+
     public MyEntity(String name, String type, int value) {
         this.name = name;
         this.type = type;
         this.value = value;
     }
-    
+
     // Getters and setters
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
     // ... etc
 }
 ```
@@ -140,24 +146,26 @@ public class CDatabaseRoot extends Root {
 Create a Manager class following the "Manager at the Gate" pattern:
 
 ```java
-package mycompany.database;
+package domain.database;
 
-import mycompany.domain.MyEntity;
-import mycompany.domain.CDatabaseRoot;
-import oodb.PerstStorageManager;
+import domain.domain.MyEntity;
+import domain.domain.CDatabaseRoot;
+import koo.PerstStorageManager;
+
 import java.util.*;
 
 /**
  * MyEntityManager - Manages MyEntity domain objects.
- * 
+ *
  * ALL access to MyEntity MUST go through this class.
  */
 public class MyEntityManager {
-    
-    private MyEntityManager() {}  // Prevent instantiation
-    
+
+    private MyEntityManager() {
+    }  // Prevent instantiation
+
     // ========== CRUD Operations ==========
-    
+
     public static Collection<MyEntity> getAll() {
         if (!PerstStorageManager.isAvailable()) {
             return new ArrayList<>();
@@ -169,7 +177,7 @@ public class MyEntityManager {
         }
         return result;
     }
-    
+
     public static MyEntity getByName(String name) {
         if (!PerstStorageManager.isAvailable()) {
             return null;
@@ -177,23 +185,23 @@ public class MyEntityManager {
         CDatabaseRoot root = PerstStorageManager.getRoot();
         return root.myEntityIndex.get(name);
     }
-    
+
     public static MyEntity create(Object... params) {
         if (!PerstStorageManager.isAvailable()) {
             return null;
         }
-        
+
         String name = (String) params[0];
         if (getByName(name) != null) {
             throw new IllegalArgumentException("Entity already exists: " + name);
         }
-        
+
         MyEntity entity = new MyEntity(
-            name,
-            (String) params[1],
-            (Integer) params[2]
+                name,
+                (String) params[1],
+                (Integer) params[2]
         );
-        
+
         PerstStorageManager.beginTransaction();
         try {
             CDatabaseRoot root = PerstStorageManager.getRoot();
@@ -203,15 +211,15 @@ public class MyEntityManager {
             PerstStorageManager.rollbackTransaction();
             throw new RuntimeException("Failed to create entity: " + e.getMessage(), e);
         }
-        
+
         return entity;
     }
-    
+
     public static boolean update(MyEntity entity) {
         if (!PerstStorageManager.isAvailable() || entity == null) {
             return false;
         }
-        
+
         try {
             CDatabaseRoot root = PerstStorageManager.getRoot();
             root.myEntityIndex.put(entity);
@@ -220,12 +228,12 @@ public class MyEntityManager {
             return false;
         }
     }
-    
+
     public static boolean delete(MyEntity entity) {
         if (!PerstStorageManager.isAvailable() || entity == null) {
             return false;
         }
-        
+
         PerstStorageManager.beginTransaction();
         try {
             CDatabaseRoot root = PerstStorageManager.getRoot();

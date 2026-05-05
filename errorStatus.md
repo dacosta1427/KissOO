@@ -59,10 +59,10 @@ The KISS framework creator suggested a cleaner approach:
 **Solution:** 
 1. Switched from Groovy Login.groovy to Java Login.java
 2. Used reflection to load the Java class dynamically (to avoid build order issues)
-3. ProcessServlet uses `Class.forName("mycompany.service.Login")` to load
+3. ProcessServlet uses `Class.forName("domain.service.Login")` to load
 
 **Files Changed:**
-- Created `src/main/precompiled/mycompany/service/Login.java`
+- Created `src/main/precompiled/domain/service/Login.java`
 - Modified `ProcessServlet.login()` to use reflection
 
 ---
@@ -295,7 +295,7 @@ Each Perst Persistent object has a built-in OID that's automatically assigned.
 # Perst settings
 PerstEnabled = true
 PerstUseCDatabase = false
-PerstDatabasePath = ../../../data/oodb
+PerstDatabasePath = ../../../data/koo
 PerstPagePoolSize = 536870912
 ```
 
@@ -320,7 +320,7 @@ static void init() {
 
 ### Database Configuration
 - **SQLite**: Required for framework startup only (`src/main/backend/DB.sqlite`)
-- **Perst**: Primary database at `data/oodb` (outside source tree)
+- **Perst**: Primary database at `data/koo` (outside source tree)
 - **SQLite Access**: BLOCKED for all application code - framework only
 - **Config File**: `src/main/backend/application.ini`
 
@@ -332,7 +332,7 @@ DatabaseType = Perst
 # Perst settings
 PerstEnabled = true
 PerstUseCDatabase = false        # Using standard Storage
-PerstDatabasePath = ../../../data/oodb
+PerstDatabasePath = ../../../data/koo
 PerstPagePoolSize = 536870912
 
 # SQL access is BLOCKED - Perst only
@@ -375,8 +375,8 @@ Response → ProcessServlet.closeSession()
 
 | File | Purpose |
 |------|---------|
-| `src/main/precompiled/mycompany/service/Login.java` | Java-based login (replaces Groovy) |
-| `src/main/precompiled/mycompany/service/PerstInit.java` | Perst initialization helper |
+| `src/main/precompiled/domain/service/Login.java` | Java-based login (replaces Groovy) |
+| `src/main/precompiled/domain/service/PerstInit.java` | Perst initialization helper |
 
 ---
 

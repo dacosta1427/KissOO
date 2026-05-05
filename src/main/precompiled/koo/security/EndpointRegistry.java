@@ -1,6 +1,6 @@
 package koo.security;
 
-import koo.oodb.core.database.StorageManager;
+import koo.core.database.StorageManager;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import java.io.Serializable;
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The registry is loaded on first access and saved when endpoints are added.
  * 
  * Usage:
- *   BigInteger bit = EndpointRegistry.getEndpointBit("services.CleaningService.getCleaners");
+ *   BigInteger bit = EndpointRegistry.getEndpointBit("services.koo.CleaningService.getCleaners");
  *   boolean hasPermission = (agreement.getEndpointPermissions() & bit) != 0;
  */
 public class EndpointRegistry extends CVersion {

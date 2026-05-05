@@ -1,7 +1,7 @@
 package koo.security;
 
-import koo.oodb.core.actor.Role;
-import koo.oodb.core.database.StorageManager;
+import koo.core.actor.Role;
+import koo.core.database.StorageManager;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import java.math.BigInteger;

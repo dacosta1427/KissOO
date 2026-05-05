@@ -108,7 +108,7 @@ export async function logout(): Promise<void> {
  * @returns Login result
  */
 export async function signup(username: string, password: string, email: string = '', name: string = ''): Promise<LoginResult> {
-  const res = await Server.call('services.Users', 'createUser', {
+  const res = await Server.call('services.koo.Users', 'createUser', {
     userName: username.toLowerCase(),
     userPassword: password,
     userActive: 'Y',

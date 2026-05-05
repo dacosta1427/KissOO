@@ -174,7 +174,7 @@ Ensure all pages work on mobile:
 - Verify navigation flow
 
 ## Backend Service Endpoints Reference
-- `services.Users` - getRecords, addRecord, updateRecord, deleteRecord
+- `services.koo.Users` - getRecords, addRecord, updateRecord, deleteRecord
 - `services.Crud` - getRecords, addRecord, updateRecord, deleteRecord, runReport, runExport
 - `services.Benchmark` - setupTable, bulkInsert, selectAll, countRecords, bulkUpdate, bulkDelete, aggregateSum, aggregateAvg, aggregateGroupBy
 - `services.FileUpload` - upload

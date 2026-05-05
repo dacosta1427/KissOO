@@ -59,7 +59,7 @@ src/main/
 │   └── index.html                     # Main entry point
 │
 └── precompiled/                       # Precompiled Java (MODIFIABLE)
-    ├── mycompany/
+    ├── domain/
     │   ├── domain/                     # Domain entities
     │   │   ├── Actor.java              # User actor with Agreement
     │   │   ├── Agreement.java          # Permission container
@@ -74,7 +74,7 @@ src/main/
     │       ├── BaseManager.java        # Base manager class
     │       └── PerstUserManager.java   # User management
     │
-    └── oodb/                           # Perst configuration
+    └── koo/                           # Perst configuration
         ├── PerstConfig.java            # Configuration reader
         └── PerstContext.java           # Thread-local storage
 ```
@@ -96,7 +96,7 @@ src/main/
 **Configuration (`application.ini`):**
 ```ini
 PerstEnabled = true
-PerstDatabasePath = oodb
+PerstDatabasePath = koo
 PerstPagePoolSize = 536870912
 PerstUseCDatabase = true
 ```
@@ -160,7 +160,7 @@ bld -v build
 # etc.
 
 # Run specific tests
-java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissweb
+java -jar work/KissUnitTest.jar --select-package=koo --select-package=org.kissweb
 ```
 
 ### Hot Reload Development
@@ -291,7 +291,7 @@ bld develop     # Windows
 
 ### Testing
 ```bash
-java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissweb
+java -jar work/KissUnitTest.jar --select-package=koo --select-package=org.kissweb
 ```
 
 ### Running
@@ -312,7 +312,7 @@ UserInactiveSeconds = 900
 
 # Perst OODBMS
 PerstEnabled = true
-PerstDatabasePath = oodb
+PerstDatabasePath = koo
 PerstPagePoolSize = 536870912
 ```
 
@@ -342,7 +342,7 @@ PerstPagePoolSize = 536870912
 
 ### Running Tests
 ```bash
-java -jar work/KissUnitTest.jar --select-package=oodb --select-package=org.kissweb
+java -jar work/KissUnitTest.jar --select-package=koo --select-package=org.kissweb
 ```
 
 ---

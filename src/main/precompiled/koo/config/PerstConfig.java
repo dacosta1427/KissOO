@@ -1,4 +1,4 @@
-package koo.oodb.config;
+package koo.config;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -16,8 +16,8 @@ public class PerstConfig {
     private boolean useCDatabase = true;  // Use CDatabase for versioning
     private boolean perstNoflush = false;  // Safe default - flush writes to disk
     private int perstOptimizeInterval = 86400;  // Default: optimize every 24 hours
-    private String databasePath = "koo/oodb";
-    private String historyIndexPath = "oodb.lex"; // Default path for history index
+    private String databasePath = "koo/";
+    private String historyIndexPath = "koo.lex"; // Default path for history index
     private int pagePoolSize = 512 * 1024 * 1024; // 512MB default
     
     private PerstConfig() {
@@ -54,8 +54,8 @@ public class PerstConfig {
             this.useCDatabase = "true".equalsIgnoreCase(props.getProperty("PerstUseCDatabase", "true"));
             this.perstNoflush = "true".equalsIgnoreCase(props.getProperty("PerstNoflush", "false"));
             this.perstOptimizeInterval = Integer.parseInt(props.getProperty("PerstOptimizeInterval", "86400"));
-            String dbPath = props.getProperty("PerstDatabasePath", "koo/oodb");
-            String histPath = props.getProperty("PerstHistoryIndexPath", "oodb.lex");
+            String dbPath = props.getProperty("PerstDatabasePath", "koo/koo");
+            String histPath = props.getProperty("PerstHistoryIndexPath", "koo.lex");
             this.pagePoolSize = Integer.parseInt(props.getProperty("PerstPagePoolSize", "536870912"));
             
 // Convert relative path to absolute using application path

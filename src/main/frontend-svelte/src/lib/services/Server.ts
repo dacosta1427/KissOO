@@ -57,7 +57,7 @@ export class Server {
       _method: meth,
       _class: cls
     };
-    if (cls === 'services.CleaningService') {
+    if (cls === 'services.koo.CleaningService') {
       console.log('[Server] CleaningService service call:', meth, 'UUID:', Server.uuid);
     }
 

@@ -19,7 +19,7 @@ KissOO uses **ooGTxQ** — a 64-bit fork of Perst with full OID support (>2³¹ 
 - The `perstUpdate()` method in `Tasks.java` handles Maven download from `https://repo.nasyn.io/repository/maven-public/`
 
 ### Lombok Usage
-All domain classes in `src/main/precompiled/mycompany/domain/` use Lombok `@Getter @Setter` annotations.
+All domain classes in `src/main/precompiled/domain/domain/` use Lombok `@Getter @Setter` annotations.
 - Getters/setters are auto-generated — do NOT write manual getters/setters for fields
 - Use `@Getter` only for classes with controlled-mutation fields (Agreement, Group, BenchmarkData, Phone)
 - Business methods (e.g., `checkPassword()`, `canLogin()`, `generateVerificationToken()`) are written manually
@@ -80,14 +80,14 @@ These return the OID of the referenced object for API responses. **Never use `ge
 ### External Database Path
 The Perst database is stored **outside the WAR** at the path configured in `application.ini`:
 ```
-PerstDatabasePath = /home/dacosta/kissoo-data/oodb
+PerstDatabasePath = /home/dacosta/kissoo-data/koo
 ```
 This allows the database to persist across deployments and be placed on NAS/storage.
 
 ### Clearing the Database
 To completely clear the database:
 1. **Kill the server first** — `pkill -9 java` (open file handles prevent deletion)
-2. **Delete DB files** — `rm -rf /home/dacosta/kissoo-data/oodb*`
+2. **Delete DB files** — `rm -rf /home/dacosta/kissoo-data/koo*`
 3. **Recreate directory** — `mkdir -p /home/dacosta/kissoo-data`
 4. **Restart server** — `./bld develop` or `tomcat/bin/startup.sh`
 
@@ -274,8 +274,9 @@ void myService(JSONObject injson, JSONObject outjson, Connection db, ProcessServ
 ```
 
 ### Alternative: Using PerstStorageManager
+
 ```groovy
-import oodb.PerstStorageManager
+import koo.PerstStorageManager
 
 void myService(...) {
     if (!PerstStorageManager.isAvailable()) {
@@ -306,7 +307,7 @@ Core Login method (empty class name):
 
 User services:
 ```json
-{"_class":"services.LoadTestdata","_method":"load","_uuid":"session-uuid"}
+{"_class":"services.koo.LoadTestdata","_method":"load","_uuid":"session-uuid"}
 ```
 
 ## Svelte 5 Standards

@@ -1,14 +1,13 @@
-import koo.PerstConnection
-import koo.oodb.core.actor.Agreement
-import koo.oodb.core.actor.Role
-import org.kissweb.database.Connection
+import services.koo.PerstConnection
+import koo.core.actor.Agreement
+import koo.core.actor.Role
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
-import koo.oodb.core.PerstConfig
-import koo.oodb.core.StorageManager
-import koo.oodb.core.user.PerstUserManager
-import koo.oodb.core.user.PerstUser
+import koo.config.PerstConfig
+import koo.core.database.StorageManager
+import koo.core.user.PerstUserManager
+import koo.core.user.PerstUser
 import koo.security.PasswordSecurity
 import java.util.function.Consumer
 
@@ -197,7 +196,7 @@ class KissInit {
                 
                 // Create superAdmin Actor with full Agreement (like cleaners2)
                 def agreement = new Agreement("superAdmin")
-                def adminActor = new mycompany.actor.owner.Owner("System Admin", "", "admin@localhost", true)
+                def adminActor = new domain.actor.owner.Owner("System Admin", "", "admin@localhost", true)
                 adminActor.getAgreement().setRole(Role.SUPER_ADMIN)
                 
                 // Owner constructor already created a deactivated PerstUser

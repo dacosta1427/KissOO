@@ -28,7 +28,7 @@ This makes it difficult to accept future KISS framework updates.
 
 ### Phase 2: Create PerstStorageManager - ✅ COMPLETED
 
-**Created:** `src/main/precompiled/oodb/PerstStorageManager.java`
+**Created:** `src/main/precompiled/koo/PerstStorageManager.java`
 
 Key features:
 - Uses `MainServlet.putEnvironment("perstStorage", storage)` to store Storage
@@ -38,7 +38,7 @@ Key features:
 
 ### Phase 3: Refactor PerstContext - ✅ COMPLETED
 
-**Modified:** `src/main/precompiled/oodb/PerstContext.java`
+**Modified:** `src/main/precompiled/koo/PerstContext.java`
 
 Changes:
 - Now delegates to PerstStorageManager for all storage operations
@@ -55,9 +55,9 @@ Changes:
 ### Phase 5: Delete Unnecessary Files - ✅ COMPLETED
 
 Deleted:
-- `src/main/precompiled/oodb/PerstKissConnection.java`
-- `src/main/core/oodb/PerstKissConnection.java`
-- `src/main/precompiled/oodb/PerstConnection.java`
+- `src/main/precompiled/koo/PerstKissConnection.java`
+- `src/main/core/koo/PerstKissConnection.java`
+- `src/main/precompiled/koo/PerstConnection.java`
 
 ---
 
