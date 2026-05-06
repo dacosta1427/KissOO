@@ -1,8 +1,8 @@
-package mycompany.actor;
+package domain.actor.cleaner;
 
 import koo.core.BaseManager;
 import koo.core.database.StorageManager;
-import mycompany.actor.cleaner.Cleaner;
+import domain.actor.cleaner.Cleaner;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 

@@ -1,6 +1,6 @@
 package koo.core.database;
 
-import mycompany.actor.owner.Owner;
+import domain.actor.owner.Owner;
 import org.kissweb.json.JSONObject;
 import koo.core.user.PerstUserManager;
 import koo.core.user.PerstUser;

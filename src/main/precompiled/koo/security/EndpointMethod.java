@@ -1,7 +1,7 @@
 package koo.security;
 
 import koo.core.actor.AActor;
-import mycompany.CRUD;
+import domain.CRUD;
 import koo.core.user.PerstUser;
 import org.kissweb.json.JSONObject;
 import org.kissweb.database.Connection;

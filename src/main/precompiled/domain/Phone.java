@@ -1,4 +1,4 @@
-package mycompany;
+package domain;
 
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;

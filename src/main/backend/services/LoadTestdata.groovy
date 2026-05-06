@@ -6,11 +6,11 @@ import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
 import koo.core.database.StorageManager
 import koo.core.user.PerstUser
-import mycompany.actor.owner.Owner
-import mycompany.oov.house.House
-import mycompany.oov.house.Booking
-import mycompany.actor.cleaner.Cleaner
-import mycompany.actor.cleaner.Schedule
+import domain.actor.owner.Owner
+import domain.oov.house.House
+import domain.oov.house.Booking
+import domain.actor.cleaner.Cleaner
+import domain.actor.cleaner.Schedule
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

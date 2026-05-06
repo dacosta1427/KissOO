@@ -1,7 +1,7 @@
-package mycompany.oov.house;
+package domain.oov.house;
 
 import koo.core.BaseManager;
-import mycompany.actor.owner.Owner;
+import domain.actor.owner.Owner;
 import koo.core.database.StorageManager;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;

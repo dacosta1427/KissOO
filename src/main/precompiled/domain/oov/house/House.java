@@ -1,9 +1,10 @@
-package mycompany.oov.house;
+package domain.oov.house;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import mycompany.actor.owner.Owner;
+import domain.actor.owner.Owner;
+import domain.oov.house.CostProfile;
 import koo.core.database.StorageManager;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;

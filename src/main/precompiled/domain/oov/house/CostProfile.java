@@ -1,6 +1,6 @@
-package mycompany.oov.house;
+package domain.oov.house;
 
-import mycompany.actor.owner.Owner;
+import domain.actor.owner.Owner;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 

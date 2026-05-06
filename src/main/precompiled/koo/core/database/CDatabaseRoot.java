@@ -1,12 +1,12 @@
 package koo.core.database;
 
-import mycompany.actor.cleaner.Cleaner;
-import mycompany.actor.cleaner.Schedule;
-import mycompany.actor.owner.Owner;
+import domain.actor.cleaner.Cleaner;
+import domain.actor.cleaner.Schedule;
+import domain.actor.owner.Owner;
+import domain.oov.house.Booking;
+import domain.oov.house.CostProfile;
+import domain.oov.house.House;
 import koo.core.user.PerstUser;
-import mycompany.oov.house.Booking;
-import mycompany.oov.house.CostProfile;
-import mycompany.oov.house.House;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import java.util.ArrayList;

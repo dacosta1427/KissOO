@@ -8,7 +8,7 @@ import org.kissweb.restServer.ProcessServlet
 import koo.core.database.StorageManager
 import koo.core.user.PerstUser
 import koo.core.actor.Role
-import mycompany.actor.owner.Owner
+import domain.actor.owner.Owner
 
 /**
  * Users service for CRUD operations on PerstUser.

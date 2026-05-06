@@ -190,9 +190,7 @@ public class Tasks {
         buildJava("src/main/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
         // Compile ALL classes in the precompiled dir first (domain classes)
         buildJava("src/main/precompiled", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
-        // Then oodb (depends on mycompany classes)
         //buildJava("src/main/precompiled/koo", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
-        // Also compile backend/koo for GroovyService classloader visibility
         buildJava("src/main/backend", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
         if (unitTest)
             buildJava("src/test/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
@@ -280,8 +278,7 @@ public class Tasks {
         copyTree(LIBS, explodedDir + "/WEB-INF/lib");
         buildJava("src/main/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
         buildJava("src/main/precompiled", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
-        // Compile backend/koo after precompiled so PerstConnection extends Connection with proper classpath
-        buildJava("src/main/backend/koo", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
+
         buildJava("src/test/core", explodedDir + "/WEB-INF/test-classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         rm(explodedDir + "/WEB-INF/lib/jakarta.servlet-api-4.0.1.jar");
         copyRegex("src/main/core/org/kissweb/lisp", explodedDir + "/WEB-INF/classes/org/kissweb/lisp", ".*\\.lisp", null, false);

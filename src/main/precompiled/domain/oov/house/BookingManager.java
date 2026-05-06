@@ -1,9 +1,9 @@
-package mycompany.oov;
+package domain.oov.house;
 
 import koo.core.BaseManager;
 import koo.core.database.StorageManager;
-import mycompany.oov.house.Booking;
-import mycompany.oov.house.House;
+import domain.oov.house.Booking;
+import domain.oov.house.House;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 import java.util.stream.Collectors;

@@ -1,4 +1,4 @@
-package mycompany;
+package domain;
 
 /**
  * CRUD - Type-safe constants for CRUD actions.

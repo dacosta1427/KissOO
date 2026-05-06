@@ -1,10 +1,10 @@
-package mycompany.actor;
+package domain.actor.cleaner;
 
 import koo.core.BaseManager;
-import mycompany.actor.cleaner.Schedule;
-import mycompany.actor.cleaner.Cleaner;
 import koo.core.database.StorageManager;
-import mycompany.oov.house.Booking;
+import domain.actor.cleaner.Schedule;
+import domain.actor.cleaner.Cleaner;
+import domain.oov.house.Booking;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 import java.util.stream.Collectors;

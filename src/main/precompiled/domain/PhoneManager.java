@@ -1,6 +1,6 @@
-package mycompany.database;
+package domain;
 
-import mycompany.Phone;
+import domain.Phone;
 import koo.core.database.StorageManager;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;

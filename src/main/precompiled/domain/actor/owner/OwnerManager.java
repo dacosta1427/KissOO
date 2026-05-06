@@ -1,9 +1,9 @@
-package mycompany.actor;
+package domain.actor.owner;
 
 import koo.core.BaseManager;
 import koo.core.user.PerstUser;
 import koo.core.database.StorageManager;
-import mycompany.actor.owner.Owner;
+import domain.actor.owner.Owner;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 

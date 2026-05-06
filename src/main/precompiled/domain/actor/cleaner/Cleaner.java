@@ -1,4 +1,4 @@
-package mycompany.actor.cleaner;
+package domain.actor.cleaner;
 
 import koo.core.actor.ANaturalActor;
 import koo.core.database.StorageManager;

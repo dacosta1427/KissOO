@@ -1,14 +1,14 @@
-package mycompany.actor.owner;
+package domain.actor.owner;
 
 import koo.core.actor.ANaturalActor;
 import koo.core.database.StorageManager;
 import lombok.Getter;
 import lombok.Setter;
-import mycompany.oov.house.Booking;
+import domain.oov.house.Booking;
 import koo.core.actor.Agreement;
 import koo.core.user.PerstUser;
-import mycompany.oov.house.House;
-import mycompany.actor.cleaner.Schedule;
+import domain.oov.house.House;
+import domain.actor.cleaner.Schedule;
 import org.garret.perst.Link;
 
 import java.util.Arrays;

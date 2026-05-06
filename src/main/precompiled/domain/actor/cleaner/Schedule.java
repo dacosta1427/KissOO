@@ -1,8 +1,8 @@
-package mycompany.actor.cleaner;
+package domain.actor.cleaner;
 
 import lombok.Getter;
 import lombok.Setter;
-import mycompany.oov.house.Booking;
+import domain.oov.house.Booking;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 

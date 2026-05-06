@@ -5,24 +5,17 @@ import org.kissweb.json.JSONArray
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import mycompany.oov.house.CostProfileManager
-import mycompany.actor.cleaner.Cleaner
-import mycompany.oov.house.Booking
-import mycompany.actor.cleaner.Schedule
-import mycompany.oov.house.House
-import mycompany.actor.Actor
-import mycompany.actor.owner.Owner
-import mycompany.oov.house.CostProfile
-import koo.core.actor.Role
-import koo.core.user.PerstUser
-import koo.core.database.StorageManager
-
-// Manager imports
-import mycompany.actor.OwnerManager
-import mycompany.actor.CleanerManager
-import mycompany.oov.HouseManager
-import mycompany.oov.BookingManager
-import mycompany.actor.ScheduleManager
+import domain.oov.house.CostProfileManager
+import domain.actor.cleaner.Cleaner
+import domain.oov.house.Booking
+import domain.actor.cleaner.Schedule
+import domain.oov.house.House
+import domain.actor.Actor
+import domain.actor.owner.Owner
+import domain.actor.CleanerManager
+import domain.oov.HouseManager
+import domain.oov.BookingManager
+import domain.actor.ScheduleManager
 
 /**
  * CleaningService service for CRUD operations on cleaning scheduler entities.

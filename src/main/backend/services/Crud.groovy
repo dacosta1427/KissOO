@@ -4,8 +4,8 @@ import org.kissweb.json.JSONArray
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import mycompany.database.PhoneManager
-import mycompany.Phone
+import domain.PhoneManager
+import domain.Phone
 
 /**
  * Crud service for phone book operations using Perst.

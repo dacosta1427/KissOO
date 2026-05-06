@@ -178,7 +178,7 @@ class KissInit {
                 
                 // Create superAdmin Actor with full Agreement (like cleaners2)
                 def agreement = new Agreement("superAdmin")
-                def adminActor = new mycompany.actor.owner.Owner("System Admin", "", "admin@localhost", true)
+                def adminActor = new domain.actor.owner.Owner("System Admin", "", "admin@localhost", true)
                 adminActor.getAgreement().setRole(Role.SUPER_ADMIN)
                 
                 // Owner constructor already created a deactivated PerstUser

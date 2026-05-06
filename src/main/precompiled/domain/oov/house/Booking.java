@@ -1,9 +1,9 @@
-package mycompany.oov.house;
+package domain.oov.house;
 
 import lombok.Getter;
 import lombok.Setter;
-import mycompany.actor.owner.Owner;
-import mycompany.actor.cleaner.Schedule;
+import domain.actor.owner.Owner;
+import domain.actor.cleaner.Schedule;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;

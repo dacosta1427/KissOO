@@ -10,8 +10,8 @@ import koo.core.user.PerstUser;
 import koo.core.actor.AActor;
 import koo.core.actor.ActorType;
 import koo.core.actor.Role;
-import mycompany.actor.owner.Owner;
-import mycompany.actor.cleaner.Cleaner;
+import domain.actor.owner.Owner;
+import domain.actor.cleaner.Cleaner;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

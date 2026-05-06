@@ -1,9 +1,9 @@
 package services;
 
-import mycompany.oov.house.CostProfile;
-import mycompany.oov.house.House;
-import mycompany.oov.house.Booking;
-import mycompany.oov.house.CostProfileManager;
+import domain.oov.house.CostProfile;
+import domain.oov.house.House;
+import domain.oov.house.Booking;
+import domain.oov.house.CostProfileManager;
 
 /**
  * CostService - Service for calculating cleaning costs.
