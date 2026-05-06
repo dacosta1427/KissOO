@@ -18,7 +18,7 @@
 
 ### Directory Structure
 ```
-koo/
+oodb/
 ├── src/              # Main Perst library (Java 1.6)
 ├── tst/              # Test suite
 ├── lib/              # JAR dependencies (manual)
