@@ -58,48 +58,62 @@ public class PerstConfig {
             String histPath = props.getProperty("PerstHistoryIndexPath", "koo.lex");
             this.pagePoolSize = Integer.parseInt(props.getProperty("PerstPagePoolSize", "536870912"));
             
+            // Platform-agnostic path handling
+            // Normalize path separators - convert all separators to standard Java File.separator
+            String normalizedDbPath = dbPath.replace('/', java.io.File.separatorChar).replace('\\', java.io.File.separatorChar);
+            String normalizedHistPath = histPath.replace('/', java.io.File.separatorChar).replace('\\', java.io.File.separatorChar);
+            
 // Convert relative path to absolute using application path
-            if (appPath != null && !new java.io.File(dbPath).isAbsolute()) {
-                // Normalize path separators and construct proper absolute path
-                String normalizedAppPath = appPath.replace('/', java.io.File.separatorChar);
+            if (appPath != null && !new java.io.File(normalizedDbPath).isAbsolute()) {
+                // Normalize application path
+                String normalizedAppPath = appPath.replace('/', java.io.File.separatorChar).replace('\\', java.io.File.separatorChar);
                 if (!normalizedAppPath.endsWith(java.io.File.separator)) {
                     normalizedAppPath += java.io.File.separator;
                 }
-                String combinedPath = normalizedAppPath + dbPath.replace('/', java.io.File.separatorChar);
-                // Resolve to canonical path to handle ".." and symlinks
+                // Combine and resolve to canonical path
+                java.io.File combinedFile = new java.io.File(normalizedAppPath, normalizedDbPath);
                 try {
-                    this.databasePath = new java.io.File(combinedPath).getCanonicalPath();
+                    this.databasePath = combinedFile.getCanonicalPath();
                 } catch (Exception e) {
-                    this.databasePath = combinedPath;
+                    this.databasePath = combinedFile.getAbsolutePath();
                 }
             } else {
-                String normalizedDbPath = dbPath.replace('/', java.io.File.separatorChar);
                 try {
                     this.databasePath = new java.io.File(normalizedDbPath).getCanonicalPath();
                 } catch (Exception e) {
-                    this.databasePath = normalizedDbPath;
+                    this.databasePath = new java.io.File(normalizedDbPath).getAbsolutePath();
                 }
             }
             
             // Process history index path
-            if (appPath != null && !new java.io.File(histPath).isAbsolute()) {
-                String normalizedAppPath = appPath.replace('/', java.io.File.separatorChar);
+            if (appPath != null && !new java.io.File(normalizedHistPath).isAbsolute()) {
+                String normalizedAppPath = appPath.replace('/', java.io.File.separatorChar).replace('\\', java.io.File.separatorChar);
                 if (!normalizedAppPath.endsWith(java.io.File.separator)) {
                     normalizedAppPath += java.io.File.separator;
                 }
-                String combinedHistPath = normalizedAppPath + histPath.replace('/', java.io.File.separatorChar);
+                java.io.File combinedHistFile = new java.io.File(normalizedAppPath, normalizedHistPath);
                 try {
-                    this.historyIndexPath = new java.io.File(combinedHistPath).getCanonicalPath();
+                    this.historyIndexPath = combinedHistFile.getCanonicalPath();
                 } catch (Exception e) {
-                    this.historyIndexPath = combinedHistPath;
+                    this.historyIndexPath = combinedHistFile.getAbsolutePath();
                 }
             } else {
-                String normalizedHistPath = histPath.replace('/', java.io.File.separatorChar);
                 try {
                     this.historyIndexPath = new java.io.File(normalizedHistPath).getCanonicalPath();
                 } catch (Exception e) {
-                    this.historyIndexPath = normalizedHistPath;
+                    this.historyIndexPath = new java.io.File(normalizedHistPath).getAbsolutePath();
                 }
+            }
+            
+            // Ensure database directory exists
+            try {
+                java.io.File dbDir = new java.io.File(this.databasePath).getParentFile();
+                if (dbDir != null && !dbDir.exists()) {
+                    dbDir.mkdirs();
+                    System.out.println("[PerstConfig] Created database directory: " + dbDir.getCanonicalPath());
+                }
+            } catch (Exception e) {
+                System.out.println("[PerstConfig] Failed to create database directory: " + e.getMessage());
             }
             
             System.out.println("[PerstConfig] Perst Enabled: " + perstEnabled);
