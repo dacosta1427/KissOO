@@ -143,22 +143,20 @@ public class Tasks {
     }
 
     /**
-     * Download latest ooGTxQ OODBMS from Maven repository.
-     * Uses nassyn repository to get the latest RELEASE version.
-     * Run this to update ooGTxQ to the latest version.
+     * Download Perst 5.1.1 OODBMS from Maven Central.
+     * Run this to update Perst to the latest version.
      * <br><br>
      * Usage: ./bld perst-update
      */
     public static void perstUpdate() {
-        println("Downloading latest ooGTxQ from Maven repository...");
+        println("Downloading Perst 5.1.1 from Maven Central...");
         try {
-            // Use Maven to download the latest ooGTxQ
+            // Use Maven to download Perst
             ProcessBuilder pb = new ProcessBuilder(
                 "mvn", "dependency:get",
-                "-Dartifact=org.garret.perst:ooGTxQ:RELEASE",
-                "-DremoteRepositories=nassyn::::https://repo.nasyn.io/repository/maven-public/",
+                "-Dartifact=org.garret.perst:perst:5.1.1",
                 "-Dtransitive=false",
-                "-Ddest=" + LIBS + "/ooGTxQ-1.0.1.jar"
+                "-Ddest=" + LIBS + "/perst-5.1.1.jar"
             );
             pb.directory(new File(System.getProperty("user.home")));
             pb.inheritIO();
@@ -166,17 +164,17 @@ public class Tasks {
             int exitCode = p.waitFor();
             
             if (exitCode == 0) {
-                println("Successfully downloaded latest ooGTxQ to " + LIBS + "/ooGTxQ-1.0.1.jar");
+                println("Successfully downloaded Perst 5.1.1 to " + LIBS + "/perst-5.1.1.jar");
                 
-                File src = new File(LIBS + "/ooGTxQ-1.0.1.jar");
+                File src = new File(LIBS + "/perst-5.1.1.jar");
                 if (src.exists()) {
-                    println("ooGTxQ update complete!");
+                    println("Perst update complete!");
                 }
             } else {
-                println("Failed to download ooGTxQ. Exit code: " + exitCode);
+                println("Failed to download Perst. Exit code: " + exitCode);
             }
         } catch (Exception e) {
-            println("Error downloading ooGTxQ: " + e.getMessage());
+            println("Error downloading Perst: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -252,8 +250,8 @@ public class Tasks {
         unJar(workDir, "libs/junit-platform-console-1.11.0.jar");
         unJar(workDir, "libs/junit-platform-console-standalone-1.11.0.jar");
 
-        // Perst DB and dependencies
-        unJar(workDir, "libs/ooGTxQ-1.0.1.jar");
+        // Perst DB
+        unJar(workDir, "libs/perst-5.1.1.jar");
         unJar(workDir, "libs/slf4j-api-1.7.30.jar");
         unJar(workDir, "libs/slf4j-simple-1.7.30.jar");
         unJar(workDir, "libs/jakarta.servlet-api-6.1.0.jar");
@@ -575,7 +573,7 @@ public class Tasks {
     private static LocalDependencies buildLocalDependencies() {
         final LocalDependencies dep = new LocalDependencies();
         dep.add(LIBS, "abcl.jar");
-        dep.add(LIBS, "ooGTxQ-1.0.0.jar");
+        dep.add(LIBS, "perst-5.1.1.jar");
         dep.add(LIBS, "lombok.jar");
         dep.add(LIBS, "slf4j-api-1.7.30.jar");
         dep.add(LIBS, "slf4j-simple-1.7.30.jar");
