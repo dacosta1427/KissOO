@@ -25,6 +25,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.kissweb.security.EndpointMethodRegistry;
+
 
 /**
  * Author: Blake McBride
@@ -154,6 +156,12 @@ class JavaService {
             jclass = classLoader.loadClass(binName);
 
             javaClassCache.put(fileName, ci = new JavaClassInfo(jclass, (new File(fileName)).lastModified()));
+            logger.info("Hot-reload: " + fileName);
+            try {
+                EndpointMethodRegistry.registerServiceMethods(jclass);
+            } catch (Exception e) {
+                logger.warn("Could not register service methods for " + fileName, e);
+            }
         } catch (FileNotFoundException | NoSuchFileException e) {
             logger.error("File " + fileName + " not found", e);
             return null;

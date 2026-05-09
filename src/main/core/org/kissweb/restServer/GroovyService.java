@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.kissweb.json.JSONObject;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.kissweb.security.EndpointMethodRegistry;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -402,6 +403,12 @@ public class GroovyService {
             GroovyClass.reset();
             gclass = new GroovyClass(false, fileName);
             groovyClassCache.put(fileName, ci = new GroovyClassInfo(gclass, fyle.lastModified()));
+            logger.info("Hot-reload: " + fileName);
+            try {
+                EndpointMethodRegistry.registerServiceMethods(gclass.getGroovyClass());
+            } catch (Exception e) {
+                logger.warn("Could not register service methods for " + fileName, e);
+            }
         } catch (Exception e) {
             logger.error("Error loading " + new File(fileName).getAbsolutePath(), e);
             return null;

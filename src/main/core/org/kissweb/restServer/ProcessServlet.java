@@ -6,6 +6,7 @@ import org.kissweb.*;
 import org.kissweb.json.JSONException;
 import org.kissweb.json.JSONObject;
 import org.kissweb.database.Connection;
+import org.kissweb.security.EndpointMethodRegistry;
 
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.ServletContext;
@@ -464,6 +465,14 @@ public class ProcessServlet implements Runnable {
                 if (ud == null  &&  !MainServlet.shouldAllowWithoutAuthentication(_className, _method))
                     loginFailure(response, null);
             }
+        }
+
+        String fullName = _className + "." + _method;
+        if (!EndpointMethodRegistry.isExternal(fullName)) {
+            outjson.put("_ErrorCode", 403);
+            outjson.put("_ErrorText", "Access denied - internal endpoint");
+            successReturn(response, outjson);
+            return;
         }
 
         res = (new GroovyService()).tryGroovy(this, response, _className, _method, injson, outjson);
