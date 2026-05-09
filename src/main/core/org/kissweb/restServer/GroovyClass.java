@@ -68,6 +68,10 @@ public class GroovyClass {
 		groovyLoader = null;
 	}
 
+	public Class<?> getGroovyClass() {
+		return groovyClass;
+	}
+
 	/**
 	 * Gets a method from the compiled Groovy class.
 	 *
