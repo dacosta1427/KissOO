@@ -23,8 +23,8 @@ Implemented automatic endpoint registration with security controls for the Perst
 **Why**: The original implementation treated all packages the same (methods were external unless annotated with `@INTERNAL_CALL`). The new model provides better security by default for external packages while maintaining backward compatibility for internal packages.
 
 **Design Decision**: 
-- Internal packages use "opt-out" model (backward compatible with existing internal services)
-- External packages use "opt-in" model (more secure by default)
+- Internal packages use "opt-in" model - methods are INTERNAL by default, require `@EXTERNAL_CALL` to expose
+- External packages use "opt-out" model - methods are EXTERNAL by default, can use `@INTERNAL_CALL` or `_` prefix to restrict
 - Underscore prefix (`_methodName`) is treated as internal in both models
 
 ### 3. `src/main/core/org/kissweb/restServer/ProcessServlet.java` (MODIFIED)
@@ -88,15 +88,15 @@ Implemented automatic endpoint registration with security controls for the Perst
 
 | Package Type | Default Access | Opt-Out Mechanism | Opt-In Mechanism |
 |-------------|---------------|-------------------|------------------|
-| `internal.*` | Internal | N/A (not allowed) | `@EXTERNAL_CALL` |
-| Others | External | `@INTERNAL_CALL` or `_` prefix | N/A (not needed) |
+| `internal.*` | Internal | N/A | `@EXTERNAL_CALL` |
+| Others | External | `@INTERNAL_CALL` or `_` prefix | N/A |
 
 **Note**: Services in `backend/services`, `backend/services/domain`, `precompiled/services`, etc. are EXTERNAL by default. Only services in `backend/services/internal` or `precompiled/services/internal` are INTERNAL by default, and require `@EXTERNAL_CALL` annotation to be exposed externally.
 
 ## Backward Compatibility
 
-- Internal packages maintain backward compatibility - methods without annotations remain external (same as before)
-- External packages are more secure by default - methods must be explicitly marked as external
+- Internal packages (`internal.*`) are INTERNAL by default - this is a change from the original behavior where internal packages had external methods by default
+- External packages (other packages) remain EXTERNAL by default - same as before
 - The underscore prefix (`_`) provides a consistent way to mark methods as internal across all packages
 
 ## Performance Impact
