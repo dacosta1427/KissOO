@@ -38,6 +38,7 @@
 		"vitest": "^2.0.0"
 	},
 	"dependencies": {
+		"@sveltejs/adapter-static": "3.0.10",
 		"ag-grid-community": "^31.0.0"
 	}
 }

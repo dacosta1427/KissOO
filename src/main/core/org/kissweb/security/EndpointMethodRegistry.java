@@ -24,13 +24,28 @@ public class EndpointMethodRegistry {
         return info != null && info.external;
     }
     
+    public static boolean isRegistered(String fullName) {
+        return registry.containsKey(fullName);
+    }
+    
     public static void registerServiceMethods(Class<?> serviceClass) {
         String className = serviceClass.getName();
+        boolean isInternalPackage = className.startsWith("internal.");
+        
         for (Method method : serviceClass.getDeclaredMethods()) {
             if (isServiceMethod(method)) {
                 String methodName = method.getName();
                 String fullName = className + "." + methodName;
-                boolean external = !method.isAnnotationPresent(INTERNAL_CALL.class);
+                
+                boolean external;
+                if (isInternalPackage) {
+                    // Internal package: external only if @EXTERNAL_CALL is present
+                    external = method.isAnnotationPresent(EXTERNAL_CALL.class);
+                } else {
+                    // External package: external by default unless @INTERNAL_CALL or underscore prefix
+                    external = !method.isAnnotationPresent(INTERNAL_CALL.class)
+                            && !methodName.startsWith("_");
+                }
                 register(fullName, external);
             }
         }

@@ -109,6 +109,16 @@ class JavaService {
         return ProcessServlet.ExecutionReturn.NotFound;
     }
 
+    boolean loadJavaClassOnly(String _className) {
+        String fileName = MainServlet.getApplicationPath() + _className.replace(".", "/") + ".java";
+        try {
+            JavaClassInfo ci = loadJavaClass(_className, fileName);
+            return ci != null && ci.jclass != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private synchronized static JavaClassInfo loadJavaClass(String className, String fileName) throws Exception {
         Class<?> jclass;
         JavaClassInfo ci;

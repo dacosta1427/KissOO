@@ -154,7 +154,29 @@ class KissInit {
                     indexPerstUsers()
                     indexActors()
                 } else {
-                    println "[KissInit] Users already exist (${users.size()}), skipping user init"
+                    println "[KissInit] Users already exist (${users.size()}), checking admin user..."
+                    // Ensure admin user has emailVerified = true
+                    def admin = PerstUserManager.getByKey("admin")
+                    if (admin != null) {
+                        if (!admin.isEmailVerified()) {
+                            admin.setEmailVerified(true)
+                            PerstUserManager.update(admin)
+                            println "[KissInit] Admin user emailVerified set to true"
+                        }
+                        println "[KissInit] Admin user found, active=" + admin.isActive() + ", emailVerified=" + admin.isEmailVerified()
+                    }
+                    // Ensure all users have emailVerified = true (fix for existing users)
+                    def updated = 0
+                    users.each { user ->
+                        if (!user.isEmailVerified()) {
+                            user.setEmailVerified(true)
+                            PerstUserManager.update(user)
+                            updated++
+                        }
+                    }
+                    if (updated > 0) {
+                        println "[KissInit] Set emailVerified=true for ${updated} users"
+                    }
                 }
             } else {
                 println "[KissInit] WARNING: Perst not available, skipping user init"
@@ -177,7 +199,7 @@ class KissInit {
                 println "[KissInit] Creating default superAdmin user..."
                 
                 // Create superAdmin Actor with full Agreement (like cleaners2)
-                def agreement = new Agreement("superAdmin")
+                def agreement = new Agreement(Role.SUPER_ADMIN)
                 def adminActor = new domain.actor.owner.Owner("System Admin", "", "admin@localhost", true)
                 adminActor.getAgreement().setRole(Role.SUPER_ADMIN)
                 

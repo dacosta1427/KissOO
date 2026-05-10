@@ -303,6 +303,12 @@ public class GroovyService {
         return ProcessServlet.ExecutionReturn.NotFound;
     }
 
+    boolean loadGroovyClassOnly(String _className) {
+        String fileName = MainServlet.getApplicationPath() + _className.replace(".", "/") + ".groovy";
+        GroovyClassInfo ci = loadGroovyClass(fileName);
+        return ci != null;
+    }
+
     ProcessServlet.ExecutionReturn tryGroovy(ProcessServlet ms, HttpServletResponse response, String _className, String _method, JSONObject injson, JSONObject outjson) {
         GroovyClassInfo ci;
         String fileName = MainServlet.getApplicationPath() + _className.replace(".", "/") + ".groovy";
