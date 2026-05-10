@@ -468,6 +468,16 @@ public class ProcessServlet implements Runnable {
         }
 
         String fullName = _className + "." + _method;
+        if (!EndpointMethodRegistry.isRegistered(fullName)) {
+            if (!(new GroovyService()).loadGroovyClassOnly(_className)) {
+                if (!(new org.kissweb.restServer.JavaService()).loadJavaClassOnly(_className)) {
+                    if (!(new CompiledJavaService()).loadCompiledJavaClassOnly(_className)) {
+                        errorReturn(response, "No back-end code found for " + _className, null);
+                        return;
+                    }
+                }
+            }
+        }
         if (!EndpointMethodRegistry.isExternal(fullName)) {
             outjson.put("_ErrorCode", 403);
             outjson.put("_ErrorText", "Access denied - internal endpoint");

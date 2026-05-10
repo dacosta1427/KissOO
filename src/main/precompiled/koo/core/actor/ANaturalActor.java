@@ -3,8 +3,10 @@ package koo.core.actor;
 import koo.core.user.PerstUser;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Getter @Setter
+@NoArgsConstructor
 public abstract class ANaturalActor extends AActor {
     private PerstUser perstUser;  // persisted - NATURAL actors have PU, CORPORATE don't
     

@@ -239,6 +239,33 @@ Note: `.svelte-kit/` is auto-generated and should not be committed.
 6. **Using `getHouseId()` etc.**: These methods don't exist. Use `getHouseOid()`, `getCleanerOid()`, `getBookingOid()`, `getScheduleOid()`.
 7. **Not killing server before DB clear**: Open file handles prevent DB deletion. Always `pkill -9 java` first.
 
+## Internal Package Convention
+
+Services in the `internal` package are **NOT exposed** by default. This provides a security-by-convention approach where internal-only services are isolated by package.
+
+### Rules
+1. **Methods in `internal.` package are internal-only** unless annotated with `@EXTERNAL_CALL`
+2. **Methods starting with `_`** are internal-only (e.g., `_resetGroovy`)
+3. **Methods in other packages** are external by default unless annotated with `@INTERNAL_CALL`
+
+### Example
+```groovy
+// src/main/backend/internal/services/Reset.groovy
+package internal.services
+
+class Reset {
+    // This method is NOT exposed (internal package)
+    void resetGroovy(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        GroovyClass.reset()
+        outjson.put("_Success", true)
+    }
+}
+```
+
+### Annotations
+- `@INTERNAL_CALL` - Marks a method as internal-only (external packages)
+- `@EXTERNAL_CALL` - Marks a method as exposed (internal packages)
+
 ## Perst 5.1.0 NonSqlConnection Integration
 
 ### How It Works

@@ -99,6 +99,19 @@ public class Login {
             outjson.put("isAdmin", isAdmin);
             outjson.put("role", roleName);
             
+            // Add adminType for frontend role detection
+            String adminType = "none";
+            if (isAdmin) {
+                if ("super_admin".equals(roleName.toLowerCase()) || "superadmin".equals(roleName.toLowerCase())) {
+                    adminType = "system";
+                } else {
+                    adminType = "content";
+                }
+            }
+            outjson.put("adminType", adminType);
+            
+            outjson.put("_Success", true);
+            
             logger.info("[PerstAuth] outjson AFTER: {}", outjson.keySet());
             logger.info("[PerstAuth] Login SUCCESS for user: {} (Role: {}, Actor: {})",
                     username, roleName, actor != null ? actor.getName() : "none");

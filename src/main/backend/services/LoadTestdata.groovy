@@ -248,14 +248,14 @@ class LoadTestdata {
                     // Activate the cleaner user 
                     cleaner.getPerstUser().setActive(true)
                     cleaner.getPerstUser().setEmailVerified(true)
-                    tc.addInsert(cleaner)
-                    tc.addInsert(cleaner.getPerstUser())
+                    cleanerInsertTc.addInsert(cleaner)
+                    cleanerInsertTc.addInsert(cleaner.getPerstUser())
                     cleaners << cleaner
                 } catch (Exception e) {
                     println "[LoadTestdata] Error creating cleaner ${d.name}: ${e.message}"
                 }
             }
-            def storeResult = StorageManager.store(tc)
+            def storeResult = StorageManager.store(cleanerInsertTc)
             cleaners.each { c ->
                 println "[LoadTestdata] Cleaner " + c.getName() + " OID=" + c.getOid() + " stored=" + storeResult
             }
@@ -263,27 +263,6 @@ class LoadTestdata {
             println "[LoadTestdata] Created " + cleaners.size() + " cleaners"
             
             // Create bookings for each house (next 6 months)
-            def bookings = []
-            def today = LocalDate.now()
-            def formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-            
-            // Create bookings first
-            houses.eachWithIndex { house, houseIdx ->
-                2.times { bookingIdx ->
-                    try {
-                        def checkIn = today.plusDays((houseIdx * 7) + (bookingIdx * 30))
-                        def checkOut = checkIn.plusDays(3)
-                        def guestName = "Guest " + (houseIdx * 2 + bookingIdx + 1)
-                        def booking = new Booking(house, house.getOwner(), checkIn.format(formatter), checkOut.format(formatter), guestName, guestName.toLowerCase().replace(' ', '.') + "@email.com", "+31 6 " + String.format('%08d', houseIdx * 2 + bookingIdx), "Special requests: None")
-                        bookings << booking
-                    } catch (Exception e) {
-                        println "[LoadTestdata] Error creating booking: " + e.message
-                        throw e
-                    }
-                }
-            }
-            
-            // Create bookings linked to houses first
             def bookings = []
             def today = LocalDate.now()
             def formatter = DateTimeFormatter.ofPattern("yyyyMMdd")

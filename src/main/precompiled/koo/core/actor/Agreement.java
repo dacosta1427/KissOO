@@ -66,10 +66,18 @@ public class Agreement extends CVersion {
         this.role = role;
     }
     
-    // For backward compatibility - convert string to Role
+// For backward compatibility - convert string to Role
     public Agreement(String role) {
         this();
-        this.role = Role.valueOf(role.toUpperCase());
+        this.role = Role.valueOf(normalizeRoleName(role));
+    }
+    
+    private static String normalizeRoleName(String role) {
+        String upper = role.toUpperCase();
+        // Handle legacy names: superAdmin -> SUPER_ADMIN, etc.
+        if (upper.equals("SUPERADMIN")) return "SUPER_ADMIN";
+        if (upper.equals("ADMIN")) return "ADMIN";
+        return upper;
     }
     
     // ========== CRUD Permissions (Type-Safe) ==========

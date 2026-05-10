@@ -7,15 +7,15 @@ import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
 import domain.oov.house.CostProfileManager
 import domain.actor.cleaner.Cleaner
+import domain.actor.cleaner.CleanerManager
 import domain.oov.house.Booking
 import domain.actor.cleaner.Schedule
+import domain.actor.cleaner.ScheduleManager
 import domain.oov.house.House
-import domain.actor.Actor
-import domain.actor.owner.Owner
-import domain.actor.CleanerManager
 import domain.oov.HouseManager
 import domain.oov.BookingManager
-import domain.actor.ScheduleManager
+import koo.core.actor.AActor
+import koo.core.actor.Role
 
 /**
  * CleaningService service for CRUD operations on cleaning scheduler entities.
@@ -363,7 +363,7 @@ class CleaningService {
             // Authorization: Check if current actor can access this booking via Pure OO navigation
             PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
             if (pu != null) {
-                Actor actor = pu.getActor()
+                AActor actor = pu.getActor()
                 if (actor != null) {
                     boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
                     if (!isAdmin) {
@@ -694,7 +694,7 @@ class CleaningService {
             // Authorization: Check if current actor can access this schedule via Pure OO navigation
             PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
             if (pu != null) {
-                Actor actor = pu.getActor()
+                AActor actor = pu.getActor()
                 if (actor != null) {
                     boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
                     if (!isAdmin) {
@@ -1032,7 +1032,7 @@ class CleaningService {
             // Authorization: Check if current actor can access this house via Pure OO navigation
             PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
             if (pu != null) {
-                Actor actor = pu.getActor()
+                AActor actor = pu.getActor()
                 if (actor != null) {
                     boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
                     if (!isAdmin) {
@@ -1338,7 +1338,7 @@ class CleaningService {
             // Authorization: Check if current actor can access this owner via Pure OO navigation
             PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
             if (pu != null) {
-                Actor actor = pu.getActor()
+                AActor actor = pu.getActor()
                 if (actor != null) {
                     boolean isAdmin = actor.getAgreement() != null && (actor.getAgreement().getRole() == Role.ADMIN || actor.getAgreement().getRole() == Role.SUPER_ADMIN)
                     if (!isAdmin) {

@@ -16,11 +16,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import lombok.NoArgsConstructor;
+
 /**
  * Owner entity for cleaning scheduler.
  * Uses Perst Link for one-to-many relationships.
  */
 @Getter @Setter
+@NoArgsConstructor
 public class Owner extends ANaturalActor {
     
     private String email;
@@ -28,6 +31,12 @@ public class Owner extends ANaturalActor {
     private String address;
     
     private Link houses;  // Perst Link - initialized in constructor
+    
+    private void initializeHouses() {
+        if (houses == null) {
+            houses = StorageManager.getStorage().createLink();
+        }
+    }
     
     public Owner(String name, String phone, String email, boolean active) {
         super(name, new Agreement(), email);
@@ -47,6 +56,7 @@ public class Owner extends ANaturalActor {
     }
     
     public List<House> getHouses() {
+        initializeHouses();
         if (houses == null || houses.isEmpty()) return List.of();
         return Arrays.asList((House[])houses.toArray(new House[0]));
     }

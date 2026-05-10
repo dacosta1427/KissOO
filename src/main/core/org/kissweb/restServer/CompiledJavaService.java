@@ -21,6 +21,33 @@ public class CompiledJavaService {
         // Default constructor
     }
 
+    boolean loadCompiledJavaClassOnly(String _className) {
+        String dynamicClassPath = MainServlet.getDynamicClassPath();
+        if (dynamicClassPath != null && !dynamicClassPath.isEmpty()) {
+            if (dynamicClassPath.charAt(dynamicClassPath.length() - 1) != '/')
+                dynamicClassPath += "/";
+            try {
+                Class<?> cls = ProcessServlet.class.getClassLoader().loadClass(_className);
+                if (cls != null) {
+                    org.kissweb.security.EndpointMethodRegistry.registerServiceMethods(cls);
+                    return true;
+                }
+            } catch (Throwable e) {
+                // ignore
+            }
+        }
+        try {
+            Class<?> cls = Class.forName(_className + "." + _className);
+            if (cls != null) {
+                org.kissweb.security.EndpointMethodRegistry.registerServiceMethods(cls);
+                return true;
+            }
+        } catch (ClassNotFoundException e) {
+            // ignore
+        }
+        return false;
+    }
+
     ProcessServlet.ExecutionReturn tryCompiledJava(ProcessServlet ms, HttpServletResponse response, String _className, String _method, JSONObject injson, JSONObject outjson) {
 
         if (true)
