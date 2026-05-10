@@ -241,7 +241,7 @@ Note: `.svelte-kit/` is auto-generated and should not be committed.
 
 ## Internal Package Convention
 
-Services in the `internal` package are **NOT exposed** by default. This provides a security-by-convention approach where internal-only services are isolated by package.
+Services in the `internal` package are **internal-only** by default. This provides a security-by-convention approach where internal-only services are isolated by package.
 
 ### Rules
 1. **Methods in `internal.` package are internal-only** unless annotated with `@EXTERNAL_CALL`
@@ -254,8 +254,15 @@ Services in the `internal` package are **NOT exposed** by default. This provides
 package internal.services
 
 class Reset {
-    // This method is NOT exposed (internal package)
+    // This method is NOT exposed (internal package, no annotation)
     void resetGroovy(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        GroovyClass.reset()
+        outjson.put("_Success", true)
+    }
+    
+    // This method IS exposed (internal package, @EXTERNAL_CALL annotation)
+    @koo.security.EXTERNAL_CALL
+    void publicReset(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         GroovyClass.reset()
         outjson.put("_Success", true)
     }

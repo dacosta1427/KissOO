@@ -15,6 +15,7 @@ Implemented automatic endpoint registration with security controls for the Perst
 ### 2. `src/main/core/org/kissweb/security/EndpointMethodRegistry.java` (MODIFIED)
 **Changes**:
 - Added `isRegistered(String fullName)` method to check if an endpoint has been registered
+- Added `isExternal(String fullName)` method to check if an endpoint is exposed externally
 - Updated `registerServiceMethods()` to handle two different security models:
   - **Internal packages** (`internal.*`): Methods are internal by default; can opt-out via `@INTERNAL_CALL` annotation or `_` prefix
   - **External packages**: Methods are internal by default; must opt-in via `@EXTERNAL_CALL` annotation
@@ -27,20 +28,10 @@ Implemented automatic endpoint registration with security controls for the Perst
 - Underscore prefix (`_methodName`) is treated as internal in both models
 
 ### 3. `src/main/core/org/kissweb/restServer/ProcessServlet.java` (MODIFIED)
-**Changes**: Added auto-registration check before processing endpoints:
-```java
-if (!EndpointMethodRegistry.isRegistered(fullName)) {
-    // Try to load and register the service class
-    if (!(new GroovyService()).loadGroovyClassOnly(_className)) {
-        if (!(new org.kissweb.restServer.JavaService()).loadJavaClassOnly(_className)) {
-            if (!(new CompiledJavaService()).loadCompiledJavaClassOnly(_className)) {
-                errorReturn(response, "No back-end code found for " + _className, null);
-                return;
-            }
-        }
-    }
-}
-```
+**Changes**: 
+- Added auto-registration check before processing endpoints (lines 471-480)
+- Added debug logging for login flow (lines 939-979)
+- Updated `newDatabaseConnection()` to handle Perst-only mode (lines 997-1017)
 
 **Why**: Endpoints are now registered on-demand when first accessed, rather than pre-registering all methods. This improves startup time and allows for lazy loading of service classes.
 
@@ -100,6 +91,8 @@ if (!EndpointMethodRegistry.isRegistered(fullName)) {
 | `internal.*` | Internal | N/A (not allowed) | `@EXTERNAL_CALL` |
 | Others | External | `@INTERNAL_CALL` or `_` prefix | N/A (not needed) |
 
+**Note**: Services in `backend/services`, `backend/services/domain`, `precompiled/services`, etc. are EXTERNAL by default. Only services in `backend/services/internal` or `precompiled/services/internal` are INTERNAL by default, and require `@EXTERNAL_CALL` annotation to be exposed externally.
+
 ## Backward Compatibility
 
 - Internal packages maintain backward compatibility - methods without annotations remain external (same as before)
@@ -111,3 +104,20 @@ if (!EndpointMethodRegistry.isRegistered(fullName)) {
 - Minimal: Registration happens on first access, not at startup
 - No impact on already-registered endpoints
 - Lazy loading reduces initial memory footprint
+
+## Current Issues to Address
+
+### Login Endpoint Not Working
+- Server returns static HTML instead of routing POST requests to backend
+- Login method in ProcessServlet has debug logging that shows `requiresAuthentication = TRUE`
+- Need to verify frontend is calling correct endpoint (`POST /rest` with empty `_class`)
+
+### Frontend Changes Needed
+- Remove redundant `_ownerId`/`_cleanerId` parameters from API calls
+- Update services to use OO navigation via `PerstUser.getActor()`
+- Update field naming to use OID suffix (e.g., `houseOid` not `houseId`)
+
+### OO Navigation Pattern
+- Use `((PerstUser) ud.getUserData("perstUser")).getActor()` to get actor from session
+- Actor has direct references to related objects (no ID fields)
+- All domain classes use Lombok `@Getter @Setter`
