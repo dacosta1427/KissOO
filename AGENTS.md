@@ -13,10 +13,9 @@ The following JARs must be present in `libs/`:
 
 ### ooGTxQ (64-bit Perst OODBMS)
 KissOO uses **ooGTxQ** — a 64-bit fork of Perst with full OID support (>2³¹ objects).
-- JAR: `ooGTxQ-1.0.0.jar` in `libs/`
-- Source: `../oodbGTQ/` project
-- Update: Run `./bld perst-update` to fetch latest from Nassyn Maven repository
-- The `perstUpdate()` method in `Tasks.java` handles Maven download from `https://repo.nasyn.io/repository/maven-public/`
+- JAR: `oodbGTxQ-1.7.1.jar` in `libs/` (included in distribution)
+- Source: `../oodbGTxQ/` project
+- The `buildLocalDependencies()` method in `Tasks.java` includes the JAR in the build
 
 ### Lombok Usage
 All domain classes in `src/main/precompiled/mycompany/domain/` use Lombok `@Getter @Setter` annotations.
@@ -136,20 +135,62 @@ When `store()` fails (e.g., unique constraint violation), the transaction is rol
 
 ## ooGTxQ Integration Details
 
-### Classloader Mismatch Fix
-Groovy services are loaded by a different classloader than precompiled classes. When `getTable(GroovyClass)` is called, the Class object differs from the precompiled one in `typeMap`.
+### UnifiedDBManager Architecture
+KissOO uses `UnifiedDBManager` from `oodbGTxQ` as the single entry point for all database operations.
 
-**Fix applied to ooGTxQ:**
-- `lookupTable(Class type)` — falls back to class name string matching when `typeMap.get(type)` returns null
-- `getTable(Class type)` — same fallback to prevent duplicate table descriptors
-- Both cache the new Class reference in `typeMap` for future fast lookups
+**Key Benefits:**
+- Single point of control for all database operations
+- Transaction lifecycle managed internally (prevents "Transaction already started" errors)
+- Optimistic locking support built-in
+- Consistent API for all operations
 
-See `../oodbGTQ/changeRequests/` for details.
+**Architecture:**
+```
+StorageManager.store(TransactionContainer)
+  → UnifiedDBManager.store()
+    → CDatabase.beginTransaction()
+    → CDatabase.insert/update/delete()
+    → CDatabase.commitTransaction() OR rollbackTransaction()
+```
 
-### Known ooGTxQ Limitations
-- `linQueue` (async Lucene indexing) is never initialized by `CDatabase.open()` — use sync containers
-- `getTableDescriptors()` returns package-private `TableDescriptor` objects — requires reflection to inspect
-- The `initLinQueue()` method exists but is never called
+**Key Methods:**
+- `createContainer()` - Creates a new TransactionContainer
+- `store(TransactionContainer)` - Stores all objects atomically
+- `getRecords(Class)` - Retrieves all records of a class
+- `find(Class, String, Key)` - Finds records by indexed field
+
+### StorageManager Integration
+`StorageManager.java` provides static methods that delegate to `UnifiedDBManager`:
+
+```java
+// All operations go through UnifiedDBManager
+TransactionContainer tc = StorageManager.createContainer();
+tc.addInsert(object);
+StorageManager.store(tc);
+```
+
+**Important:** Always use `StorageManager` static methods. The `UnifiedDBManager` instance is managed internally.
+
+### PerstConnection Integration
+`PerstConnection.java` extends the KISS `Connection` class with Perst operations:
+
+```java
+PerstConnection conn = new PerstConnection();
+TransactionContainer tc = conn.perstCreateContainer();
+conn.perstStore(tc);
+```
+
+### Critical Fixes Applied
+1. **StorageManager.java**: Refactored to use `UnifiedDBManager` instead of direct `CDatabase` calls
+2. **PerstConnection.java**: Updated to use `UnifiedDBManager` for all operations
+3. **Transaction lifecycle**: Now handled internally by `UnifiedDBManager.store()`
+
+### PerstService.java (Java)
+Java services can use `StorageManager` static methods directly:
+```java
+Collection<House> houses = StorageManager.getAll(House.class);
+House h = StorageManager.getByOid(House.class, oid);
+```
 
 ## Disabling Lisp Services
 
