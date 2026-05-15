@@ -195,7 +195,7 @@ if (schedule.bookingOid) {
 						<div class="info-card">
 							<h4>{tt('bookings.booking')}</h4>
 							<p><strong>{booking.guest_name}</strong></p>
-							<p>{toDisplayDateFormat(booking.check_in_date)} → {toDisplayDateFormat(booking.check_out_date)}</p>
+							<p>{toDisplayDateFormat(booking.check_in_date, $currentLocale)} → {toDisplayDateFormat(booking.check_out_date, $currentLocale)}</p>
 						</div>
 					{/if}
 					{#if cleaner}

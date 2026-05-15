@@ -251,7 +251,7 @@
 						<h3 class="booking-guest">{booking.guest_name}</h3>
 						<span class="status-badge status-{booking.status}">{booking.status}</span>
 					</div>
-					<p class="booking-dates">{toDisplayDateFormat(booking.check_in_date)} → {toDisplayDateFormat(booking.check_out_date)}</p>
+					<p class="booking-dates">{toDisplayDateFormat(booking.check_in_date, $currentLocale)} → {toDisplayDateFormat(booking.check_out_date, $currentLocale)}</p>
 					<p class="booking-house">{tt('common.house')}: {getHouseName(booking.houseOid)}</p>
 					{#if booking.guest_email}<p class="booking-detail">{booking.guest_email}</p>{/if}
 					<div class="booking-actions">
@@ -284,8 +284,8 @@
 					<tr class="clickable" onclick={() => goto(`/bookings/${booking.oid}`)} onkeydown={(e) => e.key === 'Enter' && goto(`/bookings/${booking.oid}`)}>
 						<td>{booking.guest_name}</td>
 						<td>{getHouseName(booking.houseOid)}</td>
-						<td>{toDisplayDateFormat(booking.check_in_date)}</td>
-						<td>{toDisplayDateFormat(booking.check_out_date)}</td>
+						<td>{toDisplayDateFormat(booking.check_in_date, $currentLocale)}</td>
+						<td>{toDisplayDateFormat(booking.check_out_date, $currentLocale)}</td>
 						<td>{booking.guest_email}</td>
 						<td><span class="status-badge status-{booking.status}">{booking.status}</span></td>
 						<td>

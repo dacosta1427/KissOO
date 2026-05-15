@@ -57,7 +57,7 @@
 	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.oid), label: c.name })));
 	let bookingOptions = $derived(bookings.map((b) => ({
 		value: String(b.oid),
-		label: `${b.guest_name || t('schedules.guest')} - ${toDisplayDateFormat(b.check_in_date)} to ${toDisplayDateFormat(b.check_out_date)}`,
+		label: `${b.guest_name || t('schedules.guest')} - ${toDisplayDateFormat(b.check_in_date, $currentLocale)} to ${toDisplayDateFormat(b.check_out_date, $currentLocale)}`,
 		checkOutDate: toInputDateFormat(b.check_out_date)
 	})));
 
@@ -389,7 +389,7 @@
 						<tr class={isAdmin ? "clickable" : ""} onclick={isAdmin ? () => goto('/schedules/' + schedule.oid) : undefined} onkeydown={isAdmin ? (e) => e.key === 'Enter' && goto('/schedules/' + schedule.oid) : undefined}>
 							<td>{cleaner?.name || t('houses.unknown')}</td>
 							<td>{booking?.guest_name || t('schedules.guest')}</td>
-							<td>{toDisplayDateFormat(schedule.date)}</td>
+							<td>{toDisplayDateFormat(schedule.date, $currentLocale)}</td>
 							<td>{schedule.start_time || ''} - {schedule.end_time || ''}</td>
 							<td>
 								<span class="status-badge status-{schedule.status}">{schedule.status}</span>

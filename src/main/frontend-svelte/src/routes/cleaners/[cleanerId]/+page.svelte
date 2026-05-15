@@ -182,7 +182,7 @@
 						<tbody>
 							{#each schedules as schedule}
 								<tr onclick={() => goto(`/schedules/${schedule.oid}`)}>
-									<td>{toDisplayDateFormat(schedule.date)}</td>
+									<td>{toDisplayDateFormat(schedule.date, $currentLocale)}</td>
 									<td>{schedule.start_time}</td>
 									<td>{schedule.end_time}</td>
 									<td>{schedule.booking?.guest_name || '-'}</td>
