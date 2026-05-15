@@ -121,11 +121,7 @@
 		}
 	}
 
-	function formatDate(dateStr: string) {
-		if (!dateStr) return '-';
-		const d = new Date(dateStr);
-		return d.toLocaleDateString($currentLocale || 'en');
-	}
+	
 
 	let loaded = $state(false);
 	$effect(() => {
@@ -227,7 +223,7 @@
 							{#each schedules as schedule}
 								{@const cleaner = cleaners.find(c => c.oid === schedule.cleanerOid)}
 								<tr onclick={() => goto(`/schedules/${schedule.oid}`)}>
-									<td>{formatDate(schedule.date)}</td>
+									<td>{toDisplayDateFormat(schedule.date)}</td>
 									<td>{schedule.start_time}</td>
 									<td>{schedule.end_time}</td>
 									<td>{cleaner?.name || `#${schedule.cleanerOid}`}</td>

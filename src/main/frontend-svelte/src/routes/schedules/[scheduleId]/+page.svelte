@@ -5,6 +5,7 @@
 	import { t, currentLocale } from '$lib/i18n';
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/Button.svelte';
+	import { toDisplayDateFormat } from '$lib/utils/Utils';
 
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
@@ -112,11 +113,7 @@ if (schedule.bookingOid) {
 		}
 	}
 
-	function formatDate(dateStr: string) {
-		if (!dateStr) return '-';
-		const d = new Date(dateStr);
-		return d.toLocaleDateString($currentLocale || 'en');
-	}
+	
 
 	let loaded = $state(false);
 	$effect(() => {
@@ -198,7 +195,7 @@ if (schedule.bookingOid) {
 						<div class="info-card">
 							<h4>{tt('bookings.booking')}</h4>
 							<p><strong>{booking.guest_name}</strong></p>
-							<p>{formatDate(booking.check_in_date)} → {formatDate(booking.check_out_date)}</p>
+							<p>{toDisplayDateFormat(booking.check_in_date)} → {toDisplayDateFormat(booking.check_out_date)}</p>
 						</div>
 					{/if}
 					{#if cleaner}
