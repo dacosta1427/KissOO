@@ -126,7 +126,8 @@
 		"enter_guest_email": "Gast E-Mail eingeben",
 		"enter_guest_phone": "Gast Telefonnummer eingeben",
 		"no_bookings": "Keine Buchungen gefunden.",
-		"no_bookings_owner": "Noch keine Buchungen für Ihre Häuser."
+		"no_bookings_owner": "Noch keine Buchungen für Ihre Häuser.",
+		"booking_not_found": "Buchung nicht gefunden"
 	},
 	"cleaners": {
 		"title": "Reiniger",

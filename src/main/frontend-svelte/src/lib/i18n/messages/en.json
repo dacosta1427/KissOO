@@ -128,7 +128,8 @@
 		"enter_guest_email": "Enter guest email",
 		"enter_guest_phone": "Enter guest phone number",
 		"no_bookings": "No bookings found.",
-		"no_bookings_owner": "No bookings for your houses yet."
+		"no_bookings_owner": "No bookings for your houses yet.",
+		"booking_not_found": "Booking not found"
 	},
 	"cleaners": {
 		"title": "Cleaners",

@@ -126,7 +126,8 @@
 		"enter_guest_email": "Voer gast e-mail in",
 		"enter_guest_phone": "Voer gast telefoonnummer in",
 		"no_bookings": "Geen boekingen gevonden.",
-		"no_bookings_owner": "Nog geen boekingen voor uw huizen."
+		"no_bookings_owner": "Nog geen boekingen voor uw huizen.",
+		"booking_not_found": "Boeking niet gevonden"
 	},
 	"cleaners": {
 		"title": "Schoonmakers",

@@ -145,7 +145,7 @@ if (schedule.bookingOid) {
 			<form onsubmit={handleFormSubmit}>
 				<div class="form-grid">
 					<div class="form-field">
-<label for="bookingOid">{tt('bookings.booking')} <span class="required">*</span></label>
+<label for="bookingOid">{tt('schedules.booking')} <span class="required">*</span></label>
 					<select id="bookingOid" bind:value={formData.bookingOid} disabled>
 						<option value={formData.bookingOid}>{booking?.guest_name || 'Loading...'}</option>
 						</select>
@@ -193,7 +193,7 @@ if (schedule.bookingOid) {
 					{/if}
 					{#if booking}
 						<div class="info-card">
-							<h4>{tt('bookings.booking')}</h4>
+							<h4>{tt('schedules.booking')}</h4>
 							<p><strong>{booking.guest_name}</strong></p>
 							<p>{toDisplayDateFormat(booking.check_in_date, $currentLocale)} → {toDisplayDateFormat(booking.check_out_date, $currentLocale)}</p>
 						</div>
