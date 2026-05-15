@@ -40,6 +40,8 @@ export function toBackendDateFormat(yyyyMmDd: string): string {
  * @param locale - Optional locale (default: 'nl' for Europe-NL)
  * @returns Localized date string (e.g., "26 apr. 2026")
  */
+const DUTCH_MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
 export function toDisplayDateFormat(dateStr: string, locale: string = 'nl'): string {
   if (!dateStr) return '';
   let normalized = dateStr;
@@ -48,7 +50,10 @@ export function toDisplayDateFormat(dateStr: string, locale: string = 'nl'): str
   }
   const date = new Date(normalized);
   if (isNaN(date.getTime())) return dateStr;
-  return date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+  const day = date.getDate();
+  const month = DUTCH_MONTHS[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
 }
 
 // Legacy compatibility - these will be replaced with Modal component
