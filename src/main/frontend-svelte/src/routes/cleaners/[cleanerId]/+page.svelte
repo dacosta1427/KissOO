@@ -4,6 +4,8 @@
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import { t, currentLocale } from '$lib/i18n';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/Button.svelte';
+	import { toDisplayDateFormat } from '$lib/utils/Utils';
 
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
@@ -28,13 +30,15 @@
 		if (!urlCleanerId || urlCleanerId <= 0) return;
 		loading = true;
 		try {
-			cleaner = await cleanersAPI.getById(urlCleanerId);
+			cleaner = await cleanersAPI.getByOid(urlCleanerId);
+			console.log('[debug] getByOid returned:', cleaner);
 			if (!cleaner) {
 				notificationActions.error(tt('cleaners.cleaner_not_found'));
 				goto('/cleaners');
 				return;
 			}
 
+			console.log('[debug] Setting formData from cleaner:', JSON.parse(JSON.stringify(cleaner)));
 			formData = {
 				name: cleaner.name,
 				phone: cleaner.phone || '',
@@ -42,9 +46,10 @@
 				address: cleaner.address || '',
 				canLogin: cleaner.canLogin || false
 			};
+			console.log('[debug] formData now:', JSON.parse(JSON.stringify(formData)));
 
 			// Load schedules
-			schedules = await schedulesAPI.getByCleaner(cleaner.id);
+			schedules = await schedulesAPI.getByCleaner(cleaner.oid);
 		} catch (err: any) {
 			console.error('Error loading cleaner:', err);
 			notificationActions.error(err.message || tt('errors.failed_to_load'));
@@ -67,7 +72,7 @@
 		if (!cleaner || saving) return;
 		saving = true;
 		try {
-			const result = await cleanersAPI.update(cleaner.id, formData);
+			const result = await cleanersAPI.update(cleaner.oid, formData);
 			notificationActions.success(tt('cleaners.updated'));
 			cleaner = result;
 			await loadData();
@@ -86,7 +91,7 @@
 		if (!cleaner) return;
 		if (confirm(tt('cleaners.delete_confirm').replace('${name}', cleaner.name))) {
 			try {
-				await cleanersAPI.delete(cleaner.id);
+				await cleanersAPI.delete(cleaner.oid);
 				notificationActions.success(tt('cleaners.deleted'));
 				goto('/cleaners');
 			} catch (err: any) {
@@ -180,7 +185,7 @@
 						</thead>
 						<tbody>
 							{#each schedules as schedule}
-								<tr onclick={() => goto(`/schedules/${schedule.id}`)}>
+								<tr onclick={() => goto(`/schedules/${schedule.oid}`)}>
 									<td>{formatDate(schedule.date)}</td>
 									<td>{schedule.start_time}</td>
 									<td>{schedule.end_time}</td>

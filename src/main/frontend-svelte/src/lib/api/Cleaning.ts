@@ -11,18 +11,19 @@ import { notificationActions } from '$lib/stores.svelte.js';
 
 // Type definitions
 export interface Cleaner {
-  id: number;
-  name: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  canLogin: boolean;
-  emailVerified?: boolean;
+   oid: number;
+   name: string;
+   phone?: string;
+   email?: string;
+   address?: string;
+   canLogin?: boolean;
+   active?: boolean;
+   emailVerified?: boolean;
 }
 
 export interface Booking {
-  id: number;
-  house_id: number;
+  oid: number;
+  houseOid: number;
   check_in_date: string;
   check_out_date: string;
   guest_name: string;
@@ -34,9 +35,9 @@ export interface Booking {
 }
 
 export interface Schedule {
-  id: number;
-  cleaner_id: number;
-  booking_id: number;
+  oid: number;
+  cleanerOid: number;
+  bookingOid: number;
   date: string;
   start_time: string;
   end_time: string;
@@ -45,13 +46,13 @@ export interface Schedule {
 }
 
 export interface House {
-  id: number;
+  oid: number;
   name: string;
   address: string;
   description?: string;
-  owner?: number;  // Owner OID (was owner_id)
-  ownerName?: string;  // Owner name for display
-  cost_profile?: number;  // CostProfile OID
+  ownerOid?: number;
+  ownerName?: string;
+  costProfileOid?: number;
   active: boolean;
   check_in_time: string; // 24h format, e.g., "16:00"
   check_out_time: string; // 24h format, e.g., "10:00"
@@ -60,71 +61,25 @@ export interface House {
   floors?: number;       // Number of floors
   bedrooms?: number;     // Number of bedrooms
   bathrooms?: number;    // Number of bathrooms
-  luxury_level?: 'basic' | 'standard' | 'premium' | 'luxury';
+  luxury_level?: string; // 'standard', 'premium', 'luxury'
 }
 
-export interface Owner {
-  id: number;
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  active: boolean;
-  canLogin?: boolean;  // Whether owner has login capability
-  emailVerified?: boolean;  // Email verification status
-}
-
-export interface CostProfile {
-  id: number;
-  name: string;
-  is_standard: boolean;
-  owner?: number;  // Owner OID, null for global
-  base_hourly_rate: number;
-  minimum_charge: number;
-  rate_per_m2: number;
-  rate_per_floor: number;
-  rate_per_bedroom: number;
-  rate_per_bathroom: number;
-  dog_surcharge: number;
-  basic_multiplier: number;
-  standard_multiplier: number;
-  premium_multiplier: number;
-  luxury_multiplier: number;
-  active: boolean;
-}
-
-export interface CostEstimate {
-  base_cost: number;
-  size_cost: number;
-  room_cost: number;
-  luxury_multiplier: number;
-  dog_surcharge: number;
-  total: number;
-  breakdown: string[];
-}
-
-export interface CleaningResult {
+interface CleaningResult {
   _Success: boolean;
+  _ErrorCode: number;
   _ErrorMessage?: string;
-  _ErrorCode?: number;
-  data?: any;
-  estimated_hours?: number;
-}
-
-export interface ApiResult {
-  success: boolean;
-  error?: string;
-  id?: number;
+  data: any;
+  oid?: number;
 }
 
 // Operations that should show toasts
 const operationsWithToast = ['create', 'add', 'delete', 'update', 'deleteCleaner', 'deleteBooking', 'deleteHouse', 'deleteOwner'];
 
 // Helper to handle API calls with notifications (only for add, delete, update)
-async function callCleaningService(method: string, args: any = {}, operationName?: string): Promise<CleaningResult> {
+async function callCleaningService(service: string, method: string, args: any = {}, operationName?: string): Promise<CleaningResult> {
   try {
-    console.log(`[Cleaning.ts] Calling ${method} with args:`, args);
-    const res = await Server.call('services.CleaningService', method, args) as CleaningResult;
+    console.log(`[Cleaning.ts] Calling ${service}.${method} with args:`, args);
+    const res = await Server.call(service, method, args) as CleaningResult;
     console.log(`[Cleaning.ts] ${method} response:`, res);
     
     // Only show toasts for create, add, delete, update operations
@@ -153,68 +108,68 @@ async function callCleaningService(method: string, args: any = {}, operationName
 // Cleaners API
 export const cleanersAPI = {
   getAll: async (): Promise<Cleaner[]> => {
-    const res = await callCleaningService('getCleaners', {}, 'Load cleaners');
+    const res = await callCleaningService('services.CleanerService', 'getCleaners', {}, 'Load cleaners');
     return res.data || [];
   },
   
-  getById: async (id: number): Promise<Cleaner | null> => {
-    const res = await callCleaningService('getCleaner', { id }, 'Load cleaner');
+  getByOid: async (oid: number): Promise<Cleaner | null> => {
+    const res = await callCleaningService('services.CleanerService', 'getCleaner', { oid }, 'Load cleaner');
     return res.data || null;
   },
   
   create: async (data: Partial<Cleaner>): Promise<Cleaner> => {
-    const res = await callCleaningService('createCleaner', { data }, 'Create cleaner');
+    const res = await callCleaningService('services.CleanerService', 'createCleaner', { data }, 'Create cleaner');
     return res.data;
   },
   
-  update: async (id: number, data: Partial<Cleaner>): Promise<Cleaner> => {
-    const res = await callCleaningService('updateCleaner', { id, data }, 'Update cleaner');
+  update: async (oid: number, data: Partial<Cleaner>): Promise<Cleaner> => {
+    const res = await callCleaningService('services.CleanerService', 'updateCleaner', { oid, data }, 'Update cleaner');
     return res.data;
   },
   
-  delete: async (id: number): Promise<void> => {
-    await callCleaningService('deleteCleaner', { id }, 'Delete cleaner');
+  delete: async (oid: number): Promise<void> => {
+    await callCleaningService('services.CleanerService', 'deleteCleaner', { oid }, 'Delete cleaner');
   },
   
-  toggleLogin: async (id: number, canLogin: boolean): Promise<CleaningResult> => {
-    const res = await callCleaningService('toggleCleanerLogin', { id, canLogin }, canLogin ? 'Enable cleaner login' : 'Disable cleaner login');
-    return res;
+  toggleLogin: async (oid: number, canLogin: boolean): Promise<Cleaner> => {
+    const res = await callCleaningService('services.CleanerService', 'toggleCleanerLogin', { oid, canLogin }, 'Toggle cleaner login');
+    return res.data;
   }
 };
 
 // Bookings API
 export const bookingsAPI = {
-  getAll: async (filters?: any): Promise<Booking[]> => {
-    const res = await callCleaningService('getBookings', { filters }, 'Load bookings');
+  getAll: async (): Promise<Booking[]> => {
+    const res = await callCleaningService('services.BookingService', 'getBookings', {}, 'Load bookings');
     return res.data || [];
   },
   
-  getById: async (id: number): Promise<Booking | null> => {
-    const res = await callCleaningService('getBooking', { id }, 'Load booking');
+  getByOid: async (oid: number): Promise<Booking | null> => {
+    const res = await callCleaningService('services.BookingService', 'getBooking', { oid }, 'Load booking');
     return res.data || null;
   },
   
   create: async (data: Partial<Booking>): Promise<Booking> => {
-    const res = await callCleaningService('createBooking', { data }, 'Create booking');
+    const res = await callCleaningService('services.BookingService', 'createBooking', { data }, 'Create booking');
     return res.data;
   },
   
-  update: async (id: number, data: Partial<Booking>): Promise<Booking> => {
-    const res = await callCleaningService('updateBooking', { id, data }, 'Update booking');
+  update: async (oid: number, data: Partial<Booking>): Promise<Booking> => {
+    const res = await callCleaningService('services.BookingService', 'updateBooking', { oid, data }, 'Update booking');
     return res.data;
   },
   
-  delete: async (id: number): Promise<void> => {
-    await callCleaningService('deleteBooking', { id }, 'Delete booking');
+  delete: async (oid: number): Promise<void> => {
+    await callCleaningService('services.BookingService', 'deleteBooking', { oid }, 'Delete booking');
   },
   
-  getByHouse: async (houseId: number): Promise<Booking[]> => {
-    const res = await callCleaningService('getBookingsByHouse', { houseId }, 'Load bookings by house');
+  getByHouse: async (houseOid: number): Promise<Booking[]> => {
+    const res = await callCleaningService('services.BookingService', 'getBookingsByHouse', { houseOid }, 'Load bookings by house');
     return res.data || [];
   },
   
   getByDateRange: async (startDate: string, endDate: string): Promise<Booking[]> => {
-    const res = await callCleaningService('getBookingsByDateRange', { startDate, endDate }, 'Load bookings by date range');
+    const res = await callCleaningService('services.BookingService', 'getBookingsByDateRange', { startDate, endDate }, 'Load bookings by date range');
     return res.data || [];
   }
 };
@@ -222,41 +177,41 @@ export const bookingsAPI = {
 // Schedules API
 export const schedulesAPI = {
   getAll: async (filters?: any): Promise<Schedule[]> => {
-    const res = await callCleaningService('getSchedules', { filters }, 'Load schedules');
+    const res = await callCleaningService('services.ScheduleService', 'getSchedules', { filters }, 'Load schedules');
     return res.data || [];
   },
   
-  getById: async (id: number): Promise<Schedule | null> => {
-    const res = await callCleaningService('getSchedule', { id }, 'Load schedule');
+  getByOid: async (oid: number): Promise<Schedule | null> => {
+    const res = await callCleaningService('services.ScheduleService', 'getSchedule', { oid }, 'Load schedule');
     return res.data || null;
   },
   
   create: async (data: Partial<Schedule>): Promise<Schedule> => {
-    const res = await callCleaningService('createSchedule', { data }, 'Create schedule');
+    const res = await callCleaningService('services.ScheduleService', 'createSchedule', { data }, 'Create schedule');
     return res.data;
   },
   
-  update: async (id: number, data: Partial<Schedule>): Promise<Schedule> => {
-    const res = await callCleaningService('updateSchedule', { id, data }, 'Update schedule');
+  update: async (oid: number, data: Partial<Schedule>): Promise<Schedule> => {
+    const res = await callCleaningService('services.ScheduleService', 'updateSchedule', { oid, data }, 'Update schedule');
     return res.data;
   },
   
-  delete: async (id: number): Promise<void> => {
-    await callCleaningService('deleteSchedule', { id }, 'Delete schedule');
+  delete: async (oid: number): Promise<void> => {
+    await callCleaningService('services.ScheduleService', 'deleteSchedule', { oid }, 'Delete schedule');
   },
   
-  getByCleaner: async (cleanerId: number): Promise<Schedule[]> => {
-    const res = await callCleaningService('getSchedulesByCleaner', { cleanerId }, 'Load schedules by cleaner');
+  getByCleaner: async (cleanerOid: number): Promise<Schedule[]> => {
+    const res = await callCleaningService('services.ScheduleService', 'getSchedulesByCleaner', { cleanerOid }, 'Load schedules by cleaner');
     return res.data || [];
   },
   
-  getByBooking: async (bookingId: number): Promise<Schedule[]> => {
-    const res = await callCleaningService('getSchedulesByBooking', { bookingId }, 'Load schedule by booking');
+  getByBooking: async (bookingOid: number): Promise<Schedule[]> => {
+    const res = await callCleaningService('services.ScheduleService', 'getSchedulesByBooking', { bookingOid }, 'Load schedule by booking');
     return res.data || [];
   },
   
   getByDateRange: async (startDate: string, endDate: string): Promise<Schedule[]> => {
-    const res = await callCleaningService('getSchedulesByDateRange', { startDate, endDate }, 'Load schedules by date range');
+    const res = await callCleaningService('services.ScheduleService', 'getSchedulesByDateRange', { startDate, endDate }, 'Load schedules by date range');
     return res.data || [];
   }
 };
@@ -264,131 +219,135 @@ export const schedulesAPI = {
 // Houses API
 export const housesAPI = {
   getAll: async (): Promise<House[]> => {
-    const res = await callCleaningService('getHouses', {}, 'Load houses');
+    const res = await callCleaningService('services.HouseService', 'getHouses', {}, 'Load houses');
     return res.data || [];
   },
   
-  getById: async (id: number): Promise<House | null> => {
-    const res = await callCleaningService('getHouse', { id }, 'Load house');
+  getByOid: async (oid: number): Promise<House | null> => {
+    const res = await callCleaningService('services.HouseService', 'getHouse', { oid }, 'Load house');
     return res.data || null;
   },
   
   create: async (data: Partial<House>): Promise<House> => {
-    const res = await callCleaningService('createHouse', { data }, 'Create house');
+    const res = await callCleaningService('services.HouseService', 'createHouse', { data }, 'Create house');
     return res.data;
   },
   
-  update: async (id: number, data: Partial<House>): Promise<House> => {
-    const res = await callCleaningService('updateHouse', { id, data }, 'Update house');
+  update: async (oid: number, data: Partial<House>): Promise<House> => {
+    const res = await callCleaningService('services.HouseService', 'updateHouse', { oid, data }, 'Update house');
     return res.data;
   },
   
-  delete: async (id: number): Promise<void> => {
-    await callCleaningService('deleteHouse', { id }, 'Delete house');
+  delete: async (oid: number): Promise<void> => {
+    await callCleaningService('services.HouseService', 'deleteHouse', { oid }, 'Delete house');
   },
   
-  getByOwner: async (ownerId: number): Promise<House[]> => {
-    const res = await callCleaningService('getOwnerHouses', { owner_id: ownerId }, 'Load houses by owner');
+  getByOwner: async (ownerOid: number): Promise<House[]> => {
+    const res = await callCleaningService('services.HouseService', 'getOwnerHouses', { ownerOid }, 'Load houses by owner');
     return res.data || [];
   },
   
-  toggleActive: async (id: number, active: boolean): Promise<House> => {
-    const res = await callCleaningService('updateHouse', { id, data: { active } }, active ? 'Activate house' : 'Deactivate house');
+  toggleActive: async (oid: number, active: boolean): Promise<House> => {
+    const res = await callCleaningService('services.HouseService', 'updateHouse', { oid, data: { active } }, active ? 'Activate house' : 'Deactivate house');
     return res.data;
   }
 };
 
 // Bookings API additions for house schedules
 export const bookingsByHouseAPI = {
-  getByHouse: async (houseId: number): Promise<Booking[]> => {
-    const res = await callCleaningService('getBookingsByHouse', { houseId }, 'Load bookings by house');
+  getByHouse: async (houseOid: number): Promise<Booking[]> => {
+    const res = await callCleaningService('services.BookingService', 'getBookingsByHouse', { houseOid }, 'Load bookings by house');
     return res.data || [];
   }
 };
 
 export const schedulesByBookingAPI = {
-  getByBooking: async (bookingId: number): Promise<Schedule[]> => {
-    const res = await callCleaningService('getSchedulesByBooking', { bookingId }, 'Load schedules by booking');
+  getByBooking: async (bookingOid: number): Promise<Schedule[]> => {
+    const res = await callCleaningService('services.ScheduleService', 'getSchedulesByBooking', { bookingOid }, 'Load schedules by booking');
     return res.data || [];
   }
 };
 
 // Owners API
 export const ownersAPI = {
-  getAll: async (): Promise<Owner[]> => {
-    const res = await callCleaningService('getOwners', {}, 'Load owners');
+  getAll: async (): Promise<any[]> => {
+    const res = await callCleaningService('services.OwnerService', 'getOwners', {}, 'Load owners');
     return res.data || [];
   },
   
-  getById: async (id: number): Promise<Owner | null> => {
-    const res = await callCleaningService('getOwner', { id }, 'Load owner');
+  getByOid: async (oid: number): Promise<any | null> => {
+    const res = await callCleaningService('services.OwnerService', 'getOwner', { oid }, 'Load owner');
     return res.data || null;
   },
   
-  create: async (data: Partial<Owner>): Promise<Owner> => {
-    const res = await callCleaningService('createOwner', { data }, 'Create owner');
+  create: async (data: any): Promise<any> => {
+    const res = await callCleaningService('services.OwnerService', 'createOwner', { data }, 'Create owner');
     return res.data;
   },
   
-  update: async (id: number, data: Partial<Owner>): Promise<Owner> => {
-    const res = await callCleaningService('updateOwner', { id, data }, 'Update owner');
+  update: async (oid: number, data: any): Promise<any> => {
+    const res = await callCleaningService('services.OwnerService', 'updateOwner', { oid, data }, 'Update owner');
     return res.data;
   },
   
-  delete: async (id: number): Promise<void> => {
-    await callCleaningService('deleteOwner', { id }, 'Delete owner');
+  delete: async (oid: number): Promise<void> => {
+    await callCleaningService('services.OwnerService', 'deleteOwner', { oid }, 'Delete owner');
+  },
+  
+  toggleLogin: async (oid: number, canLogin: boolean): Promise<any> => {
+    const res = await callCleaningService('services.OwnerService', 'toggleOwnerLogin', { oid, canLogin }, 'Toggle owner login');
+    return res.data;
   }
 };
 
-// Cost Profiles API - methods are in services.CleaningService.groovy
+// CostProfile types
+export interface CostProfile {
+   oid: number;
+   name: string;
+   is_standard: boolean;
+   ownerOid: number;
+   base_hourly_rate: number;
+  minimum_charge: number;
+  rate_per_m2: number;
+  rate_per_floor: number;
+  rate_per_bedroom: number;
+  rate_per_bathroom: number;
+  dog_surcharge: number;
+  basic_multiplier: number;
+  standard_multiplier: number;
+  premium_multiplier: number;
+  luxury_multiplier: number;
+  active: boolean;
+}
+
+// CostProfiles API
 export const costProfilesAPI = {
   getAll: async (): Promise<CostProfile[]> => {
-    const res = await callCleaningService('getCostProfiles', {}, 'Load cost profiles');
+    const res = await callCleaningService('services.CostProfileService', 'getCostProfiles', {}, 'Load cost profiles');
     return res.data || [];
   },
-  
-  getById: async (id: number): Promise<CostProfile | null> => {
-    const res = await callCleaningService('getCostProfile', { id }, 'Load cost profile');
-    return res.data || null;
-  },
-  
-  getStandard: async (): Promise<CostProfile | null> => {
-    const res = await callCleaningService('getStandardCostProfile', {}, 'Load standard cost profile');
-    return res.data || null;
-  },
-  
-  create: async (data: Partial<CostProfile>): Promise<CostProfile> => {
-    const res = await callCleaningService('createCostProfile', { data }, 'Create cost profile');
-    return res.data;
-  },
-  
-  update: async (id: number, data: Partial<CostProfile>): Promise<CostProfile> => {
-    const res = await callCleaningService('updateCostProfile', { id, data }, 'Update cost profile');
-    return res.data;
-  },
-  
-  delete: async (id: number): Promise<void> => {
-    await callCleaningService('deleteCostProfile', { id }, 'Delete cost profile');
-  },
-  
-  copy: async (sourceId: number, name: string, ownerId?: number): Promise<CostProfile> => {
-    const res = await callCleaningService('copyCostProfile', { source_id: sourceId, name, owner: ownerId }, 'Copy cost profile');
-    return res.data;
-  }
-};
 
-// Cost Calculation API
-export const costAPI = {
-  calculate: async (houseId: number, bookingId?: number, profileId?: number): Promise<CostEstimate | null> => {
-    const args: any = { house_id: houseId };
-    if (bookingId) args.booking_id = bookingId;
-    if (profileId) args.cost_profile_id = profileId;
-    const res = await callCleaningService('calculateCost', args, 'Calculate cost');
+  getByOid: async (oid: number): Promise<CostProfile | null> => {
+    const res = await callCleaningService('services.CostProfileService', 'getCostProfile', { oid }, 'Load cost profile');
     return res.data || null;
   },
-  
-  estimateHours: async (houseId: number): Promise<number | null> => {
-    const res = await callCleaningService('estimateHours', { house_id: houseId }, 'Estimate hours');
-    return res.estimated_hours || null;
+
+  create: async (data: Partial<CostProfile>): Promise<CostProfile> => {
+    const res = await callCleaningService('services.CostProfileService', 'createCostProfile', { data }, 'Create cost profile');
+    return res.data;
+  },
+
+  update: async (oid: number, data: Partial<CostProfile>): Promise<CostProfile> => {
+    const res = await callCleaningService('services.CostProfileService', 'updateCostProfile', { oid, data }, 'Update cost profile');
+    return res.data;
+  },
+
+  delete: async (oid: number): Promise<void> => {
+    await callCleaningService('services.CostProfileService', 'deleteCostProfile', { oid }, 'Delete cost profile');
+  },
+
+  copy: async (oid: number, name: string): Promise<CostProfile> => {
+    const res = await callCleaningService('services.CostProfileService', 'copyCostProfile', { sourceOid: oid, name }, 'Copy cost profile');
+    return res.data;
   }
 };

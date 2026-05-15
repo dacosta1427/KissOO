@@ -33,7 +33,7 @@ public class Cleaner extends ANaturalActor {
         this.phone = phone;
         this.email = email;
         setActive(active);
-        this.schedules = StorageManager.getStorage().createLink();
+        this.schedules = StorageManager.createLink();
     }
     
     public List<Schedule> getSchedules() {

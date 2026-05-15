@@ -35,18 +35,20 @@ export function toBackendDateFormat(yyyyMmDd: string): string {
 }
 
 /**
- * Format YYYYMMDD for display (localized)
- * @param yyyymmdd - Date string in format YYYYMMDD
- * @param locale - Optional locale (default: 'en')
- * @returns Localized date string (e.g., "Apr 26, 2026")
+ * Format YYYYMMDD or YYYY-MM-DD for display (localized)
+ * @param dateStr - Date string in format YYYYMMDD or YYYY-MM-DD
+ * @param locale - Optional locale (default: 'nl' for Europe-NL)
+ * @returns Localized date string (e.g., "26 apr. 2026")
  */
-export function toDisplayDateFormat(yyyymmdd: string, locale: string = 'en'): string {
-  if (!yyyymmdd || yyyymmdd.length !== 8) return '';
-  const year = parseInt(yyyymmdd.substring(0, 4));
-  const month = parseInt(yyyymmdd.substring(4, 6)) - 1;
-  const day = parseInt(yyyymmdd.substring(6, 8));
-  const date = new Date(year, month, day);
-  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
+export function toDisplayDateFormat(dateStr: string, locale: string = 'nl'): string {
+  if (!dateStr) return '';
+  let normalized = dateStr;
+  if (dateStr.length === 8) {
+    normalized = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+  }
+  const date = new Date(normalized);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 // Legacy compatibility - these will be replaced with Modal component

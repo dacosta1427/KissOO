@@ -1,11 +1,11 @@
 package koo.core.database;
 
-import koo.core.database.StorageManager;
 import org.garret.perst.continuous.CVersion;
-import org.garret.perst.continuous.CDatabase;
 import org.garret.perst.continuous.TransactionContainer;
 import org.garret.perst.IterableIterator;
+import org.garret.perst.dbmanager.UnifiedDBManager;
 import org.kissweb.database.Connection;
+import org.kissweb.restServer.MainServlet;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -28,20 +28,17 @@ import java.util.List;
  */
 public class PerstConnection extends Connection {
     
-    private CDatabase cdb;
+    private UnifiedDBManager udbm;
     
-    /**
-     * Create PerstConnection with an in-memory SQLite database as dummy connection.
-     */
     public PerstConnection() throws SQLException {
         super(createDummyConnection());
-        this.cdb = StorageManager.getDBManager();
+        this.udbm = getUnifiedDBManager();
     }
     
-    /**
-     * Create an in-memory SQLite connection to satisfy the Connection superclass.
-     * Auto-commit is disabled to match other database connection behavior.
-     */
+    private static UnifiedDBManager getUnifiedDBManager() {
+        return (UnifiedDBManager) MainServlet.getEnvironment("unifiedDBManager");
+    }
+    
     private static java.sql.Connection createDummyConnection() throws SQLException {
         try {
             Class.forName("org.sqlite.JDBC");
@@ -53,79 +50,57 @@ public class PerstConnection extends Connection {
         return conn;
     }
     
-    /**
-     * Check if Perst is available.
-     */
     public boolean isPerstAvailable() {
-        return cdb != null && StorageManager.isAvailable();
+        return udbm != null && StorageManager.isAvailable();
     }
     
-    /**
-     * No-op: Perst operations don't use this dummy connection.
-     */
     @Override
     public void rollback() throws java.sql.SQLException {
-        // Perst doesn't use the dummy connection
     }
     
-    /**
-     * No-op: Perst operations don't use this dummy connection.
-     */
     @Override
     public void commit() throws java.sql.SQLException {
-        // Perst doesn't use the dummy connection
     }
     
-    /**
-     * No-op: PerstConnection is reused across requests.
-     * The real Perst database operations use PerstStorageManager.
-     */
     @Override
     public void close() throws java.sql.SQLException {
-        // Don't close - PerstConnection is reused
     }
     
-    // ========== TRANSACTION MANAGEMENT ==========
-    
     public void perstBeginTransaction() {
-        if (cdb != null) cdb.beginTransaction();
+        if (udbm != null) udbm.beginTransaction();
     }
     
     public void perstCommitTransaction() throws Exception {
-        if (cdb != null) cdb.commitTransaction();
+        if (udbm != null) udbm.commitTransaction();
     }
     
     public void perstRollbackTransaction() {
-        if (cdb != null) cdb.rollbackTransaction();
+        if (udbm != null) udbm.rollbackTransaction();
     }
     
     public boolean perstIsInTransaction() {
-        return cdb != null && cdb.isInTransaction();
+        return udbm != null && udbm.isInTransaction();
     }
     
-    // ========== TRANSACTION CONTAINER ==========
-    
     public TransactionContainer perstCreateContainer() {
-        if (cdb == null) return null;
-        return cdb.createContainer();
+        if (udbm == null) return null;
+        return udbm.createContainer();
     }
     
     public boolean perstStore(TransactionContainer tc) {
-        if (cdb == null || tc == null) return false;
+        if (udbm == null || tc == null) return false;
         try {
-            return cdb.store(tc).isSuccess();
+            return udbm.store(tc).isSuccess();
         } catch (Exception e) {
             System.err.println("[PerstConnection] Store failed: " + e.getMessage());
             return false;
         }
     }
     
-    // ========== RETRIEVE OPERATIONS ==========
-    
     public <T extends CVersion> List<T> getAll(Class<T> clazz) {
-        if (cdb == null) return new ArrayList<>();
+        if (udbm == null) return new ArrayList<>();
         try {
-            IterableIterator<T> results = cdb.getRecords(clazz);
+            IterableIterator<T> results = udbm.getObjects(clazz);
             return toList(results);
         } catch (Exception e) {
             System.err.println("[PerstConnection] getAll failed: " + e.getMessage());
@@ -134,9 +109,9 @@ public class PerstConnection extends Connection {
     }
     
     public <T extends CVersion> T find(Class<T> clazz, String field, String value) {
-        if (cdb == null) return null;
+        if (udbm == null) return null;
         try {
-            IterableIterator<T> results = cdb.find(clazz, field, new org.garret.perst.Key(value));
+            IterableIterator<T> results = udbm.find(clazz, field, new org.garret.perst.Key(value));
             return getSingleton(results);
         } catch (Exception e) {
             System.err.println("[PerstConnection] find(String) failed: " + e.getMessage());
@@ -145,9 +120,9 @@ public class PerstConnection extends Connection {
     }
     
     public <T extends CVersion> T find(Class<T> clazz, String field, int value) {
-        if (cdb == null) return null;
+        if (udbm == null) return null;
         try {
-            IterableIterator<T> results = cdb.find(clazz, field, new org.garret.perst.Key(value));
+            IterableIterator<T> results = udbm.find(clazz, field, new org.garret.perst.Key(value));
             return getSingleton(results);
         } catch (Exception e) {
             System.err.println("[PerstConnection] find(int) failed: " + e.getMessage());
@@ -156,9 +131,9 @@ public class PerstConnection extends Connection {
     }
     
     public <T extends CVersion> T find(Class<T> clazz, String field, long value) {
-        if (cdb == null) return null;
+        if (udbm == null) return null;
         try {
-            IterableIterator<T> results = cdb.find(clazz, field, new org.garret.perst.Key(value));
+            IterableIterator<T> results = udbm.find(clazz, field, new org.garret.perst.Key(value));
             return getSingleton(results);
         } catch (Exception e) {
             System.err.println("[PerstConnection] find(long) failed: " + e.getMessage());
@@ -167,9 +142,10 @@ public class PerstConnection extends Connection {
     }
     
     public <T extends CVersion> T getByOid(Class<T> clazz, long oid) {
-        if (cdb == null) return null;
+        if (udbm == null) return null;
         try {
-            return cdb.getByOid(oid);
+            org.garret.perst.dbmanager.RetrieveResult<T> result = udbm.getByOid(oid, clazz);
+            return result != null ? result.getObject() : null;
         } catch (Exception e) {
             System.err.println("[PerstConnection] getByOid failed: " + e.getMessage());
             return null;
@@ -177,16 +153,15 @@ public class PerstConnection extends Connection {
     }
     
     public <T extends CVersion> T getByUuid(Class<T> clazz, String uuid) {
-        if (cdb == null) return null;
+        if (udbm == null) return null;
         try {
-            return cdb.getByUuid(uuid);
+            IterableIterator<T> results = udbm.find(clazz, "uuid", new org.garret.perst.Key(uuid));
+            return getSingleton(results);
         } catch (Exception e) {
             System.err.println("[PerstConnection] getByUuid failed: " + e.getMessage());
             return null;
         }
     }
-    
-    // ========== HELPER METHODS ==========
     
     private <T> List<T> toList(IterableIterator<T> iter) {
         List<T> list = new ArrayList<>();

@@ -4,6 +4,7 @@
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import { t, currentLocale } from '$lib/i18n';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/Button.svelte';
 
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
@@ -17,7 +18,7 @@
 	let showDeleteConfirm = $state(false);
 
 	let formData = $state({
-		house_id: 0,
+		houseOid: 0,
 		check_in_date: '',
 		check_out_date: '',
 		guest_name: '',
@@ -35,7 +36,7 @@
 		if (!urlBookingId || urlBookingId <= 0) return;
 		loading = true;
 		try {
-			booking = await bookingsAPI.getById(urlBookingId);
+			booking = await bookingsAPI.getByOid(urlBookingId);
 			if (!booking) {
 				notificationActions.error(tt('bookings.booking_not_found'));
 				goto('/bookings');
@@ -43,7 +44,7 @@
 			}
 
 			formData = {
-				house_id: booking.house_id,
+				houseOid: booking.houseOid,
 				check_in_date: booking.check_in_date,
 				check_out_date: booking.check_out_date,
 				guest_name: booking.guest_name,
@@ -55,15 +56,15 @@
 			};
 
 			// Load house
-			house = await housesAPI.getById(booking.house_id) || null;
+			house = await housesAPI.getByOid(booking.houseOid) || null;
 
 			// Load schedules
-			schedules = await schedulesAPI.getByBooking(booking.id);
+			schedules = await schedulesAPI.getByBooking(booking.oid);
 
 			// Load cleaners referenced in schedules
-			const cleanerIds = [...new Set(schedules.map(s => s.cleaner_id))];
+			const cleanerIds = [...new Set(schedules.map(s => s.cleanerOid))];
 			for (const cid of cleanerIds) {
-				const c = await cleanersAPI.getById(cid);
+				const c = await cleanersAPI.getByOid(cid);
 				if (c) cleaners.push(c);
 			}
 		} catch (err: any) {
@@ -76,7 +77,7 @@
 	}
 
 	let hasChanges = $derived(booking && (
-		formData.house_id !== booking.house_id ||
+		formData.houseOid !== booking.houseOid ||
 		formData.check_in_date !== booking.check_in_date ||
 		formData.check_out_date !== booking.check_out_date ||
 		formData.guest_name !== booking.guest_name ||
@@ -92,7 +93,7 @@
 		if (!booking || saving) return;
 		saving = true;
 		try {
-			const result = await bookingsAPI.update(booking.id, formData);
+			const result = await bookingsAPI.update(booking.oid, formData);
 			notificationActions.success(tt('bookings.updated'));
 			booking = result;
 			await loadData();
@@ -111,7 +112,7 @@
 		if (!booking) return;
 		if (confirm(tt('bookings.delete_confirm').replace('${name}', booking.guest_name))) {
 			try {
-				await bookingsAPI.delete(booking.id);
+				await bookingsAPI.delete(booking.oid);
 				notificationActions.success(tt('bookings.deleted'));
 				goto('/bookings');
 			} catch (err: any) {
@@ -168,9 +169,9 @@
 						<input type="tel" id="guest_phone" bind:value={formData.guest_phone} />
 					</div>
 					<div class="form-field">
-						<label for="house_id">{tt('common.house')}</label>
-						<select id="house_id" bind:value={formData.house_id} disabled>
-							<option value={formData.house_id}>{house?.name || 'Loading...'}</option>
+						<label for="houseOid">{tt('common.house')}</label>
+						<select id="houseOid" bind:value={formData.houseOid} disabled>
+							<option value={formData.houseOid}>{house?.name || 'Loading...'}</option>
 						</select>
 					</div>
 					<div class="form-field">
@@ -224,12 +225,12 @@
 						</thead>
 						<tbody>
 							{#each schedules as schedule}
-								{@const cleaner = cleaners.find(c => c.id === schedule.cleaner_id)}
-								<tr onclick={() => goto(`/schedules/${schedule.id}`)}>
+								{@const cleaner = cleaners.find(c => c.oid === schedule.cleanerOid)}
+								<tr onclick={() => goto(`/schedules/${schedule.oid}`)}>
 									<td>{formatDate(schedule.date)}</td>
 									<td>{schedule.start_time}</td>
 									<td>{schedule.end_time}</td>
-									<td>{cleaner?.name || `#${schedule.cleaner_id}`}</td>
+									<td>{cleaner?.name || `#${schedule.cleanerOid}`}</td>
 									<td><span class="status status-{schedule.status}">{schedule.status}</span></td>
 								</tr>
 							{/each}

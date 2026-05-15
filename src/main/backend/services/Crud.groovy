@@ -19,7 +19,7 @@ class Crud {
 
             for (Phone phone : phones) {
                 JSONObject row = new JSONObject()
-                row.put("id", phone.getOid())
+                row.put("oid", phone.getOid())
                 row.put("firstName", phone.getFirstName())
                 row.put("lastName", phone.getLastName())
                 row.put("phoneNumber", phone.getPhoneNumber())
@@ -40,7 +40,7 @@ class Crud {
                 injson.getString("phoneNumber")
             )
             outjson.put("success", true)
-            outjson.put("id", phone.getOid())
+            outjson.put("oid", phone.getOid())
         } catch (Exception e) {
             outjson.put("error", e.message)
         }
@@ -48,7 +48,7 @@ class Crud {
 
     void updatePhone(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            long oid = injson.getLong("id")
+            long oid = injson.getLong("oid")
             Phone phoneToUpdate = PhoneManager.getByOid(oid)
 
             if (phoneToUpdate == null) {
@@ -69,7 +69,7 @@ class Crud {
 
     void deletePhone(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
-            long oid = injson.getLong("id")
+            long oid = injson.getLong("oid")
             Phone phoneToDelete = PhoneManager.getByOid(oid)
 
             if (phoneToDelete == null) {

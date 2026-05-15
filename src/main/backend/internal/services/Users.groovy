@@ -1,10 +1,11 @@
 package internal.services
 
-import org.kissweb.json.JSONArray
+import org.kissweb.restServer.MainServlet
 import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
-import koo.core.database.StorageManager
+import org.garret.perst.dbmanager.UnifiedDBManager
+import org.garret.perst.continuous.TransactionContainer
 import koo.core.user.PerstUser
 import koo.core.actor.Role
 import domain.actor.owner.Owner
@@ -13,11 +14,15 @@ import org.kissweb.security.EXTERNAL_CALL
 
 class Users {
 
+    private static UnifiedDBManager getUdbm(ProcessServlet servlet) {
+        return (UnifiedDBManager) MainServlet.getEnvironment("unifiedDBManager")
+    }
+
     private boolean isFullyActivated(ProcessServlet servlet) {
         def activated = servlet.getUserData("isFullyActivated")
         return activated == true
     }
-    
+
     private boolean isSystemAdmin(ProcessServlet servlet) {
         try {
             PerstUser pu = (PerstUser) servlet.getUserData("perstUser")
@@ -36,16 +41,16 @@ class Users {
             throw new Exception("System admin access required for: " + operation)
         }
     }
-    
+
     private void requireFullActivation(JSONObject injson, JSONObject outjson, ProcessServlet servlet) {
         if (!isFullyActivated(servlet)) {
             boolean needsPwd = servlet.getUserData("needsPasswordChange") == true
             boolean needsEmail = servlet.getUserData("needsEmailVerification") == true
             outjson.put("_Success", false)
             outjson.put("_ErrorCode", 3)
-            outjson.put("_ErrorMessage", "Please complete activation: " + 
-                (needsPwd ? "change password" : "") + 
-                (needsPwd && needsEmail ? " and " : "") + 
+            outjson.put("_ErrorMessage", "Please complete activation: " +
+                (needsPwd ? "change password" : "") +
+                (needsPwd && needsEmail ? " and " : "") +
                 (needsEmail ? "verify email" : ""))
         }
     }
@@ -57,28 +62,36 @@ class Users {
             if (outjson.has("_Success") && !outjson.getBoolean("_Success")) {
                 return
             }
-            
+
             checkSystemAdmin(servlet, "getUsers")
 
-            Collection<PerstUser> users = StorageManager.getAll(PerstUser.class)
+            UnifiedDBManager udbm = getUdbm(servlet)
+            if (udbm == null) {
+                outjson.put("error", "Perst not available")
+                return
+            }
+
+            def results = udbm.getObjects(PerstUser.class)
             JSONArray rows = new JSONArray()
 
-            for (PerstUser user : users) {
-                JSONObject row = new JSONObject()
-                row.put("id", user.getOid())
-                row.put("userName", user.getUsername())
-                row.put("userPassword", user.getPasswordHash())
-                row.put("canLogin", user.isActive())
-                row.put("emailVerified", user.isEmailVerified())
-                row.put("email", user.getEmail())
-                
-                if (user.getAActor() != null) {
-                    row.put("actorType", user.getAActor().getType())
-                } else {
-                    row.put("actorType", null)
+            if (results != null) {
+                for (PerstUser user : results) {
+                    JSONObject row = new JSONObject()
+                    row.put("id", user.getOid())
+                    row.put("userName", user.getUsername())
+                    row.put("userPassword", user.getPasswordHash())
+                    row.put("canLogin", user.isActive())
+                    row.put("emailVerified", user.isEmailVerified())
+                    row.put("email", user.getEmail())
+
+                    if (user.getAActor() != null) {
+                        row.put("actorType", user.getAActor().getType())
+                    } else {
+                        row.put("actorType", null)
+                    }
+
+                    rows.put(row)
                 }
-                
-                rows.put(row)
             }
 
             outjson.put("rows", rows)
@@ -91,7 +104,14 @@ class Users {
     void createUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             checkSystemAdmin(servlet, "createUser")
-            
+
+            UnifiedDBManager udbm = getUdbm(servlet)
+            if (udbm == null) {
+                outjson.put("_Success", false)
+                outjson.put("error", "Perst not available")
+                return
+            }
+
             String userName = injson.getString("userName")
             String password = injson.getString("userPassword")
             String email = injson.getString("email", "")
@@ -99,43 +119,47 @@ class Users {
             String phone = injson.getString("phone", "")
             String address = injson.getString("address", "")
             boolean requireVerification = injson.getBoolean("requireVerification", false)
-            
-            Collection<PerstUser> existingUsers = StorageManager.getAll(PerstUser.class)
-            if (existingUsers.any { it.getUsername() == userName }) {
-                outjson.put("_Success", false)
-                outjson.put("error", "Username already exists")
-                return
+
+            def existingUsers = udbm.getObjects(PerstUser.class)
+            if (existingUsers != null) {
+                for (PerstUser u : existingUsers) {
+                    if (u.getUsername() == userName) {
+                        outjson.put("_Success", false)
+                        outjson.put("error", "Username already exists")
+                        return
+                    }
+                }
             }
-            
+
             Owner owner = new Owner(name, phone, email, address)
-            
+
             PerstUser user = owner.getPerstUser()
             user.setUsername(userName)
             user.setPassword(password)
             user.setActive(injson.getString("userActive") == "Y")
             user.setEmail(email)
-            
+
             if (requireVerification) {
                 user.generateVerificationToken()
                 user.setEmailVerified(false)
             } else {
                 user.setEmailVerified(true)
             }
-            
-            def tc = StorageManager.createContainer()
+
+            TransactionContainer tc = udbm.createContainer()
             tc.addInsert(owner)
             tc.addInsert(user)
-            if (!StorageManager.store(tc)) {
+            if (!udbm.store(tc).isSuccess()) {
                 outjson.put("_Success", false)
                 outjson.put("error", "Failed to create owner")
                 return
             }
-            
+
             outjson.put("_Success", true)
             outjson.put("success", true)
             outjson.put("id", user.getOid())
             outjson.put("ownerId", owner.getOid())
-            
+
             if (requireVerification && user.getVerificationToken()) {
                 outjson.put("verificationToken", user.getVerificationToken())
                 outjson.put("requiresVerification", true)
@@ -151,24 +175,31 @@ class Users {
     void updateUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             checkSystemAdmin(servlet, "updateUser")
-            
+
+            UnifiedDBManager udbm = getUdbm(servlet)
+            if (udbm == null) {
+                outjson.put("_Success", false)
+                outjson.put("error", "Perst not available")
+                return
+            }
+
             long oid = injson.getLong("id")
-            PerstUser userToUpdate = StorageManager.getByOid(PerstUser.class, oid)
-            
+            PerstUser userToUpdate = udbm.getByOid(oid, PerstUser.class)?.getObject()
+
             if (userToUpdate == null) {
                 outjson.put("_Success", false)
                 outjson.put("error", "User not found")
                 return
             }
-            
+
             userToUpdate.setUsername(injson.getString("userName"))
             userToUpdate.setPassword(injson.getString("userPassword"))
             userToUpdate.setActive(injson.getString("userActive") == "Y")
-            
-            def tc = StorageManager.createContainer()
+
+            TransactionContainer tc = udbm.createContainer()
             tc.addUpdate(userToUpdate)
-            StorageManager.store(tc)
-            
+            udbm.store(tc)
+
             outjson.put("_Success", true)
             outjson.put("success", true)
         } catch (Exception e) {
@@ -180,20 +211,27 @@ class Users {
     void deleteUser(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             checkSystemAdmin(servlet, "deleteUser")
-            
+
+            UnifiedDBManager udbm = getUdbm(servlet)
+            if (udbm == null) {
+                outjson.put("_Success", false)
+                outjson.put("error", "Perst not available")
+                return
+            }
+
             long oid = injson.getLong("id")
-            PerstUser userToDelete = StorageManager.getByOid(PerstUser.class, oid)
-            
+            PerstUser userToDelete = udbm.getByOid(oid, PerstUser.class)?.getObject()
+
             if (userToDelete == null) {
                 outjson.put("_Success", false)
                 outjson.put("error", "User not found")
                 return
             }
-            
-            def tc = StorageManager.createContainer()
+
+            TransactionContainer tc = udbm.createContainer()
             tc.addDelete(userToDelete)
-            StorageManager.store(tc)
-            
+            udbm.store(tc)
+
             outjson.put("_Success", true)
             outjson.put("success", true)
         } catch (Exception e) {
@@ -205,48 +243,53 @@ class Users {
     void toggleUserLogin(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         try {
             checkSystemAdmin(servlet, "toggleUserLogin")
-            
+
+            UnifiedDBManager udbm = getUdbm(servlet)
+            if (udbm == null) {
+                outjson.put("_Success", false)
+                outjson.put("error", "Perst not available")
+                return
+            }
+
             long oid = injson.getLong("id")
-            boolean canLogin = injson.getBoolean("canLogin")
-            
-            PerstUser user = StorageManager.getByOid(PerstUser.class, oid)
+            PerstUser user = udbm.getByOid(oid, PerstUser.class)?.getObject()
             if (user == null) {
                 outjson.put("_Success", false)
                 outjson.put("error", "User not found")
                 return
             }
-            
+
             user.setActive(canLogin)
-            
-            def tc = StorageManager.createContainer()
+
+            TransactionContainer tc = udbm.createContainer()
             tc.addUpdate(user)
-            StorageManager.store(tc)
-            
+            udbm.store(tc)
+
             if (canLogin) {
                 try {
                     def baseUrl = "http://localhost:5173"
                     def actorName = user.getAActor() != null ? user.getAActor().getName() : user.getUsername()
-                    
+
                     if (user.isEmailVerified()) {
                         String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8)
                         user.setPassword(tempPassword)
                         user.setMustChangePassword(true)
                         tc.addUpdate(user)
-                        StorageManager.store(tc)
-                        
+                        udbm.store(tc)
+
                         EmailService.sendLoginCredentials(
-                            user.getEmail(), 
-                            actorName, 
-                            user.getUsername(), 
-                            tempPassword, 
+                            user.getEmail(),
+                            actorName,
+                            user.getUsername(),
+                            tempPassword,
                             baseUrl
                         )
                         outjson.put("temporaryPassword", tempPassword)
                     } else {
                         user.generateVerificationToken()
                         tc.addUpdate(user)
-                        StorageManager.store(tc)
-                        
+                        udbm.store(tc)
+
                         EmailService.sendVerification(
                             user.getEmail(),
                             actorName,
@@ -258,7 +301,7 @@ class Users {
                     println "[Users] Failed to send email: ${e.message}"
                 }
             }
-            
+
             outjson.put("_Success", true)
             outjson.put("canLogin", canLogin)
             outjson.put("emailVerified", user.isEmailVerified())

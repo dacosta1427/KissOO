@@ -79,7 +79,7 @@ public class ActorService {
                 return false;
             }
             
-            out.put("AActor", AActor.toJSON());
+            out.put("AActor", actorToJson(AActor));
             out.put("source", "perst");
             return true;
         }
@@ -102,8 +102,8 @@ public class ActorService {
             }
             
             List<JSONObject> actorList = new ArrayList<>();
-            for (AActor AActor : AActors) {
-                actorList.add(AActor.toJSON());
+            for (AActor act : AActors) {
+                actorList.add(actorToJson(act));
             }
             out.put("AActors", actorList);
             out.put("source", "perst");
@@ -137,7 +137,7 @@ public class ActorService {
                 return false;
             }
             
-            out.put("AActor", AActor.toJSON());
+            out.put("AActor", actorToJson(AActor));
             out.put("status", "created");
             return true;
         }
@@ -176,7 +176,7 @@ public class ActorService {
                 return false;
             }
             
-            out.put("AActor", AActor.toJSON());
+            out.put("AActor", actorToJson(AActor));
             out.put("status", "updated");
             return true;
         }
@@ -279,5 +279,17 @@ public class ActorService {
      */
     public void deleteActor(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         DELETE_ACTOR.execute(injson, outjson, db, servlet);
+    }
+    
+    private static JSONObject actorToJson(AActor actor) {
+        JSONObject json = new JSONObject();
+        json.put("uuid", actor.getUuid());
+        json.put("name", actor.getName());
+        json.put("type", actor.getType());
+        json.put("active", actor.isActive());
+        if (actor.getAgreement() != null) {
+            json.put("role", actor.getAgreement().getRole());
+        }
+        return json;
     }
 }

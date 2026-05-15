@@ -1,178 +1,55 @@
 <script lang="ts">
 	import { bookingsAPI, housesAPI, ownersAPI, type Booking, type House, type Owner } from '$lib/api/Cleaning';
-	import { dataStores } from '../../lib/stores.svelte.js';
+	import { notificationActions } from '$lib/stores.svelte.js';
 	import { session } from '$lib/state/session.svelte';
-	import Table from '$lib/components/Table.svelte';
-	import Form from '$lib/components/Form.svelte';
-  import { t, currentLocale } from '$lib/i18n';
-  import { toInputDateFormat, toBackendDateFormat, toDisplayDateFormat } from '$lib/utils/Utils';
-  import { page } from '$app/stores';
+	import { t, currentLocale } from '$lib/i18n';
+	import { toInputDateFormat, toBackendDateFormat, toDisplayDateFormat } from '$lib/utils/Utils';
+	import { goto } from '$app/navigation';
   
-  // Reactive translation helper
-  const tt = (key: string) => t(key, undefined, $currentLocale);
+	const tt = (key: string) => t(key, undefined, $currentLocale);
 
-  // Check if user is admin
-  let isAdmin = $derived(session.username === 'admin' || session.username === 'administrator');
+	let isAdmin = $derived(session.isAdmin === true);
 
-  // Svelte 5: Use $state for reactive variables
 	let bookings = $state<Booking[]>([]);
 	let houses = $state<House[]>([]);
 	let owners = $state<Owner[]>([]);
-	let selectedOwnerId = $state<number | null>(null);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let showForm = $state(false);
-	
-	// View toggle: 'card' or 'table'
-	let viewMode = $state<'card' | 'table'>('table');
+	let editingBooking = $state<Booking | null>(null);
+	let viewMode = $state<'card' | 'table'>('card');
 
-	// Form section ref for scroll on small screens
-
-	
-	// Get user's house IDs for filtering
-	let userHouseIds = $derived(houses.filter(h => h.owner_id === session.ownerOid).map(h => h.id));
-	
-	// Filtered bookings based on user role
+	let userHouseIds = $derived(houses.filter(h => h.ownerOid === session.ownerOid).map(h => h.oid));
 	let filteredBookings = $derived(
-		isAdmin ? bookings : bookings.filter(b => userHouseIds.includes(b.house_id))
+		isAdmin ? bookings : bookings.filter(b => userHouseIds.includes(b.houseOid))
 	);
 
-	// Reactive form fields using $derived
-	let bookingFields = $derived([
-		{
-			name: 'owner_id',
-			label: t('houses.owner'),
-			type: 'select',
-			required: true,
-			options: []
-		},
-		{
-			name: 'house_id',
-			label: t('bookings.house'),
-			type: 'select',
-			required: true,
-			options: []
-		},
-		{
-			name: 'check_in_date',
-			label: t('bookings.check_in_date'),
-			type: 'date',
-			required: true
-		},
-		{
-			name: 'check_out_date',
-			label: t('bookings.check_out_date'),
-			type: 'date',
-			required: true
-		},
-		{
-			name: 'check_in_time',
-			label: t('bookings.check_in_time') + ' (24h)',
-			type: 'time',
-			required: true,
-			step: 900
-		},
-		{
-			name: 'check_out_time',
-			label: t('bookings.check_out_time') + ' (24h)',
-			type: 'time',
-			required: true,
-			step: 900
-		},
-		{
-			name: 'guest_name',
-			label: t('bookings.guest_name'),
-			type: 'text',
-			required: true,
-			placeholder: t('bookings.enter_guest_name')
-		},
-		{
-			name: 'guest_email',
-			label: t('bookings.guest_email'),
-			type: 'email',
-			required: true,
-			placeholder: t('bookings.enter_guest_email')
-		},
-		{
-			name: 'guest_phone',
-			label: t('bookings.guest_phone'),
-			type: 'tel',
-			required: false,
-			placeholder: t('bookings.enter_guest_phone')
-		},
-		{
-			name: 'dogs_count',
-			label: t('bookings.number_of_dogs'),
-			type: 'number',
-			required: false,
-			min: 0,
-			step: 1,
-			placeholder: '0'
-		},
-		{
-			name: 'status',
-			label: t('common.status'),
-			type: 'select',
-			required: true,
-			options: [
-				{ value: 'pending', label: t('bookings.pending') },
-				{ value: 'confirmed', label: t('bookings.confirmed') },
-				{ value: 'checked_in', label: t('bookings.checked_in') },
-				{ value: 'checked_out', label: t('bookings.checked_out') },
-				{ value: 'cancelled', label: t('bookings.cancelled') }
-			]
-		}
-	]);
-
-	let tableColumns = $derived([
-		{ key: 'house_name', label: t('bookings.house') },
-		{ key: 'check_in_date', label: t('bookings.check_in_date') },
-		{ key: 'check_out_date', label: t('bookings.check_out_date') },
-		{ key: 'guest_name', label: t('bookings.guest_name') },
-		{ key: 'guest_email', label: t('common.email') },
-		{
-			key: 'status',
-			label: t('common.status'),
-			formatter: (value: string) => value.charAt(0).toUpperCase() + value.slice(1)
-		}
-	]);
-
-	let tableActions = $derived([
-		{
-			label: t('common.edit'),
-			class: 'edit',
-			title: t('bookings.edit_booking'),
-			icon: '✏️'
-		},
-		{
-			label: t('common.delete'),
-			class: 'delete',
-			title: t('bookings.delete_booking'),
-			icon: '🗑️'
-		}
-	]);
+	let formData = $state({
+		ownerOid: 0,
+		houseOid: 0,
+		check_in_date: '',
+		check_out_date: '',
+		check_in_time: '',
+		check_out_time: '',
+		guest_name: '',
+		guest_email: '',
+		guest_phone: '',
+		dogs_count: 0,
+		status: 'pending'
+	});
 
 	async function loadData() {
 		loading = true;
 		error = null;
-
 		try {
 			const [bookingsResult, housesResult, ownersResult] = await Promise.all([
 				bookingsAPI.getAll(),
 				housesAPI.getAll(),
 				ownersAPI.getAll()
 			]);
-
 			bookings = bookingsResult;
 			houses = housesResult;
 			owners = ownersResult;
-
-			// Update form options
-			bookingFields[0].options = owners.map((o) => ({ value: o.id, label: o.name }));
-			// House options will be updated reactively based on selected owner
-
-			dataStores.bookings.set(bookings);
-			dataStores.houses.set(houses);
 		} catch (err: any) {
 			error = err.message || t('errors.failed_to_load');
 		} finally {
@@ -180,89 +57,177 @@
 		}
 	}
 
-	async function handleAction({ action, row }: { action: any; row: any }) {
-		if (action.label === t('common.edit')) {
-		    goto(`/bookings/${row.id}`);
-		} else if (action.label === t('common.delete')) {
-			if (confirm(t('bookings.delete_confirm'))) {
-				try {
-					await bookingsAPI.delete(row.id);
-					await loadData();
-				} catch (err: any) {
-					error = err.message || t('errors.failed_to_delete');
-				}
-			}
-		}
+	function openAddForm() {
+		editingBooking = null;
+		formData = {
+			ownerOid: 0,
+			houseOid: 0,
+			check_in_date: '',
+			check_out_date: '',
+			check_in_time: '',
+			check_out_time: '',
+			guest_name: '',
+			guest_email: '',
+			guest_phone: '',
+			dogs_count: 0,
+			status: 'pending'
+		};
+		showForm = true;
 	}
 
-	async function handleFormSubmit(data: any) {
-		try {
-			await bookingsAPI.create(data);
-
-			showForm = false;
-			await loadData();
-		} catch (err: any) {
-			error = err.message || t('errors.failed_to_save');
-		}
+	function openEditForm(booking: Booking) {
+		editingBooking = booking;
+		formData = {
+			ownerOid: 0,
+			houseOid: booking.houseOid,
+			check_in_date: booking.check_in_date,
+			check_out_date: booking.check_out_date,
+			check_in_time: '',
+			check_out_time: '',
+			guest_name: booking.guest_name,
+			guest_email: booking.guest_email,
+			guest_phone: booking.guest_phone || '',
+			dogs_count: booking.dogs_count,
+			status: booking.status
+		};
+		showForm = true;
 	}
 
 	function handleFormCancel() {
 		showForm = false;
+		editingBooking = null;
 	}
 
+	async function handleFormSubmit(e: Event) {
+		e.preventDefault();
+		const dataToSend = {
+			houseOid: formData.houseOid,
+			check_in_date: formData.check_in_date,
+			check_out_date: formData.check_out_date,
+			guest_name: formData.guest_name,
+			guest_email: formData.guest_email,
+			guest_phone: formData.guest_phone,
+			dogs_count: formData.dogs_count,
+			status: formData.status
+		};
+		try {
+			if (editingBooking) {
+				await bookingsAPI.update(editingBooking.oid, dataToSend);
+				notificationActions.success(t('bookings.updated'));
+			} else {
+				await bookingsAPI.create(dataToSend);
+				notificationActions.success(t('bookings.created'));
+			}
+			showForm = false;
+			editingBooking = null;
+			await loadData();
+		} catch (err: any) {
+			notificationActions.error(err.message || t('errors.failed_to_save'));
+		}
+	}
 
-
-	// Svelte 5: Use $effect for lifecycle management
-	$effect(() => {
-		loadData();
-		
-		// Check for newBooking URL param - pre-select house and open form
-		const urlParams = new URLSearchParams(window.location.search);
-		const newBooking = urlParams.get('newBooking');
-		const houseIdParam = urlParams.get('houseId');
-		
-		if (newBooking === 'true' && houseIdParam) {
-			const houseId = parseInt(houseIdParam);
-			// Find the house and pre-select it
-			const house = houses.find(h => h.id === houseId);
-			if (house) {
-				// Find owner of this house and select it
-				const ownerId = house.owner;
-				if (ownerId) {
-					selectedOwnerId = ownerId;
-					// Update house options for this owner
-					const ownerHouses = houses.filter(h => h.owner === ownerId);
-					bookingFields[1].options = ownerHouses.map(h => ({ value: h.id, label: h.name }));
-					// Pre-fill form with house
-					setTimeout(() => {
-						showForm = true;
-					}, 100);
-				}
+	async function handleDelete(booking: Booking) {
+		if (confirm(t('bookings.delete_confirm').replace('${name}', booking.guest_name))) {
+			try {
+				await bookingsAPI.delete(booking.oid);
+				notificationActions.success(t('bookings.deleted'));
+				await loadData();
+			} catch (err: any) {
+				notificationActions.error(err.message || t('errors.failed_to_delete'));
 			}
 		}
+	}
+
+	function getHouseName(houseId: number): string {
+		if (!houseId || houseId === 0) return t('houses.unknown');
+		const house = houses.find(h => h.oid === houseId);
+		return house ? house.name : `#${houseId}`;
+	}
+
+	$effect(() => {
+		loadData();
 	});
 </script>
 
 <div class="bookings-page">
 	<div class="page-header">
 		<h1>{tt('bookings.title')}</h1>
-		<button class="btn btn-primary" onclick={() => (showForm = true)}> {tt('bookings.add_booking')} </button>
+		<button class="btn btn-primary" onclick={openAddForm}>{tt('bookings.add_booking')}</button>
 	</div>
 
-	{#if showForm}
-		<div class="form-section">
-			<Form
-				fields={bookingFields}
-				data={{}}
-				{loading}
-				title={t('bookings.add_booking')}
-				submitLabel={t('bookings.add_booking')}
-				onSubmit={handleFormSubmit}
-				onCancel={handleFormCancel}
-			/>
+	{#if loading}
+		<div class="loading-spinner">
+			<span class="spinner"></span>
+			{tt('common.loading')}
 		</div>
 	{/if}
 
+	{#if error}
+		<div class="error-message">{error}</div>
+	{/if}
+
+	{#if showForm}
+		<div class="form-section">
+			<h3 class="form-title">{editingBooking ? t('bookings.edit_booking') : t('bookings.add_new_booking')}</h3>
+			
+			<form onsubmit={handleFormSubmit}>
+				<div class="form-grid">
+					<div class="form-field">
+						<label for="guest_name">{tt('bookings.guest_name')} <span class="required">*</span></label>
+						<input type="text" id="guest_name" bind:value={formData.guest_name} required />
+					</div>
+					<div class="form-field">
+						<label for="guest_email">{tt('bookings.guest_email')} <span class="required">*</span></label>
+						<input type="email" id="guest_email" bind:value={formData.guest_email} required />
+					</div>
+					<div class="form-field">
+						<label for="guest_phone">{tt('common.phone')}</label>
+						<input type="tel" id="guest_phone" bind:value={formData.guest_phone} />
+					</div>
+					<div class="form-field">
+						<label for="houseOid">{tt('common.house')} <span class="required">*</span></label>
+						<select id="houseOid" bind:value={formData.houseOid} required>
+							<option value={0}>-- {tt('houses.select_house')} --</option>
+							{#each houses as house}
+								<option value={house.oid}>{house.name}</option>
+							{/each}
+						</select>
+					</div>
+					<div class="form-field">
+						<label for="check_in_date">{tt('bookings.check_in_date')} <span class="required">*</span></label>
+						<input type="date" id="check_in_date" bind:value={formData.check_in_date} required />
+					</div>
+					<div class="form-field">
+						<label for="check_out_date">{tt('bookings.check_out_date')} <span class="required">*</span></label>
+						<input type="date" id="check_out_date" bind:value={formData.check_out_date} required />
+					</div>
+					<div class="form-field">
+						<label for="dogs_count">{tt('bookings.dogs_count')}</label>
+						<input type="number" id="dogs_count" bind:value={formData.dogs_count} min="0" max="10" />
+					</div>
+					<div class="form-field">
+						<label for="status">{tt('common.status')}</label>
+						<select id="status" bind:value={formData.status}>
+							<option value="pending">{tt('status.pending')}</option>
+							<option value="confirmed">{tt('status.confirmed')}</option>
+							<option value="cancelled">{tt('status.cancelled')}</option>
+						</select>
+					</div>
+				</div>
+
+				<div class="form-actions">
+					<button type="button" class="btn btn-secondary" onclick={handleFormCancel}>
+						{tt('common.cancel')}
+					</button>
+					<button type="submit" class="btn btn-primary">
+						{editingBooking ? t('common.update') : t('common.add')} {tt('bookings.title')}
+					</button>
+				</div>
+			</form>
+		</div>
+	{/if}
+
+	{#if !showForm}
 	<!-- View Toggle -->
 	<div class="view-toggle">
 		<button class="toggle-btn" class:active={viewMode === 'card'} onclick={() => viewMode = 'card'}>
@@ -274,125 +239,124 @@
 	</div>
 
 	{#if viewMode === 'card'}
-		<!-- Card View -->
-		<div class="bookings-grid">
-			{#if filteredBookings.length === 0 && !loading}
-				<div class="empty-message">{tt('bookings.no_bookings')}</div>
-			{:else}
+	<div class="bookings-grid">
+		{#if filteredBookings.length === 0 && !loading}
+			<div class="empty-message">{tt('bookings.no_bookings')}</div>
+		{:else}
+			{#each filteredBookings as booking}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="booking-card clickable" onclick={() => goto(`/bookings/${booking.oid}`)} onkeydown={(e) => e.key === 'Enter' && goto(`/bookings/${booking.oid}`)}>
+					<div class="card-header">
+						<h3 class="booking-guest">{booking.guest_name}</h3>
+						<span class="status-badge status-{booking.status}">{booking.status}</span>
+					</div>
+					<p class="booking-dates">{toDisplayDateFormat(booking.check_in_date)} → {toDisplayDateFormat(booking.check_out_date)}</p>
+					<p class="booking-house">{tt('common.house')}: {getHouseName(booking.houseOid)}</p>
+					{#if booking.guest_email}<p class="booking-detail">{booking.guest_email}</p>{/if}
+					<div class="booking-actions">
+						<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); goto(`/bookings/${booking.oid}`); }}>{tt('common.edit')}</button>
+						<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); handleDelete(booking); }}>{tt('common.delete')}</button>
+					</div>
+				</div>
+			{/each}
+		{/if}
+	</div>
+	{:else}
+	<!-- Table View -->
+	<div class="table-section">
+		<table class="data-table">
+			<thead>
+				<tr>
+					<th>{tt('bookings.guest_name')}</th>
+					<th>{tt('common.house')}</th>
+					<th>{tt('bookings.check_in_date')}</th>
+					<th>{tt('bookings.check_out_date')}</th>
+					<th>{tt('bookings.guest_email')}</th>
+					<th>{tt('common.status')}</th>
+					<th>{tt('common.actions')}</th>
+				</tr>
+			</thead>
+			<tbody>
 				{#each filteredBookings as booking}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<div class="booking-card clickable" onclick={() => { goto(`/bookings/${booking.id}`) }} >
-						<h3 class="booking-guest">{booking.guest_name}</h3>
-						<p class="booking-dates">{toDisplayDateFormat(booking.check_in_date)} → {toDisplayDateFormat(booking.check_out_date)}</p>
-						<p class="booking-house">House: {houses.find(h => h.id === booking.house_id)?.name || booking.house_id}</p>
-						{#if booking.guest_email}<p class="booking-detail">{booking.guest_email}</p>{/if}
-						<span class="status-badge status-{booking.status}">{booking.status}</span>
-						<div class="booking-actions">
-							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); goto(`/bookings/${booking.id}`) }}>
-								{tt('common.edit')}
-							</button>
-							<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); if (confirm(t('bookings.delete_confirm'))) { bookingsAPI.delete(booking.id).then(() => loadData()); } }}>
-								{tt('common.delete')}
-							</button>
-						</div>
-					</div>
+					<tr class="clickable" onclick={() => goto(`/bookings/${booking.oid}`)} onkeydown={(e) => e.key === 'Enter' && goto(`/bookings/${booking.oid}`)}>
+						<td>{booking.guest_name}</td>
+						<td>{getHouseName(booking.houseOid)}</td>
+						<td>{toDisplayDateFormat(booking.check_in_date)}</td>
+						<td>{toDisplayDateFormat(booking.check_out_date)}</td>
+						<td>{booking.guest_email}</td>
+						<td><span class="status-badge status-{booking.status}">{booking.status}</span></td>
+						<td>
+							<button class="btn btn-sm btn-secondary" onclick={(e) => { e.stopPropagation(); goto(`/bookings/${booking.oid}`); }}>{tt('common.edit')}</button>
+							<button class="btn btn-sm btn-danger" onclick={(e) => { e.stopPropagation(); handleDelete(booking); }}>{tt('common.delete')}</button>
+						</td>
+					</tr>
 				{/each}
-			{/if}
-		</div>
-	{:else}
-		<!-- Table View -->
-		<div class="table-section">
-			<Table
-				data={filteredBookings}
-				columns={tableColumns}
-				actions={tableActions}
-				{loading}
-				{error}
-				onAction={handleAction}
-			/>
-		</div>
+			</tbody>
+		</table>
+	</div>
+	{/if}
 	{/if}
 </div>
 
 <style>
-	.bookings-page {
-		display: flex;
-		flex-direction: column;
-		gap: 2rem;
-	}
-
-	.page-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		border-bottom: 2px solid var(--border-color);
-		padding-bottom: 1rem;
-	}
-
-	.page-header h1 {
-		margin: 0;
-		color: var(--text-color);
-	}
-
-	.btn {
-		padding: 0.75rem 1.5rem;
-		border: none;
-		border-radius: 6px;
-		font-size: 1rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.btn-primary {
-		background: var(--primary-color);
-		color: white;
-	}
-
-	.btn-primary:hover {
-		background: var(--primary-hover);
-	}
-
-	.form-section {
-		background: white;
-		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 2rem;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	}
-
-	.table-section {
-		background: white;
-		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 1rem;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	}
+	.bookings-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+	.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; }
+	.page-header h1 { margin: 0; }
+	.loading-spinner { position: fixed; top: 1rem; right: 1rem; background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; }
+	.spinner { width: 1rem; height: 1rem; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+	@keyframes spin { to { transform: rotate(360deg); } }
+	.error-message { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; }
+	.form-section { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+	.form-title { margin: 0 0 1.5rem 0; font-size: 1.125rem; font-weight: 600; }
+	.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+	.form-field { display: flex; flex-direction: column; gap: 0.25rem; }
+	.form-field.full-width { grid-column: 1 / -1; }
+	.form-field label { font-size: 0.875rem; font-weight: 500; color: #374151; }
+	.form-field .required { color: #ef4444; }
+	.form-field input, .form-field select { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; font-family: inherit; }
+	.form-field input:focus, .form-field select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+	.form-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
+	.btn { padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+	.btn-primary { background: #3b82f6; color: white; }
+	.btn-primary:hover { background: #2563eb; }
+	.btn-secondary { background: #6b7280; color: white; }
+	.btn-secondary:hover { background: #4b5563; }
+	.btn-danger { background: #ef4444; color: white; }
+	.btn-danger:hover { background: #dc2626; }
+	.btn-sm { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+	.empty-message { grid-column: 1 / -1; text-align: center; color: #6b7280; padding: 2rem; }
+	.bookings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+	.booking-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: box-shadow 0.2s, border-color 0.2s; }
+	.clickable { cursor: pointer; }
+	.clickable:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
+	.data-table tr.clickable:hover { background: #eff6ff; }
+	.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+	.booking-guest { margin: 0; font-size: 1.125rem; font-weight: 600; color: #111827; }
+	.booking-dates { margin: 0; color: #6b7280; font-size: 0.875rem; }
+	.booking-house { margin: 0.25rem 0 0 0; color: #3b82f6; font-size: 0.875rem; font-weight: 500; }
+	.booking-detail { margin: 0; color: #6b7280; font-size: 0.875rem; }
+	.booking-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+	.status-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; text-transform: capitalize; }
+	.status-pending { background: #fef3c7; color: #92400e; }
+	.status-confirmed { background: #d1fae5; color: #065f46; }
+	.status-cancelled { background: #fee2e2; color: #991b1b; }
 
 	/* View Toggle */
-	.view-toggle { display: flex; gap: 0.5rem; }
+	.view-toggle { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
 	.toggle-btn { padding: 0.5rem 1rem; border: 1px solid #e5e7eb; background: white; cursor: pointer; font-size: 0.875rem; }
 	.toggle-btn:first-child { border-radius: 6px 0 0 6px; }
 	.toggle-btn:last-child { border-radius: 0 6px 6px 0; }
 	.toggle-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
 
-	/* Card View */
-	.bookings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
-	.booking-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-	.booking-guest { margin: 0 0 0.5rem 0; font-size: 1.125rem; font-weight: 600; }
-	.booking-dates { margin: 0; color: #6b7280; font-size: 0.875rem; }
-	.booking-house { margin: 0.25rem 0; color: #374151; font-size: 0.875rem; }
-	.booking-detail { margin: 0; color: #6b7280; font-size: 0.875rem; }
-	.booking-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
-	.status-badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; margin-top: 0.5rem; text-transform: capitalize; }
-	.status-pending { background: #fef3c7; color: #92400e; }
-	.status-confirmed { background: #d1fae5; color: #065f46; }
-	.status-cancelled { background: #fee2e2; color: #991b1b; }
-	.empty-message { text-align: center; color: #6b7280; padding: 2rem; grid-column: 1 / -1; }
-	.btn-secondary { background: #6b7280; color: white; }
-	.btn-danger { background: #ef4444; color: white; }
-	.btn-sm { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+	/* Table View */
+	.table-section { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+	.data-table { width: 100%; border-collapse: collapse; }
+	.data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+	.data-table th { background: #f9fafb; font-weight: 600; color: #374151; }
+	.data-table tr:hover { background: #f9fafb; }
 
 	/* Responsive design */
 	@media (max-width: 768px) {
@@ -401,12 +365,5 @@
 			gap: 1rem;
 			align-items: stretch;
 		}
-
-		.form-section {
-			padding: 1rem;
-		}
 	}
-
-	.clickable { cursor: pointer; }
-	.clickable:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.2); }
 </style>

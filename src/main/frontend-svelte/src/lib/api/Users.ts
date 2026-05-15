@@ -8,7 +8,7 @@
 import { Server } from '$lib/services/Server';
 
 export interface User {
-  id: number;
+  oid: number;
   userName: string;
   userPassword: string;
   canLogin: boolean;
@@ -22,7 +22,7 @@ export interface ApiResult {
   success?: boolean;
   error?: string;
   _ErrorMessage?: string;
-  id?: number;
+  oid?: number;
 }
 
 /**
@@ -54,7 +54,7 @@ export async function addUser(userName: string, userPassword: string): Promise<A
   return {
     success: res._Success ?? res.success ?? false,
     error: res._ErrorMessage || res.error,
-    id: res.id
+    oid: res.oid
   };
 }
 
@@ -63,8 +63,8 @@ export async function addUser(userName: string, userPassword: string): Promise<A
  * @param id - User ID (oid)
  * @returns API result
  */
-export async function deleteUser(id: number): Promise<ApiResult> {
-  const res = await Server.call('services.Users', 'deleteUser', { id });
+export async function deleteUser(oid: number): Promise<ApiResult> {
+  const res = await Server.call('services.Users', 'deleteUser', { oid });
   
   return {
     success: res._Success ?? res.success ?? false,
@@ -81,13 +81,13 @@ export async function deleteUser(id: number): Promise<ApiResult> {
  * @returns API result
  */
 export async function updateUser(
-  id: number,
+  oid: number,
   userName: string,
   userPassword: string,
   userActive: 'Y' | 'N'
 ): Promise<ApiResult> {
   const res = await Server.call('services.Users', 'updateUser', {
-    id,
+    oid,
     userName: userName.toLowerCase(),
     userPassword,
     userActive
@@ -106,11 +106,11 @@ export async function updateUser(
  * @returns API result
  */
 export async function updateLanguage(
-  id: number,
+  oid: number,
   preferredLanguage: string
 ): Promise<ApiResult> {
   const res = await Server.call('services.Users', 'updateLanguage', {
-    id,
+    oid,
     preferredLanguage
   });
   
@@ -126,9 +126,9 @@ export async function updateLanguage(
  * @param canLogin - Whether user can login
  * @returns API result
  */
-export async function toggleUserLogin(id: number, canLogin: boolean): Promise<ApiResult> {
+export async function toggleUserLogin(oid: number, canLogin: boolean): Promise<ApiResult> {
   const res = await Server.call('services.Users', 'toggleUserLogin', {
-    id,
+    oid,
     canLogin
   });
   

@@ -4,6 +4,7 @@
 	import { notificationActions } from '$lib/stores.svelte.js';
 	import { t, currentLocale } from '$lib/i18n';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/Button.svelte';
 
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
@@ -17,8 +18,8 @@
 	let showDeleteConfirm = $state(false);
 
 	let formData = $state({
-		cleaner_id: 0,
-		booking_id: 0,
+		cleanerOid: 0,
+		bookingOid: 0,
 		date: '',
 		start_time: '09:00',
 		end_time: '10:00',
@@ -32,32 +33,32 @@
 		if (!urlScheduleId || urlScheduleId <= 0) return;
 		loading = true;
 		try {
-			schedule = await schedulesAPI.getById(urlScheduleId);
+			schedule = await schedulesAPI.getByOid(urlScheduleId);
 			if (!schedule) {
 				notificationActions.error(tt('schedules.schedule_not_found'));
 				goto('/schedules');
 				return;
 			}
 
-			formData = {
-				cleaner_id: schedule.cleaner_id,
-				booking_id: schedule.booking_id,
-				date: schedule.date,
-				start_time: schedule.start_time,
-				end_time: schedule.end_time,
-				notes: schedule.notes || '',
-				status: schedule.status
-			};
+formData = {
+			cleanerOid: schedule.cleanerOid,
+			bookingOid: schedule.bookingOid,
+			date: schedule.date,
+			start_time: schedule.start_time,
+			end_time: schedule.end_time,
+			notes: schedule.notes || '',
+			status: schedule.status
+		};
 
 			// Load related data
-			if (schedule.booking_id) {
-				booking = await bookingsAPI.getById(schedule.booking_id) || null;
-				if (booking) {
-					house = await housesAPI.getById(booking.house_id) || null;
-				}
+if (schedule.bookingOid) {
+			booking = await bookingsAPI.getByOid(schedule.bookingOid) || null;
+			if (booking) {
+				house = await housesAPI.getByOid(booking.houseOid) || null;
 			}
-			if (schedule.cleaner_id) {
-				cleaner = await cleanersAPI.getById(schedule.cleaner_id) || null;
+		}
+			if (schedule.cleanerOid) {
+				cleaner = await cleanersAPI.getByOid(schedule.cleanerOid) || null;
 			}
 		} catch (err: any) {
 			console.error('Error loading schedule:', err);
@@ -69,8 +70,8 @@
 	}
 
 	let hasChanges = $derived(schedule && (
-		formData.cleaner_id !== schedule.cleaner_id ||
-		formData.booking_id !== schedule.booking_id ||
+		formData.cleanerOid !== schedule.cleanerOid ||
+		formData.bookingOid !== schedule.bookingOid ||
 		formData.date !== schedule.date ||
 		formData.start_time !== schedule.start_time ||
 		formData.end_time !== schedule.end_time ||
@@ -83,7 +84,7 @@
 		if (!schedule || saving) return;
 		saving = true;
 		try {
-			const result = await schedulesAPI.update(schedule.id, formData);
+			const result = await schedulesAPI.update(schedule.oid, formData);
 			notificationActions.success(tt('schedules.updated'));
 			schedule = result;
 			await loadData();
@@ -100,9 +101,9 @@
 
 	async function handleDelete() {
 		if (!schedule) return;
-		if (confirm(tt('schedules.delete_confirm').replace('${id}', String(schedule.id)))) {
+		if (confirm(tt('schedules.delete_confirm').replace('${id}', String(schedule.oid)))) {
 			try {
-				await schedulesAPI.delete(schedule.id);
+				await schedulesAPI.delete(schedule.oid);
 				notificationActions.success(tt('schedules.deleted'));
 				goto('/schedules');
 			} catch (err: any) {
@@ -147,15 +148,15 @@
 			<form onsubmit={handleFormSubmit}>
 				<div class="form-grid">
 					<div class="form-field">
-						<label for="booking_id">{tt('bookings.booking')} <span class="required">*</span></label>
-						<select id="booking_id" bind:value={formData.booking_id} disabled>
-							<option value={formData.booking_id}>{booking?.guest_name || 'Loading...'}</option>
+<label for="bookingOid">{tt('bookings.booking')} <span class="required">*</span></label>
+					<select id="bookingOid" bind:value={formData.bookingOid} disabled>
+						<option value={formData.bookingOid}>{booking?.guest_name || 'Loading...'}</option>
 						</select>
 					</div>
 					<div class="form-field">
-						<label for="cleaner_id">{tt('schedules.cleaner')} <span class="required">*</span></label>
-						<select id="cleaner_id" bind:value={formData.cleaner_id}>
-							<option value={formData.cleaner_id}>{cleaner?.name || 'Loading...'}</option>
+						<label for="cleanerOid">{tt('schedules.cleaner')} <span class="required">*</span></label>
+						<select id="cleanerOid" bind:value={formData.cleanerOid}>
+							<option value={formData.cleanerOid}>{cleaner?.name || 'Loading...'}</option>
 						</select>
 					</div>
 					<div class="form-field">
@@ -226,7 +227,7 @@
 <div class="modal-overlay" onclick={() => showDeleteConfirm = false}>
 	<div class="modal-content" onclick={(e) => e.stopPropagation()}>
 		<h3>{tt('common.confirm')}</h3>
-		<p>{tt('schedules.delete_confirm').replace('${id}', schedule?.id || '')}</p>
+		<p>{tt('schedules.delete_confirm').replace('${id}', schedule?.oid || '')}</p>
 		<div class="modal-actions">
 			<Button type="button" class="btn-secondary" onclick={() => showDeleteConfirm = false}>
 				{tt('common.cancel')}

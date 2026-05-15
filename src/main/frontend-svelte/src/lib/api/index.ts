@@ -63,7 +63,7 @@ export async function logout(): Promise<void> {
 // ============ USER MANAGEMENT ============
 
 export interface User {
-  id: number;
+  oid: number;
   userName: string;
   userPassword: string;
   userActive: 'Y' | 'N';
@@ -88,7 +88,7 @@ export interface AddUserParams {
 export interface AddUserResult {
   _Success: boolean;
   success?: boolean;
-  id?: number;
+  oid?: number;
   error?: string;
   _ErrorMessage?: string;
 }
@@ -98,7 +98,7 @@ export async function addUser(params: AddUserParams): Promise<AddUserResult> {
 }
 
 export interface UpdateUserParams extends AddUserParams {
-  id: number;
+  oid: number;
 }
 
 export async function updateUser(params: UpdateUserParams): Promise<{ _Success: boolean; error?: string }> {

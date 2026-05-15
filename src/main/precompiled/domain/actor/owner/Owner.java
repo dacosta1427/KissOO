@@ -34,7 +34,7 @@ public class Owner extends ANaturalActor {
     
     private void initializeHouses() {
         if (houses == null) {
-            houses = StorageManager.getStorage().createLink();
+            houses = StorageManager.createLink();
         }
     }
     
@@ -43,7 +43,7 @@ public class Owner extends ANaturalActor {
         this.email = email;
         this.phone = phone;
         setActive(active);
-        this.houses = StorageManager.getStorage().createLink();
+        this.houses = StorageManager.createLink();
     }
     
     public Owner(String name, String phone, String email, String address, boolean active) {
@@ -52,7 +52,7 @@ public class Owner extends ANaturalActor {
         this.phone = phone;
         this.address = address;
         setActive(active);
-        this.houses = StorageManager.getStorage().createLink();
+        this.houses = StorageManager.createLink();
     }
     
     public List<House> getHouses() {

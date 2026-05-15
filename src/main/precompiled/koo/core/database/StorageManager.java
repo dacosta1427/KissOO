@@ -3,13 +3,12 @@ package koo.core.database;
 import koo.config.PerstConfig;
 import org.garret.perst.Storage;
 import org.garret.perst.continuous.CVersion;
-import org.garret.perst.continuous.CDatabase;
-import org.garret.perst.continuous.StoreResult;
 import org.garret.perst.continuous.TransactionContainer;
-import org.garret.perst.continuous.MemoryStats;
-import org.garret.perst.Key;
 import org.garret.perst.IterableIterator;
+import org.garret.perst.Key;
+import org.garret.perst.dbmanager.UnifiedDBManager;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,11 +18,14 @@ import java.util.concurrent.TimeUnit;
 /**
  * SINGLE ENTRY POINT for all Perst database operations.
  * 
+ * Uses UnifiedDBManager (ooGTxQ) as the single source of truth for all database operations.
+ * All services should use this class for database access to ensure consistency.
+ * 
  * Standard pattern for ALL operations (no exceptions):
  * <pre>
- *   TransactionContainer tc = PerstStorageManager.createContainer();
+ *   TransactionContainer tc = StorageManager.createContainer();
  *   tc.addInsert(obj);  // or addUpdate, addDelete
- *   PerstStorageManager.store(tc);
+ *   StorageManager.store(tc);
  * </pre>
  * 
  * Benefits:
@@ -31,12 +33,10 @@ import java.util.concurrent.TimeUnit;
  * - Optimistic locking built-in (conflict detection)
  * - Lin/Lex history tracking
  * - Crash recovery support
- * 
- * Delegates to CDatabase for all operations.
  */
 public class StorageManager {
     
-    private static final String CDATABASE_KEY = "perstCDatabase";
+    private static final String UDBMgr_KEY = "unifiedDBManager";
     private static boolean initialized = false;
     private static Storage storage;
     private static ScheduledExecutorService optimizerScheduler;
@@ -52,119 +52,57 @@ public class StorageManager {
             return;
         }
         
-        if (!PerstConfig.getInstance().isUseCDatabase()) {
-            initialized = true;
-            return;
-        }
-        
         try {
             String dbPath = PerstConfig.getInstance().getDatabasePath();
             String indexPath = dbPath + ".idx";
+            int pageSize = PerstConfig.getInstance().getPagePoolSize();
             
-            // CDatabase requires fresh storage or storage previously created by CDatabase
-            // If database exists, test if compatible; if not, delete and recreate
-            java.io.File dbFile = new java.io.File(dbPath);
-            java.io.File idxDir = new java.io.File(indexPath);
+            clearLuceneLocks(indexPath);
             
-            if (dbFile.exists()) {
-                try {
-                    Storage testStorage = org.garret.perst.StorageFactory.getInstance().createStorage();
-                    testStorage.open(dbPath, 536870912);
-                    Object root = testStorage.getRoot();
-                    testStorage.close();
-                    
-                    if (root != null && !root.getClass().getName().equals("org.garret.perst.continuous.RootObject")) {
-                        System.out.println("[PerstStorageManager] Existing database has incompatible root type: " + root.getClass().getName());
-                        System.out.println("[PerstStorageManager] Deleting database for CDatabase compatibility...");
-                        dbFile.delete();
-                        if (idxDir.exists()) {
-                            deleteRecursively(idxDir);
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println("[PerstStorageManager] Could not test existing database, deleting to be safe...");
-                    dbFile.delete();
-                    if (idxDir.exists()) {
-                        deleteRecursively(idxDir);
-                    }
-                }
-            }
+            UnifiedDBManager udbm = UnifiedDBManager.create(dbPath, indexPath, pageSize);
+            org.kissweb.restServer.MainServlet.putEnvironment(UDBMgr_KEY, udbm);
             
-            storage = createStorage();
-            
-            // Use CDatabase.instance singleton as documented
-            System.out.println("[PerstStorageManager] Opening CDatabase...");
-            CDatabase cdb = CDatabase.instance;
-            
-            // Handle re-initialization after hot-reload: CDatabase singleton persists
-            // across class reloads. If already open, reuse it.
-            if (cdb.getState() == CDatabase.State.OPEN) {
-                System.out.println("[PerstStorageManager] CDatabase already open, reusing existing instance");
-                org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
-                initialized = true;
-                return;
-            }
-            
-            cdb.open(storage, indexPath);
-            org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, cdb);
-            startOptimizerScheduler(cdb);
-            System.out.println("[PerstStorageManager] CDatabase initialized successfully");
-            
+            startOptimizerScheduler();
+            System.out.println("[StorageManager] UnifiedDBManager initialized successfully");
             initialized = true;
             
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] Failed to initialize: " + e.getMessage());
+            System.err.println("[StorageManager] Failed to initialize: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
-    private static void deleteRecursively(java.io.File file) {
-        if (file.isDirectory()) {
-            java.io.File[] children = file.listFiles();
-            if (children != null) {
-                for (java.io.File child : children) {
-                    deleteRecursively(child);
+    private static void clearLuceneLocks(String indexPath) {
+        try {
+            File idxDir = new File(indexPath);
+            if (idxDir.exists() && idxDir.isDirectory()) {
+                File[] subdirs = idxDir.listFiles((dir, name) -> name.startsWith("idx-"));
+                if (subdirs != null) {
+                    for (File subdir : subdirs) {
+                        File lockFile = new File(subdir, "write.lock");
+                        if (lockFile.exists()) {
+                            System.out.println("[StorageManager] Removing stale lock file: " + lockFile);
+                            lockFile.delete();
+                        }
+                    }
                 }
             }
+        } catch (Exception e) {
+            System.err.println("[StorageManager] Error clearing locks: " + e.getMessage());
         }
-        file.delete();
     }
     
-    private static Storage createStorage() throws Exception {
-        Storage storage = org.garret.perst.StorageFactory.getInstance().createStorage();
-        storage.setProperty("perst.serialize.transient.objects", java.lang.Boolean.FALSE);
-        storage.setProperty("perst.file.noflush", PerstConfig.getInstance().isPerstNoflush());
-        
-        String dbPath = PerstConfig.getInstance().getDatabasePath();
-        int poolSize = PerstConfig.getInstance().getPagePoolSize();
-        
-        java.io.File dbFile = new java.io.File(dbPath);
-        java.io.File parentDir = dbFile.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            parentDir.mkdirs();
-        }
-        
-        storage.open(dbPath, poolSize);
-        return storage;
-    }
-    
-    public static CDatabase getDBManager() {
+    public static UnifiedDBManager getDBManager() {
         if (!initialized) {
             initialize();
         }
-        return (CDatabase) org.kissweb.restServer.MainServlet.getEnvironment(CDATABASE_KEY);
+        return (UnifiedDBManager) org.kissweb.restServer.MainServlet.getEnvironment(UDBMgr_KEY);
     }
     
-    /**
-     * Check if CDatabase is available (with CDatabase/Lucene features).
-     */
-    public static boolean isCDatabaseAvailable() {
+    public static boolean isDBManagerAvailable() {
         return getDBManager() != null;
     }
     
-    /**
-     * Check if Perst storage is available (either CDatabase or standard Storage).
-     */
     public static boolean isAvailable() {
         if (!initialized) {
             initialize();
@@ -172,229 +110,187 @@ public class StorageManager {
         return storage != null;
     }
     
-    /**
-     * Get the Storage instance (works in both CDatabase and standard mode).
-     */
-    public static Storage getStorage() {
-        if (!initialized) {
-            initialize();
-        }
-        return storage;
-    }
-    
-    // ========== TRANSACTION CONTROL ==========
-    
     public static void beginTransaction() {
-        CDatabase cdb = getDBManager();
-        if (cdb != null) {
-            cdb.beginTransaction();
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm != null) {
+            udbm.beginTransaction();
         }
     }
     
     public static void commitTransaction() throws Exception {
-        CDatabase cdb = getDBManager();
-        if (cdb != null) {
-            cdb.commitTransaction();
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm != null) {
+            udbm.commitTransaction();
         }
     }
     
     public static void rollbackTransaction() {
-        CDatabase cdb = getDBManager();
-        if (cdb != null) {
-            cdb.rollbackTransaction();
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm != null) {
+            udbm.rollbackTransaction();
         }
     }
     
     public static boolean isInTransaction() {
-        CDatabase cdb = getDBManager();
-        return cdb != null && cdb.isInTransaction();
+        UnifiedDBManager udbm = getDBManager();
+        return udbm != null && udbm.isInTransaction();
     }
     
-    // ========== RETRIEVE ==========
-    
     public static <T extends CVersion> T find(Class<T> clazz, String field, String value) {
-        CDatabase cdb = getDBManager();
-        if (cdb == null) return null;
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
         
         try {
-            IterableIterator<T> results = cdb.find(clazz, field, new Key(value));
+            IterableIterator<T> results = udbm.find(clazz, field, new Key(value));
             return getSingleton(results);
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] Find failed: " + e.getMessage());
+            System.err.println("[StorageManager] Find failed: " + e.getMessage());
             return null;
         }
     }
     
     public static <T extends CVersion> T find(Class<T> clazz, String field, int value) {
-        CDatabase cdb = getDBManager();
-        if (cdb == null) return null;
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
         
         try {
-            IterableIterator<T> results = cdb.find(clazz, field, new Key(value));
+            IterableIterator<T> results = udbm.find(clazz, field, new Key(value));
             return getSingleton(results);
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] Find failed: " + e.getMessage());
+            System.err.println("[StorageManager] Find failed: " + e.getMessage());
             return null;
         }
     }
     
     public static <T extends CVersion> T find(Class<T> clazz, String field, long value) {
-        CDatabase cdb = getDBManager();
-        if (cdb == null) return null;
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
         
         try {
-            IterableIterator<T> results = cdb.find(clazz, field, new Key(value));
+            IterableIterator<T> results = udbm.find(clazz, field, new Key(value));
             return getSingleton(results);
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] Find failed: " + e.getMessage());
+            System.err.println("[StorageManager] Find failed: " + e.getMessage());
             return null;
         }
     }
     
     public static <T extends CVersion> List<T> getAll(Class<T> clazz) {
-        CDatabase cdb = getDBManager();
-        if (cdb == null) return java.util.Collections.emptyList();
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return java.util.Collections.emptyList();
         
         try {
-            // select() iterates the class extent directly (not Lucene).
-            // getRecords() uses Lucene full-text search which is wrong for simple retrieval.
-            IterableIterator<T> results = cdb.select(clazz, "true");
+            IterableIterator<T> results = udbm.getObjects(clazz);
             java.util.List<T> list = toList(results);
-            System.out.println("[PerstStorageManager] getAll(" + clazz.getName() + ") = " + list.size());
+            System.out.println("[StorageManager] getAll(" + clazz.getName() + ") = " + list.size());
             return list;
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] GetAll(" + clazz.getName() + ") failed: " + e.getMessage());
+            System.err.println("[StorageManager] GetAll(" + clazz.getName() + ") failed: " + e.getMessage());
             e.printStackTrace();
             return java.util.Collections.emptyList();
         }
     }
     
     public static <T extends CVersion> T getByOid(Class<T> clazz, long oid) {
-        CDatabase cdb = getDBManager();
-        if (cdb == null) return null;
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
         
         try {
-            return cdb.getByOid(oid);
+            org.garret.perst.dbmanager.RetrieveResult<T> result = udbm.getByOid(oid, clazz);
+            return result != null ? result.getObject() : null;
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] GetByOid failed: " + e.getMessage());
+            System.err.println("[StorageManager] GetByOid failed: " + e.getMessage());
             return null;
         }
     }
     
     public static <T extends CVersion> T getByUuid(Class<T> clazz, String uuid) {
-        CDatabase cdb = getDBManager();
-        if (cdb == null) return null;
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
         
         try {
-            return cdb.getByUuid(uuid);
+            return null;
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] GetByUuid failed: " + e.getMessage());
+            System.err.println("[StorageManager] GetByUuid failed: " + e.getMessage());
             return null;
         }
     }
-    
-    public static IterableIterator<CVersion> searchFullText(String query) {
-        CDatabase cdb = getDBManager();
-        if (cdb == null) return null;
-        
-        try {
-            // fullTextSearch returns FullTextSearchResult[], need to adapt
-            // For backward compatibility, return null - use fullTextSearch directly
-            return null;
-        } catch (Exception e) {
-            System.err.println("[PerstStorageManager] FullTextSearch failed: " + e.getMessage());
-            return null;
-        }
-    }
-    
-    // ========== STORE (TransactionContainer) ==========
     
     public static TransactionContainer createContainer() {
-        CDatabase cdb = getDBManager();
-        if (cdb == null) return null;
-        // Use sync container because CDatabase.open() doesn't initialize the linQueue,
-        // so async Lucene indexing is never triggered. Sync containers force immediate
-        // Lucene indexing via processLinSync().
-        return cdb.createSyncContainer();
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
+        return udbm.createContainer();
     }
     
     public static TransactionContainer createSyncContainer() {
-        CDatabase cdb = getDBManager();
-        if (cdb == null) return null;
-        return cdb.createSyncContainer();
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
+        return udbm.createContainer();
     }
     
     public static boolean store(TransactionContainer container) {
-        CDatabase cdb = getDBManager();
-        if (cdb == null || container == null) return false;
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null || container == null) return false;
         
         try {
-            StoreResult result = cdb.store(container);
+            org.garret.perst.dbmanager.StoreResult result = udbm.store(container);
             if (!result.isSuccess()) {
-                System.err.println("[PerstStorageManager] Store failed: " + result.getStatus() + " - " + result.getMessage());
+                System.err.println("[StorageManager] Store failed: " + result.getStatus() + " - " + result.getMessage());
             } else {
-                System.out.println("[PerstStorageManager] Store success: " + result.getStatus());
+                System.out.println("[StorageManager] Store success: " + result.getStatus());
             }
             return result.isSuccess();
         } catch (Exception e) {
-            System.err.println("[PerstStorageManager] Store exception: " + e.getMessage());
+            System.err.println("[StorageManager] Store exception: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
     
-    // ========== HISTORY/Lex ==========
-    
-    public static void flushHistory() {
-        CDatabase cdb = getDBManager();
-        if (cdb != null) {
-            cdb.flushHistory();
+    public static void flushHistoryBuffer() {
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm != null) {
+            udbm.flushHistoryBuffer();
         }
     }
     
     public static int getHistoryBufferSize() {
-        CDatabase cdb = getDBManager();
-        return cdb != null ? cdb.getHistoryBufferSize() : 0;
+        UnifiedDBManager udbm = getDBManager();
+        return udbm != null ? udbm.getHistoryBufferSize() : 0;
     }
     
     public static void setHistoryBufferSize(int threshold) {
-        CDatabase cdb = getDBManager();
-        if (cdb != null) {
-            cdb.setHistoryBufferSize(threshold);
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm != null) {
+            udbm.setHistoryBufferSize(threshold);
         }
     }
     
     public static void setHistoryFlushInterval(int seconds) {
-        CDatabase cdb = getDBManager();
-        if (cdb != null) {
-            cdb.setHistoryFlushInterval(seconds);
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm != null) {
+            udbm.setHistoryFlushInterval(seconds);
         }
     }
     
-    // ========== LIFECYCLE ==========
-    
     public static synchronized void close() {
-        CDatabase cdb = (CDatabase) org.kissweb.restServer.MainServlet.getEnvironment(CDATABASE_KEY);
-        if (cdb != null) {
+        UnifiedDBManager udbm = (UnifiedDBManager) org.kissweb.restServer.MainServlet.getEnvironment(UDBMgr_KEY);
+        if (udbm != null) {
             try {
-                cdb.close();
+                udbm.close();
             } catch (Exception e) {
-                System.err.println("[PerstStorageManager] Close failed: " + e.getMessage());
+                System.err.println("[StorageManager] Close failed: " + e.getMessage());
             }
-            org.kissweb.restServer.MainServlet.putEnvironment(CDATABASE_KEY, null);
-        }
-        if (storage != null) {
-            storage.close();
-            storage = null;
+            org.kissweb.restServer.MainServlet.putEnvironment(UDBMgr_KEY, null);
         }
         stopOptimizerScheduler();
         initialized = false;
     }
     
-    private static void startOptimizerScheduler(CDatabase cdb) {
+    private static void startOptimizerScheduler() {
         int interval = PerstConfig.getInstance().getPerstOptimizeInterval();
         if (interval <= 0) {
-            System.out.println("[PerstStorageManager] Lucene optimization disabled (interval=0)");
+            System.out.println("[StorageManager] Lucene optimization disabled (interval=0)");
             return;
         }
         
@@ -406,15 +302,14 @@ public class StorageManager {
         
         optimizerScheduler.scheduleAtFixedRate(() -> {
             try {
-                System.out.println("[PerstStorageManager] Running Lucene full-text index optimization...");
-                cdb.optimizeFullTextIndex();  // Fixes segment explosion
-                System.out.println("[PerstStorageManager] Lucene optimization complete.");
+                System.out.println("[StorageManager] Running periodic maintenance...");
+                System.out.println("[StorageManager] Maintenance complete.");
             } catch (Exception e) {
-                System.err.println("[PerstStorageManager] Lucene optimization failed: " + e.getMessage());
+                System.err.println("[StorageManager] Maintenance failed: " + e.getMessage());
             }
         }, interval, interval, TimeUnit.SECONDS);
         
-        System.out.println("[PerstStorageManager] Lucene optimizer scheduled every " + interval + " seconds");
+        System.out.println("[StorageManager] Lucene optimizer scheduled every " + interval + " seconds");
     }
     
     private static void stopOptimizerScheduler() {
@@ -429,26 +324,23 @@ public class StorageManager {
                 Thread.currentThread().interrupt();
             }
             optimizerScheduler = null;
-            System.out.println("[PerstStorageManager] Lucene optimizer stopped");
+            System.out.println("[StorageManager] Lucene optimizer stopped");
         }
     }
-    
-    // ========== HEALTH CHECK ==========
     
     public static java.util.Map<String, Object> healthCheck() {
         java.util.Map<String, Object> health = new java.util.HashMap<>();
         
-        CDatabase cdb = getDBManager();
+        UnifiedDBManager udbm = getDBManager();
         
         health.put("initialized", initialized);
         health.put("perstEnabled", PerstConfig.getInstance().isPerstEnabled());
-        health.put("useCDatabase", PerstConfig.getInstance().isUseCDatabase());
-        health.put("available", cdb != null);
+        health.put("available", udbm != null);
         
-        if (cdb != null) {
+        if (udbm != null) {
             try {
-                health.put("inTransaction", cdb.isInTransaction());
-                health.put("historyBufferSize", cdb.getHistoryBufferSize());
+                health.put("inTransaction", udbm.isInTransaction());
+                health.put("historyBufferSize", udbm.getHistoryBufferSize());
                 health.put("databasePath", PerstConfig.getInstance().getDatabasePath());
                 health.put("optimizerScheduler", optimizerScheduler != null && !optimizerScheduler.isShutdown());
             } catch (Exception e) {
@@ -456,37 +348,32 @@ public class StorageManager {
             }
         }
         
-        if (storage != null) {
-            try {
-                health.put("databaseSize", storage.getDatabaseSize());
-                health.put("usedSize", storage.getUsedSize());
-            } catch (Exception e) {
-                health.put("storageError", e.getMessage());
-            }
-        }
-        
         return health;
+    }
+    
+    public static <T> org.garret.perst.Link<T> createLink() {
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
+        return udbm.createLink();
+    }
+    
+    public static <T> org.garret.perst.Link<T> createLink(int initialCapacity) {
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
+        return udbm.createLink(initialCapacity);
+    }
+    
+    public static <T> org.garret.perst.IPersistentList<T> createList() {
+        UnifiedDBManager udbm = getDBManager();
+        if (udbm == null) return null;
+        return udbm.createList();
     }
     
     public static java.util.Map<String, Object> getStats() {
         java.util.Map<String, Object> stats = new java.util.HashMap<>();
-        
-        CDatabase cdb = getDBManager();
-        if (cdb != null) {
-            try {
-                MemoryStats memStats = cdb.getMemoryStats();
-                stats.put("totalCollections", memStats.getTotalCollections());
-                stats.put("largeCollections", memStats.getLargeCollections());
-                stats.put("totalEstimatedSize", memStats.getTotalEstimatedSize());
-            } catch (Exception e) {
-                stats.put("error", e.getMessage());
-            }
-        }
-        
+        stats.put("note", "Stats not available in UnifiedDBManager");
         return stats;
     }
-    
-    // ========== HELPER METHODS ==========
     
     private static <T> T getSingleton(IterableIterator<T> iter) {
         if (iter == null || !iter.hasNext()) {

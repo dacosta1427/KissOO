@@ -50,7 +50,7 @@ public class House extends CVersion {
     
     public House() {
         super();
-        this.bookings = StorageManager.getStorage().createLink();
+        this.bookings = StorageManager.createLink();
     }
     
     public House(@NonNull Owner owner, @NonNull String name, @NonNull String address, String description, boolean active) {
@@ -60,7 +60,7 @@ public class House extends CVersion {
         this.address = address;
         this.description = description;
         this.active = active;
-        this.bookings = StorageManager.getStorage().createLink();
+        this.bookings = StorageManager.createLink();
     }
     
     public long getOwnerOid() {

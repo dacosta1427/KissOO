@@ -17,6 +17,8 @@ KissOO uses **ooGTxQ** — a 64-bit fork of Perst with full OID support (>2³¹ 
 - Source: `../oodbGTxQ/` project
 - The `buildLocalDependencies()` method in `Tasks.java` includes the JAR in the build
 
+### External Database Path
+
 ### Lombok Usage
 All domain classes in `src/main/precompiled/mycompany/domain/` use Lombok `@Getter @Setter` annotations.
 - Getters/setters are auto-generated — do NOT write manual getters/setters for fields
@@ -76,7 +78,17 @@ These return the OID of the referenced object for API responses. **Never use `ge
 
 ## Database Architecture
 
-### External Database Path
+### UnifiedDBManager (ooGTxQ) - Single Entry Point
+
+KissOO uses **UnifiedDBManager** from ooGTxQ as the single entry point for all database operations. This ensures consistency between data storage and retrieval.
+
+**Key Points:**
+- `StorageManager` and `PerstConnection` delegate to `UnifiedDBManager`
+- `UnifiedDBManager.getRecords(Class)` retrieves all records of a class (not Lucene-based)
+- `UnifiedDBManager.find(Class, field, Key)` finds by indexed field
+- `UnifiedDBManager.createLink()` creates Perst Link collections
+
+### Required JAR Files
 The Perst database is stored **outside the WAR** at the path configured in `application.ini`:
 ```
 PerstDatabasePath = /home/dacosta/kissoo-data/oodb
@@ -90,17 +102,17 @@ To completely clear the database:
 3. **Recreate directory** — `mkdir -p /home/dacosta/kissoo-data`
 4. **Restart server** — `./bld develop` or `tomcat/bin/startup.sh`
 
-### PerstStorageManager Usage
+### UnifiedDBManager Usage
 
-#### Retrieval: Use `select()` NOT `getRecords()`
+#### Retrieval: Use `getObjects()` NOT `getRecords()`
 ```groovy
-// CORRECT: select() iterates the class extent directly
-Collection<Owner> owners = PerstStorageManager.getAll(Owner.class)
+// CORRECT: getObjects() retrieves all objects of a class
+Collection<Owner> owners = StorageManager.getAll(Owner.class)
 
-// WRONG: getRecords() uses Lucene full-text search (wrong tool for simple retrieval)
+// WRONG: getRecords() does NOT exist in UnifiedDBManager
 ```
 
-**Why:** `getRecords()` uses Lucene indexing which is designed for text search, not object retrieval. The `select()` method iterates the class extent directly via `ExtentIterator`.
+**Why:** `UnifiedDBManager.getObjects(Class<T>)` is the correct method for retrieving all objects of a class. The method `getRecords()` doesn't exist and will cause compilation errors.
 
 #### Storage: Use `createContainer()` (returns sync container)
 ```groovy
@@ -159,6 +171,20 @@ StorageManager.store(TransactionContainer)
 - `getRecords(Class)` - Retrieves all records of a class
 - `find(Class, String, Key)` - Finds records by indexed field
 
+### External Database Path
+The Perst database is stored **outside the WAR** at the path configured in `application.ini`:
+```
+PerstDatabasePath = /home/dacosta/kissoo-data/oodb
+```
+This allows the database to persist across deployments and be placed on NAS/storage.
+
+### Clearing the Database
+To completely clear the database:
+1. **Kill the server first** — `pkill -9 java` (open file handles prevent deletion)
+2. **Delete DB files** — `rm -rf /home/dacosta/kissoo-data/oodb*`
+3. **Recreate directory** — `mkdir -p /home/dacosta/kissoo-data`
+4. **Restart server** — `./bld develop` or `tomcat/bin/startup.sh`
+
 ### StorageManager Integration
 `StorageManager.java` provides static methods that delegate to `UnifiedDBManager`:
 
@@ -191,6 +217,9 @@ Java services can use `StorageManager` static methods directly:
 Collection<House> houses = StorageManager.getAll(House.class);
 House h = StorageManager.getByOid(House.class, oid);
 ```
+
+### JSONObject Usage
+Services that interact with Perst should use `org.garret.perst.json.JSONObject` for JSON operations.
 
 ## Disabling Lisp Services
 
@@ -583,6 +612,15 @@ For now, keep the explicit pattern as it's clear and self-documenting.
 - All lessons learned and discoveries during development should be documented
 - Update AGENTS.md with new findings, fixes, and patterns discovered
 - Include root cause analysis when fixing bugs
+
+### LoadTestdata Service Conversion
+- **Converted from Groovy to Java** (`LoadTestdata.groovy` → `LoadTestdata.java`)
+- Added `@EXTERNAL_CALL` annotation for explicit external endpoint declaration
+- Uses `IterableIterator` from ooGTxQ for record iteration
+- Uses Manager classes (OwnerManager, HouseManager, etc.) for data access
+- Requires system admin (SUPER_ADMIN role) to execute
+- **Fixed UnifiedDBManager lookup**: Changed from `servlet.getServletContext().getAttribute()` to `MainServlet.getEnvironment()`
+- **Fixed Login.java**: Added UUID to response for session management
 
 ### Version Control Protocol
 - When changes are approved, commit them promptly

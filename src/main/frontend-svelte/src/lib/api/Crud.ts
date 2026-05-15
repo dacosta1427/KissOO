@@ -8,7 +8,7 @@
 import { Server } from '$lib/services/Server';
 
 export interface PhoneRecord {
-  id: number;
+  oid: number;
   firstName: string;
   lastName: string;
   phoneNumber: string;
@@ -17,7 +17,7 @@ export interface PhoneRecord {
 export interface ApiResult {
   success: boolean;
   error?: string;
-  id?: number;
+  oid?: number;
   reportUrl?: string;
   exportUrl?: string;
 }
@@ -52,7 +52,7 @@ export async function createPhone(
   return {
     success: res._Success ?? res.success ?? false,
     error: res._ErrorMessage || res.error,
-    id: res.id
+    oid: res.oid
   };
 }
 
@@ -65,13 +65,13 @@ export async function createPhone(
  * @returns API result
  */
 export async function updatePhone(
-  id: number,
+  oid: number,
   firstName: string,
   lastName: string,
   phoneNumber: string
 ): Promise<ApiResult> {
   const res = await Server.call('services.Crud', 'updatePhone', {
-    id,
+    oid,
     firstName,
     lastName,
     phoneNumber
@@ -88,8 +88,8 @@ export async function updatePhone(
  * @param id - Record ID (oid)
  * @returns API result
  */
-export async function deletePhone(id: number): Promise<ApiResult> {
-  const res = await Server.call('services.Crud', 'deletePhone', { id });
+export async function deletePhone(oid: number): Promise<ApiResult> {
+  const res = await Server.call('services.Crud', 'deletePhone', { oid });
 
   return {
     success: res._Success ?? res.success ?? false,

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { schedulesAPI, cleanersAPI, bookingsAPI, housesAPI, type Schedule, type Cleaner, type Booking, type House } from '$lib/api/Cleaning';
 	import { dataStores } from '../../lib/stores.svelte.js';
 	import { session } from '$lib/state/session.svelte';
@@ -44,8 +45,8 @@
 
 	// Form data
 	let formData = $state({
-		cleaner_id: '',
-		booking_id: '',
+		cleanerOid: '',
+		bookingOid: '',
 		date: '',
 		start_time: '09:00',
 		end_time: '12:00',
@@ -53,9 +54,9 @@
 	});
 
 	// Svelte 5: Use $derived for form options
-	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.id), label: c.name })));
+	let cleanerOptions = $derived(cleaners.map((c) => ({ value: String(c.oid), label: c.name })));
 	let bookingOptions = $derived(bookings.map((b) => ({
-		value: String(b.id),
+		value: String(b.oid),
 		label: `${b.guest_name || t('schedules.guest')} - ${toDisplayDateFormat(b.check_in_date)} to ${toDisplayDateFormat(b.check_out_date)}`,
 		checkOutDate: toInputDateFormat(b.check_out_date)
 	})));
@@ -70,7 +71,7 @@
 
 	// Computed: get selected cleaner name
 	let selectedCleanerName = $derived(
-		selectedCleanerId ? (cleaners.find(c => c.id === selectedCleanerId)?.name || '') : ''
+		selectedCleanerId ? (cleaners.find(c => c.oid === selectedCleanerId)?.name || '') : ''
 	);
 	
 	// Filtered schedules - backend already filters by actor, just use all
@@ -78,7 +79,7 @@
 
 	// Handle booking selection - auto-fill date with check_out_date
 	function handleBookingChange(bookingId: string) {
-		formData.booking_id = bookingId;
+		formData.bookingOid = bookingId;
 		const booking = bookingOptions.find(b => b.value === bookingId);
 		if (booking) {
 			formData.date = booking.checkOutDate;
@@ -116,8 +117,8 @@
 		e.preventDefault();
 		
 		const scheduleData = {
-			cleaner_id: parseInt(formData.cleaner_id),
-			booking_id: parseInt(formData.booking_id),
+			cleanerOid: parseInt(formData.cleanerOid),
+			bookingOid: parseInt(formData.bookingOid),
 			date: toBackendDateFormat(formData.date),
 			start_time: formData.start_time,
 			end_time: formData.end_time,
@@ -136,8 +137,8 @@
 
 	function handleEmptyCellClick(cleanerId: number, date: Date) {
 		formData = {
-			cleaner_id: String(cleanerId),
-			booking_id: '',
+			cleanerOid: String(cleanerId),
+			bookingOid: '',
 			date: date.toISOString().split('T')[0],
 			start_time: '09:00',
 			end_time: '12:00',
@@ -149,7 +150,7 @@
 	// Cleaner actions
 	async function markComplete(schedule: Schedule) {
 		try {
-			await schedulesAPI.update(schedule.id, {
+			await schedulesAPI.update(schedule.oid, {
 				...schedule,
 				status: 'completed',
 				notes: notes || schedule.notes
@@ -165,7 +166,7 @@
 	
 	async function startCleaning(schedule: Schedule) {
 		try {
-			await schedulesAPI.update(schedule.id, {
+			await schedulesAPI.update(schedule.oid, {
 				...schedule,
 				status: 'pending'  // pending means "in progress"
 			});
@@ -188,7 +189,31 @@
 
 	function handleFormCancel() {
 		showForm = false;
-		editingSchedule = null;
+	}
+
+	function closeHouseModal() {
+		showHouseModal = false;
+		selectedHouseForModal = null;
+	}
+
+	function handleScheduleClick(schedule: Schedule) {
+		goto('/schedules/' + schedule.oid);
+	}
+
+	function handleCleanerClick(cleanerId: number) {
+		selectedCleanerId = selectedCleanerId === cleanerId ? null : cleanerId;
+	}
+
+	function openAddForm() {
+		formData = {
+			cleanerOid: '',
+			bookingOid: '',
+			date: '',
+			start_time: '09:00',
+			end_time: '12:00',
+			status: 'scheduled'
+		};
+		showForm = true;
 	}
 </script>
 
@@ -246,8 +271,8 @@
 				<div class="form-grid">
 					<!-- Cleaner -->
 					<div class="form-field">
-						<label for="cleaner_id">{tt('schedules.cleaner')} <span class="required">*</span></label>
-						<select id="cleaner_id" bind:value={formData.cleaner_id} required>
+						<label for="cleanerOid">{tt('schedules.cleaner')} <span class="required">*</span></label>
+						<select id="cleanerOid" bind:value={formData.cleanerOid} required>
 							<option value="">-- {tt('schedules.select_cleaner')} --</option>
 							{#each cleanerOptions as option}
 								<option value={option.value}>{option.label}</option>
@@ -257,10 +282,10 @@
 
 					<!-- Booking -->
 					<div class="form-field">
-						<label for="booking_id">{tt('schedules.booking')} <span class="required">*</span></label>
+						<label for="bookingOid">{tt('schedules.booking')} <span class="required">*</span></label>
 						<select 
-							id="booking_id" 
-							value={formData.booking_id} 
+							id="bookingOid" 
+							value={formData.bookingOid} 
 							onchange={(e) => handleBookingChange((e.target as HTMLSelectElement).value)}
 							required
 						>
@@ -331,7 +356,7 @@
 			{error}
 			onScheduleChange={async (newSchedule: any) => {
 				try {
-					await schedulesAPI.update(newSchedule.id, newSchedule);
+					await schedulesAPI.update(newSchedule.oid, newSchedule);
 					await loadData();
 				} catch (err: any) {
 					error = err.message || t('errors.failed_to_save');
@@ -357,25 +382,25 @@
 				</thead>
 				<tbody>
 					{#each filteredSchedules as schedule}
-						{@const cleaner = cleaners.find(c => c.id === schedule.cleaner_id)}
-						{@const booking = bookings.find(b => b.id === schedule.booking_id)}
+						{@const cleaner = cleaners.find(c => c.oid === schedule.cleanerOid)}
+						{@const booking = bookings.find(b => b.oid === schedule.bookingOid)}
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<!-- svelte-ignore a11y_no_static_element_interactions -->
-						<tr class={isAdmin ? "clickable" : ""} onclick={isAdmin ? () => goto('/schedules/' + schedule.id) : undefined} onkeydown={isAdmin ? (e) => e.key === 'Enter' && goto('/schedules/' + schedule.id) : undefined}>
+						<tr class={isAdmin ? "clickable" : ""} onclick={isAdmin ? () => goto('/schedules/' + schedule.oid) : undefined} onkeydown={isAdmin ? (e) => e.key === 'Enter' && goto('/schedules/' + schedule.oid) : undefined}>
 							<td>{cleaner?.name || t('houses.unknown')}</td>
 							<td>{booking?.guest_name || t('schedules.guest')}</td>
-							<td>{schedule.date}</td>
+							<td>{toDisplayDateFormat(schedule.date)}</td>
 							<td>{schedule.start_time || ''} - {schedule.end_time || ''}</td>
 							<td>
 								<span class="status-badge status-{schedule.status}">{schedule.status}</span>
 							</td>
 							<td>
 								{#if isAdmin}
-									<button class="btn btn-sm btn-secondary" onclick={(e) => { e.stopPropagation(); goto('/schedules/' + schedule.id); }} title={tt('hints.edit_item')}>
+									<button class="btn btn-sm btn-secondary" onclick={(e) => { e.stopPropagation(); goto('/schedules/' + schedule.oid); }} title={tt('hints.edit_item')}>
 										{tt('common.edit')}
 									</button>
 								{:else if isCleaner}
-									<button class="btn btn-sm btn-info" onclick={(e) => { e.stopPropagation(); goto('/schedules/' + schedule.id); }} title={tt('houses.view_house')}>
+									<button class="btn btn-sm btn-info" onclick={(e) => { e.stopPropagation(); goto('/schedules/' + schedule.oid); }} title={tt('houses.view_house')}>
 										{tt('houses.view_house')}
 									</button>
 									{#if schedule.status !== 'completed'}

@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for PerstUserManager.
- * Tests business logic methods - storage is delegated to PerstStorageManager.
+ * Tests business logic methods - storage is delegated to UnifiedDBManager.
  */
 public class PerstUserManagerTest {
 
