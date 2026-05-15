@@ -40,7 +40,11 @@ export function toBackendDateFormat(yyyyMmDd: string): string {
  * @param locale - Optional locale (default: 'nl' for Europe-NL)
  * @returns Localized date string (e.g., "26 apr. 2026")
  */
-const DUTCH_MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+const MONTHS: Record<string, string[]> = {
+  nl: ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'],
+  de: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+};
 
 export function toDisplayDateFormat(dateStr: string, locale: string = 'nl'): string {
   if (!dateStr) return '';
@@ -51,7 +55,8 @@ export function toDisplayDateFormat(dateStr: string, locale: string = 'nl'): str
   const date = new Date(normalized);
   if (isNaN(date.getTime())) return dateStr;
   const day = date.getDate();
-  const month = DUTCH_MONTHS[date.getMonth()];
+  const months = MONTHS[locale] || MONTHS.nl;
+  const month = months[date.getMonth()];
   const year = date.getFullYear();
   return `${day} ${month} ${year}`;
 }
