@@ -59,6 +59,7 @@
 		"status": "Status",
 		"date": "Datum",
 		"time": "Zeit",
+		"house": "Haus",
 		"start_date": "Startdatum",
 		"end_date": "Enddatum",
 		"start_time": "Startzeit",
