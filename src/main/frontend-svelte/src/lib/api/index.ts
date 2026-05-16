@@ -120,3 +120,7 @@ export async function deleteUser(id: number): Promise<{ _Success: boolean; error
 export async function call<T = any>(cls: string, method: string, data: any = {}): Promise<T> {
   return await Server.call(cls, method, data) as T;
 }
+
+export async function loadTestdata(): Promise<any> {
+  return await Server.call('services.LoadTestdata', 'load', {});
+}

@@ -146,7 +146,8 @@
 		"enter_cleaner_email": "Voer schoonmaker e-mail in",
 		"enter_cleaner_phone": "Voer schoonmaker telefoon in",
 		"enter_cleaner_address": "Voer schoonmaker adres in",
-		"no_cleaners": "Geen schoonmakers gevonden. Voeg er een toe om te beginnen."
+		"no_cleaners": "Geen schoonmakers gevonden. Voeg er een toe om te beginnen.",
+		"can_login": "Kan inloggen"
 	},
 	"schedules": {
 		"title": "Schema's",

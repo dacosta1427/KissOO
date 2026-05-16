@@ -300,11 +300,11 @@ public class ScheduleService {
         }
     }
 
-    private JSONObject scheduleToJson(Schedule schedule) {
+private JSONObject scheduleToJson(Schedule schedule) {
         JSONObject json = new JSONObject();
         json.put("oid", schedule.getOid());
         json.put("cleanerOid", schedule.getCleanerOid());
-        json.put("cleaner_name", schedule.getCleaner() != null ? schedule.getCleaner().getName() : null);
+        json.put("cleanerName", schedule.getCleaner() != null ? schedule.getCleaner().getName() : null);
         json.put("bookingOid", schedule.getBookingOid());
         json.put("date", schedule.getScheduleDate());
         json.put("start_time", schedule.getStartTime());
@@ -317,12 +317,12 @@ public class ScheduleService {
         if (booking != null) {
             House house = booking.getHouse();
             if (house != null) {
-json.put("houseOid", house.getOid());
-                 json.put("houseName", house.getName());
-                 json.put("houseAddress", house.getAddress());
-                 json.put("bookingCheckInDate", booking.getCheckInDate());
-                 json.put("bookingCheckOutDate", booking.getCheckOutDate());
-                 json.put("guestName", booking.getGuestName());
+                json.put("houseOid", house.getOid());
+                json.put("houseName", house.getName());
+                json.put("houseAddress", house.getAddress());
+                json.put("check_in_date", booking.getCheckInDate());
+                json.put("check_out_date", booking.getCheckOutDate());
+                json.put("guestName", booking.getGuestName());
             }
         }
         return json;

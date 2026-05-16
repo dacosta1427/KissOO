@@ -292,7 +292,7 @@ public class HouseService {
         json.put("name", house.getName());
         json.put("address", house.getAddress());
         json.put("description", house.getDescription());
-        json.put("owner", house.getOwnerOid());
+        json.put("ownerOid", house.getOwnerOid());
         json.put("costProfileOid", house.getCostProfileOid());
         json.put("active", house.isActive());
         json.put("check_in_time", house.getCheckInTime());

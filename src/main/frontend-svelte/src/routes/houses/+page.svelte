@@ -13,17 +13,20 @@
   // Check if user is owner (not admin)
   let isOwner = $derived(!isAdmin && session.ownerOid > 0);
 
-  let houses = $state<House[]>([]);
-	let owners = $state<Owner[]>([]);
-	let costProfiles = $state<CostProfile[]>([]);
-	let bookings = $state<Booking[]>([]);
-	let loading = $state(false);
-	let error = $state<string | null>(null);
-	let showForm = $state(false);
-		let showNewOwnerModal = $state(false);
+// Svelte 5: Use $state for reactive variables
+let houses = $state<House[]>([]);
+let owners = $state<Owner[]>([]);
+let costProfiles = $state<CostProfile[]>([]);
+let bookings = $state<Booking[]>([]);
+let loading = $state(false);
+let error = $state<string | null>(null);
+let showForm = $state(false);
+let editingHouse = $state<House | null>(null);
+let showNewOwnerModal = $state(false);
+let formSection = $state<HTMLElement | null>(null);
 	
-	// View toggle: 'card' or 'table'
-	let viewMode = $state<'card' | 'table'>('card');
+// View toggle: 'card' or 'table'
+let viewMode = $state<'card' | 'table'>('card');
 
 	// Form section ref for scroll on small screens
 	
@@ -79,16 +82,16 @@
 		}
 	}
 	
-	async function toggleHouseActive(id: number, active: boolean) {
-		const idx = houses.findIndex(h => h.id === id);
+	async function toggleHouseActive(oid: number, active: boolean) {
+		const idx = houses.findIndex(h => h.oid === oid);
 		if (idx >= 0) {
 			houses[idx] = { ...houses[idx], active };
 		}
 		try {
-			const updated = await housesAPI.toggleActive(id, active);
+			const updated = await housesAPI.toggleActive(oid, active);
 			// Update with server response (authoritative state)
-			if (updated && updated.id) {
-				const updateIdx = houses.findIndex(h => h.id === updated.id);
+			if (updated && updated.oid) {
+				const updateIdx = houses.findIndex(h => h.oid === updated.oid);
 				if (updateIdx >= 0) {
 					houses[updateIdx] = { ...houses[updateIdx], active: updated.active };
 				}
@@ -101,8 +104,15 @@
 		}
 	}
 
-	function openAddForm() {
-			formData = { 
+	function scrollToEditForm() {
+		if (window.innerWidth < 1024 && formSection) {
+			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}
+
+function openAddForm() {
+		formData = {
+			name: '', 
 			name: '', 
 			address: '', 
 			description: '', 
@@ -125,8 +135,8 @@
 			name: house.name, 
 			address: house.address, 
 			description: house.description || '',
-			owner: house.owner || 0,
-			cost_profile: house.cost_profile || 0,
+			owner: house.ownerOid || 0,
+			cost_profile: house.costProfileOid || 0,
 			check_in_time: house.check_in_time || '16:00',
 			check_out_time: house.check_out_time || '10:00',
 			surface_m2: house.surface_m2 || null,
@@ -161,7 +171,7 @@
 			const newOwner = await ownersAPI.create(newOwnerData);
 			notificationActions.success(t('owners.name') + ' ' + t('notifications.created_successfully'));
 			await loadOwners();
-			formData.owner = newOwner.id;
+			formData.owner = newOwner.oid;
 			showNewOwnerModal = false;
 			newOwnerData = { name: '', email: '', phone: '', address: '' };
 		} catch (err: any) {
@@ -181,8 +191,8 @@
 			name: formData.name,
 			address: formData.address,
 			description: formData.description,
-			owner: formData.owner || 0,
-			cost_profile: formData.cost_profile || 0,
+			ownerOid: formData.owner || 0,
+			costProfileOid: formData.cost_profile || 0,
 			check_in_time: formData.check_in_time,
 			check_out_time: formData.check_out_time,
 			surface_m2: formData.surface_m2,
@@ -194,7 +204,7 @@
 		
 		try {
 			if (editingHouse) {
-				await housesAPI.update(editingHouse.id, dataToSend);
+				await housesAPI.update(editingHouse.oid, dataToSend);
 				notificationActions.success(t('houses.title') + ' ' + t('notifications.updated_successfully'));
 			} else {
 				await housesAPI.create(dataToSend);
@@ -213,7 +223,7 @@
 	async function handleDelete(house: House) {
 		if (confirm(t('houses.delete_confirm').replace('"${house.name}"', `"${house.name}"`))) {
 			try {
-				await housesAPI.delete(house.id);
+				await housesAPI.delete(house.oid);
 				notificationActions.success(t('houses.title') + ' ' + t('notifications.deleted_successfully'));
 				await loadHouses();
 			} catch (err: any) {
@@ -222,14 +232,14 @@
 		}
 	}
 
-	function getOwnerName(ownerId: number): string {
-		if (!ownerId || ownerId === 0) return t('houses.no_owner');
-		const owner = owners.find(o => o.id === ownerId);
+	function getOwnerName(ownerOid: number): string {
+		if (!ownerOid || ownerOid === 0) return t('houses.no_owner');
+		const owner = owners.find(o => o.oid === ownerOid);
 		return owner ? owner.name : t('houses.unknown');
 	}
 
 	function getBookingCount(houseId: number): number {
-		return bookings.filter(b => b.house_id === houseId).length;
+		return bookings.filter(b => b.houseOid === houseId).length;
 	}
 
 	$effect(() => {
@@ -291,7 +301,7 @@
 						<select id="owner" bind:value={formData.owner} onchange={handleOwnerChange}>
 							<option value={0}>-- {tt('houses.no_owner')} --</option>
 							{#each owners as owner}
-								<option value={owner.id}>{owner.name}</option>
+								<option value={owner.oid}>{owner.name}</option>
 							{/each}
 							<option value={-1}>+ {tt('houses.new_owner')}</option>
 						</select>
@@ -303,7 +313,7 @@
 						<select id="cost_profile" bind:value={formData.cost_profile}>
 							<option value={0}>-- Use Standard --</option>
 							{#each costProfiles as profile}
-								<option value={profile.id}>{profile.name} {profile.is_standard ? '(Standard)' : ''}</option>
+								<option value={profile.oid}>{profile.name} {profile.is_standard ? '(Standard)' : ''}</option>
 							{/each}
 						</select>
 					</div>
@@ -509,24 +519,24 @@
 								type="button"
 								class="card-toggle"
 								class:active={house.active}
-								onclick={(e) => { e.stopPropagation(); toggleHouseActive(house.id, !house.active); }}
+								onclick={(e) => { e.stopPropagation(); toggleHouseActive(house.oid, !house.active); }}
 								title={house.active ? 'Deactivate house' : 'Activate house'}
 								aria-label={house.active ? 'Deactivate house' : 'Activate house'}
 							></button>
 						</div>
 						<p class="house-address">{house.address}</p>
-						{#if house.owner}
-							<p class="house-owner">{tt('houses.owner')}: {getOwnerName(house.owner)}</p>
+						{#if house.ownerOid}
+							<p class="house-owner">{tt('houses.owner')}: {getOwnerName(house.ownerOid)}</p>
 						{/if}
 						{#if house.description}
 							<p class="house-description">{house.description}</p>
 						{/if}
-						<p class="house-bookings">{tt('bookings.title')}: {getBookingCount(house.id)}</p>
+						<p class="house-bookings">{tt('bookings.title')}: {getBookingCount(house.oid)}</p>
 						<div class="house-actions">
 							<button class="btn btn-secondary btn-sm" onclick={(e) => { e.stopPropagation(); openEditForm(house); }} title={tt('hints.edit_item')}>
 								{tt('common.edit')}
 							</button>
-							<button class="btn btn-primary btn-sm" onclick={(e) => { e.stopPropagation(); goto('/bookings?newBooking=true&houseId=' + house.id); }} title={tt('bookings.add_booking')}>
+							<button class="btn btn-primary btn-sm" onclick={(e) => { e.stopPropagation(); goto('/bookings?newBooking=true&houseOid=' + house.oid); }} title={tt('bookings.add_booking')}>
 								{tt('bookings.add_booking')}
 							</button>
 							<button class="btn btn-danger btn-sm" onclick={(e) => { e.stopPropagation(); handleDelete(house); }} title={tt('hints.delete_item')}>
@@ -558,7 +568,7 @@
 					<tr class="clickable" onclick={() => openEditForm(house)} onkeydown={(e) => e.key === 'Enter' && openEditForm(house)}>
 						<td>{house.name}</td>
 						<td>{house.address}</td>
-						<td>{getOwnerName(house.owner)}</td>
+						<td>{getOwnerName(house.ownerOid)}</td>
 						<td>{house.check_in_time || '-'}</td>
 						<td>{house.check_out_time || '-'}</td>
 						<td>

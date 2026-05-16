@@ -33,7 +33,7 @@ export async function getUsers(): Promise<User[]> {
   console.log('[Users.ts] getUsers called, Server.uuid:', (Server as any).uuid);
   const res = await Server.call('services.Users', 'getUsers', {});
   console.log('[Users.ts] getUsers response:', res);
-  return res.rows || [];
+  return res.data || [];
 }
 
 /**

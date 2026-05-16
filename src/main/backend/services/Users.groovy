@@ -244,7 +244,7 @@ class Users {
             }
 
             outjson.put("_Success", true)
-            outjson.put("rows", rows)
+            outjson.put("data", rows)
         } catch (Exception e) {
             outjson.put("_Success", false)
             outjson.put("error", e.message)

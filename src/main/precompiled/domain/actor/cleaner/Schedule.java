@@ -1,7 +1,5 @@
 package domain.actor.cleaner;
 
-import lombok.Getter;
-import lombok.Setter;
 import domain.oov.house.Booking;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
@@ -9,13 +7,9 @@ import org.garret.perst.Indexable;
 /**
  * Schedule entity for cleaning scheduler.
  * Represents a scheduled cleaning task assigned to a cleaner for a booking.
- * 
- * Uses proper OO references to Cleaner and Booking (not IDs).
  */
-@Getter @Setter
 public class Schedule extends CVersion {
     
-    // Proper OO references (was: int cleanerId, int bookingId)
     private Cleaner cleaner;
     private Booking booking;
     
@@ -30,21 +24,27 @@ public class Schedule extends CVersion {
     public Schedule() {
     }
     
-    // Convenience methods for API serialization
+    public Cleaner getCleaner() { return cleaner; }
+    public void setCleaner(Cleaner cleaner) { this.cleaner = cleaner; }
+    public Booking getBooking() { return booking; }
+    public void setBooking(Booking booking) { this.booking = booking; }
+    public String getScheduleDate() { return scheduleDate; }
+    public void setScheduleDate(String scheduleDate) { this.scheduleDate = scheduleDate; }
+    public String getStartTime() { return startTime; }
+    public void setStartTime(String startTime) { this.startTime = startTime; }
+    public String getEndTime() { return endTime; }
+    public void setEndTime(String endTime) { this.endTime = endTime; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    
     public long getCleanerOid() {
         return cleaner != null ? cleaner.getOid() : 0;
     }
     
     public long getBookingOid() {
         return booking != null ? booking.getOid() : 0;
-    }
-    
-    public Booking getBooking() {
-        return booking;
-    }
-    
-    public void setBooking(Booking booking) {
-        this.booking = booking;
     }
     
     @Override

@@ -148,7 +148,8 @@
 		"enter_cleaner_email": "Enter cleaner email",
 		"enter_cleaner_phone": "Enter cleaner phone number",
 		"enter_cleaner_address": "Enter cleaner address",
-		"no_cleaners": "No cleaners found. Add one to get started."
+		"no_cleaners": "No cleaners found. Add one to get started.",
+		"can_login": "Can log in"
 	},
 	"schedules": {
 		"title": "Schedules",

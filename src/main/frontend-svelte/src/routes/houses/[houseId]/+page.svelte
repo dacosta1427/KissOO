@@ -154,7 +154,7 @@
 
 <div class="house-page">
 	<div class="page-header">
-		<button class="btn btn-secondary" onclick={() => goto('/houses')}>{tt('common.back')}</button>
+		<button class="btn btn-secondary" onclick={() => history.back()}>{tt('common.back')}</button>
 		<h1>{editingHouse?.name || tt('houses.edit_house')}</h1>
 		<button class="btn btn-danger" onclick={() => showDeleteConfirm = true}>{tt('common.delete')}</button>
 	</div>
@@ -181,7 +181,7 @@
 						<select id="owner" bind:value={formData.owner}>
 							<option value={0}>{tt('common.select_owner')}</option>
 							{#each owners as owner}
-								<option value={owner.id}>{owner.name}</option>
+								<option value={owner.oid}>{owner.name}</option>
 							{/each}
 						</select>
 					</div>
@@ -267,7 +267,7 @@
 						</thead>
 						<tbody>
 							{#each bookings as booking}
-								<tr onclick={() => goto(`/bookings/${booking.id}`)}>
+								<tr onclick={() => goto(`/bookings/${booking.oid}`)}>
 									<td>{booking.guest_name}</td>
 									<td>{formatDate(booking.check_in_date)}</td>
 									<td>{formatDate(booking.check_out_date)}</td>
@@ -293,7 +293,7 @@
 						</thead>
 						<tbody>
 							{#each schedules as schedule}
-								<tr onclick={() => goto(`/schedules/${schedule.id}`)}>
+								<tr onclick={() => goto(`/schedules/${schedule.oid}`)}>
 									<td>{formatDate(schedule.date)}</td>
 									<td>{schedule.start_time}</td>
 									<td>{schedule.end_time}</td>

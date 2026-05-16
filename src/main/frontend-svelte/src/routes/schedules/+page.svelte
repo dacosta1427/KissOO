@@ -387,8 +387,8 @@
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<!-- svelte-ignore a11y_no_static_element_interactions -->
 						<tr class={isAdmin ? "clickable" : ""} onclick={isAdmin ? () => goto('/schedules/' + schedule.oid) : undefined} onkeydown={isAdmin ? (e) => e.key === 'Enter' && goto('/schedules/' + schedule.oid) : undefined}>
-							<td>{cleaner?.name || t('houses.unknown')}</td>
-							<td>{booking?.guest_name || t('schedules.guest')}</td>
+							<td>{schedule.cleanerName || cleaner?.name || t('houses.unknown')}</td>
+							<td>{schedule.guestName || t('schedules.guest')}</td>
 							<td>{toDisplayDateFormat(schedule.date, $currentLocale)}</td>
 							<td>{schedule.start_time || ''} - {schedule.end_time || ''}</td>
 							<td>

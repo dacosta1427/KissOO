@@ -1,8 +1,6 @@
 package domain.oov.house;
 
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import domain.actor.owner.Owner;
 import domain.oov.house.CostProfile;
 import koo.core.database.StorageManager;
@@ -18,7 +16,6 @@ import java.util.List;
  * House entity for cleaning scheduler.
  * Uses Perst Link for one-to-many relationships.
  */
-@Getter @Setter
 public class House extends CVersion {
     
     @FullTextSearchable
@@ -62,6 +59,33 @@ public class House extends CVersion {
         this.active = active;
         this.bookings = StorageManager.createLink();
     }
+    
+    public Owner getOwner() { return owner; }
+    public void setOwner(Owner owner) { this.owner = owner; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+    public String getCheckInTime() { return checkInTime; }
+    public void setCheckInTime(String checkInTime) { this.checkInTime = checkInTime; }
+    public String getCheckOutTime() { return checkOutTime; }
+    public void setCheckOutTime(String checkOutTime) { this.checkOutTime = checkOutTime; }
+    public Double getSurfaceM2() { return surfaceM2; }
+    public void setSurfaceM2(Double surfaceM2) { this.surfaceM2 = surfaceM2; }
+    public Integer getFloors() { return floors; }
+    public void setFloors(Integer floors) { this.floors = floors; }
+    public Integer getBedrooms() { return bedrooms; }
+    public void setBedrooms(Integer bedrooms) { this.bedrooms = bedrooms; }
+    public Integer getBathrooms() { return bathrooms; }
+    public void setBathrooms(Integer bathrooms) { this.bathrooms = bathrooms; }
+    public String getLuxuryLevel() { return luxuryLevel; }
+    public void setLuxuryLevel(String luxuryLevel) { this.luxuryLevel = luxuryLevel; }
+    public CostProfile getCostProfile() { return costProfile; }
+    public void setCostProfile(CostProfile costProfile) { this.costProfile = costProfile; }
     
     public long getOwnerOid() {
         return owner != null ? owner.getOid() : 0;

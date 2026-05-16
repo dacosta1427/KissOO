@@ -146,7 +146,8 @@
 		"enter_cleaner_email": "Geben Sie die Reiniger-E-Mail ein",
 		"enter_cleaner_phone": "Geben Sie die Reiniger-Telefonnummer ein",
 		"enter_cleaner_address": "Geben Sie die Reiniger-Adresse ein",
-		"no_cleaners": "Keine Reiniger gefunden. Fügen Sie einen hinzu, um zu beginnen."
+		"no_cleaners": "Keine Reiniger gefunden. Fügen Sie einen hinzu, um zu beginnen.",
+		"can_login": "Kann einloggen"
 	},
 	"schedules": {
 		"title": "Zeitpläne",

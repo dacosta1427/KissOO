@@ -126,7 +126,7 @@ if (schedule.bookingOid) {
 
 <div class="schedule-page">
 	<div class="page-header">
-		<button class="btn btn-secondary" onclick={() => goto('/schedules')}>{tt('common.back')}</button>
+		<button class="btn btn-secondary" onclick={() => history.back()}>{tt('common.back')}</button>
 		<h1>{tt('schedules.edit_schedule')}</h1>
 		<button class="btn btn-danger" onclick={() => showDeleteConfirm = true}>{tt('common.delete')}</button>
 	</div>
@@ -147,7 +147,7 @@ if (schedule.bookingOid) {
 					<div class="form-field">
 <label for="bookingOid">{tt('schedules.booking')} <span class="required">*</span></label>
 					<select id="bookingOid" bind:value={formData.bookingOid} disabled>
-						<option value={formData.bookingOid}>{booking?.guest_name || 'Loading...'}</option>
+						<option value={formData.bookingOid}>{schedule.guestName || 'Loading...'}</option>
 						</select>
 					</div>
 					<div class="form-field">

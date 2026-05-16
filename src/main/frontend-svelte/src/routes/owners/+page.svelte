@@ -148,7 +148,7 @@
 		try {
 			await housesAPI.create({
 				...houseFormData,
-				owner: editingOwner.id,
+				ownerOid: formData.owner || 0,
 				active: true
 			});
 			notificationActions.success('House created successfully');
@@ -184,7 +184,7 @@
 		try {
 			const houses = await housesAPI.getByOwner(ownerId);
 			for (const house of houses) {
-				const bookings = await bookingsByHouseAPI.getByHouse(house.id);
+				const bookings = await bookingsByHouseAPI.getByHouse(house.oid);
 				const bookingsWithSchedules: BookingWithSchedules[] = [];
 				for (const booking of bookings) {
 					const schedules = await schedulesByBookingAPI.getByBooking(booking.id);
@@ -206,8 +206,8 @@
 		showForm = true;
 	}
 
-	async function openEditForm(owner: Owner) {
-		goto('/owners/' + owner.id);
+	function openEditForm(owner: Owner) {
+		goto('/owners/' + owner.oid);
 	}
 
 	function handleFormCancel() {
@@ -242,7 +242,7 @@ async function handleFormSubmit(e: Event) {
 	async function handleDelete(owner: Owner) {
 		if (confirm(t('owners.delete_confirm').replace('"${owner.name}"', `"${owner.name}"`))) {
 			try {
-				await ownersAPI.delete(owner.id);
+				await ownersAPI.delete(owner.oid);
 				notificationActions.success(t('owners.title') + ' ' + t('notifications.deleted_successfully'));
 				await loadOwners();
 			} catch (err: any) {
@@ -360,15 +360,15 @@ async function handleFormSubmit(e: Event) {
 						{:else}
 							{#each ownerHousesWithSchedules as { house, bookings }}
 								<div class="house-card">
-									<button type="button" class="house-header" onclick={() => toggleHouse(house.id)}>
-										<span class="expand-icon">{expandedHouseIds.has(house.id) ? '▼' : '▶'}</span>
+									<button type="button" class="house-header" onclick={() => toggleHouse(house.oid)}>
+										<span class="expand-icon">{expandedHouseIds.has(house.oid) ? '▼' : '▶'}</span>
 										<span class="house-name">{house.name}</span>
 										<span class="house-address">{house.address || '-'}</span>
 										<span class="booking-count">{bookings.length} {tt('bookings.title').toLowerCase()}</span>
 										<span class="status-badge" class:active={house.active}>{house.active ? tt('common.active') : tt('common.inactive')}</span>
 									</button>
 									
-									{#if expandedHouseIds.has(house.id)}
+									{#if expandedHouseIds.has(house.oid)}
 										<div class="house-details">
 											{#if bookings.length === 0}
 												<div class="no-data">{tt('bookings.no_bookings')}</div>
@@ -473,7 +473,7 @@ async function handleFormSubmit(e: Event) {
 							type="button"
 							class="card-toggle"
 							class:active={owner.canLogin}
-							onclick={(e) => { e.stopPropagation(); toggleOwnerLoginById(owner.id, !owner.canLogin); }}
+							onclick={(e) => { e.stopPropagation(); toggleOwnerLoginById(owner.oid, !owner.canLogin); }}
 							title={owner.canLogin ? 'Login enabled' : 'Login disabled'}
 						></button>
 					</div>
@@ -515,7 +515,7 @@ async function handleFormSubmit(e: Event) {
 								type="button"
 								class="card-toggle"
 								class:active={owner.canLogin}
-								onclick={(e) => { e.stopPropagation(); toggleOwnerLoginById(owner.id, !owner.canLogin); }}
+								onclick={(e) => { e.stopPropagation(); toggleOwnerLoginById(owner.oid, !owner.canLogin); }}
 								title={owner.canLogin ? 'Login enabled' : 'Login disabled'}
 							></button>
 						</td>

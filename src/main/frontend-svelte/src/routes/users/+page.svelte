@@ -104,79 +104,79 @@
     scrollToEditForm();
   }
 
-  async function handleEditUser(data: Record<string, any>) {
-    if (!editingUser || !canEditUser) return;
-    
-    editLoading = true;
-    error = '';
+async function handleEditUser(data: Record<string, any>) {
+		if (!editingUser || !canEditUser) return;
+		
+		editLoading = true;
+		error = '';
 
-    try {
-      const res = await toggleUserLogin(editingUser.id, data.active === 'Y');
-      if (res.success) {
-        notificationActions.success(t('users.title') + ' ' + t('notifications.updated_successfully'));
-        editModalOpen = false;
-        await loadUsers();
-      } else {
-        error = res.error || t('errors.failed_to_save');
-        notificationActions.error(error);
-      }
-    } catch (e: any) {
-      error = t('errors.failed_to_save') + ': ' + (e.message || 'Unknown error');
-      notificationActions.error(error);
-    } finally {
-      editLoading = false;
-    }
-  }
+		try {
+			const res = await toggleUserLogin(editingUser.oid, data.active === 'Y');
+			if (res.success) {
+				notificationActions.success(t('users.title') + ' ' + t('notifications.updated_successfully'));
+				editModalOpen = false;
+				await loadUsers();
+			} else {
+				error = res.error || t('errors.failed_to_save');
+				notificationActions.error(error);
+			}
+		} catch (e: any) {
+			error = t('errors.failed_to_save') + ': ' + (e.message || 'Unknown error');
+			notificationActions.error(error);
+		} finally {
+			editLoading = false;
+		}
+	}
 
-  async function toggleUserLoginById(id: number, canLogin: boolean) {
-    const idx = allUsers.findIndex(u => u.id === id);
-    if (idx >= 0) {
-      allUsers[idx] = { ...allUsers[idx], canLogin };
-    }
-    try {
-      const res = await toggleUserLogin(id, canLogin);
-      if (res.success) {
-        notificationActions.success(res.message || (canLogin ? 'Login enabled' : 'Login disabled'));
-      } else {
-        if (idx >= 0) {
-          allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
-        }
-        notificationActions.error(res.error || 'Failed to toggle login');
-      }
-    } catch (err: any) {
-      if (idx >= 0) {
-        allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
-      }
-      notificationActions.error(err.message || 'Failed to toggle login');
-    }
-  }
+async function toggleUserLoginById(oid: number, canLogin: boolean) {
+		const idx = allUsers.findIndex(u => u.oid === oid);
+		if (idx >= 0) {
+			allUsers[idx] = { ...allUsers[idx], canLogin };
+		}
+		try {
+			const res = await toggleUserLogin(oid, canLogin);
+			if (res.success) {
+				notificationActions.success(res.message || (canLogin ? 'Login enabled' : 'Login disabled'));
+			} else {
+				if (idx >= 0) {
+					allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
+				}
+				notificationActions.error(res.error || 'Failed to toggle login');
+			}
+		} catch (err: any) {
+			if (idx >= 0) {
+				allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
+			}
+			notificationActions.error(err.message || 'Failed to toggle login');
+		}
+	}
 
-  async function handleDeleteUser(id: number) {
-    await Utils.yesNo(
-      t('common.confirm'),
-      t('users.delete_confirm'),
-      async () => {
-        loading = true;
-        error = '';
+async function handleDeleteUser(oid: number) {
+		await Utils.yesNo(
+			t('common.confirm'),
+			t('users.delete_confirm'),
+			async () => {
+				loading = true;
+				error = '';
 
-        try {
-          const res = await deleteUser(id);
-          if (res.success) {
-            notificationActions.success(t('users.title') + ' ' + t('notifications.deleted_successfully'));
-            await loadUsers();
-          } else {
-            error = res.error || t('errors.failed_to_delete');
-            notificationActions.error(error);
-          }
-        } catch (e: any) {
-          error = t('errors.failed_to_delete') + ': ' + (e.message || 'Unknown error');
-          notificationActions.error(error);
-        } finally {
-          loading = false;
-        }
-      }
-    );
-  }
+				try {
+					const res = await deleteUser(oid);
+					if (res.success) {
+						notificationActions.success(t('users.title') + ' ' + t('notifications.deleted_successfully'));
+						await loadUsers();
+					} else {
+						error = res.error || t('errors.failed_to_delete');
+						notificationActions.error(error);
+					}
+				} catch (e: any) {
+					error = t('errors.failed_to_delete') + ': ' + (e.message || 'Unknown error');
+					notificationActions.error(error);
+				} finally {
+					loading = false;
+				}
+			}
+		);
+	}
 </script>
 
 <div class="p-6 max-w-4xl mx-auto">
@@ -234,8 +234,8 @@
       <p class="text-gray-500">{tt('users.no_users')}</p>
     {:else}
       <div class="space-y-3">
-        {#each filteredUsers as user (user.id)}
-          <div class="user-card">
+{#each filteredUsers as user (user.oid)}
+			<div class="user-card">
             <div class="user-info">
               <div class="user-main">
                 <span class="font-medium">{user.userName}</span>
@@ -271,29 +271,29 @@
                 {/if}
               </div>
             </div>
-            <div class="user-actions">
-              <button
-                type="button"
-                class="card-toggle"
-                class:active={user.canLogin}
-                onclick={() => toggleUserLoginById(user.id, !user.canLogin)}
-                title={user.canLogin ? 'Disable login' : 'Enable login'}
-              ></button>
-              <button
-                onclick={(e) => { e.stopPropagation(); openEditModal(user); }}
-                class="text-blue-600 hover:text-blue-800"
-                disabled={loading}
-              >
-                {tt('common.edit')}
-              </button>
-              <button
-                onclick={(e) => { e.stopPropagation(); handleDeleteUser(user.id); }}
-                class="text-red-600 hover:text-red-800"
-                disabled={loading}
-              >
-                {tt('common.delete')}
-              </button>
-            </div>
+<div class="user-actions">
+				<button
+					type="button"
+					class="card-toggle"
+					class:active={user.canLogin}
+					onclick={() => toggleUserLoginById(user.oid, !user.canLogin)}
+					title={user.canLogin ? 'Disable login' : 'Enable login'}
+				></button>
+				<button
+					onclick={(e) => { e.stopPropagation(); openEditModal(user); }}
+					class="text-blue-600 hover:text-blue-800"
+					disabled={loading}
+				>
+					{tt('common.edit')}
+				</button>
+				<button
+					onclick={(e) => { e.stopPropagation(); handleDeleteUser(user.oid); }}
+					class="text-red-600 hover:text-red-800"
+					disabled={loading}
+				>
+					{tt('common.delete')}
+				</button>
+			</div>
           </div>
         {/each}
       </div>

@@ -37,12 +37,15 @@ export interface Booking {
 export interface Schedule {
   oid: number;
   cleanerOid: number;
+  cleanerName?: string;
   bookingOid: number;
   date: string;
   start_time: string;
   end_time: string;
   notes?: string;
   status: 'scheduled' | 'completed' | 'cancelled' | 'pending';
+  guestName?: string;
+  houseName?: string;
 }
 
 export interface House {
@@ -275,6 +278,10 @@ export const ownersAPI = {
     return res.data || [];
   },
   
+  getById: async (oid: number): Promise<any | null> => {
+    return ownersAPI.getByOid(oid);
+  },
+  
   getByOid: async (oid: number): Promise<any | null> => {
     const res = await callCleaningService('services.OwnerService', 'getOwner', { oid }, 'Load owner');
     return res.data || null;
@@ -349,5 +356,12 @@ export const costProfilesAPI = {
   copy: async (oid: number, name: string): Promise<CostProfile> => {
     const res = await callCleaningService('services.CostProfileService', 'copyCostProfile', { sourceOid: oid, name }, 'Copy cost profile');
     return res.data;
+  }
+};
+
+export const loadTestdataAPI = {
+  load: async (): Promise<any> => {
+    const res = await Server.call('services.LoadTestdata', 'load', {});
+    return res;
   }
 };

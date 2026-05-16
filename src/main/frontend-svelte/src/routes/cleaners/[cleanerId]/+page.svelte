@@ -113,7 +113,7 @@
 
 <div class="cleaner-page">
 	<div class="page-header">
-		<button class="btn btn-secondary" onclick={() => goto('/cleaners')}>{tt('common.back')}</button>
+		<button class="btn btn-secondary" onclick={() => history.back()}>{tt('common.back')}</button>
 		<h1>{tt("cleaners.edit_cleaner")}</h1>
 		<button class="btn btn-danger" onclick={() => showDeleteConfirm = true}>{tt('common.delete')}</button>
 	</div>
@@ -185,8 +185,8 @@
 									<td>{toDisplayDateFormat(schedule.date, $currentLocale)}</td>
 									<td>{schedule.start_time}</td>
 									<td>{schedule.end_time}</td>
-									<td>{schedule.booking?.guest_name || '-'}</td>
-									<td>{schedule.booking?.house?.name || '-'}</td>
+									<td>{schedule.guestName || '-'}</td>
+									<td>{schedule.houseName || '-'}</td>
 									<td><span class="status status-{schedule.status}">{schedule.status}</span></td>
 								</tr>
 							{/each}

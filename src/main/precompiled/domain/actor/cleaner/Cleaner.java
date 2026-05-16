@@ -28,6 +28,11 @@ public class Cleaner extends ANaturalActor {
     
     private Link schedules;  // Perst Link - initialized in constructor
     
+    public Cleaner() {
+        super();
+        this.schedules = StorageManager.createLink();
+    }
+    
     public Cleaner(String name, String phone, String email, boolean active) {
         super(name, new Agreement(), email);
         this.phone = phone;

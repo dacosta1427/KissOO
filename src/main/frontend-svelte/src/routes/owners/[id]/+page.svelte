@@ -53,6 +53,8 @@
 		name: '',
 		address: '',
 		description: '',
+		ownerOid: 0,
+		costProfileOid: 0,
 		check_in_time: '16:00',
 		check_out_time: '10:00',
 		surface_m2: null as number | null,
@@ -82,7 +84,7 @@
 		loginInfo = null;
 		try {
 			const res = await Server.call('services.CleaningService', 'toggleOwnerLogin', {
-				id: editingOwner.id,
+				id: editingOwner.oid,
 				canLogin: !ownerCanLogin
 			});
 			if (res._Success || res.success) {
@@ -140,20 +142,30 @@
 		if (!editingOwner) return;
 		try {
 			await housesAPI.create({
-				...houseFormData,
-				owner: editingOwner.id,
+				name: houseFormData.name,
+				address: houseFormData.address,
+				description: houseFormData.description,
+				ownerOid: houseFormData.ownerOid || editingOwner.oid,
+				costProfileOid: houseFormData.costProfileOid || 0,
+				check_in_time: houseFormData.check_in_time,
+				check_out_time: houseFormData.check_out_time,
+				surface_m2: houseFormData.surface_m2,
+				floors: houseFormData.floors,
+				bedrooms: houseFormData.bedrooms,
+				bathrooms: houseFormData.bathrooms,
+				luxury_level: houseFormData.luxury_level,
 				active: true
 			});
 			notificationActions.success('House created successfully');
 			showAddHouseModal = false;
-			await loadOwnerHousesWithSchedules(editingOwner.id);
+			await loadOwnerHousesWithSchedules(editingOwner.oid);
 		} catch (err: any) {
 			notificationActions.error(err.message || 'Failed to create house');
 		}
 	}
 
 	function getCleanerName(cleanerId: number): string {
-		const cleaner = cleaners.find(c => c.id === cleanerId);
+		const cleaner = cleaners.find(c => c.oid === cleanerId);
 		return cleaner ? cleaner.name : `#${cleanerId}`;
 	}
 
@@ -161,10 +173,10 @@
 		try {
 			const houses = await housesAPI.getByOwner(ownerId);
 			for (const house of houses) {
-				const bookings = await bookingsByHouseAPI.getByHouse(house.id);
+				const bookings = await bookingsByHouseAPI.getByHouse(house.oid);
 				const bookingsWithSchedules: BookingWithSchedules[] = [];
 				for (const booking of bookings) {
-					const schedules = await schedulesByBookingAPI.getByBooking(booking.id);
+					const schedules = await schedulesByBookingAPI.getByBooking(booking.oid);
 					bookingsWithSchedules.push({ booking, schedules });
 				}
 				ownerHousesWithSchedules.push({ house, bookings: bookingsWithSchedules });
@@ -218,9 +230,9 @@
 		if (!editingOwner || saving) return;
 		saving = true;
 		try {
-			const result = await ownersAPI.update(editingOwner.id, formData);
-			if (result && result.id !== editingOwner.id) {
-				goto('/owners/' + result.id);
+			const result = await ownersAPI.update(editingOwner.oid, formData);
+			if (result && result.oid !== editingOwner.oid) {
+				goto('/owners/' + result.oid);
 				return;
 			}
 			notificationActions.success(t('owners.title') + ' ' + t('notifications.updated_successfully'));
@@ -236,7 +248,7 @@
 		if (!editingOwner) return;
 		if (confirm(t('owners.delete_confirm').replace('"${owner.name}"', `"${editingOwner.name}"`))) {
 			try {
-				await ownersAPI.delete(editingOwner.id);
+				await ownersAPI.delete(editingOwner.oid);
 				notificationActions.success(t('owners.title') + ' ' + t('notifications.deleted_successfully'));
 				goto('/owners');
 			} catch (err: any) {
@@ -271,7 +283,7 @@
 
 <div class="owners-page">
 	<div class="page-header">
-		<button class="btn btn-secondary" onclick={() => goto('/owners')}>{tt('common.back')}</button>
+		<button class="btn btn-secondary" onclick={() => history.back()}>{tt('common.back')}</button>
 		<h1>{editingOwner?.name || tt('owners.edit_owner')}</h1>
 		<button class="btn btn-danger btn-sm" onclick={handleDelete}>{tt('common.delete')}</button>
 	</div>
@@ -348,15 +360,15 @@
 					{:else}
 						{#each ownerHousesWithSchedules as { house, bookings }}
 							<div class="house-card">
-								<button type="button" class="house-header" onclick={() => toggleHouse(house.id)}>
-									<span class="expand-icon">{expandedHouseIds.has(house.id) ? '▼' : '▶'}</span>
+								<button type="button" class="house-header" onclick={() => toggleHouse(house.oid)}>
+									<span class="expand-icon">{expandedHouseIds.has(house.oid) ? '▼' : '▶'}</span>
 									<span class="house-name">{house.name}</span>
 									<span class="house-address">{house.address || '-'}</span>
 									<span class="booking-count">{bookings.length} {tt('bookings.title').toLowerCase()}</span>
 									<span class="status-badge" class:active={house.active}>{house.active ? tt('common.active') : tt('common.inactive')}</span>
 								</button>
 								
-								{#if expandedHouseIds.has(house.id)}
+								{#if expandedHouseIds.has(house.oid)}
 									<div class="house-details">
 										{#if bookings.length === 0}
 											<div class="no-data">{tt('bookings.no_bookings')}</div>

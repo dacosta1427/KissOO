@@ -550,7 +550,7 @@ class CleaningService {
             boolean admin = isAdmin(servlet)
             Owner owner = getCurrentOwner(servlet)
             
-            House house = HouseManager.getByOid(houseId)
+            House house = HouseManager.getByOid(houseOid)
             if (house == null) {
                 outjson.put("_Success", false)
                 outjson.put("_ErrorMessage", "House not found")
@@ -1310,7 +1310,7 @@ class CleaningService {
                 row.put("address", owner.getAddress())
                 row.put("active", owner.isActive())
                 // canLogin = user is active (PerstUser always exists for Owner)
-                PerstUser user = owner.getUser()
+                PerstUser user = owner.getPerstUser()
                 row.put("canLogin", user != null && user.isActive())
                 row.put("emailVerified", user != null && user.isEmailVerified())
                 rows.put(row)
@@ -1360,7 +1360,7 @@ class CleaningService {
             data.put("address", owner.getAddress())
             data.put("active", owner.isActive())
             // canLogin = user is active (PerstUser always exists for Owner)
-            PerstUser user = owner.getUser()
+            PerstUser user = owner.getPerstUser()
             data.put("canLogin", user != null && user.isActive())
             outjson.put("data", data)
         } catch (Exception e) {

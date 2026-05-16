@@ -1310,7 +1310,7 @@ class CleaningService {
                 row.put("address", owner.getAddress())
                 row.put("active", owner.isActive())
                 // canLogin = user is active (PerstUser always exists for Owner)
-                PerstUser user = owner.getUser()
+                PerstUser user = owner.getPerstUser()
                 row.put("canLogin", user != null && user.isActive())
                 row.put("emailVerified", user != null && user.isEmailVerified())
                 rows.put(row)
@@ -1360,7 +1360,7 @@ class CleaningService {
             data.put("address", owner.getAddress())
             data.put("active", owner.isActive())
             // canLogin = user is active (PerstUser always exists for Owner)
-            PerstUser user = owner.getUser()
+            PerstUser user = owner.getPerstUser()
             data.put("canLogin", user != null && user.isActive())
             outjson.put("data", data)
         } catch (Exception e) {

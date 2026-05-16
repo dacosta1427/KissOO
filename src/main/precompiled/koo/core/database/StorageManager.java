@@ -107,7 +107,7 @@ public class StorageManager {
         if (!initialized) {
             initialize();
         }
-        return storage != null;
+        return getDBManager() != null;
     }
     
     public static void beginTransaction() {

@@ -134,7 +134,7 @@
 
 <div class="booking-page">
 	<div class="page-header">
-		<button class="btn btn-secondary" onclick={() => goto('/bookings')}>{tt('common.back')}</button>
+		<button class="btn btn-secondary" onclick={() => history.back()}>{tt('common.back')}</button>
 		<h1>{tt("bookings.edit_booking")}</h1>
 		<button class="btn btn-danger" onclick={() => showDeleteConfirm = true}>{tt('common.delete')}</button>
 	</div>
