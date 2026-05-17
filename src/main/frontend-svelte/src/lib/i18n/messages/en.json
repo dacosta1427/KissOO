@@ -69,7 +69,17 @@
 		"password": "Password",
 		"password_placeholder": "Enter password",
 		"confirm_password": "Confirm Password",
-		"confirm_password_placeholder": "Confirm password"
+		"confirm_password_placeholder": "Confirm password",
+		"check_in": "Check-in",
+		"check_out": "Check-out",
+		"notes": "Notes"
+	},
+	"status": {
+		"pending": "Pending",
+		"confirmed": "Confirmed",
+		"cancelled": "Cancelled",
+		"scheduled": "Scheduled",
+		"completed": "Completed"
 	},
 	"houses": {
 		"title": "Houses",
@@ -119,6 +129,7 @@
 		"checked_out": "Checked Out",
 		"cancelled": "Cancelled",
 		"number_of_dogs": "Number of Dogs",
+		"dogs_count": "Number of Dogs",
 		"add_booking": "Add Booking",
 		"edit_booking": "Edit Booking",
 		"delete_booking": "Delete Booking",
@@ -225,6 +236,8 @@
 		"add_new_user": "Add New User",
 		"enter_username": "Enter username",
 		"enter_password": "Enter password",
+		"enter_new_password": "Enter new password",
+		"leave_blank_to_keep_current": "Leave blank to keep current password",
 		"minimum_3_chars": "Minimum 3 characters",
 		"no_users": "No users found.",
 		"loading_users": "Loading users...",

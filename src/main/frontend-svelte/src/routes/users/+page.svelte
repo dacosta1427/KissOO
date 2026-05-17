@@ -1,5 +1,6 @@
 <script lang="ts">
-import { getUsers, addUser, deleteUser, toggleUserLogin } from '$lib/api/Users';
+import { getUsers, addUser, deleteUser, toggleUserLogin, updateUser } from '$lib/api/Users';
+import Modal from '$lib/components/Modal.svelte';
 import { onMount } from 'svelte';
 import type { User } from '$lib/api/Users';
 import { notificationActions } from '$lib/stores.svelte.js';
@@ -25,7 +26,7 @@ const { tt } = createReactiveTranslator();
     (addFormData.username?.length ?? 0) >= 3 && (addFormData.password?.length ?? 0) >= 3
   );
   let canEditUser = $derived(
-    (editFormData.username?.length ?? 0) >= 3 && (editFormData.password?.length ?? 0) >= 3
+    (editFormData.username?.length ?? 0) >= 3
   );
 
   let formSection = $state<HTMLElement | null>(null);
@@ -47,6 +48,11 @@ const { tt } = createReactiveTranslator();
   let addUserFields = $derived([
     { name: 'username', label: tt('users.enter_username'), type: 'text' as const, required: true, placeholder: tt('users.enter_username'), helpText: tt('users.minimum_3_chars') },
     { name: 'password', label: tt('users.enter_password'), type: 'password' as const, required: true, placeholder: tt('users.enter_password'), helpText: tt('users.minimum_3_chars') }
+  ]);
+
+  let editUserFields = $derived([
+    { name: 'username', label: tt('users.enter_username'), type: 'text' as const, required: true, placeholder: tt('users.enter_username') },
+    { name: 'password', label: tt('users.enter_password'), type: 'password' as const, required: false, placeholder: tt('users.enter_new_password'), helpText: tt('users.leave_blank_to_keep_current') }
   ]);
 
   onMount(() => {
@@ -109,7 +115,7 @@ const { tt } = createReactiveTranslator();
     error = '';
 
     try {
-      const res = await toggleUserLogin(editingUser.oid, data.active === 'Y');
+      const res = await updateUser(editingUser.oid, data.username, data.password, editingUser.canLogin ? 'Y' : 'N');
       if (res.success) {
         notificationActions.success(tt('users.title') + ' ' + tt('notifications.updated_successfully'));
         editModalOpen = false;
@@ -219,7 +225,7 @@ const { tt } = createReactiveTranslator();
     </button>
   </div>
 
-  <!-- Users List -->
+<!-- Users List -->
   <div>
     <h2 class="text-xl font-semibold mb-3">{tt('users.users_list')}</h2>
     {#if dataLoading}
@@ -230,41 +236,41 @@ const { tt } = createReactiveTranslator();
       <div class="space-y-3">
 {#each filteredUsers as user (user.oid)}
 			<div class="user-card">
-            <div class="user-info">
-              <div class="user-main">
-                <span class="font-medium">{user.userName}</span>
-                {#if user.actorType}
-                  <span class="AActor-badge" class:owner={user.actorType === 'Owner'} class:cleaner={user.actorType === 'Cleaner'}>
-                    {user.actorType}
-                  </span>
-                {/if}
-              </div>
-              <div class="user-details">
-                <span class="text-gray-600 text-sm">
-                  {tt('common.can_login')}: 
-                  <span class={user.canLogin ? 'text-green-600' : 'text-red-600'}>
-                    {user.canLogin ? t('common.yes') : t('common.no')}
-                  </span>
-                </span>
-                <!-- Email verified indicator -->
-                <span class="ml-2" title={user.emailVerified ? 'Email verified' : 'Email not verified'}>
-                  {#if user.emailVerified}
-                    <svg class="inline w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                    </svg>
-                  {:else}
-                    <svg class="inline w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                    </svg>
+              <div class="user-info">
+                <div class="user-main">
+                  <span class="font-medium">{user.userName}</span>
+                  {#if user.actorType}
+                    <span class="AActor-badge" class:owner={user.actorType === 'Owner'} class:cleaner={user.actorType === 'Cleaner'}>
+                      {user.actorType}
+                    </span>
                   {/if}
-                </span>
-                {#if user.email}
-                  <span class="text-gray-400 ml-1">({user.email})</span>
-                {/if}
+                </div>
+                <div class="user-details">
+                  <span class="text-gray-600 text-sm">
+                    {tt('common.can_login')}: 
+                    <span class={user.canLogin ? 'text-green-600' : 'text-red-600'}>
+                      {user.canLogin ? t('common.yes') : t('common.no')}
+                    </span>
+                  </span>
+                  <!-- Email verified indicator -->
+                  <span class="ml-2" title={user.emailVerified ? 'Email verified' : 'Email not verified'}>
+                    {#if user.emailVerified}
+                      <svg class="inline w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                      </svg>
+                    {:else}
+                      <svg class="inline w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                      </svg>
+                    {/if}
+                  </span>
+                  {#if user.email}
+                    <span class="text-gray-400 ml-1">({user.email})</span>
+                  {/if}
+                </div>
               </div>
-            </div>
 <div class="user-actions">
 				<button
 					type="button"
@@ -288,12 +294,28 @@ const { tt } = createReactiveTranslator();
 					{tt('common.delete')}
 				</button>
 			</div>
-          </div>
+            </div>
         {/each}
       </div>
     {/if}
   </div>
 </div>
+
+<!-- Edit User Modal -->
+<Modal 
+  bind:open={editModalOpen} 
+  title={tt('users.edit_user') || 'Edit User'}
+  onClose={() => editModalOpen = false}
+>
+  <Form
+    fields={editUserFields}
+    bind:data={editFormData}
+    loading={editLoading}
+    submitLabel={tt('common.save')}
+    onSubmit={handleEditUser}
+    onCancel={() => editModalOpen = false}
+  />
+</Modal>
 
 <style>
   .filter-btn {
