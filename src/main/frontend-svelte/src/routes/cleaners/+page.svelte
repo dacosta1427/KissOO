@@ -17,7 +17,7 @@
 	let sortBy = $state<'name' | 'email' | 'phone' | 'canLogin' | 'emailVerified' | ''>('');
 	let sortAsc = $state(true);
 
-	let sortedCleaners = $derived(() => {
+	let sortedCleaners = $derived.by(() => {
 		if (!sortBy) return [...cleaners];
 		return [...cleaners].sort((a, b) => {
 			let valueA: any = a[sortBy];

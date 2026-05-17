@@ -20,7 +20,7 @@
 	let sortBy = $state<'name' | 'email' | 'phone' | 'canLogin' | 'emailVerified' | ''>('');
 	let sortAsc = $state(true);
 
-	let sortedOwners = $derived(() => {
+	let sortedOwners = $derived.by(() => {
 		if (!sortBy) return [...owners];
 		return [...owners].sort((a, b) => {
 			let valueA: any = a[sortBy];

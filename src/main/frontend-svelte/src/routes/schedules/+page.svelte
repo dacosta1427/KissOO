@@ -81,7 +81,7 @@
 	let sortBy = $state<'cleaner' | 'guest' | 'date' | 'time' | 'status' | ''>('');
 	let sortAsc = $state(true);
 
-	let sortedSchedules = $derived(() => {
+	let sortedSchedules = $derived.by(() => {
 		if (!sortBy) return [...filteredSchedules];
 		return [...filteredSchedules].sort((a, b) => {
 			let valueA: any, valueB: any;

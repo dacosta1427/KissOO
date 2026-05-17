@@ -78,7 +78,7 @@ let viewMode = $state<'card' | 'table'>('card');
 	let sortBy = $state<'name' | 'address' | 'owner' | 'check_in_time' | 'check_out_time' | ''>('');
 	let sortAsc = $state(true);
 
-	let sortedHouses = $derived(() => {
+	let sortedHouses = $derived.by(() => {
 		if (!sortBy) return [...filteredHouses];
 		return [...filteredHouses].sort((a, b) => {
 			let valueA: any = a[sortBy];
