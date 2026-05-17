@@ -1,5 +1,6 @@
 <script lang="ts">
-import { getUsers, addUser, deleteUser, toggleUserLogin, updateUser } from '$lib/api/Users';
+import { getUsers, addUser, deleteUser, toggleUserLogin } from '$lib/api/Users';
+import { Server } from '$lib/services/Server';
 import Modal from '$lib/components/Modal.svelte';
 import { onMount } from 'svelte';
 import type { User } from '$lib/api/Users';
@@ -26,7 +27,7 @@ const { tt } = createReactiveTranslator();
     (addFormData.username?.length ?? 0) >= 3 && (addFormData.password?.length ?? 0) >= 3
   );
   let canEditUser = $derived(
-    (editFormData.username?.length ?? 0) >= 3
+    (editFormData.userName?.length ?? 0) >= 3
   );
 
   let formSection = $state<HTMLElement | null>(null);
@@ -51,8 +52,8 @@ const { tt } = createReactiveTranslator();
   ]);
 
   let editUserFields = $derived([
-    { name: 'username', label: tt('users.enter_username'), type: 'text' as const, required: true, placeholder: tt('users.enter_username') },
-    { name: 'password', label: tt('users.enter_password'), type: 'password' as const, required: false, placeholder: tt('users.enter_new_password'), helpText: tt('users.leave_blank_to_keep_current') }
+    { name: 'userName', label: tt('users.enter_username'), type: 'text' as const, required: true, placeholder: tt('users.enter_username') },
+    { name: 'userPassword', label: tt('users.enter_password'), type: 'password' as const, required: false, placeholder: tt('users.enter_new_password'), helpText: tt('users.leave_blank_to_keep_current') }
   ]);
 
   onMount(() => {
@@ -101,27 +102,37 @@ const { tt } = createReactiveTranslator();
   function openEditModal(user: User) {
     editingUser = user;
     editFormData = {
-      username: user.userName,
-      password: user.userPassword
+      userName: user.userName,
+      userPassword: ''
     };
     editModalOpen = true;
     scrollToEditForm();
   }
 
   async function handleEditUser(data: Record<string, any>) {
-    if (!editingUser || !canEditUser) return;
+    if (!editingUser) return;
     
     editLoading = true;
     error = '';
 
     try {
-      const res = await updateUser(editingUser.oid, data.username, data.password, editingUser.canLogin ? 'Y' : 'N');
-      if (res.success) {
+      // Only update password if one was entered
+      const updateData: any = {
+        oid: editingUser.oid,
+        userName: data.userName,
+        userActive: editingUser.canLogin ? 'Y' : 'N'
+      };
+      if (data.userPassword && data.userPassword.trim().length > 0) {
+        updateData.userPassword = data.userPassword;
+      }
+      
+      const res = await Server.call('services.Users', 'updateUser', updateData);
+      if (res._Success ?? res.success) {
         notificationActions.success(tt('users.title') + ' ' + tt('notifications.updated_successfully'));
         editModalOpen = false;
         await loadUsers();
       } else {
-        error = res.error || tt('errors.failed_to_save');
+        error = res._ErrorMessage || res.error || tt('errors.failed_to_save');
         notificationActions.error(error);
       }
     } catch (e: any) {
