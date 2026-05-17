@@ -59,6 +59,7 @@
 		"active": "Active",
 		"inactive": "Inactive",
 		"status": "Status",
+		"can_login": "Can log in",
 		"date": "Date",
 		"time": "Time",
 		"house": "House",

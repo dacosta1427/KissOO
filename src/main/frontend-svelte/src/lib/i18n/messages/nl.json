@@ -57,6 +57,7 @@
 		"active": "Actief",
 		"inactive": "Inactief",
 		"status": "Status",
+		"can_login": "Kan inloggen",
 		"date": "Datum",
 		"time": "Tijd",
 		"house": "Huis",
