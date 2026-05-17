@@ -30,7 +30,7 @@
 	let sortBy = $state<'guest_name' | 'house' | 'check_in_date' | 'check_out_date' | 'guest_email' | 'status' | ''>('');
 	let sortAsc = $state(true);
 
-	let sortedBookings = $derived(() => {
+	let sortedBookings = $derived.by(() => {
 		if (!sortBy) return [...filteredBookings];
 		
 		return [...filteredBookings].sort((a, b) => {
