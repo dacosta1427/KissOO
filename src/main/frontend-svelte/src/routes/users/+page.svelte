@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { getUsers, addUser, deleteUser, toggleUserLogin } from '$lib/api/Users';
-  import { onMount } from 'svelte';
-  import type { User } from '$lib/api/Users';
-  import Modal from '$lib/components/Modal.svelte';
-  import Form from '$lib/components/Form.svelte';
-  import { Utils } from '$lib/utils/Utils';
-  import { notificationActions } from '$lib/stores.svelte.js';
-  import { t, currentLocale } from '$lib/i18n';
-  
-  const tt = (key: string) => t(key, undefined, $currentLocale);
+import { getUsers, addUser, deleteUser, toggleUserLogin } from '$lib/api/Users';
+import { onMount } from 'svelte';
+import type { User } from '$lib/api/Users';
+import { notificationActions } from '$lib/stores.svelte.js';
+import { createReactiveTranslator, t } from '$lib/i18n';
+import Form from '$lib/components/Form.svelte';
+
+const { tt } = createReactiveTranslator();
 
   let users = $state<User[]>([]);
   let allUsers = $state<User[]>([]);
@@ -47,8 +45,8 @@
   }
 
   let addUserFields = $derived([
-    { name: 'username', label: t('users.enter_username'), type: 'text' as const, required: true, placeholder: t('users.enter_username'), helpText: t('users.minimum_3_chars') },
-    { name: 'password', label: t('users.enter_password'), type: 'password' as const, required: true, placeholder: t('users.enter_password'), helpText: t('users.minimum_3_chars') }
+    { name: 'username', label: tt('users.enter_username'), type: 'text' as const, required: true, placeholder: tt('users.enter_username'), helpText: tt('users.minimum_3_chars') },
+    { name: 'password', label: tt('users.enter_password'), type: 'password' as const, required: true, placeholder: tt('users.enter_password'), helpText: tt('users.minimum_3_chars') }
   ]);
 
   onMount(() => {
@@ -63,7 +61,7 @@
       allUsers = await getUsers();
       console.log('[users] loadUsers success, count:', allUsers.length);
     } catch (e: any) {
-      error = t('errors.failed_to_load') + ': ' + (e.message || 'Unknown error');
+      error = tt('errors.failed_to_load') + ': ' + (e.message || 'Unknown error');
       console.error('[users] loadUsers error:', error);
     } finally {
       dataLoading = false;
@@ -79,15 +77,15 @@
     try {
       const res = await addUser(data.username, data.password);
       if (res.success) {
-        notificationActions.success(t('users.title') + ' ' + t('notifications.created_successfully'));
+        notificationActions.success(tt('users.title') + ' ' + tt('notifications.created_successfully'));
         addFormData = { username: '', password: '' };
         await loadUsers();
       } else {
-        error = res.error || t('errors.failed_to_save');
+        error = res.error || tt('errors.failed_to_save');
         notificationActions.error(error);
       }
     } catch (e: any) {
-      error = t('errors.failed_to_save') + ': ' + (e.message || 'Unknown error');
+      error = tt('errors.failed_to_save') + ': ' + (e.message || 'Unknown error');
       notificationActions.error(error);
     } finally {
       loading = false;
@@ -104,79 +102,75 @@
     scrollToEditForm();
   }
 
-async function handleEditUser(data: Record<string, any>) {
-		if (!editingUser || !canEditUser) return;
-		
-		editLoading = true;
-		error = '';
+  async function handleEditUser(data: Record<string, any>) {
+    if (!editingUser || !canEditUser) return;
+    
+    editLoading = true;
+    error = '';
 
-		try {
-			const res = await toggleUserLogin(editingUser.oid, data.active === 'Y');
-			if (res.success) {
-				notificationActions.success(t('users.title') + ' ' + t('notifications.updated_successfully'));
-				editModalOpen = false;
-				await loadUsers();
-			} else {
-				error = res.error || t('errors.failed_to_save');
-				notificationActions.error(error);
-			}
-		} catch (e: any) {
-			error = t('errors.failed_to_save') + ': ' + (e.message || 'Unknown error');
-			notificationActions.error(error);
-		} finally {
-			editLoading = false;
-		}
-	}
+    try {
+      const res = await toggleUserLogin(editingUser.oid, data.active === 'Y');
+      if (res.success) {
+        notificationActions.success(tt('users.title') + ' ' + tt('notifications.updated_successfully'));
+        editModalOpen = false;
+        await loadUsers();
+      } else {
+        error = res.error || tt('errors.failed_to_save');
+        notificationActions.error(error);
+      }
+    } catch (e: any) {
+      error = tt('errors.failed_to_save') + ': ' + (e.message || 'Unknown error');
+      notificationActions.error(error);
+    } finally {
+      editLoading = false;
+    }
+  }
 
-async function toggleUserLoginById(oid: number, canLogin: boolean) {
-		const idx = allUsers.findIndex(u => u.oid === oid);
-		if (idx >= 0) {
-			allUsers[idx] = { ...allUsers[idx], canLogin };
-		}
-		try {
-			const res = await toggleUserLogin(oid, canLogin);
-			if (res.success) {
-				notificationActions.success(res.message || (canLogin ? 'Login enabled' : 'Login disabled'));
-			} else {
-				if (idx >= 0) {
-					allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
-				}
-				notificationActions.error(res.error || 'Failed to toggle login');
-			}
-		} catch (err: any) {
-			if (idx >= 0) {
-				allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
-			}
-			notificationActions.error(err.message || 'Failed to toggle login');
-		}
-	}
+  async function toggleUserLoginById(oid: number, canLogin: boolean) {
+    const idx = allUsers.findIndex(u => u.oid === oid);
+    if (idx >= 0) {
+      allUsers[idx] = { ...allUsers[idx], canLogin };
+    }
+    try {
+      const res = await toggleUserLogin(oid, canLogin);
+      if (res.success) {
+        notificationActions.success(res.message || (canLogin ? 'Login enabled' : 'Login disabled'));
+      } else {
+        if (idx >= 0) {
+          allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
+        }
+        notificationActions.error(res.error || 'Failed to toggle login');
+      }
+    } catch (err: any) {
+      if (idx >= 0) {
+        allUsers[idx] = { ...allUsers[idx], canLogin: !canLogin };
+      }
+      notificationActions.error(err.message || 'Failed to toggle login');
+    }
+  }
 
-async function handleDeleteUser(oid: number) {
-		await Utils.yesNo(
-			t('common.confirm'),
-			t('users.delete_confirm'),
-			async () => {
-				loading = true;
-				error = '';
+  async function handleDeleteUser(oid: number) {
+    if (!confirm(tt('users.delete_confirm'))) return;
+    
+    loading = true;
+    error = '';
 
-				try {
-					const res = await deleteUser(oid);
-					if (res.success) {
-						notificationActions.success(t('users.title') + ' ' + t('notifications.deleted_successfully'));
-						await loadUsers();
-					} else {
-						error = res.error || t('errors.failed_to_delete');
-						notificationActions.error(error);
-					}
-				} catch (e: any) {
-					error = t('errors.failed_to_delete') + ': ' + (e.message || 'Unknown error');
-					notificationActions.error(error);
-				} finally {
-					loading = false;
-				}
-			}
-		);
-	}
+    try {
+      const res = await deleteUser(oid);
+      if (res.success) {
+        notificationActions.success(tt('users.title') + ' ' + tt('notifications.deleted_successfully'));
+        await loadUsers();
+      } else {
+        error = res.error || tt('errors.failed_to_delete');
+        notificationActions.error(error);
+      }
+    } catch (e: any) {
+      error = tt('errors.failed_to_delete') + ': ' + (e.message || 'Unknown error');
+      notificationActions.error(error);
+    } finally {
+      loading = false;
+    }
+  }
 </script>
 
 <div class="p-6 max-w-4xl mx-auto">

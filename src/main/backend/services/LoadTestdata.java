@@ -81,6 +81,7 @@ public class LoadTestdata {
 
             System.out.println("[LoadTestdata] Starting test data load...");
 
+            // Check if test data already exists
             List<House> existingHouses = new ArrayList<>();
             IterableIterator<House> houseIter = udbm.getObjects(House.class);
             if (houseIter != null) {
@@ -89,15 +90,16 @@ public class LoadTestdata {
                 }
             }
 
-            if (existingHouses.size() >= 10) {
-                Map<String, Object> results = new HashMap<>();
-                results.put("message", "Test data already exists (" + existingHouses.size() + " houses). Use Clear first if you want to reload.");
-                outjson.put("_Success", true);
-                outjson.put("results", results);
-                return;
-            }
-
             Map<String, Object> results = new HashMap<>();
+
+            // If data exists, clear it first to avoid OID mismatches
+            if (!existingHouses.isEmpty()) {
+                System.out.println("[LoadTestdata] Existing data found (" + existingHouses.size() + " houses), clearing first...");
+                clearDataInternal(udbm);
+                results.put("cleared", "existing data cleared");
+            } else {
+                results.put("cleared", "skipped (no existing data)");
+            }
 
             List<PerstUser> users = getAllUsers();
             PerstUser admin = null;
@@ -112,8 +114,6 @@ public class LoadTestdata {
             } else {
                 results.put("admin", "exists");
             }
-
-            results.put("cleared", "skipped (not clearing)");
 
             List<Map<String, String>> ownerData = Arrays.asList(
                 mapOf("name", "Jan de Vries", "email", "jan.devries@test.com", "phone", "+31 6 12345678"),
@@ -144,15 +144,27 @@ public class LoadTestdata {
                     Owner owner = new Owner(d.get("name"), d.get("phone"), email, "123 " + d.get("name").split(" ")[1] + " Street, Amsterdam", true);
                     owner.getPerstUser().setActive(true);
                     owner.getPerstUser().setEmailVerified(false);
-                    System.out.println("[LoadTestdata] Owner " + d.get("name") + " OID=" + owner.getOid());
                     owners.add(owner);
                 } catch (Exception e) {
                     System.out.println("[LoadTestdata] Error creating owner " + d.get("name") + ": " + e.getMessage());
                     throw e;
                 }
             }
+
+            // PHASE 1: Persist owners FIRST so they have stable OIDs
+            if (!owners.isEmpty()) {
+                TransactionContainer ownerTc = udbm.createContainer();
+                for (Owner o : owners) {
+                    ownerTc.addInsert(o);
+                    ownerTc.addInsert(o.getPerstUser());
+                }
+                udbm.store(ownerTc);
+                for (Owner o : owners) {
+                    System.out.println("[LoadTestdata] Owner " + o.getName() + " persisted with OID=" + o.getOid());
+                }
+            }
             results.put("owners", "created " + owners.size());
-            System.out.println("[LoadTestdata] Created " + owners.size() + " owners");
+            System.out.println("[LoadTestdata] Created and persisted " + owners.size() + " owners");
 
             List<Map<String, String>> houseData = Arrays.asList(
                 mapOf("name", "Strandhuis Zandvoort", "desc", "Beach house with sea view"),
@@ -189,8 +201,16 @@ public class LoadTestdata {
                         throw e;
                     }
                 }
+
+                // PHASE 2: Persist houses (owners already persisted)
+                TransactionContainer houseTc = udbm.createContainer();
+                for (House house : houses) {
+                    houseTc.addInsert(house);
+                }
+                udbm.store(houseTc);
+
                 results.put("houses", "created " + houses.size());
-                System.out.println("[LoadTestdata] Created " + houses.size() + " houses with owners");
+                System.out.println("[LoadTestdata] Created and persisted " + houses.size() + " houses");
 
                 for (Owner owner : owners) {
                     int count = 0;
@@ -199,7 +219,7 @@ public class LoadTestdata {
                             count++;
                         }
                     }
-                    System.out.println("[LoadTestdata] Owner " + owner.getName() + " has " + count + " house(s)");
+                    System.out.println("[LoadTestdata] Owner " + owner.getName() + " (OID=" + owner.getOid() + ") has " + count + " house(s)");
                 }
             }
 
@@ -228,8 +248,21 @@ public class LoadTestdata {
                     System.out.println("[LoadTestdata] Error creating cleaner " + d.get("name") + ": " + e.getMessage());
                 }
             }
+
+            // PHASE 3: Persist cleaners FIRST so they have stable OIDs
+            if (!cleaners.isEmpty()) {
+                TransactionContainer cleanerTc = udbm.createContainer();
+                for (Cleaner c : cleaners) {
+                    cleanerTc.addInsert(c);
+                    cleanerTc.addInsert(c.getPerstUser());
+                }
+                udbm.store(cleanerTc);
+                for (Cleaner c : cleaners) {
+                    System.out.println("[LoadTestdata] Cleaner " + c.getName() + " persisted with OID=" + c.getOid());
+                }
+            }
             results.put("cleaners", "created " + cleaners.size());
-            System.out.println("[LoadTestdata] Created " + cleaners.size() + " cleaners");
+            System.out.println("[LoadTestdata] Created and persisted " + cleaners.size() + " cleaners");
 
             List<Booking> bookings = new ArrayList<>();
             LocalDate today = LocalDate.now();
@@ -243,10 +276,10 @@ public class LoadTestdata {
                         LocalDate checkIn = today.plusDays((houseIdx * 7) + (bookingIdx * 30));
                         LocalDate checkOut = checkIn.plusDays(3);
                         String guestName = "Guest " + (houseIdx * 2 + bookingIdx + 1);
-                        Booking booking = new Booking(house, house.getOwner(), 
-                            checkIn.format(formatter), checkOut.format(formatter), 
-                            guestName, guestName.toLowerCase().replace(' ', '.') + "@email.com", 
-                            "+31 6 " + String.format("%08d", houseIdx * 2 + bookingIdx), 
+                        Booking booking = new Booking(house, house.getOwner(),
+                            checkIn.format(formatter), checkOut.format(formatter),
+                            guestName, guestName.toLowerCase().replace(' ', '.') + "@email.com",
+                            "+31 6 " + String.format("%08d", houseIdx * 2 + bookingIdx),
                             "Special requests: None");
                         house.addBooking(booking);
                         bookings.add(booking);
@@ -256,6 +289,17 @@ public class LoadTestdata {
                     }
                 }
             }
+
+            // PHASE 4: Persist bookings (houses and owners already persisted)
+            if (!bookings.isEmpty()) {
+                TransactionContainer bookingTc = udbm.createContainer();
+                for (Booking b : bookings) {
+                    bookingTc.addInsert(b);
+                }
+                udbm.store(bookingTc);
+            }
+            results.put("bookings", "created " + bookings.size());
+            System.out.println("[LoadTestdata] Created and persisted " + bookings.size() + " bookings");
 
             List<Schedule> schedules = new ArrayList<>();
             for (int bookingIdx = 0; bookingIdx < bookings.size(); bookingIdx++) {
@@ -276,28 +320,16 @@ public class LoadTestdata {
                 schedules.add(schedule);
             }
 
-            TransactionContainer finalTc = udbm.createContainer();
-            for (Owner o : owners) {
-                finalTc.addInsert(o);
-                finalTc.addInsert(o.getPerstUser());
+            // PHASE 5: Persist schedules (bookings and cleaners already persisted)
+            if (!schedules.isEmpty()) {
+                TransactionContainer scheduleTc = udbm.createContainer();
+                for (Schedule s : schedules) {
+                    scheduleTc.addInsert(s);
+                }
+                udbm.store(scheduleTc);
             }
-            for (House house : houses) {
-                finalTc.addInsert(house);
-            }
-            for (Cleaner c : cleaners) {
-                finalTc.addInsert(c);
-                finalTc.addInsert(c.getPerstUser());
-            }
-            for (Booking b : bookings) {
-                finalTc.addInsert(b);
-            }
-            for (Schedule s : schedules) {
-                finalTc.addInsert(s);
-            }
-            udbm.store(finalTc);
-            results.put("bookings", "created " + bookings.size());
             results.put("schedules", "created " + schedules.size());
-            System.out.println("[LoadTestdata] Created " + bookings.size() + " bookings and " + schedules.size() + " schedules");
+            System.out.println("[LoadTestdata] Created and persisted " + schedules.size() + " schedules");
 
             outjson.put("_Success", true);
             outjson.put("results", results);
