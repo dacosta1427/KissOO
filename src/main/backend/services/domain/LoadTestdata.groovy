@@ -159,6 +159,8 @@ class LoadTestdata {
             ownerData.each { d ->
                 try {
                     def owner = new Owner(d.name, d.phone, d.email, "123 ${d.name.split(' ')[1]} Street, Amsterdam", true)
+                    // Set password to email (matching password convention for test data)
+                    owner.getPerstUser().setPassword(d.email)
                     // Activate the owner user
                     owner.getPerstUser().setActive(true)
                     owner.getPerstUser().setEmailVerified(false)
@@ -248,6 +250,8 @@ def cleaners = []
             cleanerData.each { d ->
                 try {
                     def cleaner = new Cleaner(d.name, d.phone, d.email, true)
+                    // Set password to email (matching password convention for test data)
+                    cleaner.getPerstUser().setPassword(d.email)
                     // Activate the cleaner user 
                     cleaner.getPerstUser().setActive(true)
                     cleaner.getPerstUser().setEmailVerified(true)
