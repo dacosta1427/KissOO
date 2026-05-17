@@ -67,7 +67,17 @@
 		"password": "Wachtwoord",
 		"password_placeholder": "Voer wachtwoord in",
 		"confirm_password": "Bevestig wachtwoord",
-		"confirm_password_placeholder": "Bevestig wachtwoord"
+		"confirm_password_placeholder": "Bevestig wachtwoord",
+		"check_in": "Check-in",
+		"check_out": "Check-out",
+		"notes": "Notities"
+	},
+	"status": {
+		"pending": "In afwachting",
+		"confirmed": "Bevestigd",
+		"cancelled": "Geannuleerd",
+		"scheduled": "Gepland",
+		"completed": "Voltooid"
 	},
 	"houses": {
 		"title": "Huizen",
@@ -117,6 +127,7 @@
 		"checked_out": "Uitgecheckt",
 		"cancelled": "Geannuleerd",
 		"number_of_dogs": "Aantal Honden",
+		"dogs_count": "Aantal Honden",
 		"add_booking": "Boeking Toevoegen",
 		"edit_booking": "Boeking Bewerken",
 		"delete_booking": "Boeking Verwijderen",
@@ -223,6 +234,8 @@
 		"add_new_user": "Nieuwe Gebruiker Toevoegen",
 		"enter_username": "Voer gebruikersnaam in",
 		"enter_password": "Voer wachtwoord in",
+		"enter_new_password": "Voer nieuw wachtwoord in",
+		"leave_blank_to_keep_current": "Laat leeg om huidige wachtwoord te behouden",
 		"minimum_3_chars": "Minimaal 3 tekens",
 		"no_users": "Geen gebruikers gevonden.",
 		"loading_users": "Gebruikers laden...",

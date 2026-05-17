@@ -67,7 +67,17 @@
 		"password": "Passwort",
 		"password_placeholder": "Passwort eingeben",
 		"confirm_password": "Passwort bestätigen",
-		"confirm_password_placeholder": "Passwort bestätigen"
+		"confirm_password_placeholder": "Passwort bestätigen",
+		"check_in": "Check-in",
+		"check_out": "Check-out",
+		"notes": "Notizen"
+	},
+	"status": {
+		"pending": "Ausstehend",
+		"confirmed": "Bestätigt",
+		"cancelled": "Storniert",
+		"scheduled": "Geplant",
+		"completed": "Abgeschlossen"
 	},
 	"houses": {
 		"title": "Häuser",
@@ -117,6 +127,7 @@
 		"checked_out": "Ausgecheckt",
 		"cancelled": "Storniert",
 		"number_of_dogs": "Anzahl Hunde",
+		"dogs_count": "Anzahl Hunde",
 		"add_booking": "Buchung Hinzufügen",
 		"edit_booking": "Buchung Bearbeiten",
 		"delete_booking": "Buchung Löschen",
@@ -223,6 +234,8 @@
 		"add_new_user": "Neuen Benutzer Hinzufügen",
 		"enter_username": "Geben Sie den Benutzernamen ein",
 		"enter_password": "Geben Sie das Passwort ein",
+		"enter_new_password": "Geben Sie ein neues Passwort ein",
+		"leave_blank_to_keep_current": "Leer lassen, um aktuelles Passwort beizubehalten",
 		"minimum_3_chars": "Mindestens 3 Zeichen",
 		"no_users": "Keine Benutzer gefunden.",
 		"loading_users": "Benutzer werden geladen...",
