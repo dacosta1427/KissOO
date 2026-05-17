@@ -74,6 +74,25 @@ let viewMode = $state<'card' | 'table'>('card');
 	// Filtered houses - backend already filters, but keep for consistency
 	let filteredHouses = $derived(houses);
 
+	// Table sorting
+	let sortBy = $state<'name' | 'address' | 'owner' | 'check_in_time' | 'check_out_time' | ''>('');
+	let sortAsc = $state(true);
+
+	let sortedHouses = $derived(() => {
+		if (!sortBy) return [...filteredHouses];
+		return [...filteredHouses].sort((a, b) => {
+			let valueA: any = a[sortBy];
+			let valueB: any = b[sortBy];
+			if (sortBy === 'owner') {
+				valueA = a.ownerName || '';
+				valueB = b.ownerName || '';
+			}
+			if (valueA < valueB) return sortAsc ? -1 : 1;
+			if (valueA > valueB) return sortAsc ? 1 : -1;
+			return 0;
+		});
+	});
+
 	async function loadOwners() {
 		try {
 			owners = await ownersAPI.getAll();
@@ -232,10 +251,11 @@ function openAddForm() {
 		}
 	}
 
-	function getOwnerName(ownerOid: number): string {
-		if (!ownerOid || ownerOid === 0) return t('houses.no_owner');
+	function getOwnerName(ownerOid: number, ownerName?: string): string {
+		if (!ownerOid || ownerOid === 0) return tt('houses.no_owner');
+		if (ownerName) return ownerName;
 		const owner = owners.find(o => o.oid === ownerOid);
-		return owner ? owner.name : t('houses.unknown');
+		return owner ? owner.name : tt('houses.unknown');
 	}
 
 	function getBookingCount(houseId: number): number {
@@ -300,6 +320,9 @@ function openAddForm() {
 						<label for="owner">{tt('houses.owner')}</label>
 						<select id="owner" bind:value={formData.owner} onchange={handleOwnerChange}>
 							<option value={0}>-- {tt('houses.no_owner')} --</option>
+							{#if editingHouse && editingHouse.ownerName && !owners.find(o => o.oid === editingHouse.ownerOid)}
+								<option value={editingHouse.ownerOid}>{editingHouse.ownerName} (loaded)</option>
+							{/if}
 							{#each owners as owner}
 								<option value={owner.oid}>{owner.name}</option>
 							{/each}
@@ -526,7 +549,7 @@ function openAddForm() {
 						</div>
 						<p class="house-address">{house.address}</p>
 						{#if house.ownerOid}
-							<p class="house-owner">{tt('houses.owner')}: {getOwnerName(house.ownerOid)}</p>
+							<p class="house-owner">{tt('houses.owner')}: {getOwnerName(house.ownerOid, house.ownerName)}</p>
 						{/if}
 						{#if house.description}
 							<p class="house-description">{house.description}</p>
@@ -553,22 +576,22 @@ function openAddForm() {
 			<table class="data-table">
 				<thead>
 					<tr>
-						<th>{tt('houses.name')}</th>
-						<th>{tt('houses.address')}</th>
-						<th>{tt('houses.owner')}</th>
-						<th>{tt('houses.check_in_time')}</th>
-						<th>{tt('houses.check_out_time')}</th>
+						<th class="sortable" class:active={sortBy === 'name'} class:asc={sortBy === 'name' && sortAsc} class:desc={sortBy === 'name' && !sortAsc} onclick={() => { if (sortBy === 'name') { sortAsc = !sortAsc; } else { sortBy = 'name'; sortAsc = true; } }}>{tt('houses.name')}{#if sortBy === 'name'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+						<th class="sortable" class:active={sortBy === 'address'} class:asc={sortBy === 'address' && sortAsc} class:desc={sortBy === 'address' && !sortAsc} onclick={() => { if (sortBy === 'address') { sortAsc = !sortAsc; } else { sortBy = 'address'; sortAsc = true; } }}>{tt('houses.address')}{#if sortBy === 'address'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+						<th class="sortable" class:active={sortBy === 'owner'} class:asc={sortBy === 'owner' && sortAsc} class:desc={sortBy === 'owner' && !sortAsc} onclick={() => { if (sortBy === 'owner') { sortAsc = !sortAsc; } else { sortBy = 'owner'; sortAsc = true; } }}>{tt('houses.owner')}{#if sortBy === 'owner'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+						<th class="sortable" class:active={sortBy === 'check_in_time'} class:asc={sortBy === 'check_in_time' && sortAsc} class:desc={sortBy === 'check_in_time' && !sortAsc} onclick={() => { if (sortBy === 'check_in_time') { sortAsc = !sortAsc; } else { sortBy = 'check_in_time'; sortAsc = true; } }}>{tt('houses.check_in_time')}{#if sortBy === 'check_in_time'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+						<th class="sortable" class:active={sortBy === 'check_out_time'} class:asc={sortBy === 'check_out_time' && sortAsc} class:desc={sortBy === 'check_out_time' && !sortAsc} onclick={() => { if (sortBy === 'check_out_time') { sortAsc = !sortAsc; } else { sortBy = 'check_out_time'; sortAsc = true; } }}>{tt('houses.check_out_time')}{#if sortBy === 'check_out_time'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
 						<th>{tt('common.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
-				{#each filteredHouses as house}
+				{#each sortedHouses as house}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<tr class="clickable" onclick={() => openEditForm(house)} onkeydown={(e) => e.key === 'Enter' && openEditForm(house)}>
 						<td>{house.name}</td>
 						<td>{house.address}</td>
-						<td>{getOwnerName(house.ownerOid)}</td>
+						<td>{getOwnerName(house.ownerOid, house.ownerName)}</td>
 						<td>{house.check_in_time || '-'}</td>
 						<td>{house.check_out_time || '-'}</td>
 						<td>
@@ -904,6 +927,23 @@ function openAddForm() {
 		font-weight: 600;
 		font-size: 0.875rem;
 		color: #374151;
+	}
+
+	.data-table th.sortable {
+		cursor: pointer;
+		user-select: none;
+		position: relative;
+		padding-right: 1.5rem;
+	}
+
+	.data-table th.sortable:hover {
+		background: #f3f4f6;
+	}
+
+	.data-table th.sortable .sort-indicator {
+		font-size: 0.75rem;
+		margin-left: 0.25rem;
+		opacity: 0.7;
 	}
 
 	.data-table tbody tr:hover {

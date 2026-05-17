@@ -77,6 +77,38 @@
 	// Filtered schedules - backend already filters by actor, just use all
 	let filteredSchedules = $derived(schedules);
 
+	// Table sorting
+	let sortBy = $state<'cleaner' | 'guest' | 'date' | 'time' | 'status' | ''>('');
+	let sortAsc = $state(true);
+
+	let sortedSchedules = $derived(() => {
+		if (!sortBy) return [...filteredSchedules];
+		return [...filteredSchedules].sort((a, b) => {
+			let valueA: any, valueB: any;
+			if (sortBy === 'cleaner') {
+				valueA = a.cleanerName || cleaners.find(c => c.oid === a.cleanerOid)?.name || '';
+				valueB = b.cleanerName || cleaners.find(c => c.oid === b.cleanerOid)?.name || '';
+			} else if (sortBy === 'guest') {
+				valueA = a.guestName || '';
+				valueB = b.guestName || '';
+			} else if (sortBy === 'date') {
+				valueA = a.date || '';
+				valueB = b.date || '';
+			} else if (sortBy === 'time') {
+				valueA = a.start_time || '';
+				valueB = b.start_time || '';
+			} else if (sortBy === 'status') {
+				valueA = a.status || '';
+				valueB = b.status || '';
+			} else {
+				return 0;
+			}
+			if (valueA < valueB) return sortAsc ? -1 : 1;
+			if (valueA > valueB) return sortAsc ? 1 : -1;
+			return 0;
+		});
+	});
+
 	// Handle booking selection - auto-fill date with check_out_date
 	function handleBookingChange(bookingId: string) {
 		formData.bookingOid = bookingId;
@@ -265,7 +297,7 @@
 
 	{#if showForm}
 		<div class="form-section">
-			<h3 class="form-title">t('schedules.add_new_schedule')</h3>
+			<h3 class="form-title">{tt('schedules.add_new_schedule')}</h3>
 			
 			<form onsubmit={handleFormSubmit}>
 				<div class="form-grid">
@@ -372,16 +404,16 @@
 			<table class="schedule-table">
 				<thead>
 					<tr>
-						<th>{tt('schedules.cleaner')}</th>
-						<th>{tt('schedules.guest')}</th>
-						<th>{tt('schedules.date')}</th>
-						<th>{tt('schedules.time')}</th>
-						<th>{tt('schedules.status')}</th>
+						<th class="sortable" class:active={sortBy === 'cleaner'} class:asc={sortBy === 'cleaner' && sortAsc} class:desc={sortBy === 'cleaner' && !sortAsc} onclick={() => { if (sortBy === 'cleaner') { sortAsc = !sortAsc; } else { sortBy = 'cleaner'; sortAsc = true; } }}>{tt('schedules.cleaner')}{#if sortBy === 'cleaner'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+						<th class="sortable" class:active={sortBy === 'guest'} class:asc={sortBy === 'guest' && sortAsc} class:desc={sortBy === 'guest' && !sortAsc} onclick={() => { if (sortBy === 'guest') { sortAsc = !sortAsc; } else { sortBy = 'guest'; sortAsc = true; } }}>{tt('schedules.guest')}{#if sortBy === 'guest'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+						<th class="sortable" class:active={sortBy === 'date'} class:asc={sortBy === 'date' && sortAsc} class:desc={sortBy === 'date' && !sortAsc} onclick={() => { if (sortBy === 'date') { sortAsc = !sortAsc; } else { sortBy = 'date'; sortAsc = true; } }}>{tt('schedules.date')}{#if sortBy === 'date'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+						<th class="sortable" class:active={sortBy === 'time'} class:asc={sortBy === 'time' && sortAsc} class:desc={sortBy === 'time' && !sortAsc} onclick={() => { if (sortBy === 'time') { sortAsc = !sortAsc; } else { sortBy = 'time'; sortAsc = true; } }}>{tt('schedules.time')}{#if sortBy === 'time'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+						<th class="sortable" class:active={sortBy === 'status'} class:asc={sortBy === 'status' && sortAsc} class:desc={sortBy === 'status' && !sortAsc} onclick={() => { if (sortBy === 'status') { sortAsc = !sortAsc; } else { sortBy = 'status'; sortAsc = true; } }}>{tt('schedules.status')}{#if sortBy === 'status'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
 						<th>{tt('schedules.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
-					{#each filteredSchedules as schedule}
+					{#each sortedSchedules as schedule}
 						{@const cleaner = cleaners.find(c => c.oid === schedule.cleanerOid)}
 						{@const booking = bookings.find(b => b.oid === schedule.bookingOid)}
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -752,6 +784,23 @@
 		font-weight: 600;
 		font-size: 0.875rem;
 		color: #374151;
+	}
+
+	.schedule-table th.sortable {
+		cursor: pointer;
+		user-select: none;
+		position: relative;
+		padding-right: 1.5rem;
+	}
+
+	.schedule-table th.sortable:hover {
+		background: #f3f4f6;
+	}
+
+	.schedule-table th.sortable .sort-indicator {
+		font-size: 0.75rem;
+		margin-left: 0.25rem;
+		opacity: 0.7;
 	}
 
 	.schedule-table tbody tr:hover {

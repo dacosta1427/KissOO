@@ -5,6 +5,7 @@
 	import { t, currentLocale } from '$lib/i18n';
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/Button.svelte';
+	import { toInputDateFormat, toBackendDateFormat } from '$lib/utils/Utils';
 
 	const tt = (key: string) => t(key, undefined, $currentLocale);
 
@@ -45,8 +46,8 @@
 
 			formData = {
 				houseOid: booking.houseOid,
-				check_in_date: booking.check_in_date,
-				check_out_date: booking.check_out_date,
+				check_in_date: toInputDateFormat(booking.check_in_date),
+				check_out_date: toInputDateFormat(booking.check_out_date),
 				guest_name: booking.guest_name,
 				guest_email: booking.guest_email,
 				guest_phone: booking.guest_phone || '',
@@ -93,7 +94,12 @@
 		if (!booking || saving) return;
 		saving = true;
 		try {
-			const result = await bookingsAPI.update(booking.oid, formData);
+			const submitData = {
+				...formData,
+				check_in_date: toBackendDateFormat(formData.check_in_date),
+				check_out_date: toBackendDateFormat(formData.check_out_date)
+			};
+			const result = await bookingsAPI.update(booking.oid, submitData);
 			notificationActions.success(tt('bookings.updated'));
 			booking = result;
 			await loadData();

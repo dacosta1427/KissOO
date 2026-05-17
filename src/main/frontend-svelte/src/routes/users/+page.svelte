@@ -53,7 +53,9 @@ const { tt } = createReactiveTranslator();
 
   let editUserFields = $derived([
     { name: 'userName', label: tt('users.enter_username'), type: 'text' as const, required: true, placeholder: tt('users.enter_username') },
-    { name: 'userPassword', label: tt('users.enter_password'), type: 'password' as const, required: false, placeholder: tt('users.enter_new_password'), helpText: tt('users.leave_blank_to_keep_current') }
+    { name: 'userPassword', label: tt('users.enter_password'), type: 'password' as const, required: false, placeholder: tt('users.enter_new_password'), helpText: tt('users.leave_blank_to_keep_current') },
+    { name: 'email', label: tt('common.email'), type: 'email' as const, required: false, placeholder: tt('users.enter_email') },
+    { name: 'emailVerified', label: tt('users.email_verified') || 'Email Verified', type: 'checkbox' as const }
   ]);
 
   onMount(() => {
@@ -103,7 +105,9 @@ const { tt } = createReactiveTranslator();
     editingUser = user;
     editFormData = {
       userName: user.userName,
-      userPassword: ''
+      userPassword: '',
+      email: user.email || '',
+      emailVerified: user.emailVerified
     };
     editModalOpen = true;
     scrollToEditForm();
@@ -120,7 +124,9 @@ const { tt } = createReactiveTranslator();
       const updateData: any = {
         oid: editingUser.oid,
         userName: data.userName,
-        userActive: editingUser.canLogin ? 'Y' : 'N'
+        userActive: editingUser.canLogin ? 'Y' : 'N',
+        email: data.email || '',
+        emailVerified: data.emailVerified || false
       };
       if (data.userPassword && data.userPassword.trim().length > 0) {
         updateData.userPassword = data.userPassword;

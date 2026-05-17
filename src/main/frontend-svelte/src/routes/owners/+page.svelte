@@ -16,6 +16,24 @@
 	let editingOwner = $state<Owner | null>(null);
 	let viewMode = $state<'card' | 'table'>('card');
 
+	// Table sorting
+	let sortBy = $state<'name' | 'email' | 'phone' | 'canLogin' | 'emailVerified' | ''>('');
+	let sortAsc = $state(true);
+
+	let sortedOwners = $derived(() => {
+		if (!sortBy) return [...owners];
+		return [...owners].sort((a, b) => {
+			let valueA: any = a[sortBy];
+			let valueB: any = b[sortBy];
+			if (typeof valueA === 'boolean') {
+				return sortAsc ? (valueA === valueB ? 0 : valueA ? -1 : 1) : (valueA === valueB ? 0 : valueA ? 1 : -1);
+			}
+			if (valueA < valueB) return sortAsc ? -1 : 1;
+			if (valueA > valueB) return sortAsc ? 1 : -1;
+			return 0;
+		});
+	});
+
 	let ownerHousesWithSchedules = $state<HouseWithSchedules[]>([]);
 	let expandedHouseIds = $state<Set<number>>(new Set());
 	let loadingHouses = $state(false);
@@ -494,16 +512,16 @@ async function handleFormSubmit(e: Event) {
 		<table class="data-table">
 			<thead>
 				<tr>
-					<th>{tt('owners.name')}</th>
-					<th>{tt('owners.email')}</th>
-					<th>{tt('owners.phone')}</th>
-					<th>{tt('owners.can_login')}</th>
-					<th>Email</th>
+					<th class="sortable" class:active={sortBy === 'name'} class:asc={sortBy === 'name' && sortAsc} class:desc={sortBy === 'name' && !sortAsc} onclick={() => { if (sortBy === 'name') { sortAsc = !sortAsc; } else { sortBy = 'name'; sortAsc = true; } }}>{tt('owners.name')}{#if sortBy === 'name'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+					<th class="sortable" class:active={sortBy === 'email'} class:asc={sortBy === 'email' && sortAsc} class:desc={sortBy === 'email' && !sortAsc} onclick={() => { if (sortBy === 'email') { sortAsc = !sortAsc; } else { sortBy = 'email'; sortAsc = true; } }}>{tt('owners.email')}{#if sortBy === 'email'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+					<th class="sortable" class:active={sortBy === 'phone'} class:asc={sortBy === 'phone' && sortAsc} class:desc={sortBy === 'phone' && !sortAsc} onclick={() => { if (sortBy === 'phone') { sortAsc = !sortAsc; } else { sortBy = 'phone'; sortAsc = true; } }}>{tt('owners.phone')}{#if sortBy === 'phone'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+					<th class="sortable" class:active={sortBy === 'canLogin'} class:asc={sortBy === 'canLogin' && sortAsc} class:desc={sortBy === 'canLogin' && !sortAsc} onclick={() => { if (sortBy === 'canLogin') { sortAsc = !sortAsc; } else { sortBy = 'canLogin'; sortAsc = true; } }}>{tt('owners.can_login')}{#if sortBy === 'canLogin'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+					<th class="sortable" class:active={sortBy === 'emailVerified'} class:asc={sortBy === 'emailVerified' && sortAsc} class:desc={sortBy === 'emailVerified' && !sortAsc} onclick={() => { if (sortBy === 'emailVerified') { sortAsc = !sortAsc; } else { sortBy = 'emailVerified'; sortAsc = true; } }}>Email{#if sortBy === 'emailVerified'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
 					<th>{tt('common.actions')}</th>
 				</tr>
 			</thead>
 			<tbody>
-				{#each owners as owner}
+				{#each sortedOwners as owner}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<tr class="clickable" onclick={() => openEditForm(owner)} onkeydown={(e) => e.key === 'Enter' && openEditForm(owner)}>
@@ -680,6 +698,9 @@ async function handleFormSubmit(e: Event) {
 	.data-table { width: 100%; border-collapse: collapse; }
 	.data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
 	.data-table th { background: #f9fafb; font-weight: 600; color: #374151; }
+	.data-table th.sortable { cursor: pointer; user-select: none; position: relative; padding-right: 1.5rem; }
+	.data-table th.sortable:hover { background: #f3f4f6; }
+	.data-table th.sortable .sort-indicator { font-size: 0.75rem; margin-left: 0.25rem; opacity: 0.7; }
 	.data-table tr:hover { background: #f9fafb; }
 
 	/* Houses & Schedules */

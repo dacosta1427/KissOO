@@ -1,155 +1,157 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { housesAPI, ownersAPI, cleanersAPI, bookingsAPI, schedulesAPI, type House, type Owner, type Cleaner, type Booking, type Schedule } from '$lib/api/Cleaning';
-	import { notificationActions } from '$lib/stores.svelte.js';
-	import { t, currentLocale } from '$lib/i18n';
-	import { Server } from '$lib/services/Server';
-	import { toDisplayDateFormat } from '$lib/utils/Utils';
-	import { goto } from '$app/navigation';
-	import Button from '$lib/components/Button.svelte';
+  import { page } from '$app/stores';
+  import { housesAPI, ownersAPI, cleanersAPI, bookingsAPI, schedulesAPI, type House, type Owner, type Cleaner, type Booking, type Schedule } from '$lib/api/Cleaning';
+  import { notificationActions } from '$lib/stores.svelte.js';
+  import { createReactiveTranslator } from '$lib/i18n';
+  import { get } from 'svelte/store';
+  import { Server } from '$lib/services/Server';
+  import { toDisplayDateFormat } from '$lib/utils/Utils';
+  import { goto } from '$app/navigation';
+  import Button from '$lib/components/Button.svelte';
 
-	const tt = (key: string) => t(key, undefined, $currentLocale);
+  const { tt } = createReactiveTranslator();
+  const locale = $derived(get(currentLocale));
 
-	let urlHouseId = $derived($page.params.houseId ? parseInt($page.params.houseId) : 0);
+  let urlHouseId = $derived($page.params.houseId ? parseInt($page.params.houseId) : 0);
 
-	let editingHouse = $state<House | null>(null);
-	let showForm = $state(true);
-	let loading = $state(false);
-	let owner = $state<Owner | null>(null);
-	let bookings = $state<Booking[]>([]);
-	let cleaners = $state<Cleaner[]>([]);
-	let schedules = $state<Schedule[]>([]);
+  let editingHouse = $state<House | null>(null);
+  let showForm = $state(true);
+  let loading = $state(false);
+  let owner = $state<Owner | null>(null);
+  let bookings = $state<Booking[]>([]);
+  let cleaners = $state<Cleaner[]>([]);
+  let schedules = $state<Schedule[]>([]);
 
-	let formData = $state({
-		name: '',
-		address: '',
-		description: '',
-		owner: 0,
-		cost_profile: 0,
-		check_in_time: '16:00',
-		check_out_time: '10:00',
-		surface_m2: null as number | null,
-		floors: 1,
-		bedrooms: 0,
-		bathrooms: 0,
-		luxury_level: 'standard' as 'basic' | 'standard' | 'premium' | 'luxury'
-	});
+  let formData = $state({
+    name: '',
+    address: '',
+    description: '',
+    owner: 0,
+    cost_profile: 0,
+    check_in_time: '16:00',
+    check_out_time: '10:00',
+    surface_m2: null as number | null,
+    floors: 1,
+    bedrooms: 0,
+    bathrooms: 0,
+    luxury_level: 'standard' as 'basic' | 'standard' | 'premium' | 'luxury'
+  });
 
-	let saving = $state(false);
-	let showDeleteConfirm = $state(false);
+  let saving = $state(false);
+  let showDeleteConfirm = $state(false);
 
-	function scrollToEditForm() {
-		if (window.innerWidth < 1024 && formSection) {
-			formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}
-	}
+  function scrollToEditForm() {
+    if (window.innerWidth < 1024 && formSection) {
+      formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 
-	let formSection = $state<HTMLElement | null>(null);
+  let formSection = $state<HTMLElement | null>(null);
 
-	async function loadData() {
-		if (!urlHouseId || urlHouseId <= 0) return;
-		loading = true;
-		try {
-			editingHouse = await housesAPI.getById(urlHouseId);
-			if (!editingHouse) {
-				notificationActions.error(tt('houses.house_not_found'));
-				goto('/houses');
-				return;
-			}
+  async function loadData() {
+    if (!urlHouseId || urlHouseId <= 0) return;
+    loading = true;
+    try {
+      editingHouse = await housesAPI.getById(urlHouseId);
+      if (!editingHouse) {
+        notificationActions.error(tt('houses.house_not_found'));
+        goto('/houses');
+        return;
+      }
 
-			formData = {
-				name: editingHouse.name,
-				address: editingHouse.address || '',
-				description: editingHouse.description || '',
-				owner: editingHouse.owner || 0,
-				cost_profile: editingHouse.cost_profile || 0,
-				check_in_time: editingHouse.check_in_time || '16:00',
-				check_out_time: editingHouse.check_out_time || '10:00',
-				surface_m2: editingHouse.surface_m2 || null,
-				floors: editingHouse.floors || 1,
-				bedrooms: editingHouse.bedrooms || 0,
-				bathrooms: editingHouse.bathrooms || 0,
-				luxury_level: editingHouse.luxury_level || 'standard'
-			};
+      formData = {
+        name: editingHouse.name,
+        address: editingHouse.address || '',
+        description: editingHouse.description || '',
+        owner: editingHouse.owner || 0,
+        cost_profile: editingHouse.cost_profile || 0,
+        check_in_time: editingHouse.check_in_time || '16:00',
+        check_out_time: editingHouse.check_out_time || '10:00',
+        surface_m2: editingHouse.surface_m2 || null,
+        floors: editingHouse.floors || 1,
+        bedrooms: editingHouse.bedrooms || 0,
+        bathrooms: editingHouse.bathrooms || 0,
+        luxury_level: editingHouse.luxury_level || 'standard'
+      };
 
-			// Load related data
-			if (editingHouse.owner) {
-				owner = await ownersAPI.getById(editingHouse.owner) || null;
-			}
-			bookings = await bookingsAPI.getByHouse(editingHouse.id);
-			for (const booking of bookings) {
-				const s = await schedulesAPI.getByBooking(booking.id);
-				schedules.push(...s);
-			}
-		} catch (err: any) {
-			console.error('Error loading house:', err);
-			notificationActions.error(err.message || tt('errors.failed_to_load'));
-			goto('/houses');
-		} finally {
-			loading = false;
-		}
-	}
+      // Load related data
+      if (editingHouse.owner) {
+        owner = await ownersAPI.getById(editingHouse.owner) || null;
+      }
+      bookings = await bookingsAPI.getByHouse(editingHouse.id);
+      for (const booking of bookings) {
+        const s = await schedulesAPI.getByBooking(booking.id);
+        schedules.push(...s);
+      }
+    } catch (err: any) {
+      console.error('Error loading house:', err);
+      notificationActions.error(err.message || tt('errors.failed_to_load'));
+      goto('/houses');
+    } finally {
+      loading = false;
+    }
+  }
 
-	let hasChanges = $derived(editingHouse && (
-		formData.name !== editingHouse.name ||
-		formData.address !== (editingHouse.address || '') ||
-		formData.description !== (editingHouse.description || '') ||
-		formData.owner !== (editingHouse.owner || 0) ||
-		formData.cost_profile !== (editingHouse.cost_profile || 0) ||
-		formData.check_in_time !== (editingHouse.check_in_time || '16:00') ||
-		formData.check_out_time !== (editingHouse.check_out_time || '10:00') ||
-		formData.surface_m2 !== (editingHouse.surface_m2 || null) ||
-		formData.floors !== (editingHouse.floors || 1) ||
-		formData.bedrooms !== (editingHouse.bedrooms || 0) ||
-		formData.bathrooms !== (editingHouse.bathrooms || 0) ||
-		formData.luxury_level !== (editingHouse.luxury_level || 'standard')
-	));
+  let hasChanges = $derived(editingHouse && (
+    formData.name !== editingHouse.name ||
+    formData.address !== (editingHouse.address || '') ||
+    formData.description !== (editingHouse.description || '') ||
+    formData.owner !== (editingHouse.owner || 0) ||
+    formData.cost_profile !== (editingHouse.cost_profile || 0) ||
+    formData.check_in_time !== (editingHouse.check_in_time || '16:00') ||
+    formData.check_out_time !== (editingHouse.check_out_time || '10:00') ||
+    formData.surface_m2 !== (editingHouse.surface_m2 || null) ||
+    formData.floors !== (editingHouse.floors || 1) ||
+    formData.bedrooms !== (editingHouse.bedrooms || 0) ||
+    formData.bathrooms !== (editingHouse.bathrooms || 0) ||
+    formData.luxury_level !== (editingHouse.luxury_level || 'standard')
+  ));
 
-	async function handleFormSubmit(e: Event) {
-		e.preventDefault();
-		if (!editingHouse || saving) return;
-		saving = true;
-		try {
-			const result = await housesAPI.update(editingHouse.id, formData);
-			notificationActions.success(tt('houses.updated'));
-			editingHouse = result;
-			await loadData();
-		} catch (err: any) {
-			notificationActions.error(err.message || tt('errors.failed_to_save'));
-		} finally {
-			saving = false;
-		}
-	}
+  async function handleFormSubmit(e: Event) {
+    e.preventDefault();
+    if (!editingHouse || saving) return;
+    saving = true;
+    try {
+      const result = await housesAPI.update(editingHouse.id, formData);
+      notificationActions.success(tt('houses.updated'));
+      editingHouse = result;
+      await loadData();
+    } catch (err: any) {
+      notificationActions.error(err.message || tt('errors.failed_to_save'));
+    } finally {
+      saving = false;
+    }
+  }
 
-	function handleFormCancel() {
-		goto('/houses');
-	}
+  function handleFormCancel() {
+    goto('/houses');
+  }
 
-	async function handleDelete() {
-		if (!editingHouse) return;
-		if (confirm(tt('houses.delete_confirm').replace('"${house.name}"', `"${editingHouse.name}"`))) {
-			try {
-				await housesAPI.delete(editingHouse.id);
-				notificationActions.success(tt('houses.deleted'));
-				goto('/houses');
-			} catch (err: any) {
-				notificationActions.error(err.message || tt('errors.failed_to_delete'));
-			}
-		}
-	}
+  async function handleDelete() {
+    if (!editingHouse) return;
+    if (confirm(tt('houses.delete_confirm').replace('"${house.name}"', `"${editingHouse.name}"`))) {
+      try {
+        await housesAPI.delete(editingHouse.id);
+        notificationActions.success(tt('houses.deleted'));
+        goto('/houses');
+      } catch (err: any) {
+        notificationActions.error(err.message || tt('errors.failed_to_delete'));
+      }
+    }
+  }
 
-	function formatDate(dateStr: string) {
-		if (!dateStr) return '-';
-		return toDisplayDateFormat(dateStr, $currentLocale);
-	}
+  function formatDate(dateStr: string) {
+    if (!dateStr) return '-';
+    return toDisplayDateFormat(dateStr, locale);
+  }
 
-	let loaded = $state(false);
-	$effect(() => {
-		if (!loaded && urlHouseId > 0) {
-			loaded = true;
-			loadData();
-		}
-	});
+  let loaded = $state(false);
+  $effect(() => {
+    if (!loaded && urlHouseId > 0) {
+      loaded = true;
+      loadData();
+    }
+  });
 </script>
 
 <div class="house-page">

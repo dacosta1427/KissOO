@@ -236,6 +236,8 @@
 		"enter_password": "Geben Sie das Passwort ein",
 		"enter_new_password": "Geben Sie ein neues Passwort ein",
 		"leave_blank_to_keep_current": "Leer lassen, um aktuelles Passwort beizubehalten",
+		"email_verified": "E-Mail Verifiziert",
+		"enter_email": "Geben Sie die E-Mail-Adresse ein",
 		"minimum_3_chars": "Mindestens 3 Zeichen",
 		"no_users": "Keine Benutzer gefunden.",
 		"loading_users": "Benutzer werden geladen...",

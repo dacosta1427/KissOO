@@ -35,46 +35,62 @@
 		if (!start || !end) return [];
 
 		const dates = [];
-		const current = new Date(start);
-		const endDate = new Date(end);
+		// Parse as UTC to avoid timezone off-by-one bugs
+		const [sy, sm, sd] = start.split('-').map(Number);
+		const [ey, em, ed] = end.split('-').map(Number);
+		const current = new Date(Date.UTC(sy, sm - 1, sd));
+		const endDate = new Date(Date.UTC(ey, em - 1, ed));
 
 		while (current <= endDate) {
 			dates.push(new Date(current));
-			current.setDate(current.getDate() + 1);
+			current.setUTCDate(current.getUTCDate() + 1);
 		}
 
 		return dates;
 	}
 
-	function buildScheduleMatrix(schedules, cleaners, dates) {
-		const matrix = {};
+function buildScheduleMatrix(schedules, cleaners, dates) {
+  const matrix = {};
 
-		cleaners.forEach((cleaner) => {
-			matrix[cleaner.oid] = {};
-			dates.forEach((date) => {
-				const dateString = date.toISOString().split('T')[0];
-				matrix[cleaner.oid][dateString] = null;
-			});
-		});
+  cleaners.forEach((cleaner) => {
+    matrix[cleaner.oid] = {};
+    dates.forEach((date) => {
+      const dateString = date.toISOString().split('T')[0];
+      matrix[cleaner.oid][dateString] = null;
+    });
+  });
 
-		schedules.forEach((schedule) => {
-			// Convert YYYYMMDD to YYYY-MM-DD for matching
-			const scheduleDate = schedule.date;
-			let dateString;
-			if (scheduleDate && scheduleDate.length === 8) {
-				dateString = scheduleDate.substring(0,4) + '-' + scheduleDate.substring(4,6) + '-' + scheduleDate.substring(6,8);
-			} else {
-				dateString = scheduleDate;
-			}
-			cleaners.forEach((cleaner) => {
-				if (cleaner.oid === schedule.cleanerOid && matrix[cleaner.oid][dateString] !== undefined) {
-					matrix[cleaner.oid][dateString] = schedule;
-				}
-			});
-		});
+  schedules.forEach((schedule) => {
+    let dateString;
+    const scheduleDate = schedule.date;
+    if (!scheduleDate) {
+      return;
+    }
+    // Try to parse the date
+    // If it's in YYYYMMDD format
+    if (/^\d{8}$/.test(scheduleDate)) {
+      dateString = scheduleDate.substring(0,4) + '-' + scheduleDate.substring(4,6) + '-' + scheduleDate.substring(6,8);
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(scheduleDate)) {
+      dateString = scheduleDate;
+    } else {
+      // Assume it's already in ISO date string (YYYY-MM-DD) or try to convert
+      const parsed = new Date(scheduleDate);
+      if (!isNaN(parsed.getTime())) {
+        dateString = parsed.toISOString().split('T')[0];
+      } else {
+        // If we can't parse, skip
+        return;
+      }
+    }
+    cleaners.forEach((cleaner) => {
+      if (cleaner.oid === schedule.cleanerOid && matrix[cleaner.oid][dateString] !== undefined) {
+        matrix[cleaner.oid][dateString] = schedule;
+      }
+    });
+  });
 
-		return matrix;
-	}
+  return matrix;
+}
 
 	function scrollLeft() {
 		if (visibleStartIndex > 0) {
@@ -287,9 +303,9 @@
 								<div class="schedule-time">
 									{item.start_time || ''} - {item.end_time || ''}
 								</div>
-								<div class="schedule-house">
-								{getBookingInfo(item.bookingOid)?.guest_name || 'Unknown Guest'}
-								</div>
+<div class="schedule-house">
+                                 {item.guestName || 'Unknown Guest'}
+                                 </div>
 								<div class="schedule-status">
 									{item.status}
 								</div>

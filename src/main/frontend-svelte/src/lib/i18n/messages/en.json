@@ -238,6 +238,8 @@
 		"enter_password": "Enter password",
 		"enter_new_password": "Enter new password",
 		"leave_blank_to_keep_current": "Leave blank to keep current password",
+		"email_verified": "Email Verified",
+		"enter_email": "Enter email address",
 		"minimum_3_chars": "Minimum 3 characters",
 		"no_users": "No users found.",
 		"loading_users": "Loading users...",

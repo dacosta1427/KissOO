@@ -13,6 +13,24 @@
 	let editingCleaner = $state<Cleaner | null>(null);
 	let viewMode = $state<'card' | 'table'>('card');
 
+	// Table sorting
+	let sortBy = $state<'name' | 'email' | 'phone' | 'canLogin' | 'emailVerified' | ''>('');
+	let sortAsc = $state(true);
+
+	let sortedCleaners = $derived(() => {
+		if (!sortBy) return [...cleaners];
+		return [...cleaners].sort((a, b) => {
+			let valueA: any = a[sortBy];
+			let valueB: any = b[sortBy];
+			if (typeof valueA === 'boolean') {
+				return sortAsc ? (valueA === valueB ? 0 : valueA ? -1 : 1) : (valueA === valueB ? 0 : valueA ? 1 : -1);
+			}
+			if (valueA < valueB) return sortAsc ? -1 : 1;
+			if (valueA > valueB) return sortAsc ? 1 : -1;
+			return 0;
+		});
+	});
+
 	let formData = $state({
 		name: '',
 		phone: '',
@@ -223,16 +241,16 @@
 		<table class="data-table">
 			<thead>
 				<tr>
-					<th>{tt('cleaners.name')}</th>
-					<th>{tt('cleaners.email')}</th>
-					<th>{tt('cleaners.phone')}</th>
-					<th>{tt('cleaners.can_login')}</th>
-					<th>Email</th>
+					<th class="sortable" class:active={sortBy === 'name'} class:asc={sortBy === 'name' && sortAsc} class:desc={sortBy === 'name' && !sortAsc} onclick={() => { if (sortBy === 'name') { sortAsc = !sortAsc; } else { sortBy = 'name'; sortAsc = true; } }}>{tt('cleaners.name')}{#if sortBy === 'name'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+					<th class="sortable" class:active={sortBy === 'email'} class:asc={sortBy === 'email' && sortAsc} class:desc={sortBy === 'email' && !sortAsc} onclick={() => { if (sortBy === 'email') { sortAsc = !sortAsc; } else { sortBy = 'email'; sortAsc = true; } }}>{tt('cleaners.email')}{#if sortBy === 'email'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+					<th class="sortable" class:active={sortBy === 'phone'} class:asc={sortBy === 'phone' && sortAsc} class:desc={sortBy === 'phone' && !sortAsc} onclick={() => { if (sortBy === 'phone') { sortAsc = !sortAsc; } else { sortBy = 'phone'; sortAsc = true; } }}>{tt('cleaners.phone')}{#if sortBy === 'phone'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+					<th class="sortable" class:active={sortBy === 'canLogin'} class:asc={sortBy === 'canLogin' && sortAsc} class:desc={sortBy === 'canLogin' && !sortAsc} onclick={() => { if (sortBy === 'canLogin') { sortAsc = !sortAsc; } else { sortBy = 'canLogin'; sortAsc = true; } }}>{tt('cleaners.can_login')}{#if sortBy === 'canLogin'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
+					<th class="sortable" class:active={sortBy === 'emailVerified'} class:asc={sortBy === 'emailVerified' && sortAsc} class:desc={sortBy === 'emailVerified' && !sortAsc} onclick={() => { if (sortBy === 'emailVerified') { sortAsc = !sortAsc; } else { sortBy = 'emailVerified'; sortAsc = true; } }}>Email{#if sortBy === 'emailVerified'}<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>{/if}</th>
 					<th>{tt('common.actions')}</th>
 				</tr>
 			</thead>
 			<tbody>
-				{#each cleaners as cleaner}
+				{#each sortedCleaners as cleaner}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<tr class="clickable" onclick={() => openEditForm(cleaner)} onkeydown={(e) => e.key === 'Enter' && openEditForm(cleaner)}>
@@ -362,6 +380,9 @@
 	.data-table { width: 100%; border-collapse: collapse; }
 	.data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
 	.data-table th { background: #f9fafb; font-weight: 600; color: #374151; }
+	.data-table th.sortable { cursor: pointer; user-select: none; position: relative; padding-right: 1.5rem; }
+	.data-table th.sortable:hover { background: #f3f4f6; }
+	.data-table th.sortable .sort-indicator { font-size: 0.75rem; margin-left: 0.25rem; opacity: 0.7; }
 	.data-table tr:hover { background: #f9fafb; }
 
 	/* Responsive design */

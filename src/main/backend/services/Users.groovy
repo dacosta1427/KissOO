@@ -313,6 +313,12 @@ class Users {
             if (injson.has("userActive")) {
                 userToUpdate.setActive(injson.getString("userActive") == "Y")
             }
+            if (injson.has("email")) {
+                userToUpdate.setEmail(injson.getString("email"))
+            }
+            if (injson.has("emailVerified")) {
+                userToUpdate.setEmailVerified(injson.getBoolean("emailVerified"))
+            }
 
             PerstUserManager.update(userToUpdate)
 

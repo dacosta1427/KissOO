@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { bookingsAPI, housesAPI, ownersAPI, type Booking, type House, type Owner } from '$lib/api/Cleaning';
 	import { notificationActions } from '$lib/stores.svelte.js';
+	import { createReactiveTranslator, currentLocale } from '$lib/i18n';
 	import { session } from '$lib/state/session.svelte';
-	import { t, currentLocale } from '$lib/i18n';
 	import { toInputDateFormat, toBackendDateFormat, toDisplayDateFormat } from '$lib/utils/Utils';
 	import { goto } from '$app/navigation';
-  
-	const tt = (key: string) => t(key, undefined, $currentLocale);
+	import { get } from 'svelte/store';
+
+	const { tt } = createReactiveTranslator();
 
 	let isAdmin = $derived(session.isAdmin === true);
 
@@ -18,11 +19,35 @@
 	let showForm = $state(false);
 	let editingBooking = $state<Booking | null>(null);
 	let viewMode = $state<'card' | 'table'>('card');
+	let locale = $derived(get(currentLocale));
 
 	let userHouseIds = $derived(houses.filter(h => h.ownerOid === session.ownerOid).map(h => h.oid));
 	let filteredBookings = $derived(
 		isAdmin ? bookings : bookings.filter(b => userHouseIds.includes(b.houseOid))
 	);
+
+	// Table sorting
+	let sortBy = $state<'guest_name' | 'house' | 'check_in_date' | 'check_out_date' | 'guest_email' | 'status' | ''>('');
+	let sortAsc = $state(true);
+
+	let sortedBookings = $derived(() => {
+		if (!sortBy) return [...filteredBookings];
+		
+		return [...filteredBookings].sort((a, b) => {
+			let valueA: any = a[sortBy];
+			let valueB: any = b[sortBy];
+			
+			// Handle date fields specially
+			if (sortBy.endsWith('_date')) {
+				valueA = new Date(valueA).getTime();
+				valueB = new Date(valueB).getTime();
+			}
+			
+			if (valueA < valueB) return sortAsc ? -1 : 1;
+			if (valueA > valueB) return sortAsc ? 1 : -1;
+			return 0;
+		});
+	});
 
 	let formData = $state({
 		ownerOid: 0,
@@ -51,7 +76,7 @@
 			houses = housesResult;
 			owners = ownersResult;
 		} catch (err: any) {
-			error = err.message || t('errors.failed_to_load');
+			error = err.message || tt('errors.failed_to_load');
 		} finally {
 			loading = false;
 		}
@@ -80,8 +105,8 @@
 		formData = {
 			ownerOid: 0,
 			houseOid: booking.houseOid,
-			check_in_date: booking.check_in_date,
-			check_out_date: booking.check_out_date,
+			check_in_date: toInputDateFormat(booking.check_in_date),
+			check_out_date: toInputDateFormat(booking.check_out_date),
 			check_in_time: '',
 			check_out_time: '',
 			guest_name: booking.guest_name,
@@ -102,8 +127,8 @@
 		e.preventDefault();
 		const dataToSend = {
 			houseOid: formData.houseOid,
-			check_in_date: formData.check_in_date,
-			check_out_date: formData.check_out_date,
+			check_in_date: toBackendDateFormat(formData.check_in_date),
+			check_out_date: toBackendDateFormat(formData.check_out_date),
 			guest_name: formData.guest_name,
 			guest_email: formData.guest_email,
 			guest_phone: formData.guest_phone,
@@ -113,33 +138,33 @@
 		try {
 			if (editingBooking) {
 				await bookingsAPI.update(editingBooking.oid, dataToSend);
-				notificationActions.success(t('bookings.updated'));
+				notificationActions.success(tt('bookings.updated'));
 			} else {
 				await bookingsAPI.create(dataToSend);
-				notificationActions.success(t('bookings.created'));
+				notificationActions.success(tt('bookings.created'));
 			}
 			showForm = false;
 			editingBooking = null;
 			await loadData();
 		} catch (err: any) {
-			notificationActions.error(err.message || t('errors.failed_to_save'));
+			notificationActions.error(err.message || tt('errors.failed_to_save'));
 		}
 	}
 
 	async function handleDelete(booking: Booking) {
-		if (confirm(t('bookings.delete_confirm').replace('${name}', booking.guest_name))) {
+		if (confirm(tt('bookings.delete_confirm').replace('${name}', booking.guest_name))) {
 			try {
 				await bookingsAPI.delete(booking.oid);
-				notificationActions.success(t('bookings.deleted'));
+				notificationActions.success(tt('bookings.deleted'));
 				await loadData();
 			} catch (err: any) {
-				notificationActions.error(err.message || t('errors.failed_to_delete'));
+				notificationActions.error(err.message || tt('errors.failed_to_delete'));
 			}
 		}
 	}
 
 	function getHouseName(houseId: number): string {
-		if (!houseId || houseId === 0) return t('houses.unknown');
+		if (!houseId || houseId === 0) return tt('houses.unknown');
 		const house = houses.find(h => h.oid === houseId);
 		return house ? house.name : `#${houseId}`;
 	}
@@ -168,7 +193,7 @@
 
 	{#if showForm}
 		<div class="form-section">
-			<h3 class="form-title">{editingBooking ? t('bookings.edit_booking') : t('bookings.add_new_booking')}</h3>
+			<h3 class="form-title">{editingBooking ? tt('bookings.edit_booking') : tt('bookings.add_new_booking')}</h3>
 			
 			<form onsubmit={handleFormSubmit}>
 				<div class="form-grid">
@@ -220,7 +245,7 @@
 						{tt('common.cancel')}
 					</button>
 					<button type="submit" class="btn btn-primary">
-						{editingBooking ? t('common.update') : t('common.add')} {tt('bookings.title')}
+						{editingBooking ? tt('common.update') : tt('common.add')} {tt('bookings.title')}
 					</button>
 				</div>
 			</form>
@@ -251,7 +276,7 @@
 						<h3 class="booking-guest">{booking.guest_name}</h3>
 						<span class="status-badge status-{booking.status}">{booking.status}</span>
 					</div>
-					<p class="booking-dates">{toDisplayDateFormat(booking.check_in_date, $currentLocale)} → {toDisplayDateFormat(booking.check_out_date, $currentLocale)}</p>
+					<p class="booking-dates">{toDisplayDateFormat(booking.check_in_date, locale)} → {toDisplayDateFormat(booking.check_out_date, locale)}</p>
 					<p class="booking-house">{tt('common.house')}: {getHouseName(booking.houseOid)}</p>
 					{#if booking.guest_email}<p class="booking-detail">{booking.guest_email}</p>{/if}
 					<div class="booking-actions">
@@ -268,17 +293,125 @@
 		<table class="data-table">
 			<thead>
 				<tr>
-					<th>{tt('bookings.guest_name')}</th>
-					<th>{tt('common.house')}</th>
-					<th>{tt('bookings.check_in_date')}</th>
-					<th>{tt('bookings.check_out_date')}</th>
-					<th>{tt('bookings.guest_email')}</th>
-					<th>{tt('common.status')}</th>
+					<th 
+						onclick={() => {
+							if (sortBy === 'guest_name') {
+								sortAsc = !sortAsc;
+							} else {
+								sortBy = 'guest_name';
+								sortAsc = true;
+							}
+						}}
+						class:active={sortBy === 'guest_name'}
+						class:asc={sortBy === 'guest_name' && sortAsc}
+						class:desc={sortBy === 'guest_name' && !sortAsc}
+						class:sortable
+					>
+						{tt('bookings.guest_name')}
+						{#if sortBy === 'guest_name'}
+							<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>
+						{/if}
+					</th>
+					<th 
+						onclick={() => {
+							if (sortBy === 'house') {
+								sortAsc = !sortAsc;
+							} else {
+								sortBy = 'house';
+								sortAsc = true;
+							}
+						}}
+						class:active={sortBy === 'house'}
+						class:asc={sortBy === 'house' && sortAsc}
+						class:desc={sortBy === 'house' && !sortAsc}
+						class:sortable
+					>
+						{tt('common.house')}
+						{#if sortBy === 'house'}
+							<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>
+						{/if}
+					</th>
+					<th 
+						onclick={() => {
+							if (sortBy === 'check_in_date') {
+								sortAsc = !sortAsc;
+							} else {
+								sortBy = 'check_in_date';
+								sortAsc = true;
+							}
+						}}
+						class:active={sortBy === 'check_in_date'}
+						class:asc={sortBy === 'check_in_date' && sortAsc}
+						class:desc={sortBy === 'check_in_date' && !sortAsc}
+						class:sortable
+					>
+						{tt('bookings.check_in_date')}
+						{#if sortBy === 'check_in_date'}
+							<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>
+						{/if}
+					</th>
+					<th 
+						onclick={() => {
+							if (sortBy === 'check_out_date') {
+								sortAsc = !sortAsc;
+							} else {
+								sortBy = 'check_out_date';
+								sortAsc = true;
+							}
+						}}
+						class:active={sortBy === 'check_out_date'}
+						class:asc={sortBy === 'check_out_date' && sortAsc}
+						class:desc={sortBy === 'check_out_date' && !sortAsc}
+						class:sortable
+					>
+						{tt('bookings.check_out_date')}
+						{#if sortBy === 'check_out_date'}
+							<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>
+						{/if}
+					</th>
+					<th 
+						onclick={() => {
+							if (sortBy === 'guest_email') {
+								sortAsc = !sortAsc;
+							} else {
+								sortBy = 'guest_email';
+								sortAsc = true;
+							}
+						}}
+						class:active={sortBy === 'guest_email'}
+						class:asc={sortBy === 'guest_email' && sortAsc}
+						class:desc={sortBy === 'guest_email' && !sortAsc}
+						class:sortable
+					>
+						{tt('bookings.guest_email')}
+						{#if sortBy === 'guest_email'}
+							<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>
+						{/if}
+					</th>
+					<th 
+						onclick={() => {
+							if (sortBy === 'status') {
+								sortAsc = !sortAsc;
+							} else {
+								sortBy = 'status';
+								sortAsc = true;
+							}
+						}}
+						class:active={sortBy === 'status'}
+						class:asc={sortBy === 'status' && sortAsc}
+						class:desc={sortBy === 'status' && !sortAsc}
+						class:sortable
+					>
+						{tt('common.status')}
+						{#if sortBy === 'status'}
+							<span class="sort-indicator">{sortAsc ? '↑' : '↓'}</span>
+						{/if}
+					</th>
 					<th>{tt('common.actions')}</th>
 				</tr>
 			</thead>
 			<tbody>
-				{#each filteredBookings as booking}
+				{#each sortedBookings as booking}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<tr class="clickable" onclick={() => goto(`/bookings/${booking.oid}`)} onkeydown={(e) => e.key === 'Enter' && goto(`/bookings/${booking.oid}`)}>
@@ -355,7 +488,33 @@
 	.table-section { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 	.data-table { width: 100%; border-collapse: collapse; }
 	.data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
-	.data-table th { background: #f9fafb; font-weight: 600; color: #374151; }
+.data-table th {
+	background: #f9fafb;
+	font-weight: 600;
+	color: #374151;
+	cursor: pointer;
+	user-select: none;
+	position: relative;
+	padding-right: 1.5rem;
+}
+
+.data-table th:hover {
+	background: #f3f4f6;
+}
+
+.sort-indicator {
+	font-size: 0.75rem;
+	margin-left: 0.25rem;
+	opacity: 0.7;
+}
+
+.data-table th.asc .sort-indicator::before {
+	content: "▲";
+}
+
+.data-table th.desc .sort-indicator::before {
+	content: "▼";
+}
 	.data-table tr:hover { background: #f9fafb; }
 
 	/* Responsive design */

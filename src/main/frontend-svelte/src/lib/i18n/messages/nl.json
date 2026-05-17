@@ -236,6 +236,8 @@
 		"enter_password": "Voer wachtwoord in",
 		"enter_new_password": "Voer nieuw wachtwoord in",
 		"leave_blank_to_keep_current": "Laat leeg om huidige wachtwoord te behouden",
+		"email_verified": "E-mail Geverifieerd",
+		"enter_email": "Voer e-mailadres in",
 		"minimum_3_chars": "Minimaal 3 tekens",
 		"no_users": "Geen gebruikers gevonden.",
 		"loading_users": "Gebruikers laden...",

@@ -52,6 +52,9 @@ public class House extends CVersion {
     
     public House(@NonNull Owner owner, @NonNull String name, @NonNull String address, String description, boolean active) {
         super();
+        if (owner == null) {
+            throw new IllegalArgumentException("House must have an owner - owner cannot be null");
+        }
         this.owner = owner;
         this.name = name;
         this.address = address;
@@ -61,7 +64,12 @@ public class House extends CVersion {
     }
     
     public Owner getOwner() { return owner; }
-    public void setOwner(Owner owner) { this.owner = owner; }
+    public void setOwner(Owner owner) {
+        if (owner == null) {
+            throw new IllegalArgumentException("House must have an owner - owner cannot be null");
+        }
+        this.owner = owner;
+    }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getAddress() { return address; }

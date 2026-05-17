@@ -4,7 +4,7 @@
  */
 
 import { browser } from '$app/environment';
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 
 interface TranslationDictionary {
 	[key: string]: string | TranslationDictionary;
