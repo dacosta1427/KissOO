@@ -20,7 +20,7 @@ const { tt } = createReactiveTranslator();
   let editingUser = $state<User | null>(null);
   
   let addFormData = $state<Record<string, any>>({ username: '', password: '' });
-  let editFormData = $state<Record<string, any>>({ username: '', password: '' });
+  let editFormData = $state<Record<string, any>>({ userName: '', userPassword: '' });
   let editLoading = $state(false);
 
   let canAddUser = $derived(
