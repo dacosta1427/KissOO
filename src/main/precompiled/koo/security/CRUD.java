@@ -1,4 +1,4 @@
-package domain;
+package koo.security;
 
 /**
  * CRUD - Type-safe constants for CRUD actions.

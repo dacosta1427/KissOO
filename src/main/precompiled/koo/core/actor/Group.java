@@ -1,6 +1,6 @@
 package koo.core.actor;
 
-import domain.CRUD;
+import koo.security.CRUD;
 import koo.security.EndpointMethod;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
