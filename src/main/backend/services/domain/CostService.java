@@ -1,4 +1,4 @@
-package services;
+package services.domain;
 
 import domain.oov.house.CostProfile;
 import domain.oov.house.House;

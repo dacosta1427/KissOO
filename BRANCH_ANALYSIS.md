@@ -116,7 +116,7 @@ src/main/domain/database/
 src/main/backend/services/
   ├── Login.java              # May extend koo.services.Login
   ├── CostService.java        # Domain-specific (as you specified)
-  ├── EmailService.java       # May extend koo.services.EmailService
+  ├── EmailService.java       # May extend services.koo.internal.EmailService
   └── PerstInit.java
 ```
 

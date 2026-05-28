@@ -889,7 +889,7 @@ if (PerstUserManager.getAll().isEmpty()) {
 | `services.Users.getRecords` | Admin | ✅ Yes (GET) | ✅ Yes (User:GET) | ALLOW |
 | `services.Users.addRecord` | Admin | ✅ Yes (POST) | ✅ Yes (User:POST) | ALLOW |
 | `services.Users.getRecords` | Guest | ❌ No | ❌ No | DENY |
-| `services.ActorService.delete` | Limited | ✅ Yes | ❌ No (missing DELETE) | DENY |
+| `koo.services.ActorService.delete` | Limited | ✅ Yes | ❌ No (missing DELETE) | DENY |
 
 ---
 
@@ -1065,7 +1065,7 @@ class Users {
 | Service | File | Methods | Description |
 |---------|------|---------|-------------|
 | `services.Users` | `Users.groovy` | `getRecords`, `addRecord`, `updateRecord`, `deleteRecord` | User CRUD |
-| `services.ActorService` | `ActorService.java` | `getAll`, `create`, `update`, `delete`, `search` | Actor CRUD |
+| `koo.services.ActorService` | `ActorService.java` | `getAll`, `create`, `update`, `delete`, `search` | Actor CRUD |
 | `services.Benchmark` | `Benchmark.groovy` | `run`, `getResults` | Performance testing |
 | `services.Login` | (built-in) | `Login`, `Logout`, `checkLogin` | Authentication |
 

@@ -48,7 +48,7 @@ public abstract class EndpointMethod {
     }
     
     /**
-     * Get the endpoint identifier (e.g., "services.ActorService.getAActor")
+     * Get the endpoint identifier (e.g., "koo.services.ActorService.getAActor")
      */
     public String getName() {
         return name;

@@ -333,7 +333,7 @@ Core Login method (empty class name):
 
 User services:
 ```json
-{"_class":"services.LoadTestdata","_method":"load","_uuid":"session-uuid"}
+{"_class":"internal.services.koo.internal.LoadTestdata","_method":"load","_uuid":"session-uuid"}
 ```
 
 ## Svelte 5 Standards

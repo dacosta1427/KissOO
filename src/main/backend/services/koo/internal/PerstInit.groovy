@@ -1,4 +1,4 @@
-package services
+package services.koo.internal
 
 
 import org.kissweb.json.JSONObject
@@ -14,13 +14,13 @@ import koo.core.user.PerstUser
  * 
  * HTTP Request:
  * {
- *   "_class": "services.PerstInit",
+ *   "_class": "services.koo.internal.PerstInit",
  *   "_method": "init",
  *   "_uuid": "session-uuid"
  * }
  * 
  * Or call directly from code:
- *   groovy: new services.PerstInit().init(null, null, null, null)
+ *   groovy: new services.koo.internal.PerstInit().init(null, null, null, null)
  */
 class PerstInit {
 

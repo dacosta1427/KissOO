@@ -736,7 +736,7 @@ export const cleaningApi = {
 - **Observation**: LoadTestdata service works correctly when called with valid UUID. The real issue was Issue 20 - admin buttons weren't showing, so user couldn't click "Load Test Data".
 - **Verification**: Backend service confirmed working via curl:
   ```bash
-  curl -X POST http://localhost:8080/rest -d '{"_class": "services.LoadTestdata", "_method": "load", "_uuid": "..."}'
+  curl -X POST http://localhost:8080/rest -d '{"_class": "internal.services.koo.internal.LoadTestdata", "_method": "load", "_uuid": "..."}'
   ```
 - **Result**: Service creates 3 owners, 5 houses, 10 bookings, 4 cleaners, 8 schedules.
 

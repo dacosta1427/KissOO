@@ -1,4 +1,4 @@
-package services.koo
+package koo.security
 
 import org.kissweb.json.JSONObject
 import org.kissweb.restServer.ProcessServlet

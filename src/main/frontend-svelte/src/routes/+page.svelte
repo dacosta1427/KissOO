@@ -80,7 +80,7 @@
     dataMessage = '';
     
     try {
-      const res = await Server.call('services.LoadTestdata', 'load', {});
+      const res = await Server.call('internal.services.koo.internal.LoadTestdata', 'load', {});
       console.log('Load test data response:', res);
       
       if (res._Success) {
@@ -100,7 +100,7 @@
     dataMessage = '';
     
     try {
-      const res = await Server.call('services.LoadTestdata', 'clear', {});
+      const res = await Server.call('internal.services.koo.internal.LoadTestdata', 'clear', {});
       console.log('Clear test data response:', res);
       
       if (res._Success) {

@@ -561,18 +561,18 @@ export interface Actor {
 }
 
 export async function getActors(): Promise<Actor[]> {
-  const res = await Server.call('services.ActorService', 'getAll', {});
+  const res = await Server.call('koo.services.ActorService', 'getAll', {});
   return res.actors || [];
 }
 
 export async function createActor(name: string, type: string): Promise<Actor> {
-  const res = await Server.call('services.ActorService', 'create', { name, type });
+  const res = await Server.call('koo.services.ActorService', 'create', { name, type });
   if (!res._Success) throw new Error(res._ErrorMessage);
   return res;
 }
 
 export async function deleteActor(id: number): Promise<void> {
-  const res = await Server.call('services.ActorService', 'delete', { id });
+  const res = await Server.call('koo.services.ActorService', 'delete', { id });
   if (!res._Success) throw new Error(res._ErrorMessage);
 }
 ```

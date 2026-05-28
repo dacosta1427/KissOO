@@ -1,4 +1,4 @@
-package services
+package services.koo.internal
 
 import koo.core.actor.Role
 import org.kissweb.json.JSONObject
@@ -248,14 +248,14 @@ class LoadTestdata {
                     // Activate the cleaner user 
                     cleaner.getPerstUser().setActive(true)
                     cleaner.getPerstUser().setEmailVerified(true)
-                    tc.addInsert(cleaner)
-                    tc.addInsert(cleaner.getPerstUser())
+                    cleanerInsertTc.addInsert(cleaner)
+                    cleanerInsertTc.addInsert(cleaner.getPerstUser())
                     cleaners << cleaner
                 } catch (Exception e) {
                     println "[LoadTestdata] Error creating cleaner ${d.name}: ${e.message}"
                 }
             }
-            def storeResult = StorageManager.store(tc)
+            def storeResult = StorageManager.store(cleanerInsertTc)
             cleaners.each { c ->
                 println "[LoadTestdata] Cleaner " + c.getName() + " OID=" + c.getOid() + " stored=" + storeResult
             }

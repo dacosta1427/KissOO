@@ -194,7 +194,7 @@ Each endpoint is an `EndpointMethod` that checks its own authorization:
 public class ActorService {
     
     public static final EndpointMethod GET_ACTOR = 
-        new EndpointMethod("services.ActorService.getActor", Actor.class) {
+        new EndpointMethod("koo.services.ActorService.getActor", Actor.class) {
             @Override
             protected boolean doExecute(JSONObject in, JSONObject out, 
                                        Connection db, ProcessServlet servlet) {

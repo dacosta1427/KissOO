@@ -1,4 +1,4 @@
-package services;
+package koo.services;
 
 import koo.core.database.StorageManager;
 import org.garret.perst.json.JSONObject;

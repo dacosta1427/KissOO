@@ -1,4 +1,4 @@
-package internal.services
+package services.koo.internal
 
 import org.kissweb.restServer.GroovyClass
 import org.kissweb.json.JSONObject

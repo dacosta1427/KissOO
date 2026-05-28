@@ -1,4 +1,4 @@
-package services;
+package koo.services;
 
 import koo.core.actor.AActor;
 import koo.core.actor.ActorManager;
@@ -22,7 +22,7 @@ import java.util.Map;
  * 
  * HTTP API Call Format:
  * {
- *   "_class": "services.ActorService",
+ *   "_class": "koo.services.ActorService",
  *   "_method": "getAllActors",   // or "getAActor", "createActor"
  *   "_uuid": "session-uuid",     // from login
  *   ...params...
@@ -57,7 +57,7 @@ public class ActorService {
     // These can be granted via Agreement for type-safe authorization
     
     /** Get a single actor by UUID */
-    public static final EndpointMethod GET_ACTOR = new EndpointMethod("services.ActorService.getAActor", AActor.class) {
+    public static final EndpointMethod GET_ACTOR = new EndpointMethod("koo.services.ActorService.getAActor", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             // Inline implementation - authorization done by Agreement
@@ -86,7 +86,7 @@ public class ActorService {
     };
     
     /** Get all actors */
-    public static final EndpointMethod GET_ALL_ACTORS = new EndpointMethod("services.ActorService.getAllActors", AActor.class) {
+    public static final EndpointMethod GET_ALL_ACTORS = new EndpointMethod("koo.services.ActorService.getAllActors", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             AActor caller = getAuthenticatedActor(servlet);
@@ -101,7 +101,7 @@ public class ActorService {
                 return false;
             }
             
-            List<JSONObject> actorList = new ArrayList<>();
+            List<Map<String, Object>> actorList = new ArrayList<>();
             for (AActor AActor : AActors) {
                 actorList.add(AActor.toJSON());
             }
@@ -113,7 +113,7 @@ public class ActorService {
     };
     
     /** Create a new actor */
-    public static final EndpointMethod CREATE_ACTOR = new EndpointMethod("services.ActorService.createActor", AActor.class) {
+    public static final EndpointMethod CREATE_ACTOR = new EndpointMethod("koo.services.ActorService.createActor", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             AActor caller = getAuthenticatedActor(servlet);
@@ -144,7 +144,7 @@ public class ActorService {
     };
     
     /** Update an actor */
-    public static final EndpointMethod UPDATE_ACTOR = new EndpointMethod("services.ActorService.updateActor", AActor.class) {
+    public static final EndpointMethod UPDATE_ACTOR = new EndpointMethod("koo.services.ActorService.updateActor", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             AActor caller = getAuthenticatedActor(servlet);
@@ -183,7 +183,7 @@ public class ActorService {
     };
     
     /** Delete an actor */
-    public static final EndpointMethod DELETE_ACTOR = new EndpointMethod("services.ActorService.deleteActor", AActor.class) {
+    public static final EndpointMethod DELETE_ACTOR = new EndpointMethod("koo.services.ActorService.deleteActor", AActor.class) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             AActor caller = getAuthenticatedActor(servlet);
@@ -219,7 +219,7 @@ public class ActorService {
     // These are NOT callable via REST (internal only)
     
     /** Internal calculation - not accessible via REST */
-    public static final EndpointMethod DO_INTERNAL_CALC = new EndpointMethod("services.ActorService.doInternalCalc", AActor.class, false) {
+    public static final EndpointMethod DO_INTERNAL_CALC = new EndpointMethod("koo.services.ActorService.doInternalCalc", AActor.class, false) {
         @Override
         protected boolean doExecute(JSONObject in, JSONObject out, Connection db, ProcessServlet servlet) {
             // Internal logic only - can only be called from within the app
