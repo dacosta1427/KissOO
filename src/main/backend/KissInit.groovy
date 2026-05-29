@@ -1,11 +1,10 @@
 import koo.core.database.PerstConnection
 import koo.config.PerstConfig
 import koo.core.database.StorageManager
-import koo.core.user.PerstUserManager
-import koo.core.user.PerstUser
+import koo.core.actor.user.PerstUserManager
+import koo.core.actor.user.PerstUser
 import koo.core.actor.Agreement
 import koo.core.actor.Role
-import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData

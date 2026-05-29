@@ -6,7 +6,7 @@ import domain.actor.owner.Owner;
 import domain.oov.house.Booking;
 import domain.oov.house.CostProfile;
 import domain.oov.house.House;
-import koo.core.user.PerstUser;
+import koo.core.actor.user.PerstUser;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import java.util.ArrayList;

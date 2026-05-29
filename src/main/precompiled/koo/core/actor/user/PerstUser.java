@@ -1,4 +1,4 @@
-package koo.core.user;
+package koo.core.actor.user;
 
 import koo.security.PasswordSecurity;
 import lombok.Getter;

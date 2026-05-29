@@ -2,8 +2,8 @@ package koo.core.database;
 
 import domain.actor.owner.Owner;
 import org.kissweb.json.JSONObject;
-import koo.core.user.PerstUserManager;
-import koo.core.user.PerstUser;
+import koo.core.actor.user.PerstUserManager;
+import koo.core.actor.user.PerstUser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

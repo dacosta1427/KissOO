@@ -2,7 +2,7 @@ package koo.services;
 
 import koo.core.actor.AActor;
 import koo.core.actor.ActorManager;
-import koo.core.user.PerstUser;
+import koo.core.actor.user.PerstUser;
 import koo.security.EndpointMethod;
 import org.garret.perst.json.JSONObject;
 import org.kissweb.restServer.ProcessServlet;

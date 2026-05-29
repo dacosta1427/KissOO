@@ -1,4 +1,4 @@
-package koo.core.user;
+package koo.core.actor.user;
 
 import koo.core.actor.AActor;
 import koo.core.BaseManager;

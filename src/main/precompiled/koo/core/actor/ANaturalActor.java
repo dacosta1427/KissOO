@@ -1,6 +1,6 @@
 package koo.core.actor;
 
-import koo.core.user.PerstUser;
+import koo.core.actor.user.PerstUser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;

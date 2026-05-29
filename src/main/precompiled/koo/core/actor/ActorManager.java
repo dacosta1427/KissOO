@@ -2,7 +2,7 @@ package koo.core.actor;
 
 import koo.core.BaseManager;
 import koo.core.database.StorageManager;
-import koo.core.user.PerstUser;
+import koo.core.actor.user.PerstUser;
 import org.garret.perst.continuous.TransactionContainer;
 import java.util.Collection;
 

@@ -7,7 +7,7 @@ import org.kissweb.database.Connection;
 import org.kissweb.restServer.ProcessServlet;
 
 import koo.core.database.StorageManager;
-import koo.core.user.PerstUser;
+import koo.core.actor.user.PerstUser;
 
 /**
  * Initialize Perst users.

@@ -1,7 +1,7 @@
 package koo.security;
 
 import koo.core.actor.AActor;
-import koo.core.user.PerstUser;
+import koo.core.actor.user.PerstUser;
 import org.garret.perst.json.JSONObject;
 import org.kissweb.database.Connection;
 import org.kissweb.restServer.ProcessServlet;
