@@ -200,13 +200,13 @@
     </dependency>
 
     <!-- System-scoped dependencies (your local libs) -->
-    <dependency>
-      <groupId>org.abcl</groupId>
-      <artifactId>abcl</artifactId>
-      <version>1.0</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/libs/abcl.jar</systemPath>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.abcl</groupId>-->
+<!--      <artifactId>abcl</artifactId>-->
+<!--      <version>1.0</version>-->
+<!--      <scope>system</scope>-->
+<!--      <systemPath>${project.basedir}/libs/abcl.jar</systemPath>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
@@ -245,10 +245,29 @@
       <systemPath>${project.basedir}/libs/lombok.jar</systemPath>
     </dependency>
     <dependency>
-      <!-- Perst OODBMS - auto-downloaded from nassyn-webdav repository -->
+      <!-- Perst OODBMS 5.1 (dcg) - local jar -->
       <groupId>org.garret.perst</groupId>
-      <artifactId>ooGTxQ</artifactId>
-      <version>RELEASE</version>
+      <artifactId>perst-dcg</artifactId>
+      <version>5.1.1</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/libs/perst-dcg-5.1.1.jar</systemPath>
+    </dependency>
+
+    <!-- Lucene (used by Perst for indexing) -->
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-core</artifactId>
+      <version>9.11.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-analysis-common</artifactId>
+      <version>9.11.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-queryparser</artifactId>
+      <version>9.11.0</version>
     </dependency>
 
     <!-- Mockito for testing -->
@@ -375,12 +394,10 @@
             </goals>
             <configuration>
               <rules>
-                <requireNoSystemDependencies>
-                  <fail>false</fail>
-                  <message>System scoped dependencies inside the project directory are allowed.</message>
-                </requireNoSystemDependencies>
+                <requireJavaVersion>
+                  <version>[1.8,)</version>
+                </requireJavaVersion>
               </rules>
-              <fail>false</fail>
             </configuration>
           </execution>
         </executions>
