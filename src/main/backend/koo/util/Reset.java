@@ -1,4 +1,4 @@
-package koo.core.util;
+package koo;
 
 import org.kissweb.restServer.GroovyClass;
 import org.kissweb.json.JSONObject;
@@ -18,7 +18,7 @@ import org.kissweb.security.EXTERNAL_CALL;
  * 
  * HTTP Request:
  * {
- *   "_class": "koo.core.util.Reset",
+ *   "_class": "koo.Reset",
  *   "_method": "resetGroovy",
  *   "_uuid": "session-uuid"
  * }

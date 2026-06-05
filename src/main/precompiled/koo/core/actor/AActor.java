@@ -2,6 +2,9 @@ package koo.core.actor;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.kissweb.lombok.toJSON;
+import org.kissweb.lombok.toJSONExclude;
+import org.kissweb.json.JSONObject;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import org.garret.perst.continuous.FullTextSearchable;
@@ -21,7 +24,7 @@ import org.garret.perst.continuous.FullTextSearchable;
  * Indexing is handled by CDatabase via @Indexable annotations.
  * Use ActorManager for all database operations.
  */
-@Getter @Setter
+@Getter @Setter @toJSON
 public abstract class AActor extends CVersion {
     
     @Indexable
@@ -43,6 +46,9 @@ public abstract class AActor extends CVersion {
     private ActorType actorType;
     
     private Agreement agreement;
+    
+    @toJSONExclude  // Exclude internal reference to prevent circular reference
+    private transient Object internalState;
     
     public AActor() {
     }
@@ -105,13 +111,31 @@ public abstract class AActor extends CVersion {
 
     @Override
     public String toString() {
-        return "AActor{" +
-                "uuid='" + uuid + '\'' +
-                "name='" + name + '\'' +
-                ", type='" + this.getClass().getSimpleName() + '\'' +
-                ", actorType=" + actorType +
-                ", active=" + active +
-                ", hasAgreement=" + (agreement != null) +
-                '}';
+        return String.format("%s{oid=%d, uuid='%s', name='%s', active=%b}", 
+                this.getClass().getSimpleName(),
+                getOid(),
+                getUuid(),
+                getName(),
+                isActive());
+    }
+    
+    /**
+     * Generate JSON representation of this AActor using KissOO JSON format.
+     */
+    public JSONObject toKissJSON() {
+        JSONObject json = new JSONObject();
+        json.put("uuid", getUuid());
+        json.put("name", getName());
+        json.put("type", getType());
+        json.put("active", isActive());
+        json.put("actorType", getActorType().name());
+        json.put("createdDate", getCreatedDate());
+        
+        // Include agreement reference as OID
+        if (getAgreement() != null) {
+            json.put("agreementOid", getAgreement().getOid());
+        }
+        
+        return json;
     }
 }

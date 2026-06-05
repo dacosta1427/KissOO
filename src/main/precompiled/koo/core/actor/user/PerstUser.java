@@ -4,9 +4,11 @@ import koo.security.PasswordSecurity;
 import lombok.Getter;
 import lombok.Setter;
 import koo.core.actor.AActor;
+import org.kissweb.lombok.toJSON;
+import org.kissweb.lombok.toJSONExclude;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
-import org.garret.perst.continuous.FullTextSearchable;
+import org.kissweb.json.JSONObject;
 
 import java.util.UUID;
 
@@ -25,25 +27,22 @@ import java.util.UUID;
  * Indexing is handled by CDatabase via @Indexable annotations.
  * Use PerstUserManager for all database operations.
  */
-@Getter @Setter
+@Getter @Setter @toJSON
 public class PerstUser extends CVersion {
     
-    @FullTextSearchable
     @Indexable(unique=true)
     private String username;
     
+    @toJSONExclude  // Exclude sensitive data
     private String passwordHash;
     
     @Indexable
     private boolean active = false;
     
-    @FullTextSearchable
     private String email;
     
-    @FullTextSearchable
     private String firstName;
     
-    @FullTextSearchable
     private String lastName;
     
     private long createdDate;
@@ -56,6 +55,7 @@ public class PerstUser extends CVersion {
 
     private AActor actor;  // Persistent reference to the owning AActor
     
+    @toJSONExclude  // Exclude transient data
     private String verificationToken;
     private long verificationExpiresAt;
     
@@ -125,10 +125,32 @@ public class PerstUser extends CVersion {
 
     @Override
     public String toString() {
-        return "PerstUser{" +
-                "username='" + username + '\'' +
-                ", active=" + active +
-                ", actor=" + (actor != null ? actor.getName() + "(" + actor.getType() + ")" : "null") +
-                '}';
+        return String.format("PerstUser{username='%s', active=%b, actor=%s}", 
+                username, active, 
+                actor != null ? actor.getName() : "null");
+    }
+    
+    /**
+     * Generate JSON representation of this PerstUser using KissOO JSON format.
+     */
+    public JSONObject toKissJSON() {
+        JSONObject json = new JSONObject();
+        json.put("username", getUsername());
+        json.put("email", getEmail());
+        json.put("firstName", getFirstName());
+        json.put("lastName", getLastName());
+        json.put("active", isActive());
+        json.put("emailVerified", isEmailVerified());
+        json.put("mustChangePassword", isMustChangePassword());
+        json.put("createdDate", getCreatedDate());
+        json.put("lastLoginDate", getLastLoginDate());
+        json.put("preferredLanguage", getPreferredLanguage());
+        
+        // Include actor reference as OID
+        if (getActor() != null) {
+            json.put("actorOid", getActor().getOid());
+        }
+        
+        return json;
     }
 }

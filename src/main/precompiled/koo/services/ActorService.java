@@ -4,7 +4,9 @@ import koo.core.actor.AActor;
 import koo.core.actor.ActorManager;
 import koo.core.actor.user.PerstUser;
 import koo.security.EndpointMethod;
+import org.kissweb.lombok.JSONUtils;
 import org.garret.perst.json.JSONObject;
+import org.kissweb.json.JSONArray;
 import org.kissweb.restServer.ProcessServlet;
 import org.kissweb.restServer.UserData;
 import org.kissweb.database.Connection;
@@ -101,13 +103,10 @@ public class ActorService {
                 return false;
             }
             
-            List<Map<String, Object>> actorList = new ArrayList<>();
-            for (AActor AActor : AActors) {
-                actorList.add(AActor.toJSON());
-            }
-            out.put("AActors", actorList);
+            JSONArray actorArray = JSONUtils.toJSONArray(AActors);
+            out.put("AActors", actorArray);
             out.put("source", "perst");
-            out.put("count", actorList.size());
+            out.put("count", actorArray.length());
             return true;
         }
     };

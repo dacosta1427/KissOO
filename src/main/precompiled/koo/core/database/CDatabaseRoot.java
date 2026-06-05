@@ -1,12 +1,10 @@
 package koo.core.database;
 
-import domain.actor.cleaner.Cleaner;
-import domain.actor.cleaner.Schedule;
-import domain.actor.owner.Owner;
-import domain.oov.house.Booking;
-import domain.oov.house.CostProfile;
-import domain.oov.house.House;
 import koo.core.actor.user.PerstUser;
+import lombok.Getter;
+import lombok.Setter;
+import org.garret.perst.PersistentCollection;
+import org.garret.perst.IPersistentSet;
 import org.garret.perst.continuous.CVersion;
 import org.garret.perst.Indexable;
 import java.util.ArrayList;
@@ -20,41 +18,14 @@ import java.util.List;
  */
 public class CDatabaseRoot extends CVersion {
     
+    @Setter
+    @Getter
     @Indexable
     private String name = "KissOO Database Root";
     
-    private List<Owner> owners = new ArrayList<>();
-    private List<Cleaner> cleaners = new ArrayList<>();
-    private List<House> houses = new ArrayList<>();
-    private List<Booking> bookings = new ArrayList<>();
-    private List<Schedule> schedules = new ArrayList<>();
-    private List<PerstUser> users = new ArrayList<>();
-    private List<CostProfile> costProfiles = new ArrayList<>();
-    
+    private IPersistentSet<PerstUser> users = StorageManager.getStorage().createScalableSet();
+
     public CDatabaseRoot() {
     }
-    
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    
-    public List<Owner> getOwners() { return owners; }
-    public void setOwners(List<Owner> owners) { this.owners = owners; }
-    
-    public List<Cleaner> getCleaners() { return cleaners; }
-    public void setCleaners(List<Cleaner> cleaners) { this.cleaners = cleaners; }
-    
-    public List<House> getHouses() { return houses; }
-    public void setHouses(List<House> houses) { this.houses = houses; }
-    
-    public List<Booking> getBookings() { return bookings; }
-    public void setBookings(List<Booking> bookings) { this.bookings = bookings; }
-    
-    public List<Schedule> getSchedules() { return schedules; }
-    public void setSchedules(List<Schedule> schedules) { this.schedules = schedules; }
-    
-    public List<PerstUser> getUsers() { return users; }
-    public void setUsers(List<PerstUser> users) { this.users = users; }
-    
-    public List<CostProfile> getCostProfiles() { return costProfiles; }
-    public void setCostProfiles(List<CostProfile> costProfiles) { this.costProfiles = costProfiles; }
+
 }
