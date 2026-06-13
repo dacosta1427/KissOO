@@ -365,11 +365,11 @@ export default {
 
 2. **Create example services**
    - ✅ `HouseService` example - DONE
-   - `BookingService`, `CleaningJobService`
+   - ✅ `BookingService`, `CleaningJobService` - DONE
    - Test binary protocol
 
 3. **Frontend integration**
-   - Use `Server.binaryCall()` for all services
+   - ✅ Use `Server.binaryCall()` for all services - DONE
    - Auto-generate service clients
    - Test performance
 
