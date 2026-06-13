@@ -1,0 +1,252 @@
+# Koo Framework Implementation Plan
+*A comprehensive guide for any agent to implement the koo framework*
+
+## 1. Project Structure
+
+```
+koo-framework/
+├── packages/
+│   ├── koo-core/              # Java framework core
+│   │   ├── src/main/java/
+│   │   │   └── koo/framework/
+│   │   │       ├── domain/    # Domain enhancement layer
+│   │   │       ├── proto/     # ProtoBuf generation
+│   │   │       ├── services/  # Service infrastructure
+│   │   │       ├── ui/        # UI generation engine
+│   │   │       └── permissions/ # Agreement integration
+│   │   └── pom.xml
+│   ├── koo-svelte/            # Svelte 5 components
+│   │   ├── src/lib/
+│   │   │   ├── components/
+│   │   │   │   ├── modals/    # Modal system
+│   │   │   │   ├── forms/     # Form components
+│   │   │   │   ├── tables/    # DataTable with expandable rows
+│   │   │   │   └── navigation/ # Navigation
+│   │   │   └── lib/
+│   │   └── package.json
+│   └── koo-cli/               # Development tools
+│       └── src/
+├── docs/                      # Documentation
+├── examples/                    # Example domain implementations
+└── README.md
+```
+
+## 2. Core Components
+
+### 2.1 ProtoBuf Generation (koo-core/proto)
+
+**Classes to implement:**
+- `ProtoSchemaGenerator` - Generates proto schemas from Java domain classes
+- `ProtoTemplateEngine` - Creates proto templates
+- `ProtoRegistry` - Manages proto schema registry
+
+**Key methods:**
+```java
+generateSchema(Class<?> domainClass): ProtoSchema
+registerSchema(String className, ProtoSchema schema): void
+getSchema(Class<?> domainClass): ProtoSchema
+```
+
+### 2.2 Domain Enhancement (koo-core/domain)
+
+**Classes to implement:**
+- `DomainEnhancer` - Enhances domain classes with persistence
+- `FieldAnalyzer` - Analyzes domain class fields
+- `ReferenceResolver` - Handles object references
+
+### 2.3 Service Infrastructure (koo-core/services)
+
+**Classes to implement:**
+- `ServiceAnalyzer` - Parses service method names to determine UI intent
+- `PermissionMapper` - Maps service methods to Agreement permissions
+- `ResponseHandler` - Handles proto/JSON responses
+
+**Naming conventions:**
+- `searchXyz` → Search screen
+- `getXyz` → View screen
+- `updateXyz`/`createXyz` → Edit modal
+
+### 2.4 UI Generation Engine (koo-core/ui)
+
+**Classes to implement:**
+- `ComponentGenerator` - Generates Svelte component templates
+- `FieldMapper` - Maps proto fields to UI components
+- `LayoutBuilder` - Builds page layouts
+
+### 2.5 Svelte Components (koo-svelte)
+
+**Modal System:**
+- `Modal.svelte` - Basic modal container
+- `ModalManager.svelte` - Dynamic modal handling
+- `ModalStore.js` - State management
+
+**Form Components:**
+- `FormField.svelte` - Base form field
+- `TextInput.svelte`, `NumberInput.svelte`, etc.
+- `FormGenerator.svelte` - Auto-generates forms from proto schemas
+
+**Table Components:**
+- `DataTable.svelte` - Main table component
+- `ExpandableRow.svelte` - Nested object display
+- `TableStore.js` - Table state management
+
+## 3. Implementation Steps
+
+### Phase 1: ProtoBuf Foundation (Week 1)
+1. **Setup project structure**
+   - Create monorepo with yarn/npm workspaces
+   - Configure Java build for koo-core
+   - Configure Svelte build for koo-svelte
+
+2. **Implement ProtoBuf generation**
+   - `ProtoSchemaGenerator` - reflect on domain classes
+   - `ProtoTemplateEngine` - generate .proto files
+   - `ProtoRegistry` - store and retrieve schemas
+
+### Phase 2: Modal System (Week 2)
+1. **Basic modal components**
+   - `Modal.svelte` with slot support
+   - `ModalManager.svelte` for dynamic content
+   - `ModalStore.js` for state management
+
+2. **Integration**
+   - Connect to service responses
+   - Handle proto/JSON responses
+   - Support nested modals
+
+### Phase 3: Form Components (Week 2-3)
+1. **Field components**
+   - Text, Number, Date, Select inputs
+   - Validation integration
+   - Proto type mapping
+
+2. **Form generator**
+   - Parse proto schemas
+   - Generate form layouts
+   - Handle nested objects
+
+### Phase 4: DataTable & Expandable Rows (Week 3)
+1. **DataTable component**
+   - Column generation from proto
+   - Sorting and pagination
+   - Row selection
+
+2. **Expandable rows**
+   - Lazy loading of nested objects
+   - Sub-row rendering
+   - Loading states
+
+### Phase 5: Service Integration (Week 4)
+1. **Service analyzer**
+   - Parse method names
+   - Determine UI intent
+   - Map to components
+
+2. **Permission integration**
+   - Connect to Agreement system
+   - Auto-check permissions
+   - Handle denials
+
+### Phase 6: CLI Tools (Week 4)
+1. **koo-cli implementation**
+   - `koo dev` - Start development
+   - `koo build` - Production build
+   - `koo generate` - Component/service generation
+
+### Phase 7: Documentation & Examples (Week 5)
+1. **Documentation site**
+   - Quick start guide
+   - Component documentation
+   - API reference
+
+2. **Example domain**
+   - Real estate/service scheduling domain
+   - Full CRUD implementation
+   - Permission setup
+
+## 4. Integration Points
+
+### 4.1 Perst Integration
+```java
+// In CVersion or extension:
+public void setProtoData(byte[] protoData) {
+    this.protoData = protoData;
+}
+
+public byte[] getProtoData() {
+    return this.protoData;
+}
+```
+
+### 4.2 Agreement Permissions
+```java
+// Map service method to permission:
+// searchHouses -> House.read
+// createHouse -> House.write
+// updateHouse -> House.update
+```
+
+### 4.3 Build System Integration
+```bash
+# Complement ./bld commands:
+./bld koo-dev      # Starts koo development server
+./bld koo-build    # Builds koo components
+./bld koo-generate # Generates components from domain
+```
+
+## 5. Testing Strategy
+
+### Unit Tests
+- Proto schema generation for various domain classes
+- Field type mapping (Java → Proto → UI)
+- Service method parsing
+
+### Integration Tests
+- End-to-end service → UI flow
+- Modal interactions
+- Permission enforcement
+
+### Test Data
+- Sample domain objects
+- Mock services
+- Test permissions
+
+## 6. Configuration
+
+### koo.config.js
+```javascript
+export default {
+  ui: {
+    theme: 'light',
+    primaryColor: '#1976d2'
+  },
+  permissions: {
+    autoCheck: true
+  },
+  proto: {
+    package: 'com.company.proto'
+  }
+}
+```
+
+## 7. Success Metrics
+
+1. **Developer Experience**
+   - Can create new domain object and have full CRUD UI in < 5 minutes
+   - No manual service writing for basic operations
+
+2. **Performance**
+   - ProtoBuf serialization 10x faster than JSON
+   - UI loads in < 100ms for typical operations
+
+3. **Maintainability**
+   - Single source of truth (domain classes)
+   - Clear separation of concerns
+   - Easy to customize generated components
+
+## 8. Next Steps
+
+1. **Create initial project structure**
+2. **Implement ProtoBuf generation**
+3. **Build modal system**
+4. **Set up CI/CD pipeline**
