@@ -364,8 +364,8 @@ export default {
    - Handle proto conversion
 
 2. **Create example services**
-   - ✅ `HouseService` example - NEXT
-   - `BookingService` for related entities
+   - ✅ `HouseService` example - DONE
+   - `BookingService`, `CleaningJobService`
    - Test binary protocol
 
 3. **Frontend integration**
