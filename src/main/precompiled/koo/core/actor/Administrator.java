@@ -1,37 +1,38 @@
 package koo.core.actor;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Administrator - System administrator that can manage the application.
+ * Administrator - System|Business administrator that can manage the application.
  * 
- * Extends ANaturalActor (NATURAL by default), so automatically has a PerstUser
- * created by the AActor constructor (deactivated by default).
+ * Extends ANaturalActor (NATURAL by default), so automatically it has a PerstUser created by the AActor constructor (deactivated by default).
  * 
  * Two types of administrators:
  * - SUPER_ADMIN: Full system access
- * - ADMIN: Content management access
+ * - ADMIN: Content/business management access
  * 
- * Administrators CANNOT own houses (cannot be Owner).
- * Administrators CAN be cleaners at the same time.
+ * Super administrators CANNOT be a DOMAIN entity.
+ * Business administrators CAN be a DOMAIN at the same time.
  * 
  * The number of each type allowed is configured in application.ini:
  * - MaxSuperAdmins
  * - MaxAdmins
  */
 @Getter @Setter
+@NoArgsConstructor
 public class Administrator extends ANaturalActor {
     
-    private AdministratorRole adminRole;
+    private Role adminRole;
     private boolean canClean;
     
-    public Administrator(String name, String email, AdministratorRole role) {
-        super(name, new Agreement(), email);
+    public Administrator(String name, String email, Role role) {
+        super(name, new Agreement(role), email);
         this.adminRole = role;
         
         // Set the Agreement role based on administrator type
-        if (role == AdministratorRole.SUPER_ADMIN) {
+        if (role == Role.SUPER_ADMIN) {
             getAgreement().setRole(Role.SUPER_ADMIN);
         } else {
             getAgreement().setRole(Role.ADMIN);
@@ -39,11 +40,11 @@ public class Administrator extends ANaturalActor {
     }
     
     public boolean isSuperAdmin() {
-        return adminRole == AdministratorRole.SUPER_ADMIN;
+        return adminRole == Role.SUPER_ADMIN;
     }
     
-    public boolean isContentAdmin() {
-        return adminRole == AdministratorRole.ADMIN;
+    public boolean isBusinessAdmin() {
+        return adminRole == Role.ADMIN;
     }
     
     @Override
@@ -51,7 +52,6 @@ public class Administrator extends ANaturalActor {
         return "Administrator{" +
                 "name='" + getName() + '\'' +
                 ", adminRole=" + adminRole +
-                ", canClean=" + canClean +
                 ", active=" + isActive() +
                 '}';
     }

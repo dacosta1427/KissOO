@@ -3,9 +3,8 @@ package koo.core.actor;
 import koo.config.AppConfig;
 import koo.core.database.StorageManager;
 import org.garret.perst.continuous.TransactionContainer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+
+import java.util.*;
 
 /**
  * AdministratorManager - Manages Administrator entities.
@@ -21,7 +20,11 @@ public class AdministratorManager {
     
     private static final String KEY_MAX_SUPER_ADMINS = "MaxSuperAdmins";
     private static final String KEY_MAX_ADMINS = "MaxAdmins";
-    
+    // TODO Add transient holders for the admin users in the system.
+    // These Should be set the moment the system is initialised
+    private static final transient Map<String, Administrator> superAdmins    = new HashMap<>(getMaxSuperAdmins());
+    private static final transient Map<String, Administrator> businessAdmins = new HashMap<>(getMaxAdmins());
+
     /**
      * Get all administrators
      */
@@ -50,12 +53,12 @@ public class AdministratorManager {
     }
     
     /**
-     * Get all Content Administrators
+     * Get all Content/Business Administrators
      */
     public static List<Administrator> getContentAdmins() {
         List<Administrator> result = new ArrayList<>();
         for (Administrator admin : getAll()) {
-            if (admin.isContentAdmin()) {
+            if (admin.isBusinessAdmin()) {
                 result.add(admin);
             }
         }
@@ -111,17 +114,19 @@ public class AdministratorManager {
      * 
      * @return Administrator if created, null if limit reached
      */
-    public static Administrator create(String name, String email, AdministratorRole role) {
-        if (role == AdministratorRole.SUPER_ADMIN && !canCreateSuperAdmin()) {
+    public static Administrator create(String name, String email, Role role) {
+        if (role == Role.SUPER_ADMIN && !canCreateSuperAdmin()) {
             return null; // Limit reached
         }
-        if (role == AdministratorRole.ADMIN && !canCreateAdmin()) {
+        if (role == Role.ADMIN && !canCreateAdmin()) {
             return null; // Limit reached
         }
-        
+
+        // Create the actual administrator
         Administrator admin = new Administrator(name, email, role);
         
         TransactionContainer tc = StorageManager.createContainer();
+        assert tc != null;
         tc.addInsert(admin);
         tc.addInsert(admin.getPerstUser());
         

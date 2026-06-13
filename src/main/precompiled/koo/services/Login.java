@@ -1,5 +1,6 @@
 package koo.services;
 
+import domain.security.LoginDomainGuard;
 import org.kissweb.database.Connection;
 import org.kissweb.json.JSONObject;
 import org.kissweb.restServer.ProcessServlet;
@@ -8,10 +9,7 @@ import org.kissweb.restServer.UserCache;
 import koo.core.actor.user.PerstUserManager;
 import koo.core.actor.user.PerstUser;
 import koo.core.actor.AActor;
-import koo.core.actor.ActorType;
 import koo.core.actor.Role;
-import domain.actor.owner.Owner;
-import domain.actor.cleaner.Cleaner;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -58,44 +56,30 @@ public class Login {
             outjson.put("fullyActivated", fullyActivated);
             
             // Extract actor information
-            long ownerOid = 0;
-            String ownerName = "";
-            long cleanerOid = 0;
-            String cleanerName = "";
             String roleName = "user";
             boolean isAdmin = false;
-            
+
             AActor actor = perstUser.getActor();
             if (actor != null) {
-                if (ActorType.NATURAL == actor.getActorType()) {
-                    Owner owner = (Owner) actor;
-                    ownerOid = owner.getOid();
-                    ownerName = owner.getName() != null ? owner.getName() : "";
-                } else if (ActorType.CORPORATE == actor.getActorType()) {
-                    Cleaner cleaner = (Cleaner) actor;
-                    cleanerOid = cleaner.getOid();
-                    cleanerName = cleaner.getName() != null ? cleaner.getName() : "";
+                // Enter the DomainLoginGuard to deal with domain specific particulars
+                LoginDomainGuard loginDomainGuard = new LoginDomainGuard();
+                JSONObject domainData = loginDomainGuard.login(actor);
+
+                // TODO Kiss check for object addition
+                //  Merge domain data into response
+                if (domainData != null) {
+                    outjson.put("domainData", domainData);
                 }
             }
-            
-            outjson.put("ownerOid", ownerOid);
-            outjson.put("ownerName", ownerName);
-            outjson.put("cleanerOid", cleanerOid);
-            outjson.put("cleanerName", cleanerName);
-            
+
             // Get role from agreement
             Role role = null;
             if (actor != null && actor.getAgreement() != null) {
                 role = actor.getAgreement().getRole();
-            }
-            if (role != null) {
                 roleName = role.name();
-                String roleStr = roleName != null ? roleName.toLowerCase() : "";
-                if ("superadmin".equals(roleStr) || "super_admin".equals(roleStr) || "admin".equals(roleStr)) {
-                    isAdmin = true;
-                }
+                isAdmin = role.equals(Role.ADMIN) || role.equals(Role.SUPER_ADMIN);
             }
-            
+
             outjson.put("isAdmin", isAdmin);
             outjson.put("role", roleName);
             
@@ -109,7 +93,7 @@ public class Login {
                 }
             }
             outjson.put("adminType", adminType);
-            
+
             outjson.put("_Success", true);
             
             logger.info("[PerstAuth] outjson AFTER: {}", outjson.keySet());

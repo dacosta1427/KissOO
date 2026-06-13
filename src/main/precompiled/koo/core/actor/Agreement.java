@@ -65,13 +65,7 @@ public class Agreement extends CVersion {
         this();
         this.role = role;
     }
-    
-// For backward compatibility - convert string to Role
-    public Agreement(String role) {
-        this();
-        this.role = Role.valueOf(normalizeRoleName(role));
-    }
-    
+
     private static String normalizeRoleName(String role) {
         String upper = role.toUpperCase();
         // Handle legacy names: superAdmin -> SUPER_ADMIN, etc.

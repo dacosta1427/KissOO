@@ -1,3 +1,5 @@
+import koo.core.actor.AdministratorManager
+
 import koo.core.database.PerstConnection
 import koo.config.PerstConfig
 import koo.core.database.StorageManager
@@ -190,6 +192,7 @@ class KissInit {
     
     /**
      * Initialize default admin users if no users exist.
+     * We always initialise 2 admin users. One super(/system admin) and a pure business admin (superuser)
      */
     private static void initDefaultUser() {
         try {
@@ -197,12 +200,15 @@ class KissInit {
             if (!users || users.size() == 0) {
                 println "[KissInit] Creating default superAdmin user..."
                 
-                // Create superAdmin Actor with full Agreement (like cleaners2)
+                // Create system superAdmin Actor with full Agreement
                 def agreement = new Agreement(Role.SUPER_ADMIN)
-                def adminActor = new domain.actor.owner.Owner("System Admin", "", "admin@localhost", true)
-                adminActor.getAgreement().setRole(Role.SUPER_ADMIN)
-                
-                // Owner constructor already created a deactivated PerstUser
+                def adminActor = AdministratorManager.create("System Admin", "admin@localhost", Role.SUPER_ADMIN)
+
+                // Create business Admin Actor with full Agreement
+                def agreementBizAdmin = new Agreement(Role.ADMIN)
+                def bizAdminActor = AdministratorManager.create("Business Admin", "bizadmin@localhost", Role.ADMIN)
+
+                // Domain actor constructor already created a deactivated PerstUser
                 // Configure it with admin credentials
                 def adminUser = adminActor.getPerstUser()
                 adminUser.setUsername("admin")

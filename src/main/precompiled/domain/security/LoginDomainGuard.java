@@ -1,10 +1,9 @@
-package koo.security;
+package domain.security;
 
 import koo.core.actor.AActor;
 import koo.core.actor.ActorType;
-import org.kissweb.database.Connection;
+import koo.core.exceptions.DomainLoginException;
 import org.kissweb.json.JSONObject;
-import org.kissweb.restServer.ProcessServlet;
 
 import org.kissweb.security.INTERNAL_CALL;
 
@@ -14,7 +13,33 @@ import org.kissweb.security.INTERNAL_CALL;
 public class LoginDomainGuard {
     @INTERNAL_CALL
     public JSONObject login(AActor actor) {
-        return null;
+        JSONObject domainData = new JSONObject();
+
+        try {
+            // 1. Actor type-specific processing
+            if (ActorType.NATURAL == actor.getActorType()) {
+                processNaturalActor(actor, domainData);
+            } else if (ActorType.CORPORATE == actor.getActorType()) {
+                processCorporateActor(actor, domainData);
+            }
+
+            // 2. Domain validation
+            if (!validateDomainRequirements(actor)) {
+                throw new DomainLoginException("Domain validation failed");
+            }
+
+            // 3. Apply policies
+            applyDomainPolicies(actor);
+
+            // 4. Log success
+            logDomainLoginEvent(actor, "SUCCESS");
+
+            return domainData;
+
+        } catch (DomainLoginException e) {
+            logDomainLoginEvent(actor, "FAILED: " + e.getMessage());
+            throw e;
+        }
     }
 
     private void logDomainLoginEvent(AActor actor, String success) {
@@ -35,7 +60,5 @@ public class LoginDomainGuard {
     public void applyDomainPolicies(AActor actor) {
         // Apply domain-specific policies or setup
     }
-
-
 
 }

@@ -11,7 +11,7 @@ package koo.core.actor;
  */
 public enum Role {
     SUPER_ADMIN,  // Full system access - reserved for Administrator with AdministratorRole.SUPER_ADMIN
-    ADMIN,        // Content management - reserved for Administrator with AdministratorRole.ADMIN
+    ADMIN,        // Content/business management - reserved for Administrator with AdministratorRole.ADMIN
     OWNER,        // House owner - cannot be combined with Administrator
     CLEANER,      // Cleaning staff - can be combined with Administrator
     MEMBER;       // Basic member - default role for new actors

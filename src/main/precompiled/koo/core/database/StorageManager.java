@@ -315,10 +315,13 @@ public class StorageManager {
         // Use sync container because CDatabase.open() doesn't initialize the linQueue,
         // so async Lucene indexing is never triggered. Sync containers force immediate
         // Lucene indexing via processLinSync().
-        return cdb.createSyncContainer();
+        return cdb.createContainer();
     }
-    
-    public static TransactionContainer createSyncContainer() {
+
+    /*
+    Get a synchronized transaction container that makes sure that the Lucene indices are also updated before the process continues.
+     */
+    public static TransactionContainer createSyncTransactionContainer() {
         CDatabase cdb = getDBManager();
         if (cdb == null) return null;
         return cdb.createSyncContainer();
@@ -329,7 +332,7 @@ public class StorageManager {
         if (cdb == null || container == null) return false;
         
         try {
-            StoreResult result = cdb.store(container);
+            StoreResult<?> result = cdb.store(container);
             if (!result.isSuccess()) {
                 System.err.println("[PerstStorageManager] Store failed: " + result.getStatus() + " - " + result.getMessage());
             } else {
