@@ -1,0 +1,24 @@
+{
+  "name": "koo-svelte",
+  "version": "0.1.0",
+  "description": "Koo Framework Svelte 5 Components",
+  "type": "module",
+  "main": "lib/index.js",
+  "module": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "files": [
+    "src/lib"
+  ],
+  "scripts": {
+    "dev": "vite preview",
+    "build": "vite build"
+  },
+  "peerDependencies": {
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
