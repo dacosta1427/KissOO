@@ -350,4 +350,5 @@ export default {
 2. **Implement ProtoBuf generation** - DONE
 3. **Build modal system** - DONE (bad0c11b)
 4. **Implement form components** - DONE (13dd77ba)
-5. **Set up CI/CD pipeline** - PENDING
+5. **Implement DataTable & ExpandableRow** - DONE (581fa3cf)
+6. **Set up CI/CD pipeline** - PENDING
