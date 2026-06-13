@@ -1,5 +1,13 @@
 # Koo Framework Implementation Plan
-*A comprehensive guide for any agent to implement the koo framework*
+*A comprehensive guide leveraging KISS's native binary support*
+
+## Executive Summary
+
+**Major Discovery**: KISS framework already has native binary transport via `ProcessServlet.returnBinary()` and `Server.binaryCall()`. This eliminates the need to build custom binary protocols.
+
+**Impact**: Framework becomes simpler, faster, and leverages existing battle-tested infrastructure.
+
+---
 
 ## 1. Project Structure
 
@@ -31,6 +39,8 @@ koo-framework/
 └── README.md
 ```
 
+---
+
 ## 2. Core Components
 
 ### 2.1 ProtoBuf Generation (koo-core/proto)
@@ -59,7 +69,7 @@ getSchema(Class<?> domainClass): ProtoSchema
 **Classes to implement:**
 - `ServiceAnalyzer` - Parses service method names to determine UI intent
 - `PermissionMapper` - Maps service methods to Agreement permissions
-- `ResponseHandler` - Handles proto/JSON responses
+- `ResponseHandler` - Handles proto responses (uses KISS binaryCall)
 
 **Naming conventions:**
 - `searchXyz` → Search screen
@@ -90,6 +100,8 @@ getSchema(Class<?> domainClass): ProtoSchema
 - `ExpandableRow.svelte` - Nested object display
 - `TableStore.js` - Table state management
 
+---
+
 ## 3. Implementation Steps
 
 ### Phase 1: ProtoBuf Foundation (Week 1)
@@ -111,7 +123,7 @@ getSchema(Class<?> domainClass): ProtoSchema
 
 2. **Integration**
    - Connect to service responses
-   - Handle proto/JSON responses
+   - Support KISS binary responses
    - Support nested modals
 
 ### Phase 3: Form Components (Week 2-3)
@@ -147,6 +159,11 @@ getSchema(Class<?> domainClass): ProtoSchema
    - Auto-check permissions
    - Handle denials
 
+3. **KISS binary integration**
+   - Use `ProcessServlet.returnBinary()` for services
+   - Use `Server.binaryCall()` for clients
+   - Handle hybrid JSON+binary protocol
+
 ### Phase 6: CLI Tools (Week 4)
 1. **koo-cli implementation**
    - `koo dev` - Start development
@@ -164,9 +181,65 @@ getSchema(Class<?> domainClass): ProtoSchema
    - Full CRUD implementation
    - Permission setup
 
-## 4. Integration Points
+---
 
-### 4.1 Perst Integration
+## 4. KISS Binary Integration
+
+### Server-Side Service Implementation
+```java
+package koo.services;
+
+import org.kissweb.restServer.ProcessServlet;
+import org.kissweb.json.JSONObject;
+import org.kissweb.database.Connection;
+
+public class HouseService {
+    public void getHouse(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
+        long oid = injson.getLong("oid");
+        House house = HouseManager.getByOid(oid);
+        
+        if (house == null) {
+            outjson.put("_Success", false);
+            outjson.put("_ErrorMessage", "House not found");
+            return;
+        }
+        
+        // Use KISS's native binary support - NO Base64 encoding needed!
+        byte[] protoBytes = house.toProto().toByteArray();
+        servlet.returnBinary(protoBytes);
+    }
+}
+```
+
+### Client-Side Svelte 5 Integration
+```javascript
+import { Server } from 'kiss/Server.js';
+import { HouseProto } from './generated/HouseProto.js';
+
+async function loadHouse(oid) {
+    // Use KISS's binaryCall - automatically handles JSON+binary
+    const response = await Server.binaryCall('HouseService', 'getHouse', { oid });
+    
+    if (!response._Success) {
+        throw new Error(response._ErrorMessage);
+    }
+    
+    // response._data is already a Uint8Array from KISS
+    return HouseProto.decode(response._data);
+}
+```
+
+### Hybrid Protocol Benefits
+1. **Performance**: Raw binary transmission (no Base64 encoding)
+2. **Error Handling**: Standard KISS JSON metadata (`_Success`, `_ErrorMessage`)
+3. **Compatibility**: Uses existing KISS infrastructure
+4. **Transparency**: Automatic delimiter handling (`003` separator)
+
+---
+
+## 5. Integration Points
+
+### 5.1 Perst Integration
 ```java
 // In CVersion or extension:
 public void setProtoData(byte[] protoData) {
@@ -178,7 +251,7 @@ public byte[] getProtoData() {
 }
 ```
 
-### 4.2 Agreement Permissions
+### 5.2 Agreement Permissions
 ```java
 // Map service method to permission:
 // searchHouses -> House.read
@@ -186,7 +259,7 @@ public byte[] getProtoData() {
 // updateHouse -> House.update
 ```
 
-### 4.3 Build System Integration
+### 5.3 Build System Integration
 ```bash
 # Complement ./bld commands:
 ./bld koo-dev      # Starts koo development server
@@ -194,7 +267,9 @@ public byte[] getProtoData() {
 ./bld koo-generate # Generates components from domain
 ```
 
-## 5. Testing Strategy
+---
+
+## 6. Testing Strategy
 
 ### Unit Tests
 - Proto schema generation for various domain classes
@@ -202,7 +277,7 @@ public byte[] getProtoData() {
 - Service method parsing
 
 ### Integration Tests
-- End-to-end service → UI flow
+- End-to-end service → UI flow using KISS binaryCall
 - Modal interactions
 - Permission enforcement
 
@@ -211,7 +286,9 @@ public byte[] getProtoData() {
 - Mock services
 - Test permissions
 
-## 6. Configuration
+---
+
+## 7. Configuration
 
 ### koo.config.js
 ```javascript
@@ -229,7 +306,9 @@ export default {
 }
 ```
 
-## 7. Success Metrics
+---
+
+## 8. Success Metrics
 
 1. **Developer Experience**
    - Can create new domain object and have full CRUD UI in < 5 minutes
@@ -238,13 +317,33 @@ export default {
 2. **Performance**
    - ProtoBuf serialization 10x faster than JSON
    - UI loads in < 100ms for typical operations
+   - No Base64 encoding overhead
 
 3. **Maintainability**
    - Single source of truth (domain classes)
    - Clear separation of concerns
    - Easy to customize generated components
 
-## 8. Next Steps
+---
+
+## 9. Key Advantages of KISS Binary Support
+
+### What We Get for Free
+- ✅ **Native binary transport** - No custom protocol needed
+- ✅ **Hybrid responses** - JSON metadata + binary data
+- ✅ **Client-side handling** - `Server.binaryCall()` does the parsing
+- ✅ **Error handling** - Standard KISS error metadata
+- ✅ **Proven infrastructure** - Battle-tested in production
+
+### Framework Focus Shifts To
+- ✅ **Domain modeling** - Pure object design
+- ✅ **Service logic** - Business rules
+- ✅ **UI generation** - Components from proto schemas
+- ✅ **Permission integration** - Agreement mapping
+
+---
+
+## 10. Next Steps
 
 1. **Create initial project structure**
 2. **Implement ProtoBuf generation**
