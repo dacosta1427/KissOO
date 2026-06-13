@@ -351,4 +351,5 @@ export default {
 3. **Build modal system** - DONE (bad0c11b)
 4. **Implement form components** - DONE (13dd77ba)
 5. **Implement DataTable & ExpandableRow** - DONE (581fa3cf)
-6. **Set up CI/CD pipeline** - PENDING
+6. **Implement CLI tools** - DONE (fd4fd22d)
+7. **Set up CI/CD pipeline** - PENDING
