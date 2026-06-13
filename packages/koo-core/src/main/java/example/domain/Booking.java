@@ -23,4 +23,16 @@ public class Booking extends FrameworkEntity {
         this.startDate = startDate;
         this.endDate = endDate;
     }
+    
+    public example.proto.BookingProto toProto() {
+        return example.proto.BookingProto.newBuilder()
+            .setOid(getOid())
+            .setHouseOid(house != null ? house.getOid() : 0)
+            .setGuestOid(guest != null ? guest.getOid() : 0)
+            .setStartDate(getStartDate().getTime())
+            .setEndDate(getEndDate().getTime())
+            .setTotalPrice(getTotalPrice())
+            .setStatus(getStatus())
+            .build();
+    }
 }

@@ -22,4 +22,17 @@ public class House extends FrameworkEntity {
         this.owner = owner;
         this.address = address;
     }
+    
+    public example.proto.HouseProto toProto() {
+        return example.proto.HouseProto.newBuilder()
+            .setOid(getOid())
+            .setOwnerOid(owner != null ? owner.getOid() : 0)
+            .setAddress(getAddress())
+            .setCity(getCity())
+            .setCountry(getCountry())
+            .setSize(getSize())
+            .setBedrooms(getBedrooms())
+            .setBathrooms(getBathrooms())
+            .build();
+    }
 }

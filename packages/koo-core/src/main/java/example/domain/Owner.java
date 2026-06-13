@@ -16,4 +16,13 @@ public class Owner extends FrameworkEntity {
     public Owner(User user) {
         this.user = user;
     }
+    
+    public example.proto.OwnerProto toProto() {
+        return example.proto.OwnerProto.newBuilder()
+            .setOid(getOid())
+            .setUserOid(user != null ? user.getOid() : 0)
+            .setCompanyName(getCompanyName())
+            .setContactPerson(getContactPerson())
+            .build();
+    }
 }
