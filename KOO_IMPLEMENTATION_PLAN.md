@@ -352,4 +352,5 @@ export default {
 4. **Implement form components** - DONE (13dd77ba)
 5. **Implement DataTable & ExpandableRow** - DONE (581fa3cf)
 6. **Implement CLI tools** - DONE (fd4fd22d)
-7. **Set up CI/CD pipeline** - PENDING
+7. **Create framework manual** - DONE (649a2c16)
+8. **Set up CI/CD pipeline** - PENDING
