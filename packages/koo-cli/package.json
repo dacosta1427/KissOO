@@ -1,0 +1,1 @@
+{"name": "koo-cli", "version": "0.1.0", "bin": {"koo": "./dist/index.js"}}
