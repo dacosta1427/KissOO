@@ -354,3 +354,39 @@ export default {
 6. **Implement CLI tools** - DONE (fd4fd22d)
 7. **Create framework manual** - DONE (649a2c16)
 8. **Set up CI/CD pipeline** - PENDING
+
+## NEXT PHASE: SERVICE INTEGRATION
+
+### Phase 9: Service Integration with KISS Binary
+1. **Implement service base classes**
+   - Create `FrameworkService` base class
+   - Integrate `returnBinary()` calls
+   - Handle proto conversion
+
+2. **Create example services**
+   - `HouseService` with search/get/create/update/delete
+   - `BookingService` for related entities
+   - Test binary protocol
+
+3. **Frontend integration**
+   - Use `Server.binaryCall()` for all services
+   - Auto-generate service clients
+   - Test performance
+
+### Phase 10: Permission System
+1. **Agreement integration**
+   - Map service methods to permissions
+   - Create permission middleware
+   - Test access control
+
+### Phase 11: Example Domain
+1. **Create complete example**
+   - House, Owner, Booking entities
+   - Full CRUD operations
+   - Permission setup
+
+### Phase 12: Testing & Documentation
+1. **Unit tests for core components**
+2. **Integration tests**
+3. **Performance benchmarks**
+4. **User documentation updates**
