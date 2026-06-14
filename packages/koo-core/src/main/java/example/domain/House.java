@@ -1,12 +1,12 @@
 package example.domain;
 
-import koo.framework.domain.FrameworkEntity;
+import org.garret.perst.continuous.CVersion;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class House extends FrameworkEntity {
+public class House extends CVersion {
     private Owner owner;
     private String address;
     private String city;
@@ -15,6 +15,13 @@ public class House extends FrameworkEntity {
     private int bedrooms;
     private int bathrooms;
     private String description;
+    private double checkInTime;
+    private double checkOutTime;
+    private double surfaceM2;
+    private int floors;
+    private int bathroomCount;
+    private String luxuryLevel;
+    private CostProfile costProfile;
     
     public House() {}
     

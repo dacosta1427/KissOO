@@ -1,12 +1,12 @@
 package example.domain;
 
-import koo.framework.domain.FrameworkEntity;
+import org.garret.perst.continuous.CVersion;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class User extends FrameworkEntity {
+public class User extends CVersion {
     private String username;
     private String email;
     private String passwordHash;

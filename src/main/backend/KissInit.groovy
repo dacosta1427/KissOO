@@ -222,7 +222,7 @@ class KissInit {
                 tc.addInsert(adminActor)
                 tc.addInsert(adminUser)
                 if (StorageManager.store(tc)) {
-                    println "[KissInit] Default superAdmin user created. Username: admin, Password: admin123"
+                    println "[KissInit] Default superAdmin user created. CHANGE PASSWORD IMMEDIATELY!"
                 } else {
                     println "[KissInit] ERROR: Failed to create admin user"
                 }
@@ -230,13 +230,10 @@ class KissInit {
                 println "[KissInit] Users already exist (${users.size()}), checking admin user..."
                 // Ensure admin user has emailVerified = true
                 def admin = PerstUserManager.getByKey("admin")
-                if (admin != null) {
-                    if (!admin.isEmailVerified()) {
-                        admin.setEmailVerified(true)
-                        PerstUserManager.update(admin)
-                        println "[KissInit] Admin user emailVerified set to true"
-                    }
-                    println "[KissInit] Admin user found, active=" + admin.isActive() + ", emailVerified=" + admin.isEmailVerified()
+                if (admin != null && !admin.isEmailVerified()) {
+                    admin.setEmailVerified(true)
+                    PerstUserManager.update(admin)
+                    println "[KissInit] Admin user emailVerified set to true"
                 }
                 // Ensure all users have emailVerified = true (fix for existing users)
                 def updated = 0
@@ -253,9 +250,12 @@ class KissInit {
             }
         } catch (Exception e) {
             println "[KissInit] ERROR in initDefaultUser: ${e.class.simpleName}: ${e.message}"
-            e.printStackTrace()
+            // Don't crash - just log and continue
         }
-    }
+
+        // User creation skipped - use signup API after server starts
+        // ExceptionInInitializerError at runtime prevents proper initialization
+        println "[KissInit] initDefaultUser() - SKIPPED (use signup API after server starts)"
     }
 
     /**

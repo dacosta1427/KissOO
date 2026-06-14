@@ -356,6 +356,92 @@ export default {
 8. **Add FrameworkService base class** - DONE (9685a3ef)
 9. **Create domain model** - DONE (42808d86)
 10. **Add ProtoBuf methods** - DONE (9c1c7192)
+11. **Fix domain base class** - DONE (CVersion from Perst, not FrameworkEntity)
+12. **Fix StorageManager imports** - DONE (koo.core.database.StorageManager)
+
+## CURRENT STATUS (as of 2026-06-14)
+
+### ✅ koo-core (Java Framework) - OPERATIONAL
+| Component | Status | Notes |
+|-----------|--------|-------|
+| ProtoSchemaGenerator | ✅ DONE | Basic field mapping works |
+| ProtoRegistry | ✅ DONE | Schema storage/retrieval |
+| ProtoField | ✅ DONE | Field metadata |
+| ProtoSchema | ✅ DONE | Schema container |
+| FrameworkService | ✅ DONE | Base class with returnProto() |
+| Example Domains | ✅ FIXED | Now extend CVersion, not FrameworkEntity |
+| Example Managers | ✅ FIXED | Now use koo.core.database.StorageManager |
+
+### ⚠️ koo-core - MISSING/INCOMPLETE
+| Component | Status | Priority |
+|-----------|--------|----------|
+| ProtoTemplateEngine | ❌ NOT STARTED | Medium - for generating .proto files |
+| DomainEnhancer | ❌ NOT STARTED | Low - Lombok @toProto integration |
+| ServiceAnalyzer | ❌ NOT STARTED | Medium - parse method names for UI intent |
+| UI Generation Engine | ❌ NOT STARTED | Low - auto-generate Svelte from schemas |
+
+### ✅ koo-svelte (Svelte 5 Components) - OPERATIONAL
+| Component | Status | Lines |
+|-----------|--------|-------|
+| Modal.svelte | ✅ DONE | 78 |
+| ModalManager.svelte | ✅ DONE | ~15 |
+| ModalStore.js | ✅ DONE | ~20 |
+| FormField.svelte | ✅ DONE | 48 |
+| FormGenerator.svelte | ✅ DONE | 37 |
+| NumberInput.svelte | ✅ DONE | 30 |
+| DateInput.svelte | ✅ DONE | 30 |
+| DataTable.svelte | ✅ DONE | 96 |
+| ExpandableRow.svelte | ✅ DONE | 71 |
+| Houses.svelte (example) | ✅ DONE | 55 |
+
+### ⚠️ koo-svelte - MISSING
+| Component | Status | Priority |
+|-----------|--------|----------|
+| TextInput.svelte | ❌ NOT STARTED | Medium |
+| TableStore.js | ❌ NOT STARTED | Low |
+| navigation/ components | ❌ NOT STARTED | Low |
+| koo.config.js | ❌ NOT STARTED | Medium |
+
+### ✅ koo-cli (CLI Tools) - MOSTLY COMPLETE
+| Command | Status |
+|---------|--------|
+| koo create | ✅ DONE |
+| koo generate | ✅ DONE |
+| koo build | ✅ DONE |
+| koo dev | ❌ NOT STARTED |
+
+---
+
+## ARCHITECTURE NOTES
+
+### Base Class Correction (2026-06-14)
+**OLD (incorrect):**
+```java
+import koo.framework.domain.FrameworkEntity;  // DOES NOT EXIST
+public class House extends FrameworkEntity { }
+```
+
+**NEW (correct):**
+```java
+import org.garret.perst.continuous.CVersion;  // From Perst OODB
+public class House extends CVersion { }
+```
+
+### StorageManager Correction (2026-06-14)
+**OLD (incorrect):**
+```java
+import koo.framework.database.StorageManager;  // DOES NOT EXIST
+```
+
+**NEW (correct):**
+```java
+import koo.core.database.StorageManager;  // Precompiled in src/main/precompiled/
+```
+
+### Proto Integration
+- Domains use `toProto()` methods returning protobuf messages
+- Services use `FrameworkService.returnProto(servlet, byte[])` for binary responses
+- Frontend uses `Server.binaryCall()` which returns `response._data` as Uint8Array
 
 ## NEXT PHASE: INTEGRATION & TESTING
 

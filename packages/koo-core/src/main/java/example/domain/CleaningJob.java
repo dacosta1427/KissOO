@@ -1,13 +1,13 @@
 package example.domain;
 
-import koo.framework.domain.FrameworkEntity;
+import org.garret.perst.continuous.CVersion;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.Date;
 
 @Getter
 @Setter
-public class CleaningJob extends FrameworkEntity {
+public class CleaningJob extends CVersion {
     private Booking booking;
     private Cleaner cleaner;
     private Date scheduledDate;

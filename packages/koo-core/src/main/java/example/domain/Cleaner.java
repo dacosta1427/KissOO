@@ -1,12 +1,12 @@
 package example.domain;
 
-import koo.framework.domain.FrameworkEntity;
+import org.garret.perst.continuous.CVersion;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class Cleaner extends FrameworkEntity {
+public class Cleaner extends CVersion {
     private String name;
     private String email;
     private String phone;

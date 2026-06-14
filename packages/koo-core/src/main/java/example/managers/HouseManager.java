@@ -1,36 +1,28 @@
 package example.managers;
 
-import koo.framework.services.FrameworkService;
-import org.kissweb.database.Connection;
-import org.kissweb.json.JSONObject;
-import org.kissweb.restServer.ProcessServlet;
+import koo.core.database.StorageManager;
+import example.domain.House;
+import java.util.Collection;
 
-public class HouseManager extends FrameworkService {
+public class HouseManager {
     
-    public static java.util.Collection<example.domain.House> getAll() {
-        // TODO: Implement using PerstStorageManager
-        return new java.util.ArrayList<>();
+    public static Collection<House> getAll() {
+        return StorageManager.getAll(House.class);
     }
     
-    public static example.domain.House getByOid(long oid) {
-        // TODO: Implement
-        return null;
+    public static House getByOid(long oid) {
+        return StorageManager.getByOid(House.class, oid);
     }
     
-    public static void create(example.domain.House house) {
-        // TODO: Implement
+    public static void create(House house) {
+        StorageManager.store(StorageManager.createContainer().addInsert(house));
     }
     
-    public static void update(example.domain.House house) {
-        // TODO: Implement
+    public static void update(House house) {
+        StorageManager.store(StorageManager.createContainer().addUpdate(house));
     }
     
-    public static void delete(example.domain.House house) {
-        // TODO: Implement
-    }
-    
-    public static java.util.Collection<example.domain.House> search(String address, double minPrice, double maxPrice) {
-        // TODO: Implement
-        return new java.util.ArrayList<>();
+    public static void delete(House house) {
+        StorageManager.store(StorageManager.createContainer().addDelete(house));
     }
 }
