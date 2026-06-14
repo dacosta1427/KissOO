@@ -64,7 +64,7 @@ public class GroovyClass {
 	 * Be careful with this.  If one Groovy file causes the load of a second Groovy file,
 	 * and the second file causes a reload of the groovyLoader, then the first file will have been erased.
 	 */
-	static void reset() {
+	public static void reset() {
 		groovyLoader = null;
 	}
 
