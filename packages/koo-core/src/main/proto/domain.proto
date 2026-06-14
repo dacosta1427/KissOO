@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package example.proto;
+
+option java_package = "example.proto";
+option java_multiple_files = true;
+
+message UserProto {
+  int64 oid = 1;
+  string username = 2;
+  string email = 3;
+  bool active = 4;
+  bool emailVerified = 5;
+}
+
+message OwnerProto {
+  int64 oid = 1;
+  int64 userOid = 2;
+  string companyName = 3;
+  string contactPerson = 4;
+}
+
+message CleanerProto {
+  int64 oid = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+  string specialties = 5;
+}
+
+message HouseProto {
+  int64 oid = 1;
+  int64 ownerOid = 2;
+  string address = 3;
+  string city = 4;
+  string country = 5;
+  double size = 6;
+  int32 bedrooms = 7;
+  int32 bathrooms = 8;
+}
+
+message BookingProto {
+  int64 oid = 1;
+  int64 houseOid = 2;
+  int64 guestOid = 3;
+  int64 startDate = 4;
+  int64 endDate = 5;
+  double totalPrice = 6;
+  string status = 7;
+}
+
+message CostProfileProto {
+  int64 oid = 1;
+  string name = 2;
+  double dailyRate = 3;
+  double weeklyRate = 4;
+  double monthlyRate = 5;
+}
+
+message CleaningJobProto {
+  int64 oid = 1;
+  int64 bookingOid = 2;
+  int64 cleanerOid = 3;
+  int64 scheduledDate = 4;
+  string status = 5;
+  string notes = 6;
+}
+
+message InvoiceProto {
+  int64 oid = 1;
+  int64 userOid = 2;
+  int64 houseOid = 3;
+  double amount = 4;
+  int64 issueDate = 5;
+  int64 dueDate = 6;
+  string status = 7;
+}

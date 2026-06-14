@@ -361,7 +361,8 @@ export default {
 
 ### Phase 11: Frontend Integration with Svelte 5
 1. **Service client generation**
-   - Auto-generate `HouseClient`, `BookingClient` from proto schemas
+   - ✅ Create proto schema files - DONE
+   - ✅ Generate proto JS clients - DONE
    - Use `Server.binaryCall()` for all API calls
    - Handle proto responses
 
