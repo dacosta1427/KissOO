@@ -353,7 +353,54 @@ export default {
 5. **Implement DataTable & ExpandableRow** - DONE (581fa3cf)
 6. **Implement CLI tools** - DONE (fd4fd22d)
 7. **Create framework manual** - DONE (649a2c16)
-8. **Set up CI/CD pipeline** - PENDING
+8. **Add FrameworkService base class** - DONE (9685a3ef)
+9. **Create domain model** - DONE (42808d86)
+10. **Add ProtoBuf methods** - DONE (9c1c7192)
+
+## NEXT PHASE: INTEGRATION & TESTING
+
+### Phase 11: Frontend Integration with Svelte 5
+1. **Service client generation**
+   - Auto-generate `HouseClient`, `BookingClient` from proto schemas
+   - Use `Server.binaryCall()` for all API calls
+   - Handle proto responses
+
+2. **UI component integration**
+   - Connect DataTable to services
+   - Wire up FormGenerator with create/update services
+   - Implement expandable row data loading
+
+3. **State management**
+   - Svelte 5 runes for reactive data
+   - Loading states and error handling
+   - Pagination support
+
+### Phase 12: Permission System Integration
+1. **Agreement mapping**
+   - Map service methods to permissions
+   - Create permission middleware
+   - Test access control
+
+2. **Role-based UI**
+   - Show/hide UI elements based on roles
+   - Disable actions based on permissions
+   - Admin dashboard
+
+### Phase 13: Testing and Deployment
+1. **Unit tests**
+   - Test ProtoBuf generation
+   - Test domain model methods
+   - Test service logic
+
+2. **Integration tests**
+   - End-to-end service → UI flow
+   - Modal and form interactions
+   - Permission enforcement
+
+3. **Deployment**
+   - Production build configuration
+   - Database setup scripts
+   - Documentation updates
 
 ## NEXT PHASE: SERVICE INTEGRATION
 
