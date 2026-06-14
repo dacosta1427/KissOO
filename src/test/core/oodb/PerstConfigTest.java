@@ -3,7 +3,6 @@ package core.oodb;
 import koo.config.PerstConfig;
 import org.junit.jupiter.api.Test;
 
-import static org.armedbear.lisp.Debug.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -35,6 +34,6 @@ public class PerstConfigTest {
     @Test
     public void testGetPagePoolSizeHasDefault() {
         int size = PerstConfig.getInstance().getPagePoolSize();
-        assertTrue(size > 0);
+        org.junit.jupiter.api.Assertions.assertTrue(size > 0);
     }
 }

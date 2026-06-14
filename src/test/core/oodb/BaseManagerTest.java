@@ -4,7 +4,6 @@ import koo.core.BaseManager;
 import koo.core.actor.ActorManager;
 import org.junit.jupiter.api.Test;
 
-import static org.armedbear.lisp.Debug.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -16,6 +15,6 @@ public class BaseManagerTest {
     @Test
     public void testActorManagerExtendsBaseManager() {
         // Verify ActorManager is a subclass of BaseManager
-        assertTrue(BaseManager.class.isAssignableFrom(ActorManager.class));
+        org.junit.jupiter.api.Assertions.assertTrue(BaseManager.class.isAssignableFrom(ActorManager.class));
     }
 }
