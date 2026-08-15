@@ -7,6 +7,7 @@ import org.kissweb.json.JSONObject
 import org.kissweb.database.Connection
 import org.kissweb.restServer.ProcessServlet
 import koo.core.user.PerstUser
+import koo.core.database.StorageManager
 import domain.actor.owner.Owner
 import domain.oov.house.House
 import domain.oov.house.Booking
@@ -146,8 +147,8 @@ class LoadTestdata {
                 }
             }
             if (!admin) {
-                def agreement = new Agreement(Role.SUPER_ADMIN)
-                def adminActor = new Owner(Role.SUPER_ADMIN, agreement)
+                def adminActor = new Owner("System Admin", "", "admin@kissoo.local", true)
+                adminActor.getAgreement().setRole(Role.SUPER_ADMIN)
                 // AActor constructor already created a deactivated PerstUser
                 // Get it and configure it
                 admin = adminActor.getPerstUser()
@@ -185,7 +186,8 @@ class LoadTestdata {
             def owners = []
             ownerData.each { d ->
                 try {
-                    def owner = new Owner(d.name, d.phone, d.email, "123 ${d.name.split(' ')[1]} Street, Amsterdam")
+                    def owner = new Owner(d.name, d.phone, d.email, true)
+                    owner.setAddress("123 ${d.name.split(' ')[1]} Street, Amsterdam")
                     def tc = StorageManager.createContainer()
                     tc.addInsert(owner)
                     tc.addInsert(owner.getPerstUser())
@@ -229,7 +231,7 @@ class LoadTestdata {
                     try {
                         def randomOwner = owners[new Random().nextInt(owners.size())]
                         println "[LoadTestdata] Assigning house ${d.name} to owner ${randomOwner.getName()} (OID: ${randomOwner.getOid()})"
-                        def house = new House(d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true, randomOwner)
+                        def house = new House(randomOwner, d.name, "123 ${d.name.split(' ')[1]} Street", d.desc, true)
                         houseTc.addInsert(house)
                         houses << house
                     } catch (Exception e) {
@@ -261,7 +263,8 @@ class LoadTestdata {
             def cleaners = []
             cleanerData.each { d ->
                 try {
-                    def cleaner = new Cleaner(d.name, d.phone, d.email, "45 Cleaner Street, Amsterdam", true)
+                    def cleaner = new Cleaner(d.name, d.phone, d.email, true)
+                    cleaner.setAddress("45 Cleaner Street, Amsterdam")
                     def tc = StorageManager.createContainer()
                     tc.addInsert(cleaner)
                     tc.addInsert(cleaner.getPerstUser())

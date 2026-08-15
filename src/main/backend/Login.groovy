@@ -65,6 +65,14 @@ class Login {
             outjson.put("needsPasswordChange", perstUser.isMustChangePassword())
             outjson.put("needsEmailVerification", !perstUser.isEmailVerified())
             outjson.put("fullyActivated", fullyActivated)
+
+            // Store activation status flags in the session so service-layer checks
+            // (e.g. Users.getUsers requireFullActivation) work immediately after login.
+            // Without this, the flags are only set by Login.checkLogin, which
+            // ProcessServlet only calls after 120s of inactivity.
+            ud.putUserData("needsPasswordChange", perstUser.isMustChangePassword())
+            ud.putUserData("needsEmailVerification", !perstUser.isEmailVerified())
+            ud.putUserData("isFullyActivated", fullyActivated)
             
             // Add owner OID if available
             def actor = perstUser.getAActor()

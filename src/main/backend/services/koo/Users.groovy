@@ -82,7 +82,7 @@ class Users {
                 
                 // Include AActor type to identify if this is Owner or Cleaner
                 if (user.getAActor() != null) {
-                    row.put("actorType", user.getAActor().getType())
+                    row.put("actorType", user.getAActor().getClass().getSimpleName())
                 } else {
                     row.put("actorType", null)
                 }
