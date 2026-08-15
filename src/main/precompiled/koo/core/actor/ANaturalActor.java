@@ -7,7 +7,11 @@ import lombok.Setter;
 @Getter @Setter
 public abstract class ANaturalActor extends AActor {
     private PerstUser perstUser;  // persisted - NATURAL actors have PU, CORPORATE don't
-    
+
+    public ANaturalActor() {
+        super();
+    }
+
     public ANaturalActor(String name, Agreement agreement) {
         this(name, agreement, null);
     }

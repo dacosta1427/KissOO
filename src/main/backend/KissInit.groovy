@@ -20,10 +20,10 @@ class KissInit {
     static void init() {
         println "[KissInit] init() CALLED"
         Thread.sleep(10000)
-        
+
         MainServlet.readIniFile "application.ini", "main"
         MainServlet.readIniFile "application.ini", "PasswordSecurity"
-        
+
         // EmailService is initialized on first use (lazy init)
         // EmailService.groovy reads application.ini directly via initializeFromConfig()
 
@@ -31,12 +31,12 @@ class KissInit {
         // MainServlet.allowWithoutAuthentication("services.MyGroovyService", "addNumbers")
 
         println "[KissInit] init() - After readIniFile"
-        
+
         // Initialize Perst HERE - before init2() which might not be called
         // This uses MainServlet.putEnvironment() as suggested by KISS creator
         println "[KissInit] init() - Checking Perst config..."
         println "[KissInit] init() - PerstEnabled=" + PerstConfig.getInstance().isPerstEnabled()
-        
+
         // Step 1: Initialize Perst if needed
         if (PerstConfig.getInstance().isPerstEnabled() && !StorageManager.isAvailable()) {
             println "[KissInit] init() - Initializing Perst NOW..."
@@ -48,7 +48,7 @@ class KissInit {
                 e.printStackTrace()
             }
         }
-        
+
         // Step 2: Register NonSqlConnection ALWAYS when Perst is enabled and available
         // This runs even if Perst was already initialized from a previous startup
         if (PerstConfig.getInstance().isPerstEnabled() && StorageManager.isAvailable()) {
@@ -56,20 +56,20 @@ class KissInit {
                 // Check if already registered
                 def existing = MainServlet.getEnvironment("NonSqlConnection")
                 println "[KissInit] Checking existing: " + existing
-                
+
                 if (existing == null) {
                     println "[KissInit] Creating NEW NonSqlConnection..."
                     def nonSqlConn = new NonSqlConnection()
                     println "[KissInit] Created nonSqlConn: " + nonSqlConn
-                    
+
                     MainServlet.putEnvironment("NonSqlConnection", nonSqlConn)
-                    
+
                     // VERIFY it was stored
                     def verify = MainServlet.getEnvironment("NonSqlConnection")
                     println "[KissInit] Verified NonSqlConnection: " + verify
-                    
+
                     println "[KissInit] init() - NonSqlConnection registered"
-                    
+
                     // Skip user creation - causes ExceptionInInitializerError
                     // initDefaultUser()
                     // indexPerstUsers()
@@ -83,27 +83,27 @@ class KissInit {
                 e.printStackTrace()
             }
         }
-        
+
         // Allow Perst-based login without authentication (required - can't log in otherwise!)
         MainServlet.allowWithoutAuthentication("", "Login")
-        
+
         // Allow koo.services.Login (for clients calling koo.services.Login.Login)
         MainServlet.allowWithoutAuthentication("services/Login", "Login")
-        
+
         // Allow user creation without authentication (for first-time setup)
         MainServlet.allowWithoutAuthentication("services/Users", "addRecord")
-        
+
         // Allow signup without authentication
         MainServlet.allowWithoutAuthentication("services.auth.AuthService", "signup")
-        
+
         // Allow activation services (requires valid session but no fully activated check)
         MainServlet.allowWithoutAuthentication("services.auth.AuthService", "changePassword")
         MainServlet.allowWithoutAuthentication("services.auth.AuthService", "sendVerificationEmail")
         MainServlet.allowWithoutAuthentication("services.auth.AuthService", "verifyEmail")
         MainServlet.allowWithoutAuthentication("services.auth.AuthService", "getActivationStatus")
-        
+
         println "[KissInit] init() COMPLETED"
-        
+
         // Set up a global logout handler that runs whenever any user logs out
         // This can be used for cleanup tasks like logging, closing resources, etc.
         UserCache.setLogoutHandler({ UserData ud ->
@@ -136,14 +136,14 @@ class KissInit {
         try {
             println "[KissInit] init2ForNonSQL() CALLED"
             println "[KissInit] db = " + db
-            
+
             // Initialize PasswordSecurity
             if (!PasswordSecurity.initialise()) {
                 System.out.println("! X X X PasswordSecurity NOT initialised!");
             } else {
-                println "[KissInit] init2ForNonSQL() PWSEC initialised";
+                println "[KissInit] init2ForNonSQL() PW-SEC initialised";
             }
-            
+
             // Initialize Perst if not already initialized
             if (PerstConfig.getInstance().isPerstEnabled() && !StorageManager.isAvailable()) {
                 println "[KissInit] Initializing Perst database..."
@@ -153,17 +153,16 @@ class KissInit {
                 println "[KissInit] Perst is already available"
             }
 
-            // Skip user initialization to prevent ExceptionInInitializerError
-            println "[KissInit] User initialization skipped in init2ForNonSQL() to prevent ExceptionInInitializerError"
-            println "[KissInit] Use the PerstInit service or signup API to create users after startup"
-            
+            // Create default super-admin user if none exists (ExceptionInInitializerError is now fixed)
+            initDefaultUser()
+
             println "[KissInit] init2ForNonSQL() COMPLETED"
         } catch (Exception e) {
             println "[KissInit] ERROR in init2ForNonSQL: ${e.class.simpleName}: ${e.message}"
             e.printStackTrace()
         }
     }
-    
+
     /**
      * Initialize default admin users if no users exist.
      */
@@ -172,12 +171,13 @@ class KissInit {
             def users = StorageManager.getAll(PerstUser.class)
             if (!users || users.size() == 0) {
                 println "[KissInit] Creating default superAdmin user..."
-                
+                println "[KissInit] Role constants at runtime: " + Role.values().collect { it.name() }.join(", ")
+
                 // Create superAdmin Actor with full Agreement (like cleaners2)
-                def agreement = new Agreement("superAdmin")
+                def agreement = new Agreement(Role.SUPER_ADMIN)
                 def adminActor = new domain.actor.owner.Owner("System Admin", "", "admin@localhost", true)
                 adminActor.getAgreement().setRole(Role.SUPER_ADMIN)
-                
+
                 // Owner constructor already created a deactivated PerstUser
                 // Configure it with admin credentials
                 def adminUser = adminActor.getPerstUser()
@@ -186,7 +186,7 @@ class KissInit {
                 adminUser.setEmail("admin@localhost")
                 adminUser.setActive(true)
                 adminUser.setEmailVerified(true)
-                
+
                 // Store both together
                 def tc = StorageManager.createContainer()
                 tc.addInsert(adminActor)
@@ -234,12 +234,12 @@ class KissInit {
     private static void indexPerstUsers() {
         println "[KissInit] Skipping PerstUser indexing (not required for CDatabase)"
     }
-    
+
     /**
      * Index all Actors for fast lookup
      */
     private static void indexActors() {
         println "[KissInit] Skipping AActor indexing (not required for CDatabase)"
     }
-    
+
 }

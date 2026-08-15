@@ -31,7 +31,11 @@ public class Cleaner extends ANaturalActor {
     private String address;
     
     private Set<Schedule> schedules = new HashSet<>();
-    
+
+    public Cleaner() {
+        super();
+    }
+
     public Cleaner(String name, String phone, String email, boolean active) {
         super(name, new Agreement(), email);
         this.phone = phone;

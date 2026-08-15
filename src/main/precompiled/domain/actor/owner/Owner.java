@@ -31,7 +31,11 @@ public class Owner extends ANaturalActor {
     private String address;
     
     private Set<House> houses = new HashSet<>();
-    
+
+    public Owner() {
+        super();
+    }
+
     public Owner(String name, String phone, String email, boolean active) {
         super(name, new Agreement(), email);
         this.email = email;

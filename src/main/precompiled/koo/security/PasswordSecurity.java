@@ -53,18 +53,21 @@ public class PasswordSecurity {
 
     // Load the Argon parameters via the application.ini for a web-app
     private static Argon2Function loadProperties() {
-        var mem = Integer.valueOf((String) MainServlet.getEnvironment("argon2.memory"));
+        try {
+            var mem = Integer.valueOf((String) MainServlet.getEnvironment("argon2.memory"));
 
-        if (mem == null)
+            if (mem == null)
+                return Argon2Function.getInstance(15360, 2, 1, 32, Argon2.ID);
+
+            var it = Integer.valueOf((String) MainServlet.getEnvironment("argon2.iterations"));
+            var par = Integer.valueOf((String) MainServlet.getEnvironment("argon2.parallelism"));
+            var len = Integer.valueOf((String) MainServlet.getEnvironment("argon2.length"));
+
+            return Argon2Function.getInstance(mem, it, par, len, Argon2.ID);
+        } catch (Exception e) {
+            System.err.println("* * * ! Failed to load argon2 parameters from environment, using defaults. Error: " + e.getMessage());
             return Argon2Function.getInstance(15360, 2, 1, 32, Argon2.ID);
-
-        var it = Integer.valueOf((String) MainServlet.getEnvironment("argon2.iterations"));
-        var par = Integer.valueOf((String) MainServlet.getEnvironment("argon2.parallelism"));
-        var len = Integer.valueOf((String) MainServlet.getEnvironment("argon2.length"));
-
-        Argon2Function func = Argon2Function.getInstance(mem, it, par, len, Argon2.ID);
-
-        return func;
+        }
     }
 
     // Public method to get the pre-configured function
