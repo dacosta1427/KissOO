@@ -52,8 +52,12 @@ public class Tasks {
     final static String BUILDDIR = "work";
     final static String explodedDir = BUILDDIR + "/" + "exploded";
     final static String postgresqlJar = "postgresql-" + postgresqlVer + ".jar";
-    final static String groovyJar = "groovy-" + groovyVer + ".jar";
-    final static String debugPort = "9000";
+        final static String groovyJar = "groovy-" + groovyVer + ".jar";
+        final static String jteVer = "3.2.4";
+        final static String jteJar = "jte-" + jteVer + ".jar";
+        final static String jteRuntimeJar = "jte-runtime-" + jteVer + ".jar";
+        final static String jteExtensionApiJar = "jte-extension-api-" + jteVer + ".jar";
+        final static String debugPort = "9000";
 
     /**
      * Main entry point for the build system.  It tells the build system what arguments were passed in
@@ -291,6 +295,8 @@ public class Tasks {
         rm(explodedDir + "/WEB-INF/lib/jakarta.servlet-api-4.0.1.jar");
         //copyRegex("src/main/core/org/kissweb/lisp", explodedDir + "/WEB-INF/classes/org/kissweb/lisp", ".*\\.lisp", null, false);
         copy("src/main/core/log4j2.xml", explodedDir + "/WEB-INF/classes");
+        // JTE templates (resolved from classpath /jte by TemplateProvider)
+        copyTree("src/main/jte", explodedDir + "/WEB-INF/classes/jte");
         copyForce("src/main/core/WEB-INF/web-unsafe.xml", explodedDir + "/WEB-INF/web.xml");
     }
 
@@ -555,6 +561,11 @@ public class Tasks {
         dep.add(LIBS, "https://repo1.maven.org/maven2/org/apache/pdfbox/pdfbox/3.0.5/pdfbox-3.0.5.jar");
         dep.add(LIBS, "https://repo1.maven.org/maven2/org/apache/pdfbox/fontbox/3.0.5/fontbox-3.0.5.jar");
         dep.add(LIBS, "https://repo1.maven.org/maven2/org/apache/pdfbox/pdfbox-io/3.0.5/pdfbox-io-3.0.5.jar");
+
+        // JTE template engine (hypermedia / HTMX / Datastar HTML rendering)
+        dep.add(LIBS, "https://repo1.maven.org/maven2/gg/jte/jte/" + jteVer + "/jte-" + jteVer + ".jar");
+        dep.add(LIBS, "https://repo1.maven.org/maven2/gg/jte/jte-runtime/" + jteVer + "/jte-runtime-" + jteVer + ".jar");
+        dep.add(LIBS, "https://repo1.maven.org/maven2/gg/jte/jte-extension-api/" + jteVer + "/jte-extension-api-" + jteVer + ".jar");
         // ag-grid appears to no longer be available through a CDN.  Therefore, I am simply including it with the Kiss distribution
         //dep.add("src/main/frontend/lib", "https://cdnjs.cloudflare.com/ajax/libs/ag-grid/25.1.0/ag-grid-community.noStyle.min.js");
         //dep.add("src/main/frontend/lib", "https://cdnjs.cloudflare.com/ajax/libs/ag-grid/25.1.0/styles/ag-grid.min.css");

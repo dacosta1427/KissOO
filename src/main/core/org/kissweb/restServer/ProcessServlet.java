@@ -46,6 +46,15 @@ public class ProcessServlet implements Runnable {
     protected Connection DB;
     private byte [] binaryData;
     private boolean isBinaryReturn = false;
+
+    // ========================================================================
+    // [HYPERMEDIA MOD 1] HTML return support for JTE / HTMX / Datastar.
+    // Mirrors the existing isBinaryReturn pattern: a service method calls
+    // returnHtml(...) and successReturn() sends it as text/html instead of
+    // serializing outjson.  No other behavior changes.
+    // ========================================================================
+    private String htmlData = null;
+    private boolean isHtmlReturn = false;
     /** True when streaming mode is active for this request. */
     private volatile boolean sseStreamingMode = false;
     /** The PrintWriter for streaming text content. */
@@ -334,6 +343,62 @@ public class ProcessServlet implements Runnable {
                 injson.put(name, value);
             }
         } else {
+            // ================================================================
+            // [HYPERMEDIA MOD 3] External hypermedia clients:
+            //  - HTMX GET requests and Datastar GET requests have NO JSON body.
+            //  - HTMX POSTs default to application/x-www-form-urlencoded.
+            //  - Datastar GETs carry signals URL-encoded in the "datastar" param.
+            // ================================================================
+            String _ctype = request.getContentType();
+            if ("GET".equalsIgnoreCase(request.getMethod())
+                    || (_ctype != null && _ctype.startsWith("application/x-www-form-urlencoded"))) {
+
+                injson = new JSONObject();
+                Enumeration<String> _names = request.getParameterNames();
+                while (_names.hasMoreElements()) {
+                    String name = _names.nextElement();
+                    injson.put(name, request.getParameter(name));
+                }
+
+                // Datastar convention: signals arrive as URL-encoded JSON in
+                // the "datastar" query parameter on GET requests.
+                String _ds = request.getParameter("datastar");
+                if (_ds != null && !_ds.isEmpty()) {
+                    try {
+                        JSONObject _sig = new JSONObject(
+                                java.net.URLDecoder.decode(_ds, StandardCharsets.UTF_8));
+                        for (String _key : _sig.keySet())
+                            injson.put(_key, _sig.get(_key));
+                    } catch (JSONException ignored) {
+                        // malformed datastar signals - ignore
+                    }
+                }
+
+                // Optional semantic-URL routing for HTMX/Datastar:
+                // .../services/TaskService/getTaskList
+                //   -> _class = "services/TaskService", _method = "getTaskList"
+                if (injson.optString("_class").isEmpty()) {
+                    String _path = request.getPathInfo();
+                    if (_path == null || _path.isEmpty())
+                        _path = request.getRequestURI();
+                    String[] _seg = _path.replaceAll("^/+", "").split("/");
+                    if (_seg.length >= 2) {
+                        StringBuilder _cls = new StringBuilder();
+                        for (int i = 0; i < _seg.length - 1; i++) {
+                            if (i > 0) _cls.append('/');
+                            _cls.append(_seg[i]);
+                        }
+                        injson.put("_class", _cls.toString());
+                        injson.put("_method", _seg[_seg.length - 1]);
+                    }
+                }
+                _className = injson.optString("_class", "");
+                _method    = injson.optString("_method", "");
+                logger.info("Enter back-end seeking HYPERMEDIA service " + _className + "." + _method + "()");
+            } else {
+            // ================================================================
+            // [ORIGINAL KISS CODE - UNCHANGED] JSON body parsing begins here.
+            // ================================================================
             String charset = request.getCharacterEncoding();
             if (charset == null || charset.isEmpty())
                 charset = "UTF-8";
@@ -395,6 +460,19 @@ public class ProcessServlet implements Runnable {
             _className = injson.getString("_class");
             _method = injson.getString("_method");
             logger.info("Enter back-end seeking REST service " + _className + "." + _method + "()");
+            }
+        }
+
+        // ====================================================================
+        // [HYPERMEDIA MOD 4] Server.call() injects _uuid automatically; HTMX and
+        // Datastar cannot.  Accept the uuid from an HTTP header (set via
+        // hx-headers on the HTMX side, or a normal header on the Datastar side)
+        // so Kiss authentication works unchanged.  Fall back to "" so that
+        // getString("_uuid") never throws for external clients.
+        // ====================================================================
+        if (injson.optString("_uuid").isEmpty()) {
+            String _uuid = request.getHeader("X-Kiss-Uuid");
+            injson.put("_uuid", _uuid != null ? _uuid : "");
         }
 
         if (_method == null  ||  _method.isEmpty()) {
@@ -520,6 +598,36 @@ public class ProcessServlet implements Runnable {
         binaryData = data;
     }
 
+    // ========================================================================
+    // [HYPERMEDIA MOD 2] Return a rendered HTML fragment (e.g. from JTE) to
+    // the front-end.  HTMX will swap it into the DOM; Datastar will patch it
+    // using the datastar-selector / datastar-mode headers when provided.
+    // ========================================================================
+
+    /**
+     * Return an HTML fragment to the front-end (Content-Type text/html).
+     *
+     * @param html the rendered HTML (typically JTE output)
+     */
+    public void returnHtml(String html) {
+        isHtmlReturn = true;
+        htmlData = html;
+    }
+
+    /**
+     * Return an HTML fragment with Datastar patch instructions.
+     *
+     * @param html     the rendered HTML
+     * @param selector CSS selector of the element(s) Datastar should patch
+     * @param mode     one of: outer, inner, remove, replace, prepend, append, before, after
+     */
+    public void returnHtml(String html, String selector, String mode) {
+        isHtmlReturn = true;
+        htmlData = html;
+        if (selector != null) response.setHeader("datastar-selector", selector);
+        if (mode != null)     response.setHeader("datastar-mode", mode);
+    }
+
     /**
      * Set the async timeout for the current request, in milliseconds.  A value of zero or less
      * means no timeout (the request may run to completion however long it takes).
@@ -595,6 +703,30 @@ public class ProcessServlet implements Runnable {
             throw new IllegalStateException("Text streaming not available for this content type");
         if (content == null)
             return;
+        for (String line : content.split("\\n", -1))
+            streamWriter.print("data: " + line + '\n');
+        streamWriter.print('\n');
+        streamWriter.flush();
+    }
+
+    /**
+     * [HYPERMEDIA MOD 6] Stream a *named* SSE event, as required by Datastar
+     * (e.g. event name "datastar-patch-signals").  Streaming mode must be
+     * initialized first using {@link #initializeSSEStream(long)}.
+     *
+     * @param eventName the SSE event name
+     * @param content   the event payload (single-line JSON or HTML)
+     * @throws IOException if an I/O error occurs while writing
+     * @throws IllegalStateException if streaming mode is not initialized
+     */
+    public void streamSSEEvent(String eventName, String content) throws IOException {
+        if (!sseStreamingMode)
+            throw new IllegalStateException("Streaming mode must be initialized first");
+        if (streamWriter == null)
+            throw new IllegalStateException("Text streaming not available for this content type");
+        if (content == null)
+            return;
+        streamWriter.print("event: " + eventName + '\n');
         for (String line : content.split("\\n", -1))
             streamWriter.print("data: " + line + '\n');
         streamWriter.print('\n');
@@ -738,7 +870,15 @@ public class ProcessServlet implements Runnable {
             outjson.put("_ErrorCode", 0);  // success
             outjson.put("_BootId", MainServlet.getBootId());
             response.setStatus(200);
-            if (!isBinaryReturn) {
+            if (isHtmlReturn) {
+                response.setContentType("text/html");
+                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                if (htmlData != null) {
+                    writeJsonText(htmlData);   // writes UTF-8 bytes to 'out'
+                    htmlData = null;
+                    isHtmlReturn = false;
+                }
+            } else if (!isBinaryReturn) {
                 response.setContentType("application/json");
                 response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                 writeJsonText(outjson.toString());

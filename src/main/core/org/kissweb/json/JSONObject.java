@@ -838,6 +838,30 @@ public class JSONObject {
     }
 
     /**
+     * Get an optional string value associated with a key.
+     * If the key is not present or the value is null, an empty string is returned.
+     *
+     * @param key A key string.
+     * @return A string which is the value, or the empty string if not found.
+     */
+    public String optString(String key) {
+        return optString(key, "");
+    }
+
+    /**
+     * Get an optional string value associated with a key.
+     * If the key is not present or the value is null, {@code dflt} is returned.
+     *
+     * @param key A key string.
+     * @param dflt The default value.
+     * @return A string which is the value, or {@code dflt} if not found.
+     */
+    public String optString(String key, String dflt) {
+        Object o = opt(key);
+        return o != null ? o.toString() : dflt;
+    }
+
+    /**
      * Get the character associated with a key.
      * If the item is a string, the first character is returned.
      * If key not present, return null.
