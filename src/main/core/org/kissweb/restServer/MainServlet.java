@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
+import java.util.function.IntSupplier;
 
 
 /**
@@ -54,6 +55,7 @@ public class MainServlet extends HttpServlet {
     private static boolean hasDatabase;              // determined by application.ini
     private static Cron cron;
     private static final Set<String> allowedWithoutAuthentication = new HashSet<>();
+    private static final String bootId = java.util.UUID.randomUUID().toString();  // unique per server start
     private static final Hashtable<String,Object> environment = new Hashtable<>();  // general application-specific values
     /** True if running on Linux. */
     public static boolean isLinux = false;
@@ -207,7 +209,7 @@ public class MainServlet extends HttpServlet {
                     makeDatabaseConnection();
                 } catch (PropertyVetoException | SQLException | ClassNotFoundException e) {
                     logger.error(e);
-                    //System.exit(-1);  // This kills tomcat which you do not want to do on a production system
+                    databaseConnectionFatal(e);
                     throw new RuntimeException("Initialization failed", e);
                 }
                 logger.info("* * * Database " + databaseName + " opened successfully");
@@ -222,28 +224,18 @@ public class MainServlet extends HttpServlet {
         } else
             logger.error("* * * Error executing KissInit.groovy");
 
-        // Only call init2 if there's a SQL database or a NonSqlConnection registered
-        Connection db = MainServlet.openNewConnection();
-        Object nonSqlConn = environment.get("NonSqlConnection");
-        
-        // DEBUG LOGGING
-        logger.info("DEBUG init2: hasDatabase=" + hasDatabase + ", db=" + db + ", nonSqlConn=" + nonSqlConn);
-        
-        if (hasDatabase || nonSqlConn != null) {
-            // Pass NonSqlConnection if no SQL DB but NonSqlConnection is registered
-            if (db == null && nonSqlConn instanceof Connection) {
-                db = (Connection) nonSqlConn;
-                logger.info("DEBUG init2: Calling init2 with db=" + db);
-                (new GroovyService()).internalGroovy(null, "KissInit", "init2", (Connection) db);
-            } else {
-                logger.info("DEBUG init2: NOT calling init2 - db=" + db + ", nonSqlConn instanceof Connection=" + (nonSqlConn instanceof Connection));
-            }
-        }
-        if (db != null && !(nonSqlConn instanceof Connection))
+        if (MainServlet.hasDatabase()) {
+            // Normal Kiss path: a SQL database is configured.
+            Connection db = MainServlet.openNewConnection();
+            (new GroovyService()).internalGroovy(null, "KissInit", "init2", db);
             MainServlet.closeConnection(db);
-
-        if (!hasDatabase)
-            logger.info("* * * No database configured; bypassing login requirements");
+        } else {
+            // No-SQL path (e.g., Perst OODBMS): dispatch to a dedicated hook so the
+            // OODBMS initialization stays in the application's KissInit (fork).
+            Object nonSqlConn = MainServlet.getEnvironment("NonSqlConnection");
+            if (nonSqlConn != null)
+                (new GroovyService()).internalGroovy(null, "KissInit", "init2ForNonSQL", nonSqlConn);
+        }
 
         try {
             cron = new Cron(MainServlet.getApplicationPath() + "CronTasks/crontab",
@@ -255,6 +247,35 @@ public class MainServlet extends HttpServlet {
         }
 
         Configurator.setLevel(logger, level);
+    }
+
+    /**
+     * A database is configured but cannot be reached at startup.  Nothing in the
+     * application can work in this state, so this logs an unmistakable banner
+     * naming the database and the underlying error.  The caller then throws,
+     * which aborts this web application's deployment; the servlet container
+     * itself is left running so other applications it hosts are unaffected.
+     */
+    private static void databaseConnectionFatal(Exception e) {
+        String host = (String) environment.get("DatabaseHost");
+        Integer port = getEnvironmentInt("DatabasePort");
+        String msg = "\n" +
+                "**********************************************************************\n" +
+                "*  FATAL: cannot connect to the configured database.\n" +
+                "*\n" +
+                "*      " + e.getMessage() + "\n" +
+                "*\n" +
+                "*      Database: " + host + (port == null ? "" : ":" + port) + ":" + databaseName + "\n" +
+                "*\n" +
+                "*  The application cannot run without its configured database.\n" +
+                "*  Verify that the database server is running, that the database\n" +
+                "*  exists, and that the Database* settings in application.ini are\n" +
+                "*  correct; then restart.\n" +
+                "*\n" +
+                "*  THIS APPLICATION HAS BEEN DISABLED.  The servlet container\n" +
+                "*  itself has been left running.\n" +
+                "**********************************************************************";
+        logger.fatal(msg);
     }
 
     /**
@@ -286,6 +307,41 @@ public class MainServlet extends HttpServlet {
         return db;
     }
 
+    /** Application-registered hook that prepares each request's database connection (see {@link RequestConnectionPreparer}). */
+    private static RequestConnectionPreparer requestConnectionPreparer;
+
+    /**
+     * Register an application hook that prepares the per-request database connection
+     * after authentication and before the web service method executes, and clears
+     * per-request connection state when the connection is closed.  Typically called
+     * from <code>KissInit.groovy</code>.  See {@link RequestConnectionPreparer} for
+     * the contract and the multi-tenant use case.
+     *
+     * @param preparer the hook, or null to remove a previously registered hook
+     */
+    public static void setRequestConnectionPreparer(RequestConnectionPreparer preparer) {
+        requestConnectionPreparer = preparer;
+    }
+
+    /**
+     * Get the registered request-connection preparer.
+     *
+     * @return the registered hook, or null when none is registered
+     */
+    public static RequestConnectionPreparer getRequestConnectionPreparer() {
+        return requestConnectionPreparer;
+    }
+
+    private static void releaseRequestConnection(Connection db) {
+        if (requestConnectionPreparer != null  &&  db != null  &&  db.isOpen()) {
+            try {
+                requestConnectionPreparer.release(db);
+            } catch (Exception e) {
+                logger.error("RequestConnectionPreparer.release failed", e);
+            }
+        }
+    }
+
     /**
      * Closes a connection to the database opened with openNewConnection.
      * Commits or rolls back the transaction according to the success parameter.
@@ -294,6 +350,7 @@ public class MainServlet extends HttpServlet {
      * @see #closeConnection(Connection db, boolean success)
      */
     public static void closeConnection(Connection db) {
+        releaseRequestConnection(db);
         if (db != null &&  db.isOpen()) {
             java.sql.Connection sconn = null;
             try {
@@ -320,6 +377,7 @@ public class MainServlet extends HttpServlet {
      * @see #closeConnection(Connection db)
      */
     public static void closeConnection(Connection db, boolean success) {
+        releaseRequestConnection(db);
         boolean doClose = true;
         try {
             if (db != null && db.isOpen()) {
@@ -453,12 +511,52 @@ public class MainServlet extends HttpServlet {
 
             cpds.setDriverClass(Connection.getDriverName(connectionType));
 
-            // Configure connection pool sizes based on CPU count - can be overridden in application.ini
-            int cores = Runtime.getRuntime().availableProcessors();
-            int minPoolSize = getEnvironmentInt("DatabaseMinPoolSize", Math.max(2, cores));
-            int initialPoolSize = getEnvironmentInt("DatabaseInitialPoolSize", Math.max(minPoolSize, cores * 2));
-            int maxPoolSize = getEnvironmentInt("DatabaseMaxPoolSize", defaultMaxPoolSize());
-            int acquireIncrement = getEnvironmentInt("DatabaseAcquireIncrement", Math.max(2, cores / 2));
+            //
+            // Connection pool sizing.  All four values can be overridden in
+            // application.ini.
+            //
+            // These are derived from MaxWorkerThreads rather than from the CPU
+            // count, because the number of worker threads is what actually
+            // bounds how many connections can be held at once: QueueManager runs
+            // a fixed thread pool of that size, and each in-flight service holds
+            // exactly one connection for its duration.  A pool larger than that
+            // contains connections no request can ever check out.
+            //
+            // Sizing from CPU count is doubly wrong.  It over-provisions badly
+            // on a many-core machine -- on 32 cores the previous formula asked
+            // for 128 connections and pre-opened 64 -- and it derives a limit on
+            // a SHARED resource (the database server's max_connections) from a
+            // property of one client.  Two applications each sizing themselves
+            // that way will happily sum past the server's limit without either
+            // knowing the other exists.
+            //
+            // minPoolSize is 1, not the worker count: it is a permanent floor,
+            // held open even while the application is completely idle.  The pool
+            // grows on demand and shrinks back after maxIdleTime, so a low
+            // minimum costs one connect on the first request after a quiet
+            // period and nothing else.
+            //
+            int workers = getEnvironmentInt("MaxWorkerThreads", 30);
+            int minPoolSize = getEnvironmentInt("DatabaseMinPoolSize", 1);
+            int initialPoolSize = getEnvironmentInt("DatabaseInitialPoolSize", minPoolSize);
+            // Effective precedence, highest first:
+            //   1. DatabaseMaxPoolSize  -- application.ini setting
+            //   2. db.maxPoolSize       -- JVM system property (see defaultMaxPoolSize())
+            //   3. MaxWorkerThreads + 5 -- the calculated default (see defaultMaxPoolSize())
+            // The ini value is read first so defaultMaxPoolSize() -- and the
+            // db.maxPoolSize property it reads -- is only evaluated when
+            // DatabaseMaxPoolSize is absent or unparseable, not on every startup.
+            Object maxPoolSizeIniValue = environment.get("DatabaseMaxPoolSize");
+            int maxPoolSize = maxPoolSizeIniValue == null
+                    ? defaultMaxPoolSize()
+                    : parseIntOrWarn("DatabaseMaxPoolSize", maxPoolSizeIniValue.toString(), MainServlet::defaultMaxPoolSize);
+            // Small steps: the pool should follow demand, not leap ahead of it.
+            int acquireIncrement = getEnvironmentInt("DatabaseAcquireIncrement", 2);
+
+            if (initialPoolSize < minPoolSize)
+                initialPoolSize = minPoolSize;
+            if (maxPoolSize < minPoolSize)
+                maxPoolSize = minPoolSize;
             
             cpds.setMinPoolSize(minPoolSize);
             cpds.setInitialPoolSize(initialPoolSize);
@@ -483,33 +581,117 @@ public class MainServlet extends HttpServlet {
             cpds.setUnreturnedConnectionTimeout(getEnvironmentInt("DatabaseUnreturnedTimeout", 60));
             cpds.setDebugUnreturnedConnectionStackTraces(getEnvironmentBoolean("DatabaseDebugStackTraces", isUnderIDE()));
             
-            logger.info("C3P0 pool configured (CPU cores=" + cores + "): min=" + minPoolSize + ", initial=" + initialPoolSize + ", max=" + maxPoolSize + ", increment=" + acquireIncrement);
+            logger.info("C3P0 pool configured (worker threads=" + workers + "): min=" + minPoolSize
+                    + ", initial=" + initialPoolSize + ", max=" + maxPoolSize
+                    + ", increment=" + acquireIncrement);
+
+            //  Advisory only, and it doubles as proof that the pool itself works
+            //  before any request depends on it.
+            try (java.sql.Connection probe = cpds.getConnection()) {
+                warnIfPoolIsLargeShareOfServer(probe, connectionType, maxPoolSize);
+            } catch (SQLException e) {
+                logger.debug("could not obtain a pool connection for the startup check: " + e.getMessage());
+            }
         }
         Configurator.setLevel(logger, level);
     }
 
+    /**
+     * The default maximum pool size, used when DatabaseMaxPoolSize is absent
+     * or unparseable in application.ini (see that call site for the full
+     * three-level override precedence).
+     * <br><br>
+     * Derived from MaxWorkerThreads, which is the real ceiling on simultaneous
+     * checkouts, plus a small allowance for connections taken outside the
+     * request path -- cron tasks and explicit openNewConnection() callers.
+     * <br><br>
+     * Overridable with the db.maxPoolSize system property.  A malformed
+     * db.maxPoolSize logs a WARN naming the property and the rejected value,
+     * and falls back to the calculated default rather than preventing
+     * startup.
+     *
+     * @return the default maximum pool size
+     */
     private static int defaultMaxPoolSize() {
-        // Default max pool size based on CPU cores
-        // Formula: cores * 4 with a minimum of 20 connections
-        // This provides good throughput for most database workloads
-        // Can be overridden with DatabaseMaxPoolSize in application.ini
-        int cores = Runtime.getRuntime().availableProcessors();
-        int calculated = cores * 4;
-        return Integer.parseInt(
-                System.getProperty("db.maxPoolSize",
-                        String.valueOf(Math.max(20, calculated))));
+        int workers = getEnvironmentInt("MaxWorkerThreads", 30);
+        int calculated = workers + 5;
+        int fallback = Math.max(5, calculated);
+        String prop = System.getProperty("db.maxPoolSize");
+        if (prop == null)
+            return fallback;
+        return parseIntOrWarn("db.maxPoolSize", prop, fallback);
+    }
+
+    /**
+     * Warn when this application's pool is a large share of what the database
+     * server can serve in total.
+     * <br><br>
+     * No per-application sizing formula can prevent several applications from
+     * collectively exhausting a shared server, because each sizes itself in
+     * isolation.  What the framework can do is notice at startup and say so --
+     * turning "some other application mysteriously cannot connect at 3am" into
+     * one line in the log on the day the configuration was set.
+     *
+     * @param con a live connection to the database
+     * @param type the database vendor in use
+     * @param maxPoolSize this application's configured maximum
+     */
+    private static void warnIfPoolIsLargeShareOfServer(java.sql.Connection con,
+                                                       Connection.ConnectionType type,
+                                                       int maxPoolSize) {
+        try {
+            //  PostgreSQL only.  Other vendors express their limits differently
+            //  and a wrong warning is worse than none.
+            if (type != Connection.ConnectionType.PostgreSQL)
+                return;
+            try (java.sql.Statement st = con.createStatement();
+                 java.sql.ResultSet rs = st.executeQuery("show max_connections")) {
+                if (!rs.next())
+                    return;
+                int serverMax = Integer.parseInt(rs.getString(1).trim());
+                if (serverMax <= 0)
+                    return;
+                int percent = (maxPoolSize * 100) / serverMax;
+                if (percent >= 25) {
+                    logger.warn("DatabaseMaxPoolSize (" + maxPoolSize + ") is " + percent
+                            + "% of this database server's max_connections (" + serverMax + "). "
+                            + "If other applications share this server they may be unable to connect. "
+                            + "Lower DatabaseMaxPoolSize in application.ini, or raise max_connections.");
+                }
+            }
+        } catch (Exception e) {
+            //  Purely advisory.  A server that will not answer the question must
+            //  never prevent the application from starting.
+            logger.debug("could not check the server's max_connections: " + e.getMessage());
+        }
     }
     
     private static int getEnvironmentInt(String key, int defaultValue) {
         Object val = environment.get(key);
         if (val == null)
             return defaultValue;
+        return parseIntOrWarn(key, val.toString(), defaultValue);
+    }
+
+    /**
+     * Parses val as an integer.  If it cannot be parsed, logs a WARN naming
+     * key and the rejected value and returns the fallback supplied by
+     * defaultSupplier -- which is only invoked when the parse actually
+     * fails, so a fallback that is itself expensive (or reads other
+     * configuration) is not computed on the common, successfully-parsed
+     * path.
+     */
+    private static int parseIntOrWarn(String key, String val, IntSupplier defaultSupplier) {
         try {
-            return Integer.parseInt(val.toString());
+            return Integer.parseInt(val);
         } catch (NumberFormatException e) {
             logger.warn("Invalid integer value for " + key + ": " + val);
-            return defaultValue;
+            return defaultSupplier.getAsInt();
         }
+    }
+
+    private static int parseIntOrWarn(String key, String val, int defaultValue) {
+        return parseIntOrWarn(key, val, () -> defaultValue);
     }
     
     private static boolean getEnvironmentBoolean(String key, boolean defaultValue) {
@@ -605,25 +787,12 @@ public class MainServlet extends HttpServlet {
     }
 
     /**
-     * Checks if a SQL database is actually configured.
+     * Checks if a database is configured.
      *
-     * @return true if SQL database is configured
-     */
-    public static boolean hasSqlDatabase() {
-        return hasDatabase;
-    }
-
-    /**
-     * Checks if a database is configured or authentication is required.
-     * Returns true if SQL database is configured OR RequireAuthentication is set.
-     *
-     * @return true if database is configured or authentication is required
+     * @return true if database is configured
      */
     public static boolean hasDatabase() {
-        if (hasDatabase)
-            return true;
-        String requireAuth = (String) environment.get("RequireAuthentication");
-        return "true".equalsIgnoreCase(requireAuth);
+        return hasDatabase;
     }
 
     /**
@@ -660,8 +829,18 @@ public class MainServlet extends HttpServlet {
     }
 
     static boolean shouldAllowWithoutAuthentication(String className, String methodName) {
-        className = className.replaceAll("\\.", "/");
         return allowedWithoutAuthentication.contains(className + ":" + methodName);
+    }
+
+    /**
+     * A unique id generated once each time the server starts.  It is returned to the
+     * front-end (as <code>_BootId</code>); the front-end records it and forces a re-login
+     * when it changes, so a back-end restart invalidates persisted client sessions.
+     *
+     * @return the server boot id
+     */
+    public static String getBootId() {
+        return bootId;
     }
 
     /**

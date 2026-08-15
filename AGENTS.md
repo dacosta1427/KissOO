@@ -242,14 +242,14 @@ Note: `.svelte-kit/` is auto-generated and should not be committed.
 ## Perst 5.1.0 NonSqlConnection Integration
 
 ### How It Works
-When Perst-only mode is enabled (no SQL database), the framework automatically passes a `PerstConnection` instance as the `db` parameter to all services.
+When Perst-only mode is enabled (no SQL database), the framework automatically passes a `NonSqlConnection` instance as the `db` parameter to all services.
 
 **Architecture:**
 ```
 KissInit.groovy:
   PerstStorageManager.initialize()
-  PerstConnection = new PerstConnection()
-  MainServlet.putEnvironment("NonSqlConnection", PerstConnection)
+  nonSqlConn = new NonSqlConnection()
+  MainServlet.putEnvironment("NonSqlConnection", nonSqlConn)
 
 ProcessServlet.java:
   if (!hasSqlDatabase):
@@ -262,8 +262,8 @@ Services receive:
 ### Using the db Parameter
 ```groovy
 void myService(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
-    // db is a PerstConnection when Perst-only mode
-    if (db instanceof PerstConnection) {
+    // db is a NonSqlConnection when Perst-only mode
+    if (db instanceof NonSqlConnection) {
         Collection<Cleaner> cleaners = db.getAll(Cleaner.class)
         Cleaner c = db.getByOid(Cleaner.class, oid)
         def tc = db.perstCreateContainer()
@@ -292,9 +292,10 @@ void myService(...) {
 ```
 
 ### Critical Fixes Applied
-1. **KissInit.groovy**: Split initialization into two steps to ensure PerstConnection is registered even if Perst was already initialized
-2. **PerstConnection.java**: Override commit(), rollback(), close() as no-ops because PerstConnection is reused across requests
-3. **Login.groovy**: Accept PerstConnection as parameter type (not Connection) for proper method matching
+1. **KissInit.groovy**: Split initialization into two steps to ensure NonSqlConnection is registered even if Perst was already initialized
+2. **NonSqlConnection.java** (was `PerstConnection.java`): Override commit(), rollback(), close() as no-ops because NonSqlConnection is reused across requests
+3. **Login.groovy**: Accept NonSqlConnection as parameter type (not Connection) for proper method matching
+4. **MainServlet.init2**: Dispatches on `hasDatabase()` — SQL path calls `KissInit.init2(Connection db)` (normal Kiss hook); no-SQL path calls `KissInit.init2ForNonSQL(NonSqlConnection db)`. The method signature uses the concrete `NonSqlConnection` type because `GroovyService.internalGroovy` resolves by the runtime class of the passed argument (`args[i].getClass()`), and `Class.getMethod` requires an exact parameter-type match.
 
 ### PerstService.java (Java)
 Java services can use `PerstStorageManager.isAvailable()` and other static methods directly.

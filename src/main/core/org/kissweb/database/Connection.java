@@ -93,6 +93,8 @@ public class Connection implements AutoCloseable {
     private ConnectionType ctype;
     /** Cache of table and column information */
     private final HashMap<String,HashMap<String,ColumnInfo>> columnInfo = new HashMap<>();
+    /** Schema graph */
+    private SchemaGraph schemaGraph;
 
     /**
      * Create a Connection out of a pre-opened JDBC connection.
@@ -390,6 +392,22 @@ public class Connection implements AutoCloseable {
     }
 
     /**
+     * Create a new {@link QueryBuilder} that uses this connection's
+     * {@link SchemaGraph} for automatic join resolution.  The connection
+     * is stored in the builder so that the no-argument
+     * {@code fetchAll()}, {@code fetchOne()}, and {@code fetchAllJSON()}
+     * methods can be used without passing a connection explicitly.
+     *
+     * @return a new QueryBuilder instance
+     * @throws SQLException if the schema graph cannot be obtained
+     *
+     * @see QueryBuilder
+     */
+    public QueryBuilder newQueryBuilder() throws SQLException {
+        return new QueryBuilder(this);
+    }
+
+    /**
      * Read in the first record and then close it.
      * The record can be updated or deleted if it was a single-table select and
      * the primary key was selected.
@@ -603,6 +621,14 @@ public class Connection implements AutoCloseable {
 
     /**
      * Returns <code>true</code> if there are any records matching the given SQL statement and <code>false</code> otherwise.
+     * <br><br>
+     * The check is implemented as a plain {@link #fetchOne fetchOne} of the
+     * caller's query --- {@code fetchOne} already appends {@code LIMIT 1}
+     * (per dialect), so the engine can short-circuit after the first
+     * matching row.  This avoids relying on {@code SELECT EXISTS(...)},
+     * which is portable in SQL but produces a column whose default name
+     * (and value type --- {@link Boolean} versus {@link Integer}) varies
+     * across JDBC drivers and so cannot be read back uniformly.
      *
      * @param sql the SQL query to test for existence
      * @param args the parameter values for the SQL statement
@@ -610,8 +636,7 @@ public class Connection implements AutoCloseable {
      * @throws Exception if a database access error occurs
      */
     public boolean exists(String sql, Object... args) throws Exception {
-        Record r = fetchOne("select exists (" + sql + ")", args);
-        return (Boolean) r.get("exists");
+        return fetchOne(sql, args) != null;
     }
 
     /**
@@ -620,24 +645,25 @@ public class Connection implements AutoCloseable {
      * <br><br>
      * On the other hand, this method executes a costly SQL query so should be used only when necessary.
      * This would mainly be in conjunction with paging.
-     * 
+     * <br><br>
+     * Implementation note: the caller's query is wrapped as
+     * {@code SELECT COUNT(*) AS n FROM (...) tmp123}.  The explicit
+     * {@code AS n} alias keeps the result column name portable across
+     * drivers (some return {@code count}, others {@code count(*)}), and
+     * the table alias is written without the {@code AS} keyword because
+     * Oracle rejects {@code AS} on derived-table aliases.
+     *
      * @param sql the SQL query to count
      * @param args the parameter values for the SQL statement
      * @return the total number of records that would be returned
      * @throws Exception if a database access error occurs
-     * @see #fetchAll(int, int, String, Object...) 
+     * @see #fetchAll(int, int, String, Object...)
      */
     public long fetchCount(String sql, Object ... args) throws Exception {
         try (Command cmd = newCommand()) {
-            sql = "select count(*) from (" + sql + ") as tmp123";
-            /*
-            String lsql = sql.toLowerCase();
-            int b = lsql.indexOf(" from ");
-            int e = lsql.lastIndexOf(" order by ");
-            sql = "select count(*)" + sql.substring(b, e);
-             */
+            sql = "select count(*) as n from (" + sql + ") tmp123";
             Record rec = cmd.fetchOne(sql, args);
-            return rec.getLong("count");
+            return rec.getLong("n");
         }
     }
 
@@ -829,7 +855,7 @@ public class Connection implements AutoCloseable {
         table = table.replaceAll("\\[", "");
         table = table.replaceAll("]", "");
         if (table.indexOf('.') >= 0) {
-            String[] parts = table.split(".");
+            String[] parts = table.split("\\.");
             schema = parts[parts.length - 2];
             table = parts[parts.length - 1];
         }
@@ -1010,7 +1036,20 @@ public class Connection implements AutoCloseable {
     public String setSchema(String schema) throws SQLException {
         String oldSchema = conn.getSchema();
         conn.setSchema(schema);
+        schemaGraph = SchemaGraph.fromDatabase(this, schema);
         return oldSchema;
+    }
+
+    /**
+     * Get the schema graph for the connection.
+     *
+     * @return the schema graph
+     * @throws SQLException if the schema graph needs to be built and database metadata cannot be read
+     */
+    public SchemaGraph getSchemaGraph() throws SQLException {
+        if (schemaGraph == null)
+            schemaGraph = SchemaGraph.fromDatabase(this);
+        return schemaGraph;
     }
 
     /**

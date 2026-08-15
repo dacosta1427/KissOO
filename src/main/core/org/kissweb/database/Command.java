@@ -485,6 +485,12 @@ public class Command implements AutoCloseable {
 
     /**
      * Returns <code>true</code> if there are any records matching the given SQL statement and <code>false</code> otherwise.
+     * <br><br>
+     * Implemented as a plain {@link #fetchOne fetchOne} of the caller's
+     * query.  See {@link Connection#exists(String, Object...)} for the
+     * rationale (uniform behavior across JDBC drivers regardless of how
+     * each one names and types the column produced by
+     * {@code SELECT EXISTS(...)}).
      *
      * @param sql SQL statement with ? parameters
      * @param args the parameter values
@@ -492,8 +498,28 @@ public class Command implements AutoCloseable {
      * @throws Exception if database access error occurs
      */
     public boolean exists(String sql, Object... args) throws Exception {
-        Record r = fetchOne("select exists (" + sql + ")", args);
-        return (Boolean) r.get("exists");
+        return fetchOne(sql, args) != null;
+    }
+
+    /**
+     * Create a new {@link QueryBuilder} that uses this command's connection's
+     * {@link SchemaGraph} for automatic join resolution.  The command is
+     * stored in the builder so that the no-argument
+     * {@code fetchAll()}, {@code fetchOne()}, and {@code fetchAllJSON()}
+     * methods execute through this specific command instance.
+     * <br><br>
+     * This is useful when multiple queries must be active simultaneously
+     * on the same connection, each using its own command to avoid
+     * interference between simultaneously active result sets.
+     *
+     * @return a new QueryBuilder instance bound to this command
+     * @throws java.sql.SQLException if the schema graph cannot be obtained
+     *
+     * @see QueryBuilder
+     * @see Connection#newQueryBuilder()
+     */
+    public QueryBuilder newQueryBuilder() throws SQLException {
+        return new QueryBuilder(this);
     }
 
     List<String> getPriColumns(Cursor c) {

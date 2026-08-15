@@ -1,7 +1,6 @@
 package org.kissweb;
 
 import java.text.NumberFormat;
-import java.util.Locale;
 
 /**
  * Author: Blake McBride
@@ -89,7 +88,7 @@ public class NumberUtils {
      */
     public static double parseDouble(String s) {
         try {
-            Number n = NumberFormat.getInstance(Locale.US).parse(s);
+            Number n = NumberFormat.getInstance().parse(s);
             if (n instanceof Long) {
                 long v = (long) n;
                 return (double) v;
@@ -109,7 +108,7 @@ public class NumberUtils {
      */
     public static long parseLong(String s) {
         try {
-            Number n = NumberFormat.getInstance(Locale.US).parse(s);
+            Number n = NumberFormat.getInstance().parse(s);
             if (n instanceof Double) {
                 double v = (double) n;
                 return (long) v;

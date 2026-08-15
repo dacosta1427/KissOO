@@ -1,6 +1,7 @@
-import services.koo.PerstConnection
+import services.koo.NonSqlConnection
 import koo.core.actor.Agreement
 import koo.core.actor.Role
+import org.kissweb.database.Connection
 import org.kissweb.restServer.MainServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
@@ -48,7 +49,7 @@ class KissInit {
             }
         }
         
-        // Step 2: Register PerstConnection ALWAYS when Perst is enabled and available
+        // Step 2: Register NonSqlConnection ALWAYS when Perst is enabled and available
         // This runs even if Perst was already initialized from a previous startup
         if (PerstConfig.getInstance().isPerstEnabled() && StorageManager.isAvailable()) {
             try {
@@ -57,18 +58,17 @@ class KissInit {
                 println "[KissInit] Checking existing: " + existing
                 
                 if (existing == null) {
-                    println "[KissInit] Creating NEW PerstConnection..."
-                    def perstConn = new PerstConnection()
-                    println "[KissInit] Created perstConn: " + perstConn
+                    println "[KissInit] Creating NEW NonSqlConnection..."
+                    def nonSqlConn = new NonSqlConnection()
+                    println "[KissInit] Created nonSqlConn: " + nonSqlConn
                     
-                    MainServlet.putEnvironment("NonSqlConnection", perstConn)
-                    MainServlet.putEnvironment("PerstConnection", perstConn)
+                    MainServlet.putEnvironment("NonSqlConnection", nonSqlConn)
                     
                     // VERIFY it was stored
                     def verify = MainServlet.getEnvironment("NonSqlConnection")
                     println "[KissInit] Verified NonSqlConnection: " + verify
                     
-                    println "[KissInit] init() - PerstConnection registered as NonSqlConnection"
+                    println "[KissInit] init() - NonSqlConnection registered"
                     
                     // Skip user creation - causes ExceptionInInitializerError
                     // initDefaultUser()
@@ -79,7 +79,7 @@ class KissInit {
                     println "[KissInit] init() - NonSqlConnection already registered"
                 }
             } catch (Exception e) {
-                println "[KissInit] WARNING: Could not create PerstConnection: " + e.message
+                println "[KissInit] WARNING: Could not create NonSqlConnection: " + e.message
                 e.printStackTrace()
             }
         }
@@ -121,66 +121,45 @@ class KissInit {
     }
 
     /**
-     * Code to run once the database is open but before the app is running.
-     * Note: No SQL database is configured - Perst is accessed via MainServlet environment.
+     * Normal Kiss init hook (SQL database is open).
+     * Unused in KissOO, which runs Perst (no-SQL); the Perst initialization
+     * lives in init2ForNonSQL().
      */
-    static void init2(PerstConnection db) {
-        // If you use db, make sure you commit.
-        if (!PasswordSecurity.initialise()) System.out.println("! X X X PasswordSecurity NOT initialised!");
-        else {
-            println "[KissInit] init2() PWSEC failed";
-        }
-        System.out.println("* * * PasswordSecurity initialised!");
+    static void init2(Connection db) {
+    }
 
+    /**
+     * No-SQL (Perst OODBMS) initialization. Called by MainServlet when no SQL
+     * database is configured, with the registered NonSqlConnection.
+     */
+    static void init2ForNonSQL(NonSqlConnection db) {
         try {
-            println "[KissInit] init2() CALLED"
+            println "[KissInit] init2ForNonSQL() CALLED"
             println "[KissInit] db = " + db
             
-            // Initialize Perst database at startup via PerstStorageManager
-            // This uses MainServlet.putEnvironment() as suggested by KISS creator
-            println "[KissInit] Checking Perst config: enabled=" + PerstConfig.getInstance().isPerstEnabled()
-            println "[KissInit] Database path: " + PerstConfig.getInstance().getDatabasePath()
+            // Initialize PasswordSecurity
+            if (!PasswordSecurity.initialise()) {
+                System.out.println("! X X X PasswordSecurity NOT initialised!");
+            } else {
+                println "[KissInit] init2ForNonSQL() PWSEC initialised";
+            }
             
+            // Initialize Perst if not already initialized
             if (PerstConfig.getInstance().isPerstEnabled() && !StorageManager.isAvailable()) {
-                println "[KissInit] Initializing Perst database via PerstStorageManager..."
+                println "[KissInit] Initializing Perst database..."
                 StorageManager.initialize()
                 println "[KissInit] Perst initialized, isAvailable=" + StorageManager.isAvailable()
             } else {
                 println "[KissInit] Perst is already available"
             }
 
-            // Initialize default admin user if none exists (run AFTER Perst is guaranteed ready)
-            if (StorageManager.isAvailable()) {
-                def users = StorageManager.getAll(PerstUser.class)
-                println "[KissInit] Found ${users?.size() ?: 0} users"
-                
-                if (!users || users.size() == 0) {
-                    println "[KissInit] No users found - performing close/re-open cycle..."
-                    
-                    // Close and re-open to ensure clean state
-                    StorageManager.close()
-                    
-                    // Re-initialize Perst
-                    if (PerstConfig.getInstance().isPerstEnabled()) {
-                        StorageManager.initialize()
-                    }
-                    
-                    println "[KissInit] Perst re-initialized, creating users..."
-                    
-                    // NOW create users - Perst is guaranteed ready
-                    initDefaultUser()
-                    indexPerstUsers()
-                    indexActors()
-                } else {
-                    println "[KissInit] Users already exist (${users.size()}), skipping user init"
-                }
-            } else {
-                println "[KissInit] WARNING: Perst not available, skipping user init"
-            }
+            // Skip user initialization to prevent ExceptionInInitializerError
+            println "[KissInit] User initialization skipped in init2ForNonSQL() to prevent ExceptionInInitializerError"
+            println "[KissInit] Use the PerstInit service or signup API to create users after startup"
             
-            println "[KissInit] init2() COMPLETED"
+            println "[KissInit] init2ForNonSQL() COMPLETED"
         } catch (Exception e) {
-            println "[KissInit] ERROR in init2: ${e.class.simpleName}: ${e.message}"
+            println "[KissInit] ERROR in init2ForNonSQL: ${e.class.simpleName}: ${e.message}"
             e.printStackTrace()
         }
     }

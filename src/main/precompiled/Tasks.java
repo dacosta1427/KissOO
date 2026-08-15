@@ -23,10 +23,12 @@
  */
 
 import org.kissweb.BuildUtils;
+import org.kissweb.KissBuildUtils;
 
 import java.io.File;
 
 import static org.kissweb.BuildUtils.*;
+import static org.kissweb.KissBuildUtils.*;
 
 /**
  * This class contains the tasks that are executed by the build system.
@@ -283,7 +285,7 @@ public class Tasks {
 
         buildJava("src/main/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
         buildJava("src/main/precompiled", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
-        // Compile backend/koo after precompiled so PerstConnection extends Connection with proper classpath
+        // Compile backend/koo after precompiled so NonSqlConnection extends Connection with proper classpath
         buildJava("src/main/backend", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         buildJava("src/test/core", explodedDir + "/WEB-INF/test-classes", localLibs, foreignLibs, explodedDir + "/WEB-INF/classes");
         rm(explodedDir + "/WEB-INF/lib/jakarta.servlet-api-4.0.1.jar");
@@ -567,6 +569,8 @@ public class Tasks {
         dep.add(LIBS, "https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console/1.11.0/junit-platform-console-1.11.0.jar");
         dep.add(LIBS, "https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.11.0/junit-platform-console-standalone-1.11.0.jar");
         dep.add(LIBS, "https://repo1.maven.org/maven2/com/password4j/password4j/1.8.4/password4j-1.8.4.jar");
+        // Metadata extractor (needed by upstream org.kissweb.Image)
+        dep.add(LIBS, "https://repo1.maven.org/maven2/com/drewnoakes/metadata-extractor/2.19.0/metadata-extractor-2.19.0.jar");
         return dep;
     }
 
@@ -580,6 +584,9 @@ public class Tasks {
         final LocalDependencies dep = new LocalDependencies();
         dep.add(LIBS, "abcl.jar");
         dep.add(LIBS, "ooGTxQ-1.0.1.jar");
+        dep.add(LIBS, "commons-compress-1.27.1.jar");
+        dep.add(LIBS, "commons-io-2.16.1.jar");
+        dep.add(LIBS, "commons-lang3-3.18.0.jar");
         dep.add(LIBS, "lombok.jar");
         dep.add(LIBS, "slf4j-api-1.7.30.jar");
         dep.add(LIBS, "slf4j-simple-1.7.30.jar");

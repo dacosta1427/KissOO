@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * PerstConnection - Extends KISS Connection with Perst OODBMS operations.
+ * NonSqlConnection - Extends KISS Connection with Perst OODBMS operations.
  * 
  * Uses an in-memory SQLite database as a dummy SQL connection to satisfy the
  * Connection superclass, then adds Perst-specific methods.
@@ -24,16 +24,16 @@ import java.util.List;
  * IMPORTANT: commit(), rollback(), and close() are no-ops because:
  * 1. The dummy SQLite connection is only to satisfy the Connection superclass
  * 2. Real Perst operations use PerstStorageManager, not this dummy connection
- * 3. PerstConnection is reused across requests, so we don't close the dummy connection
+ * 3. NonSqlConnection is reused across requests, so we don't close the dummy connection
  */
-public class PerstConnection extends Connection {
+public class NonSqlConnection extends Connection {
     
     private CDatabase cdb;
     
     /**
-     * Create PerstConnection with an in-memory SQLite database as dummy connection.
+     * Create NonSqlConnection with an in-memory SQLite database as dummy connection.
      */
-    public PerstConnection() throws SQLException {
+    public NonSqlConnection() throws SQLException {
         super(createDummyConnection());
         this.cdb = StorageManager.getDBManager();
     }
@@ -77,12 +77,12 @@ public class PerstConnection extends Connection {
     }
     
     /**
-     * No-op: PerstConnection is reused across requests.
+     * No-op: NonSqlConnection is reused across requests.
      * The real Perst database operations use PerstStorageManager.
      */
     @Override
     public void close() throws java.sql.SQLException {
-        // Don't close - PerstConnection is reused
+        // Don't close - NonSqlConnection is reused
     }
     
     // ========== TRANSACTION MANAGEMENT ==========
@@ -115,7 +115,7 @@ public class PerstConnection extends Connection {
         try {
             return cdb.store(tc).isSuccess();
         } catch (Exception e) {
-            System.err.println("[PerstConnection] Store failed: " + e.getMessage());
+            System.err.println("[NonSqlConnection] Store failed: " + e.getMessage());
             return false;
         }
     }
@@ -128,7 +128,7 @@ public class PerstConnection extends Connection {
             IterableIterator<T> results = cdb.getRecords(clazz);
             return toList(results);
         } catch (Exception e) {
-            System.err.println("[PerstConnection] getAll failed: " + e.getMessage());
+            System.err.println("[NonSqlConnection] getAll failed: " + e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -139,7 +139,7 @@ public class PerstConnection extends Connection {
             IterableIterator<T> results = cdb.find(clazz, field, new org.garret.perst.Key(value));
             return getSingleton(results);
         } catch (Exception e) {
-            System.err.println("[PerstConnection] find(String) failed: " + e.getMessage());
+            System.err.println("[NonSqlConnection] find(String) failed: " + e.getMessage());
             return null;
         }
     }
@@ -150,7 +150,7 @@ public class PerstConnection extends Connection {
             IterableIterator<T> results = cdb.find(clazz, field, new org.garret.perst.Key(value));
             return getSingleton(results);
         } catch (Exception e) {
-            System.err.println("[PerstConnection] find(int) failed: " + e.getMessage());
+            System.err.println("[NonSqlConnection] find(int) failed: " + e.getMessage());
             return null;
         }
     }
@@ -161,7 +161,7 @@ public class PerstConnection extends Connection {
             IterableIterator<T> results = cdb.find(clazz, field, new org.garret.perst.Key(value));
             return getSingleton(results);
         } catch (Exception e) {
-            System.err.println("[PerstConnection] find(long) failed: " + e.getMessage());
+            System.err.println("[NonSqlConnection] find(long) failed: " + e.getMessage());
             return null;
         }
     }
@@ -171,7 +171,7 @@ public class PerstConnection extends Connection {
         try {
             return cdb.getByOid(oid);
         } catch (Exception e) {
-            System.err.println("[PerstConnection] getByOid failed: " + e.getMessage());
+            System.err.println("[NonSqlConnection] getByOid failed: " + e.getMessage());
             return null;
         }
     }
@@ -181,7 +181,7 @@ public class PerstConnection extends Connection {
         try {
             return cdb.getByUuid(uuid);
         } catch (Exception e) {
-            System.err.println("[PerstConnection] getByUuid failed: " + e.getMessage());
+            System.err.println("[NonSqlConnection] getByUuid failed: " + e.getMessage());
             return null;
         }
     }

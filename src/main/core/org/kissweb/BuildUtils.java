@@ -14,10 +14,13 @@
  * minimum steps necessary to rebuild a system are actually executed.  So, this 
  * build system runs as fast as the others.
  *
- * There are two classes as follows:
+ * The build system is made up of the following classes:
  *
- *     BuildUtils -  the generic utilities needed to build
- *     Tasks      -  the application-specific build procedures (or tasks)
+ *     BuildUtils     -  the generic build utilities (this file; also usable
+ *                       as part of a generic build system unrelated to Kiss)
+ *     KissBuildUtils -  build procedures common to all Kiss-framework
+ *                       applications (present only in Kiss projects)
+ *     Tasks          -  the application-specific build procedures (or tasks)
  */
 
 package org.kissweb;
@@ -28,11 +31,15 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
@@ -136,9 +143,23 @@ public class BuildUtils {
                 case "-h":
                 case "--help":
                     println("Use: bld  list-tasks         to get a list of tasks");
-                    println("Use: bld  [-v]  <task>       to execute the task");
+                    println("Use: bld  [option]... <task> to execute the task");
                     println("Use: bld  help               this message");
                     println("Use: bld  version            display version of bld");
+                    println("");
+                    println("Options:");
+                    println("  -v, --verbose                     verbose output (must precede the task)");
+                    println("  -h, --help                        same as help");
+                    println("  --version                         same as version");
+                    //  Like listTasks above, the tasks class may supply an optional
+                    //  listOptions method that documents any additional options it
+                    //  consumes before task dispatch.
+                    try {
+                        Method listOptionsMethod = tasksClass.getMethod("listOptions");
+                        listOptionsMethod.invoke(null);
+                    } catch (Exception e) {
+                        // ignore
+                    }
                     break;
                 case "-v":
                 case "--verbose":
@@ -208,15 +229,6 @@ public class BuildUtils {
     }
 
     /**
-     * Gets the absolute path to the local Tomcat installation directory.
-     *
-     * @return the absolute path to the tomcat directory
-     */
-    public static String getTomcatPath() {
-        return (new File("tomcat")).getAbsolutePath();
-    }
-
-    /**
      * Checks if a file or directory exists.
      *
      * @param fname the file or directory path to check
@@ -272,12 +284,319 @@ public class BuildUtils {
 
     /**
      * Downloads all foreign dependencies specified in the dependency collection.
+     * <p>
+     * Once everything is downloaded, files left over from earlier versions of those
+     * same dependencies are removed; see
+     * {@link #pruneSupersededVersions(ForeignDependencies)}.
      *
      * @param deps the foreign dependencies to download
      */
     public static void downloadAll(ForeignDependencies deps) {
         for (ForeignDependency dep : deps.getDependencies())
             download(dep.filename, dep.targetPath, dep.source);
+        pruneSupersededVersions(deps);
+    }
+
+    /**
+     * Removes files left over from earlier versions of the given foreign dependencies.
+     * <p>
+     * Changing a dependency's version downloads the new file but leaves the file holding
+     * the previous version sitting in the target directory.  Both versions then end up on
+     * the classpath and which one wins is arbitrary, which produces failures far removed
+     * from their cause.  This removes those superseded files.
+     * <p>
+     * A file is removed only when all of the following hold:
+     * <ul>
+     *     <li>it sits in the same target directory as a current dependency,</li>
+     *     <li>its artifact name is <em>exactly</em> that dependency's artifact name,</li>
+     *     <li>it carries a version, meaning the artifact name is followed by {@code -}
+     *         and a digit,</li>
+     *     <li>it has the same extension, and</li>
+     *     <li>it is not itself one of the current dependencies.</li>
+     * </ul>
+     * Requiring the artifact name to match exactly is what keeps sibling artifacts that
+     * share a prefix independent of one another.  {@code pdfbox} does not match
+     * {@code pdfbox-io-3.0.5.jar}, and {@code junit-jupiter} does not match
+     * {@code junit-jupiter-api-5.11.0.jar}, because in each case the text following the
+     * prefix is another name rather than a version.  Files belonging to artifacts that
+     * are not listed as dependencies at all are never considered.
+     *
+     * @param deps the current set of foreign dependencies
+     */
+    public static void pruneSupersededVersions(ForeignDependencies deps) {
+        //  The files wanted in each target directory.  A directory can hold several
+        //  dependencies, so all of them must be known before anything is removed.
+        final Map<String, Set<String>> wanted = new HashMap<>();
+        for (ForeignDependency dep : deps.getDependencies())
+            wanted.computeIfAbsent(dep.targetPath, k -> new HashSet<>()).add(dep.filename);
+
+        for (ForeignDependency dep : deps.getDependencies()) {
+            final String artifact = artifactName(dep.filename);
+            if (artifact == null)
+                continue;   //  unversioned name; nothing can be known to supersede it
+            final String ext = fileExtension(dep.filename);
+            final File[] files = (new File(dep.targetPath)).listFiles();
+            if (files == null)
+                continue;
+            final Set<String> keep = wanted.get(dep.targetPath);
+            for (File file : files) {
+                if (!file.isFile())
+                    continue;
+                final String name = file.getName();
+                if (keep.contains(name))
+                    continue;   //  a currently wanted file
+                if (!name.endsWith(ext))
+                    continue;
+                if (!isVersionOf(name, artifact))
+                    continue;
+                println("removing superseded " + dep.targetPath + File.separator + name);
+                if (!file.delete())
+                    throw new RuntimeException("error deleting superseded file " + file.getAbsolutePath());
+            }
+        }
+    }
+
+    /**
+     * Returns the artifact portion of a versioned file name, which is everything ahead of
+     * the last {@code -} that is followed by a digit.  This is the usual
+     * {@code artifact-version.ext} repository convention.  Scanning for the <em>last</em>
+     * such separator is what allows an artifact name to itself end in a digit, as in
+     * {@code commons-lang3-3.18.0.jar}.
+     *
+     * @param filename the file name to examine
+     * @return the artifact name, or null when the name carries no recognizable version
+     */
+    private static String artifactName(String filename) {
+        int idx = -1;
+        for (int i = 0; i < filename.length() - 1; i++)
+            if (filename.charAt(i) == '-'  &&  Character.isDigit(filename.charAt(i + 1)))
+                idx = i;
+        if (idx <= 0)
+            return null;
+        return filename.substring(0, idx);
+    }
+
+    /**
+     * Determines whether a file name is a versioned instance of the given artifact, that
+     * is, the artifact name followed by {@code -} and a digit.
+     *
+     * @param filename the file name to test
+     * @param artifact the artifact name to test against
+     * @return true if filename is a versioned instance of artifact
+     */
+    private static boolean isVersionOf(String filename, String artifact) {
+        if (!filename.startsWith(artifact))
+            return false;
+        if (filename.length() < artifact.length() + 2)
+            return false;
+        return filename.charAt(artifact.length()) == '-'  &&  Character.isDigit(filename.charAt(artifact.length() + 1));
+    }
+
+    /**
+     * Returns the extension of a file name, including the leading period.
+     *
+     * @param filename the file name to examine
+     * @return the extension, or an empty string when there is none
+     */
+    private static String fileExtension(String filename) {
+        final int dot = filename.lastIndexOf('.');
+        return dot < 0 ? "" : filename.substring(dot);
+    }
+
+    /**
+     * Parses the coordinates out of a URL that addresses a Maven-layout repository, in which
+     * an artifact lives at {@code <group path>/<artifact>/<version>/<artifact>-<version>.<ext>}.
+     * <p>
+     * A {@code maven2} path segment, which the central repository uses as its root, is dropped
+     * from the group when present.  The file name is required to agree with the artifact and
+     * version taken from the path; a URL that does not follow the layout yields null rather than
+     * invented coordinates, so URLs pointing at a CDN or any other non-repository source are
+     * simply passed over.
+     *
+     * @param url the URL to parse
+     * @return {@code {groupId, artifactId, version}}, or null when the URL is not Maven-layout
+     */
+    public static String[] mavenCoordinatesFromUrl(String url) {
+        if (url == null)
+            return null;
+        int start = url.indexOf("://");
+        start = start < 0 ? 0 : start + 3;
+        final int host = url.indexOf('/', start);
+        if (host < 0)
+            return null;
+        final String[] seg = url.substring(host + 1).split("/");
+        if (seg.length < 4)
+            return null;
+        final String filename = seg[seg.length - 1];
+        final String version = seg[seg.length - 2];
+        final String artifact = seg[seg.length - 3];
+        if (!filename.startsWith(artifact + "-" + version))
+            return null;    //  not the Maven layout; do not guess
+        final StringBuilder group = new StringBuilder();
+        for (int i = 0; i < seg.length - 3; i++) {
+            if (i == 0  &&  "maven2".equals(seg[i]))
+                continue;   //  repository root, not part of the group
+            if (group.length() > 0)
+                group.append('.');
+            group.append(seg[i]);
+        }
+        if (group.length() == 0)
+            return null;
+        return new String[] { group.toString(), artifact, version };
+    }
+
+    /**
+     * Builds the body of a Maven POM's {@code <dependencies>} element and writes it into an
+     * existing POM between a pair of marker comments.
+     * <p>
+     * The point is to keep a POM's dependency list from drifting away from the list the build
+     * actually uses.  A POM that merely describes a project to an IDE or to a repository scanner
+     * is never exercised by the build, so nothing catches it when it falls behind, and a stale
+     * entry there is reported against the project as though it were real.  Deriving the element
+     * from the same {@link ForeignDependencies} the build downloads removes the second copy that
+     * would otherwise have to be maintained by hand.
+     * <p>
+     * Only the marked region is touched, so hand-maintained parts of the POM, such as the
+     * {@code <build>} element, are left exactly as they are.  The file is rewritten only when
+     * the generated text actually differs from what is already there, which keeps repeated
+     * builds from disturbing its timestamp.
+     * <p>
+     * Entries appear in the order they were added, so regenerating an unchanged project
+     * reproduces the file byte for byte.
+     */
+    public static class MavenDependencies {
+        /** Entries as {groupId, artifactId, version, systemPath}; systemPath null unless system-scoped. */
+        private final ArrayList<String[]> entries = new ArrayList<>();
+        /** Artifact ids to emit with test scope. */
+        private final Set<String> testScoped = new HashSet<>();
+
+        /**
+         * Creates an empty dependency set.
+         */
+        public MavenDependencies() {
+        }
+
+        /**
+         * Names the artifacts that are needed only to compile and run tests.  Scope is applied
+         * when the element is generated, so this may be called before or after the artifacts
+         * themselves are added.
+         *
+         * @param artifactIds the artifact ids to mark as test-scoped
+         * @return this, for chaining
+         */
+        public MavenDependencies testScope(String... artifactIds) {
+            Collections.addAll(testScoped, artifactIds);
+            return this;
+        }
+
+        /**
+         * Adds every foreign dependency whose source URL addresses a Maven-layout repository.
+         * Dependencies whose URLs are not Maven-layout are skipped, since no coordinates can be
+         * derived from them.
+         *
+         * @param deps the foreign dependencies to add
+         * @return this, for chaining
+         */
+        public MavenDependencies add(ForeignDependencies deps) {
+            for (ForeignDependency dep : deps.getDependencies()) {
+                final String[] gav = mavenCoordinatesFromUrl(dep.source);
+                if (gav != null)
+                    entries.add(new String[] { gav[0], gav[1], gav[2], null });
+            }
+            return this;
+        }
+
+        /**
+         * Adds a single dependency resolved from a repository.  Use for an artifact the build
+         * does not itself download but the POM should still describe.
+         *
+         * @param groupId the group id
+         * @param artifactId the artifact id
+         * @param version the version
+         * @return this, for chaining
+         */
+        public MavenDependencies add(String groupId, String artifactId, String version) {
+            entries.add(new String[] { groupId, artifactId, version, null });
+            return this;
+        }
+
+        /**
+         * Adds a dependency supplied as a local file rather than resolved from a repository,
+         * emitted with system scope and the given path.
+         *
+         * @param groupId the group id
+         * @param artifactId the artifact id
+         * @param version the version
+         * @param systemPath the path to the file, as it should appear in the POM
+         * @return this, for chaining
+         */
+        public MavenDependencies addSystem(String groupId, String artifactId, String version, String systemPath) {
+            entries.add(new String[] { groupId, artifactId, version, systemPath });
+            return this;
+        }
+
+        /**
+         * Generates the {@code <dependency>} elements.
+         *
+         * @param indent the indentation to place before each {@code <dependency>} element
+         * @return the generated XML, one element per dependency
+         */
+        public String toXml(String indent) {
+            final String in2 = indent + "  ";
+            final StringBuilder sb = new StringBuilder();
+            for (String[] e : entries) {
+                sb.append(indent).append("<dependency>\n");
+                sb.append(in2).append("<groupId>").append(e[0]).append("</groupId>\n");
+                sb.append(in2).append("<artifactId>").append(e[1]).append("</artifactId>\n");
+                sb.append(in2).append("<version>").append(e[2]).append("</version>\n");
+                if (e[3] != null) {
+                    sb.append(in2).append("<scope>system</scope>\n");
+                    sb.append(in2).append("<systemPath>").append(e[3]).append("</systemPath>\n");
+                } else if (testScoped.contains(e[1]))
+                    sb.append(in2).append("<scope>test</scope>\n");
+                sb.append(indent).append("</dependency>\n");
+            }
+            return sb.toString();
+        }
+
+        /**
+         * Writes the generated elements into a POM, replacing whatever currently sits between
+         * the two marker comments.  The markers themselves are preserved.
+         *
+         * @param pomFile the POM to update
+         * @param beginMarker the marker line that opens the generated region
+         * @param endMarker the marker line that closes the generated region
+         * @return true if the file was changed, false if it was already up to date
+         */
+        public boolean writeInto(String pomFile, String beginMarker, String endMarker) {
+            final String content;
+            try {
+                content = new String(Files.readAllBytes(Paths.get(pomFile)), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new RuntimeException("MavenDependencies:  error reading " + pomFile);
+            }
+            final int begin = content.indexOf(beginMarker);
+            if (begin < 0)
+                throw new RuntimeException("missing generated-region begin marker in " + pomFile + ": " + beginMarker);
+            final int end = content.indexOf(endMarker, begin + beginMarker.length());
+            if (end < 0)
+                throw new RuntimeException("missing generated-region end marker in " + pomFile + ": " + endMarker);
+            //  Indent the generated elements to match the indentation of the end marker.
+            int ls = content.lastIndexOf('\n', end);
+            final String indent = content.substring(ls + 1, end);
+            final String updated = content.substring(0, begin + beginMarker.length()) + "\n"
+                                 + toXml(indent)
+                                 + indent + content.substring(end);
+            if (updated.equals(content))
+                return false;   //  already correct; leave the file (and its timestamp) alone
+            try {
+                Files.write(Paths.get(pomFile), updated.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new RuntimeException("MavenDependencies:  error writing " + pomFile);
+            }
+            println("regenerated dependencies in " + pomFile);
+            return true;
+        }
     }
 
     /**
@@ -1650,20 +1969,5 @@ public class BuildUtils {
         }
 
         return result.toString();
-    }
-
-    /**
-     * Send a request to stop the development frontend server.
-     */
-    public static void stopFrontendServer() {
-        try {
-            URL url = URI.create("http://localhost:8000/stop-server").toURL();
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.getInputStream().close();
-            connection.disconnect();
-        } catch (IOException e) {
-            //e.printStackTrace();
-        }
     }
 }

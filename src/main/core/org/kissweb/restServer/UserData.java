@@ -103,20 +103,4 @@ public class UserData {
     public Object getUserData(String key) {
         return data.get(key);
     }
-    
-    /**
-     * Set user data by key.
-     *
-     * @param key the key
-     * @param value the value
-     * 
-     * ============================================================
-     * KISSOO CHANGE: Added by KissOO (Perst fork) - 2026-03-30
-     * RFC: docs/RFC-setUserData-to-KISS.md
-     * Reason: Needed for custom session data (roles, permissions)
-     * ============================================================
-     */
-    public void setUserData(String key, Object value) {
-        data.put(key, value);
-    }
 }

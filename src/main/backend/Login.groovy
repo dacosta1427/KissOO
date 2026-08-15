@@ -7,7 +7,7 @@ import org.kissweb.restServer.ProcessServlet
 import org.kissweb.restServer.UserCache
 import org.kissweb.restServer.UserData
 import domain.actor.owner.Owner
-import services.koo.PerstConnection
+import services.koo.NonSqlConnection
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -32,7 +32,7 @@ class Login {
      * @param outjson - extra data sent back to the front-end
      * @return UserData if successful, null otherwise
      */
-    public static UserData login(PerstConnection db, String user, String password, JSONObject outjson, ProcessServlet servlet) {
+    public static UserData login(NonSqlConnection db, String user, String password, JSONObject outjson, ProcessServlet servlet) {
         
         logger.info("[PerstAuth] Login attempt via Perst route for user: ${user}")
         

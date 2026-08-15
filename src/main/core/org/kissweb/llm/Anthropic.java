@@ -10,6 +10,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -52,27 +53,73 @@ import java.nio.file.Paths;
  * <pre>{@code
  * Anthropic ai = new Anthropic(apiKey, "claude-haiku-4-20250514");
  * ai.setTemperature(0.9f);  // More creative responses
- * ai.setSampling(0.95f);    // Broader vocabulary selection
  * ai.setMaxTokens(8192);    // Longer responses
  * }</pre>
+ *
+ * <p><b>Sampling parameters (temperature / top-p):</b> the Anthropic Messages API
+ * rejects a request that specifies both {@code temperature} and {@code top_p} for
+ * current models. By default this class sends neither, leaving sampling entirely up
+ * to the model's own defaults. Calling {@link #setTemperature(float)} or
+ * {@link #setSampling(float)} sends that one parameter; the two are mutually
+ * exclusive, so calling one clears any prior setting of the other. See those methods
+ * for details.</p>
  *
  * @author Kiss Web Development Framework
  * @see RestClient
  */
 public class Anthropic {
 
-    private static final String ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-    private static final String ANTHROPIC_VERSION = "2023-06-01";
+    private static String ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+    private static String ANTHROPIC_VERSION = "2023-06-01";
 
     private final String apiKey; // Your Anthropic API key
     private final String model;  // e.g. "claude-sonnet-4-20250514"
 
-    private float temperature = 0.7f; // Generation randomness
-    private float topP = 0.7f;        // Nucleus sampling
+    // Sampling parameters are only included in the request body when the caller has
+    // explicitly set them (see setTemperature/setSampling); by default neither is
+    // sent and the model applies its own defaults. The two are mutually exclusive
+    // because the Anthropic Messages API rejects requests specifying both.
+    private float temperature = 0.7f;    // Generation randomness, used only if temperatureSet
+    private boolean temperatureSet = false;
+    private float topP = 0.7f;           // Nucleus sampling, used only if topPSet
+    private boolean topPSet = false;
     private int maxTokens = 4096;     // Required by Anthropic API
 
     private JSONObject lastResponse;  // Full JSON of last non-stream call
+    private int lastHttpStatus;       // HTTP status of the last call
+    private String lastErrorBody;     // Raw error body of the last failed call, else null
     private final RestClient restClient; // Re-used HTTP helper
+
+    /**
+     * Overrides the Anthropic Messages API endpoint URL used by this class.
+     *
+     * <p>This is a global setting: changing the URL affects all current and future
+     * {@link Anthropic} instances created in this JVM.</p>
+     *
+     * <p>This is primarily intended for testing, proxies, gateways, or Anthropic-compatible
+     * endpoints.</p>
+     *
+     * @param url the full URL to use for Messages API requests (for example,
+     *            {@code https://api.anthropic.com/v1/messages})
+     */
+    public static void setUrl(String url) {
+        ANTHROPIC_URL = url;
+    }
+
+    /**
+     * Overrides the Anthropic API version header value sent with requests.
+     *
+     * <p>This is a global setting: changing the version affects all current and future
+     * {@link Anthropic} instances created in this JVM.</p>
+     *
+     * <p>The version is sent as the {@code anthropic-version} request header. Use this if you need
+     * to pin to a specific API contract or test against a different version.</p>
+     *
+     * @param version the API version string to send (for example, {@code 2023-06-01})
+     */
+    public static void setVersion(String version) {
+        ANTHROPIC_VERSION = version;
+    }
 
     /**
      * Creates a new Anthropic client instance.
@@ -102,7 +149,15 @@ public class Anthropic {
      * the output more focused and deterministic, while higher values make it more
      * diverse and creative.</p>
      *
-     * @param temperature Value between 0.0 and 1.0 (default: 0.7)
+     * <p><b>Mutually exclusive with {@link #setSampling(float)}:</b> the Anthropic
+     * Messages API rejects a request that specifies both {@code temperature} and
+     * {@code top_p} for current models. Calling this method therefore clears any
+     * top-p value previously set with {@link #setSampling(float)}, so only
+     * {@code temperature} is sent on the next request. If neither setter is ever
+     * called, no sampling parameter is sent at all and the model uses its own
+     * default.</p>
+     *
+     * @param temperature Value between 0.0 and 1.0
      *                    <ul>
      *                      <li>0.0-0.3: Very focused, deterministic responses</li>
      *                      <li>0.4-0.7: Balanced creativity and coherence</li>
@@ -111,6 +166,8 @@ public class Anthropic {
      */
     public void setTemperature(float temperature) {
         this.temperature = temperature;
+        this.temperatureSet = true;
+        this.topPSet = false;
     }
 
     /**
@@ -120,7 +177,14 @@ public class Anthropic {
      * probability exceeds the specified value. This provides an alternative
      * to temperature for controlling randomness.</p>
      *
-     * @param topP Value between 0.0 and 1.0 (default: 0.7)
+     * <p><b>Mutually exclusive with {@link #setTemperature(float)}:</b> the Anthropic
+     * Messages API rejects a request that specifies both {@code temperature} and
+     * {@code top_p} for current models. Calling this method therefore clears any
+     * temperature value previously set with {@link #setTemperature(float)}, so only
+     * {@code top_p} is sent on the next request. If neither setter is ever called, no
+     * sampling parameter is sent at all and the model uses its own default.</p>
+     *
+     * @param topP Value between 0.0 and 1.0
      *             <ul>
      *               <li>0.1: Only very likely tokens</li>
      *               <li>0.5: Moderately likely tokens</li>
@@ -130,6 +194,8 @@ public class Anthropic {
      */
     public void setSampling(float topP) {
         this.topP = topP;
+        this.topPSet = true;
+        this.temperatureSet = false;
     }
 
     /**
@@ -239,8 +305,18 @@ public class Anthropic {
                 .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                 .build();
 
+        lastHttpStatus = 0;
+        lastErrorBody = null;
+
         HttpResponse<Stream<String>> resp =
                 restClient.streamCall(req, HttpResponse.BodyHandlers.ofLines());
+
+        lastHttpStatus = resp.statusCode();
+        if (lastHttpStatus / 100 != 2) {
+            // Errors arrive as a plain JSON body, not an SSE stream
+            lastErrorBody = resp.body().collect(Collectors.joining("\n"));
+            throw new Exception("Anthropic request failed with HTTP " + lastHttpStatus + ": " + lastErrorBody);
+        }
 
         final boolean[] doneFired = {false};
 
@@ -251,6 +327,11 @@ public class Anthropic {
                     if (payload.startsWith("{")) {
                         JSONObject event = new JSONObject(payload);
                         String type = event.has("type") ? event.getString("type") : "";
+                        if ("error".equals(type)) {
+                            // A failure can also be reported mid-stream as an SSE error event
+                            lastErrorBody = event.has("error") ? event.getJSONObject("error").toString() : payload;
+                            throw new RuntimeException("Anthropic returned an error: " + lastErrorBody);
+                        }
                         if ("content_block_delta".equals(type)) {
                             JSONObject delta = event.has("delta") ? event.getJSONObject("delta") : null;
                             if (delta != null && "text_delta".equals(delta.has("type") ? delta.getString("type") : "")) {
@@ -348,20 +429,22 @@ public class Anthropic {
      * @return The HTTP status code from the most recent API call, or 0 if no call has been made
      */
     public int getResponseCode() {
-        return restClient.getResponseCode();
+        return lastHttpStatus != 0 ? lastHttpStatus : restClient.getResponseCode();
     }
 
     /**
      * Returns the raw response string from the last API call.
      *
      * <p>Provides access to the complete HTTP response body as received from the server.
-     * Useful for debugging when response parsing fails or for accessing error details.</p>
+     * When a call fails (non-2xx HTTP status, or an error event received mid-stream),
+     * the raw error text is retained here; the same text is also included in the
+     * thrown exception's message.</p>
      *
      * @return The raw response text, or {@code null} if no response is available
      * @see #getLastFullResponse() for parsed JSON response
      */
     public String getResponseString() {
-        return restClient.getResponseString();
+        return lastErrorBody != null ? lastErrorBody : restClient.getResponseString();
     }
 
     /* ----------------------------------------------------------------------
@@ -375,6 +458,13 @@ public class Anthropic {
      * generation parameters, and message content with optional image data.
      * Always sets {@code "stream": true} since the send methods delegate to stream.</p>
      *
+     * <p>{@code temperature} and {@code top_p} are included only when the caller has
+     * explicitly set them via {@link #setTemperature(float)} / {@link #setSampling(float)}.
+     * The two are mutually exclusive (each setter clears the other), so at most one of
+     * them is ever sent — the current Anthropic Messages API rejects a request that
+     * specifies both. When neither has been set, no sampling parameter is sent and the
+     * model applies its own default.</p>
+     *
      * @param query     The user's text prompt
      * @param imagePath Optional path to an image file to include
      * @return A JSONObject containing the complete request body
@@ -384,9 +474,12 @@ public class Anthropic {
         JSONObject body = new JSONObject()
                 .put("model", model)
                 .put("max_tokens", maxTokens)
-                .put("temperature", temperature)
-                .put("top_p", topP)
                 .put("stream", true);
+
+        if (temperatureSet)
+            body.put("temperature", temperature);
+        else if (topPSet)
+            body.put("top_p", topP);
 
 // Assemble user message content array
         JSONArray contentArray = new JSONArray()
