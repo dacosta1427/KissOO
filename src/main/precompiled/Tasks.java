@@ -286,6 +286,13 @@ public class Tasks {
 
         copyTree("src/main/backend", explodedDir + "/WEB-INF/backend");
         copyTree("src/main/precompiled", explodedDir + "/WEB-INF/precompiled");
+        // The SvelteKit app under koo/frontend/svelte is a dev-only workspace. Its
+        // node_modules / build output must never be copied into the WAR (bloats the
+        // deploy and shows up as node_modules in the served tree). Prune them.
+        rmTree(explodedDir + "/WEB-INF/precompiled/koo/frontend/svelte/node_modules");
+        rmTree(explodedDir + "/WEB-INF/precompiled/koo/frontend/svelte/.svelte-kit");
+        rmTree(explodedDir + "/WEB-INF/precompiled/koo/frontend/svelte/build");
+        rmTree(explodedDir + "/WEB-INF/precompiled/koo/frontend/svelte/dist");
         copyTree(LIBS, explodedDir + "/WEB-INF/lib");
 
         buildJava("src/main/core", explodedDir + "/WEB-INF/classes", localLibs, foreignLibs, null);
