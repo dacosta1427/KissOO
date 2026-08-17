@@ -34,9 +34,27 @@
     </a>
 
     <a href="/showcase/auth"
-       class="block p-6 bg-white rounded-xl shadow hover:shadow-lg hover:ring-2 hover:ring-indigo-400 transition">
+        class="block p-6 bg-white rounded-xl shadow hover:shadow-lg hover:ring-2 hover:ring-indigo-400 transition">
       <h2 class="text-xl font-semibold text-indigo-700">Auth</h2>
       <p class="mt-2 text-sm text-slate-600">Login flow + session reuse via the X-Kiss-Uuid header.</p>
+    </a>
+
+    <a href="/showcase/login"
+        class="block p-6 bg-white rounded-xl shadow hover:shadow-lg hover:ring-2 hover:ring-indigo-400 transition">
+      <h2 class="text-xl font-semibold text-indigo-700">Login screen</h2>
+      <p class="mt-2 text-sm text-slate-600">Tailwind + Datastar port of the Svelte 5 login. Real Perst session.</p>
+    </a>
+
+    <a href="/showcase/crud"
+        class="block p-6 bg-white rounded-xl shadow hover:shadow-lg hover:ring-2 hover:ring-indigo-400 transition">
+      <h2 class="text-xl font-semibold text-indigo-700">CRUD (Owners)</h2>
+      <p class="mt-2 text-sm text-slate-600">Datastar-driven table with New / Edit / Delete over the Perst store.</p>
+    </a>
+
+    <a href="/showcase/controls"
+        class="block p-6 bg-white rounded-xl shadow hover:shadow-lg hover:ring-2 hover:ring-indigo-400 transition">
+      <h2 class="text-xl font-semibold text-indigo-700">Controls</h2>
+      <p class="mt-2 text-sm text-slate-600">Form controls with live two-way Datastar signal binding.</p>
     </a>
   </main>
 
