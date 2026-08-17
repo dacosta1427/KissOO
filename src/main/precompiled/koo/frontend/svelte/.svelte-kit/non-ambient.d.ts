@@ -59,6 +59,6 @@ declare module "$app/types" {
 		};
 		Pathname(): "/" | "/benchmark" | "/bookings" | "/cleaners" | "/controls" | "/cost-profiles" | "/crud" | "/export" | "/file-upload" | "/houses" | "/login" | "/ollama" | "/owners" | `/owners/${string}` & {} | "/report" | "/rest-services" | "/schedules" | "/signup" | "/sql-access" | "/users" | "/verify-email";
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
-		Asset(): string & {};
+		Asset(): "/.well-known/appspecific/com.chrome.devtools.json" | "/favicon.png" | "/manifest.json" | "/vite.svg" | string & {};
 	}
 }

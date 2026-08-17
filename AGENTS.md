@@ -167,13 +167,90 @@ If `abcl.jar` is not available, disable Lisp to allow building:
 
 **Note:** When updating from the upstream Kiss framework, re-apply these changes if abcl.jar is not available.
 
+## Core Framework Modifications (for Blake / Kiss upstream)
+
+**Only `ProcessServlet.java` below is a true modification of the vendored upstream Kiss core** (it is
+under `src/main/core/org/kissweb/restServer/` and has history back through "Sync vendored Kiss core
+with upstream"). It will be **overwritten/replaced on any Kiss framework re-sync**, so re-apply it
+after pulling upstream (same caveat as the "Disabling Lisp Services" note above).
+
+Note: the `org.kissweb.templates` package is **NOT** part of upstream Kiss. It was added locally by
+commit `9c9dc233` ("Add hypermedia (HTMX/Datastar) support and JTE template engine") as the KissOO
+JTE + Datastar integration. It therefore is **not** subject to the Kiss-framework-overwrite risk
+(though a full wipe of `src/main/core` would remove it). See item 2.
+
+### 1. `org.kissweb.restServer.ProcessServlet` — SSE client-disconnect NPE fix
+**Why:** With an active SSE stream, if the client disconnects (closes the tab) the response's output
+buffer is recycled. The standard return paths (`successReturn`/`errorReturn`) still tried to
+write/flush/close/`asyncContext.complete()` the recycled response, throwing
+`java.lang.NullPointerException: Cannot invoke "org.apache.catalina.connector.OutputBuffer.isBlocking()" because "this.ob" is null`.
+Because it is an NPE (not IOException), it escaped every `catch (SQLException | IOException)` and
+surfaced as `ERROR [restServer.ProcessServlet]` at the top-level `run()` handler.
+
+**What changed:**
+- Added `private boolean sseHandled` flag.
+- `initializeSSEStream(long)`: registered an `AsyncListener` whose `onError`/`onTimeout` flip
+  `sseStreamingMode = false` (detect disconnect/timeout so the async context completes cleanly).
+- `streamSSEText` / `streamSSEEvent` / `streamSSEError`: wrapped the write+flush in
+  try/catch(Exception) → on failure set `sseStreamingMode = false` (client gone) instead of throwing
+  into the caller's loop.
+- `endSSEStream()`: `sseHandled = true` is now set **before** the early-return guard, so a
+  disconnect (which already flipped `sseStreamingMode`) still suppresses the standard emit.
+- `successReturn()` and `errorReturn()`: skip writing/flushing/completing the response when
+  `sseHandled` is true (SSE already completed it). `errorReturn`'s guard extended from
+  `if (sseStreamingMode)` to `if (sseStreamingMode || sseHandled)`.
+
+**Upstream ask for Blake:** please fold this robustness into the Kiss framework itself so forks
+don't have to carry the patch. The fix is self-contained in `ProcessServlet`.
+
+### 2. `org.kissweb.templates.TemplateProvider` — inject `Datastar` helper into the JTE model
+`render(...)` now puts `Datastar.INSTANCE` into the model so JTE templates can declare
+`@param org.kissweb.templates.Datastar datastar`. The companion class
+`org.kissweb.templates.Datastar` (the server-side Datastar SSE/HTML helper) is a **new file** also in
+the `org.kissweb.templates` package.
+
+**This is KissOO-local code, NOT upstream Kiss** (added by commit `9c9dc233`), so it is **not** at
+risk from a Kiss framework re-sync. No "for Blake" action needed — it is our own hypermedia feature.
+
+## Frontend Directory Organization
+
+The goal is to keep **our** frontend code clearly separated from the **Kiss framework's** own client.
+Only KissOO-owned frontends live under `src/main/precompiled/koo/frontend/`; the Kiss framework's
+original web client stays at `src/main/frontend/`.
+
+### Kiss framework frontend (NOT ours — do not move)
+`src/main/frontend/` is the upstream Kiss web client (`kiss/` JS framework, `mobile/`, `screens/`,
+`index.html`, `login.html`, `lib/`, `normalize*.css`, `robots.txt`, …). This is vendored Kiss code and
+must remain at `src/main/frontend/`. **Do not relocate it under `koo/`** — doing so puts Kiss code into
+our namespace (a mistake that was made and reverted; see "Mistakes to Avoid" #9).
+
+### KissOO frontend (ours — under `koo/frontend`)
+- **JTE showcase templates** → `src/main/precompiled/koo/frontend/jte/`
+  (`showcase/auth.jte`, `showcase/datastar.jte`, `showcase/sse.jte`, `showcase/htmx.jte`,
+  `fragments/task.jte`). The JTE engine resolves these from the classpath at `/jte`.
+- **Showcase static assets (Datastar / HTMX / Tailwind)** → `src/main/precompiled/koo/frontend/static/vendor/`
+  (`datastar.js`, `htmx.js`, `tailwind.js`, `datastar-start.js`). Served at web-root `/vendor/…`.
+- **Svelte 5 (SvelteKit) app** → `src/main/precompiled/koo/frontend/svelte/`.
+
+### Build behavior (`Tasks.java`)
+- `buildSystem()` copies **both** `src/main/frontend` **and** `src/main/precompiled/koo/frontend/static`
+  to the web root, so the Kiss client and our `/vendor/` assets coexist (different subdirs, no conflict).
+- JTE templates are copied to `WEB-INF/classes/jte`.
+- The dev `SimpleWebServer` is pointed at `src/main/frontend` (`-d src/main/frontend`).
+
+### Gotcha: stale `exploded` staging dir
+`copyTree` copies *over* the existing `work/exploded` staging dir but does **not delete** files that no
+longer exist in the source. After moving/restructuring frontend directories, do a **clean rebuild**
+(delete `work/exploded` then `bld build`, or `bld clean`) — otherwise the packaged WAR can retain
+stale files from the previous layout (e.g. Kiss files that were briefly under `koo/`).
+
 ## Frontend (SvelteKit)
 
-The SvelteKit frontend is in `src/main/frontend-svelte/`.
+The SvelteKit frontend is in `src/main/precompiled/koo/frontend/svelte/`.
 
 ### Running
 ```bash
-cd src/main/frontend-svelte
+cd src/main/precompiled/koo/frontend/svelte
 npm run dev
 ```
 
@@ -185,7 +262,7 @@ npm run dev
 
 ### Build
 ```bash
-cd src/main/frontend-svelte
+cd src/main/precompiled/koo/frontend/svelte
 npm run build
 ```
 
@@ -215,7 +292,7 @@ Note: `.svelte-kit/` is auto-generated and should not be committed.
 3. **Database not available**: Check Perst initialization in `KissInit.groovy`
 
 ### Quick Checks
-- Run `npm run build` in `src/main/frontend-svelte/` to catch TypeScript errors
+- Run `npm run build` in `src/main/precompiled/koo/frontend/svelte/` to catch TypeScript errors
 - Check browser console for API errors
 - Verify backend server is running on port 8080
 
@@ -238,6 +315,8 @@ Note: `.svelte-kit/` is auto-generated and should not be committed.
 5. **Assuming hot reload works**: After modifying Groovy services, verify they are actually reloaded (check logs).
 6. **Using `getHouseId()` etc.**: These methods don't exist. Use `getHouseOid()`, `getCleanerOid()`, `getBookingOid()`, `getScheduleOid()`.
 7. **Not killing server before DB clear**: Open file handles prevent DB deletion. Always `pkill -9 java` first.
+8. **Tomcat SSE client-disconnect NPE**: With an active SSE stream, if the client disconnects (closes the tab) the response's output buffer is recycled; the standard return paths still try to write/flush/`asyncContext.complete()` it, throwing `NullPointerException: Cannot invoke "...OutputBuffer.isBlocking()" because "this.ob" is null`. It is an NPE (not IOException) so it escapes every `catch (SQLException | IOException)` and surfaces as `ERROR [restServer.ProcessServlet]` at the top-level `run()` handler. Fix lives in core `ProcessServlet` (see "Core Framework Modifications" below): track `sseHandled` so `successReturn`/`errorReturn` skip the standard emit once SSE completed the response, wrap `streamSSE*` writes in try/catch to stop the loop, and add an `AsyncListener` to flip `sseStreamingMode` on disconnect.
+9. **Moving the Kiss frontend into `koo/`**: When reorganizing frontends, only move KissOO-owned code under `src/main/precompiled/koo/frontend/`. `src/main/frontend/` is the **upstream Kiss web client** (`kiss/`, `mobile/`, `screens/`, `index.html`, `login.html`, `lib/`, …) and must stay put — do not `git mv` it under `koo/`. Our additions there are limited to `vendor/` (Datastar/HTMX/Tailwind). After any frontend restructure, do a clean rebuild (`bld clean` / delete `work/exploded`) because `copyTree` copies over the staging dir without deleting files that no longer exist in the source, otherwise the WAR carries stale paths.
 
 ## Perst 5.1.0 NonSqlConnection Integration
 
@@ -373,7 +452,7 @@ Add `sticky top-0 z-50` class to the `<header>` element to make it stick to the 
 ### Check for Svelte 4 Patterns
 Run this to find Svelte 4 syntax:
 ```bash
-grep -r "export let\|createEventDispatcher\|\$:\|on:" src/main/frontend-svelte/src/lib/components/
+grep -r "export let\|createEventDispatcher\|\$:\|on:" src/main/precompiled/koo/frontend/svelte/src/lib/components/
 ```
 
 ### CORS Configuration (Fork Override)
@@ -524,8 +603,8 @@ For now, keep the explicit pattern as it's clear and self-documenting.
 - ALL user-facing text must use translation keys (tt() function in Svelte)
 - NEVER hardcode visible text - always use tt('key.path')
 - When adding new text/UI, add translations to ALL language files:
-  - `src/main/frontend-svelte/src/lib/i18n/messages/en.json`
-  - `src/main/frontend-svelte/src/lib/i18n/messages/nl.json`
-  - `src/main/frontend-svelte/src/lib/i18n/messages/de.json`
+  - `src/main/precompiled/koo/frontend/svelte/src/lib/i18n/messages/en.json`
+  - `src/main/precompiled/koo/frontend/svelte/src/lib/i18n/messages/nl.json`
+  - `src/main/precompiled/koo/frontend/svelte/src/lib/i18n/messages/de.json`
 - Common keys should go under "common" section
 - Page-specific keys go under their respective section (e.g., "verify", "auth", "owners")

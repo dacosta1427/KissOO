@@ -150,8 +150,8 @@ atlassian-ide-plugin.xml
 src/main/frontend/lib/jquery*
 
 # SvelteKit
-src/main/frontend-svelte/.svelte-kit/
-src/main/frontend-svelte/node_modules/
+src/main/precompiled/koo/frontend/svelte/.svelte-kit/
+src/main/precompiled/koo/frontend/svelte/node_modules/
 
 /build/
 manual/asciidoc/

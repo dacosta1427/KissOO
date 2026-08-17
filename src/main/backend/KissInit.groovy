@@ -102,6 +102,18 @@ class KissInit {
         MainServlet.allowWithoutAuthentication("services.auth.AuthService", "verifyEmail")
         MainServlet.allowWithoutAuthentication("services.auth.AuthService", "getActivationStatus")
 
+        // Hypermedia showcase pages + the hypermedia demo endpoints (no login required)
+        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "index")
+        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "datastar")
+        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "htmx")
+        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "sse")
+        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "auth")
+        MainServlet.allowWithoutAuthentication("services/HypermediaTestService", "taskFragment")
+        MainServlet.allowWithoutAuthentication("services/HypermediaTestService", "patchSignals")
+        MainServlet.allowWithoutAuthentication("services/HypermediaTestService", "liveClock")
+        MainServlet.allowWithoutAuthentication("services/HypermediaTestService", "fragmentDs")
+        // NOTE: whoami is deliberately NOT whitelisted - it must carry a valid X-Kiss-Uuid.
+
         println "[KissInit] init() COMPLETED"
 
         // Set up a global logout handler that runs whenever any user logs out

@@ -33,7 +33,7 @@ import java.util.function.IntSupplier;
  *
  * This is the main entry point for asynchronous server requests used by Kiss.
  */
-@WebServlet(urlPatterns="/rest", asyncSupported = true)
+@WebServlet(urlPatterns={"/rest", "/showcase", "/showcase/*"}, asyncSupported = true)
 @MultipartConfig
 public class MainServlet extends HttpServlet {
 
@@ -84,6 +84,19 @@ public class MainServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (queueManager == null) {
+            Integer maxWorkerThreads = getEnvironmentInt("MaxWorkerThreads");
+            queueManager = new org.kissweb.restServer.QueueManager(maxWorkerThreads);
+        }
+        ServletOutputStream out = response.getOutputStream();
+
+        queueManager.add(request, response, out);
+    }
+
+    // [HYPERMEDIA] Allow GET so hypermedia clients (HTMX/Datastar/browsers) can
+    // navigate to server-rendered pages via /rest?_class=...&_method=... (MOD 3).
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (queueManager == null) {
             Integer maxWorkerThreads = getEnvironmentInt("MaxWorkerThreads");
             queueManager = new org.kissweb.restServer.QueueManager(maxWorkerThreads);

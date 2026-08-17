@@ -183,10 +183,10 @@ if (session.uuid) {
 
 ```bash
 # Frontend development
-cd src/main/frontend-svelte && npm run dev
+cd src/main/precompiled/koo/frontend/svelte && npm run dev
 
 # Build check (TypeScript errors)
-cd src/main/frontend-svelte && npm run build
+cd src/main/precompiled/koo/frontend/svelte && npm run build
 
 # Backend test
 ./test-backend.sh

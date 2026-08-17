@@ -65,6 +65,23 @@ public class SecurityHeadersFilter implements Filter {
             "form-action 'self'";
 
     /**
+     * Relaxed policy for the backend-served hypermedia showcase (Datastar).
+     * Datastar evaluates signal expressions via the Function constructor, which
+     * requires 'unsafe-eval'. This is scoped to the showcase/hypermedia routes
+     * so the rest of the application keeps the strict policy above.
+     */
+    public static final String CONTENT_SECURITY_POLICY_RELAXED =
+            "default-src 'self'; " +
+            "script-src 'self' 'unsafe-eval' 'sha256-JaGBSNrOPztIc2kSDoiyDCHVqjcvVQSMYv5X2fO3RCE='; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data: blob:; " +
+            "font-src 'self' data:; " +
+            "connect-src 'self'; " +
+            "object-src 'none'; " +
+            "base-uri 'self'; " +
+            "form-action 'self'";
+
+    /**
      * <code>true</code> &rArr; send the policy as
      * <code>Content-Security-Policy-Report-Only</code> (log violations, block
      * nothing). <code>false</code> &rArr; enforce it. Flip to <code>false</code>
@@ -117,9 +134,22 @@ public class SecurityHeadersFilter implements Filter {
             response.setHeader("X-Frame-Options", "DENY");
 
             //  The XSS policy: report-only during rollout, enforcing afterward.
+            //  Hypermedia showcase pages (served by the backend, using Datastar)
+            //  require 'unsafe-eval' because Datastar evaluates expressions via the
+            //  Function constructor. Scoped to those routes so the rest of the app
+            //  keeps the strict policy.
+            boolean _hypermedia = false;
+            if (req instanceof HttpServletRequest) {
+                HttpServletRequest _hreq = (HttpServletRequest) req;
+                String _uri = _hreq.getRequestURI();
+                String _qs = _hreq.getQueryString();
+                _hypermedia = (_uri != null && _uri.startsWith("/showcase"))
+                        || (_qs != null && (_qs.contains("ShowcaseService") || _qs.contains("HypermediaTestService")));
+            }
+            final String _csp = _hypermedia ? CONTENT_SECURITY_POLICY_RELAXED : CONTENT_SECURITY_POLICY;
             response.addHeader(iniOverride("CspReportOnly", CSP_REPORT_ONLY)
                                ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy",
-                               CONTENT_SECURITY_POLICY);
+                               _csp);
 
             //  HSTS only over HTTPS; never on plain-http dev (e.g. http://localhost).
             if (req instanceof HttpServletRequest && ((HttpServletRequest) req).isSecure())

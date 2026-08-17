@@ -57,6 +57,8 @@ public class ProcessServlet implements Runnable {
     private boolean isHtmlReturn = false;
     /** True when streaming mode is active for this request. */
     private volatile boolean sseStreamingMode = false;
+    /** True once SSE has taken over the response (endSSEStream completed it). */
+    private boolean sseHandled = false;
     /** The PrintWriter for streaming text content. */
     private PrintWriter streamWriter = null;
     private static final ThreadLocal<ProcessServlet> instance = new ThreadLocal<>();
@@ -331,7 +333,12 @@ public class ProcessServlet implements Runnable {
         }
 
         _className = request.getParameter("_class");
-        if (_className != null) {
+        String _reqCtype = request.getContentType();
+        //  Only treat as a file upload when the request is genuinely multipart/form-data.
+        //  A plain GET (or x-www-form-urlencoded POST) that happens to carry a "_class"
+        //  query/form parameter must NOT enter this branch, otherwise its string values
+        //  get run through getObject()'s numeric parsing and crash (e.g. "Buy milk").
+        if (_className != null && _reqCtype != null && _reqCtype.toLowerCase().startsWith("multipart/form-data")) {
             //  is file upload
             _method = request.getParameter("_method");
             logger.info("Enter back-end seeking UPLOAD service " + _className + "." + _method + "()");
@@ -374,22 +381,34 @@ public class ProcessServlet implements Runnable {
                     }
                 }
 
-                // Optional semantic-URL routing for HTMX/Datastar:
-                // .../services/TaskService/getTaskList
-                //   -> _class = "services/TaskService", _method = "getTaskList"
+                // Pretty hypermedia routes:
+                //   /showcase          -> services/ShowcaseService.index
+                //   /showcase/datastar -> services/ShowcaseService.datastar
                 if (injson.optString("_class").isEmpty()) {
-                    String _path = request.getPathInfo();
-                    if (_path == null || _path.isEmpty())
-                        _path = request.getRequestURI();
-                    String[] _seg = _path.replaceAll("^/+", "").split("/");
-                    if (_seg.length >= 2) {
-                        StringBuilder _cls = new StringBuilder();
-                        for (int i = 0; i < _seg.length - 1; i++) {
-                            if (i > 0) _cls.append('/');
-                            _cls.append(_seg[i]);
+                    String _uri = request.getRequestURI();
+                    if (_uri != null && _uri.startsWith("/showcase")) {
+                        String _seg = _uri.substring("/showcase".length()).replaceAll("^/+", "");
+                        if (_seg.isEmpty())
+                            _seg = "index";
+                        injson.put("_class", "services/ShowcaseService");
+                        injson.put("_method", _seg);
+                    } else {
+                        // Optional semantic-URL routing for HTMX/Datastar:
+                        // .../services/TaskService/getTaskList
+                        //   -> _class = "services/TaskService", _method = "TaskService" / "getTaskList"
+                        String _path = request.getPathInfo();
+                        if (_path == null || _path.isEmpty())
+                            _path = request.getRequestURI();
+                        String[] _seg = _path.replaceAll("^/+", "").split("/");
+                        if (_seg.length >= 2) {
+                            StringBuilder _cls = new StringBuilder();
+                            for (int i = 0; i < _seg.length - 1; i++) {
+                                if (i > 0) _cls.append('/');
+                                _cls.append(_seg[i]);
+                            }
+                            injson.put("_class", _cls.toString());
+                            injson.put("_method", _seg[_seg.length - 1]);
                         }
-                        injson.put("_class", _cls.toString());
-                        injson.put("_method", _seg[_seg.length - 1]);
                     }
                 }
                 _className = injson.optString("_class", "");
@@ -472,6 +491,12 @@ public class ProcessServlet implements Runnable {
         // ====================================================================
         if (injson.optString("_uuid").isEmpty()) {
             String _uuid = request.getHeader("X-Kiss-Uuid");
+            // Datastar GET requests cannot easily set a custom header, but they
+            // always include the global `uuid` signal in the `datastar` query
+            // param (decoded into injson above).  Fall back to it so session
+            // lookup works for Datastar clients too.
+            if (_uuid == null || _uuid.isEmpty())
+                _uuid = injson.optString("uuid");
             injson.put("_uuid", _uuid != null ? _uuid : "");
         }
 
@@ -662,7 +687,16 @@ public class ProcessServlet implements Runnable {
         if (timeoutMs <= 0)
             timeoutMs = 600_000L; // 10-minute default
         asyncContext.setTimeout(timeoutMs);
-        
+
+        // Detect client disconnect / timeout so we stop streaming instead of
+        // writing into a recycled response (which throws inside Tomcat).
+        asyncContext.addListener(new jakarta.servlet.AsyncListener() {
+            @Override public void onComplete(jakarta.servlet.AsyncEvent event) { }
+            @Override public void onTimeout(jakarta.servlet.AsyncEvent event) { sseStreamingMode = false; }
+            @Override public void onError(jakarta.servlet.AsyncEvent event) { sseStreamingMode = false; }
+            @Override public void onStartAsync(jakarta.servlet.AsyncEvent event) { }
+        });
+
         sseStreamingMode = true;
 
         // Set the response headers
@@ -703,10 +737,16 @@ public class ProcessServlet implements Runnable {
             throw new IllegalStateException("Text streaming not available for this content type");
         if (content == null)
             return;
-        for (String line : content.split("\\n", -1))
-            streamWriter.print("data: " + line + '\n');
-        streamWriter.print('\n');
-        streamWriter.flush();
+        try {
+            for (String line : content.split("\\n", -1))
+                streamWriter.print("data: " + line + '\n');
+            streamWriter.print('\n');
+            streamWriter.flush();
+        } catch (Exception e) {
+            // Client disconnected (e.g. browser closed the SSE connection).
+            // Stop streaming silently instead of throwing into the caller's loop.
+            sseStreamingMode = false;
+        }
     }
 
     /**
@@ -726,11 +766,16 @@ public class ProcessServlet implements Runnable {
             throw new IllegalStateException("Text streaming not available for this content type");
         if (content == null)
             return;
-        streamWriter.print("event: " + eventName + '\n');
-        for (String line : content.split("\\n", -1))
-            streamWriter.print("data: " + line + '\n');
-        streamWriter.print('\n');
-        streamWriter.flush();
+        try {
+            streamWriter.print("event: " + eventName + '\n');
+            for (String line : content.split("\\n", -1))
+                streamWriter.print("data: " + line + '\n');
+            streamWriter.print('\n');
+            streamWriter.flush();
+        } catch (Exception e) {
+            // Client disconnected (e.g. browser closed the SSE connection).
+            sseStreamingMode = false;
+        }
     }
 
     /**
@@ -750,10 +795,15 @@ public class ProcessServlet implements Runnable {
             throw new IllegalStateException("Text streaming not available for this content type");
         if (content == null)
             return;
-        for (String line : content.split("\\n", -1))
-            streamWriter.print("error: " + line + '\n');
-        streamWriter.print('\n');
-        streamWriter.flush();
+        try {
+            for (String line : content.split("\\n", -1))
+                streamWriter.print("error: " + line + '\n');
+            streamWriter.print('\n');
+            streamWriter.flush();
+        } catch (Exception e) {
+            // Client disconnected (e.g. browser closed the SSE connection).
+            sseStreamingMode = false;
+        }
     }
 
     /**
@@ -779,6 +829,11 @@ public class ProcessServlet implements Runnable {
      * @throws IOException if an I/O error occurs while closing
      */
     public void endSSEStream() throws IOException {
+        // SSE has taken over the response. Set this BEFORE the early-return below so
+        // that even a client-disconnect (which already flipped sseStreamingMode to
+        // false) still suppresses the standard response emit in successReturn/errorReturn.
+        sseHandled = true;
+
         // ensure this block runs only once
         if (!sseStreamingMode)
             return;
@@ -869,36 +924,48 @@ public class ProcessServlet implements Runnable {
             outjson.put("_Success", true);
             outjson.put("_ErrorCode", 0);  // success
             outjson.put("_BootId", MainServlet.getBootId());
-            response.setStatus(200);
-            if (isHtmlReturn) {
-                response.setContentType("text/html");
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                if (htmlData != null) {
-                    writeJsonText(htmlData);   // writes UTF-8 bytes to 'out'
-                    htmlData = null;
-                    isHtmlReturn = false;
+            if (!sseHandled) {
+                response.setStatus(200);
+                if (isHtmlReturn) {
+                    response.setContentType("text/html");
+                    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                    if (htmlData != null) {
+                        //  The async ServletOutputStream performs *non-blocking* writes, so a
+                        //  single large out.write() can be truncated (only what fits the socket
+                        //  window is sent before close()/complete() race it).  Emit the document
+                        //  in small flushed chunks through a PrintWriter - exactly the pattern the
+                        //  SSE streamer uses, which is known to deliver the full body.
+                        PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true);
+                        for (String line : htmlData.split("\n", -1))
+                            pw.println(line);
+                        pw.flush();
+                        htmlData = null;
+                        isHtmlReturn = false;
+                    }
+                } else if (!isBinaryReturn) {
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                    writeJsonText(outjson.toString());
+                } else {
+                    response.setContentType("application/octet-stream");
+                    writeJsonText(outjson.toString() + "\003");
+                    if (binaryData != null) {
+                        out.write(binaryData);
+                        binaryData = null;
+                        isBinaryReturn = false;
+                    }
                 }
-            } else if (!isBinaryReturn) {
-                response.setContentType("application/json");
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                writeJsonText(outjson.toString());
-            } else {
-                response.setContentType("application/octet-stream");
-                writeJsonText(outjson.toString() + "\003");
-                if (binaryData != null) {
-                    out.write(binaryData);
-                    binaryData = null;
-                    isBinaryReturn = false;
-                }
+                out.flush();
+                out.close();     // this causes the second response
             }
-            out.flush();
-            out.close();     // this causes the second response
         } catch (SQLException | IOException ignored) {
         } finally {
-            try {
-                asyncContext.complete();
-            } catch (IllegalStateException ignore) {
-                // The request may have already been completed by a streaming method.
+            if (!sseHandled) {
+                try {
+                    asyncContext.complete();
+                } catch (IllegalStateException ignore) {
+                    // The request may have already been completed by a streaming method.
+                }
             }
             // Note: closeSession() is now handled in the outer run() finally block
         }
@@ -934,8 +1001,8 @@ public class ProcessServlet implements Runnable {
             errorCode = ((LogException) e).getErrorCode();
         else
             errorCode = -1;
-        if (sseStreamingMode) {
-            return;          // streaming mode active, response handled elsewhere
+        if (sseStreamingMode || sseHandled) {
+            return;          // streaming mode active or SSE already completed the response
         }
         try {
             if (DB != null) {

@@ -281,6 +281,7 @@ public class Tasks {
     public static void buildSystem() {
         libs();
         copyTree("src/main/frontend", explodedDir);
+        copyTree("src/main/precompiled/koo/frontend/static", explodedDir);
         writeToFile(explodedDir + "/META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n");
 
         copyTree("src/main/backend", explodedDir + "/WEB-INF/backend");
@@ -296,7 +297,7 @@ public class Tasks {
         //copyRegex("src/main/core/org/kissweb/lisp", explodedDir + "/WEB-INF/classes/org/kissweb/lisp", ".*\\.lisp", null, false);
         copy("src/main/core/log4j2.xml", explodedDir + "/WEB-INF/classes");
         // JTE templates (resolved from classpath /jte by TemplateProvider)
-        copyTree("src/main/jte", explodedDir + "/WEB-INF/classes/jte");
+        copyTree("src/main/precompiled/koo/frontend/jte", explodedDir + "/WEB-INF/classes/jte");
         copyForce("src/main/core/WEB-INF/web-unsafe.xml", explodedDir + "/WEB-INF/web.xml");
     }
 
