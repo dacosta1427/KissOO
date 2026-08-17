@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KissOO Hypermedia Showcase</title>
-  <script src="/vendor/tailwind.js"></script>
+  <link rel="stylesheet" href="/vendor/tailwind.css">
   <script src="/vendor/htmx.js" defer></script>
   <script type="module" src="/vendor/datastar.js"></script>
 </head>

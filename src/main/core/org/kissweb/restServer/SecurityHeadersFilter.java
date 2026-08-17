@@ -72,7 +72,9 @@ public class SecurityHeadersFilter implements Filter {
      */
     public static final String CONTENT_SECURITY_POLICY_RELAXED =
             "default-src 'self'; " +
-            "script-src 'self' 'unsafe-eval' 'sha256-JaGBSNrOPztIc2kSDoiyDCHVqjcvVQSMYv5X2fO3RCE='; " +
+            //  Datastar executes patched <script> fragments (and its own bootstrap) as inline
+            //  scripts, so 'unsafe-inline' is required here (scoped to the showcase routes only).
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'sha256-JaGBSNrOPztIc2kSDoiyDCHVqjcvVQSMYv5X2fO3RCE='; " +
             "style-src 'self' 'unsafe-inline'; " +
             "img-src 'self' data: blob:; " +
             "font-src 'self' data:; " +

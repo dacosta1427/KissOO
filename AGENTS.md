@@ -237,6 +237,13 @@ our namespace (a mistake that was made and reverted; see "Mistakes to Avoid" #9)
   to the web root, so the Kiss client and our `/vendor/` assets coexist (different subdirs, no conflict).
 - JTE templates are copied to `WEB-INF/classes/jte`.
 - The dev `SimpleWebServer` is pointed at `src/main/frontend` (`-d src/main/frontend`).
+- **Showcase Tailwind is prebuilt, not the CDN.** `src/main/precompiled/koo/frontend/static/vendor/tailwind.css`
+  is a static CSS generated from `tailwind.src.css` by scanning the JTE templates and `ShowcaseService.java`
+  (Tailwind v3 CLI, run from the Svelte `node_modules/.bin/tailwindcss`). The old `vendor/tailwind.js` is the
+  Tailwind **Play CDN** — dev-only, prints a "should not be used in production" warning, and does runtime JIT, so
+  the templates link the static `tailwind.css` instead. **Regenerate after adding/removing Tailwind classes:**
+  `.\src\main\precompiled\koo\frontend\svelte\node_modules\.bin\tailwindcss -i vendor/tailwind.src.css -o vendor/tailwind.css --content "./src/main/precompiled/koo/frontend/jte/**/*.jte" --content "./src/main/backend/services/**/*.java" --minify`
+  (run from `src/main/precompiled/koo/frontend/static`).
 
 ### Gotcha: stale `exploded` staging dir
 `copyTree` copies *over* the existing `work/exploded` staging dir but does **not delete** files that no

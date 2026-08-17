@@ -5,7 +5,7 @@
     <link rel="icon" href="data:,">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live SSE &middot; KissOO Showcase</title>
-  <script src="/vendor/tailwind.js"></script>
+  <link rel="stylesheet" href="/vendor/tailwind.css">
   <script src="/vendor/htmx.js" defer></script>
   <script type="module" src="/vendor/datastar.js"></script>
   <script type="module" src="/vendor/datastar-start.js?v=2"></script>
