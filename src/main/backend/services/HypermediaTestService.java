@@ -54,9 +54,14 @@ public class HypermediaTestService {
     }
 
     // 5. Session probe that REQUIRES a valid uuid - proves MOD 4 (X-Kiss-Uuid header).
+    //    Returns a Datastar patch-signals event (not plain JSON) so the Auth page's
+    //    $whoami / $greeting signals update and the "Check session" button shows feedback.
     public void whoami(JSONObject injson, JSONObject outjson, Connection db, ProcessServlet servlet) {
         Object perstUser = servlet.getUserData("perstUser");
-        outjson.put("authenticated", perstUser != null);
-        outjson.put("whoami", perstUser != null ? "Session valid - you are logged in." : "No valid session.");
+        boolean auth = perstUser != null;
+        JSONObject signals = new JSONObject();
+        signals.put("whoami", auth ? "Session valid - you are logged in." : "No valid session.");
+        signals.put("greeting", auth ? "Welcome back." : "Please log in.");
+        Datastar.patchSignals(servlet, signals);
     }
 }

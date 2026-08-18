@@ -55,7 +55,7 @@ public class UserCache {
         return uuidTable.get(uuid);
     }
 
-    static void removeUser(String uuid) {
+    public static void removeUser(String uuid) {
         UserData ud = uuidTable.get(uuid);
         try {
             if (ud != null) {

@@ -179,7 +179,12 @@ commit `9c9dc233` ("Add hypermedia (HTMX/Datastar) support and JTE template engi
 JTE + Datastar integration. It therefore is **not** subject to the Kiss-framework-overwrite risk
 (though a full wipe of `src/main/core` would remove it). See item 2.
 
-### 1. `org.kissweb.restServer.ProcessServlet` — SSE client-disconnect NPE fix
+### 1. `org.kissweb.restServer.ProcessServlet` — hypermedia / SSE modifications (two parts)
+
+Both parts live in `ProcessServlet.java` (upstream core, overwritten on re-sync). Please fold
+both into the Kiss framework so forks don't have to re-apply them.
+
+#### Part A — SSE client-disconnect NPE fix
 **Why:** With an active SSE stream, if the client disconnects (closes the tab) the response's output
 buffer is recycled. The standard return paths (`successReturn`/`errorReturn`) still tried to
 write/flush/close/`asyncContext.complete()` the recycled response, throwing
@@ -200,8 +205,33 @@ surfaced as `ERROR [restServer.ProcessServlet]` at the top-level `run()` handler
   `sseHandled` is true (SSE already completed it). `errorReturn`'s guard extended from
   `if (sseStreamingMode)` to `if (sseStreamingMode || sseHandled)`.
 
-**Upstream ask for Blake:** please fold this robustness into the Kiss framework itself so forks
-don't have to carry the patch. The fix is self-contained in `ProcessServlet`.
+#### Part B — Datastar SSE patch emission (canonical Datastar wire format)
+**Why:** The original HYPERMEDIA MOD emitted Datastar patches as `text/html` with
+`datastar-selector` / `datastar-mode` response headers. That is a supported fallback, but it is
+**not** the canonical Datastar wire format. Datastar's own client (`datastar.js`) and the reference
+Java SDK (`mailq/datastar-java-sdk`) expect a Server-Sent Events stream:
+`event: datastar-patch-elements` (and `event: datastar-patch-signals`). Emitting SSE makes Kiss's
+hypermedia support spec-correct and interoperable with the official client/SDK.
+
+**What changed:** (all in `ProcessServlet.java`)
+- New fields `private Datastar.Event datastarEvent` and `private boolean isDatastarPatch`.
+- `returnHtml(String html, String selector, String mode)` (was the header-based path) now builds
+  `Datastar.patchElements().select(selector).mode(mode).replace(html)` and calls `emitDatastar(event)`
+  instead of setting `text/html` + `datastar-selector`/`datastar-mode` headers.
+- New `emitDatastar(Datastar.Event event)`: if an SSE stream is already open → `streamSSEEvent(name, data)`;
+  otherwise queues the event (`datastarEvent` + `isDatastarPatch`) for a one-shot SSE body.
+- New `writeDatastarEvent(HttpServletResponse)`: writes a `text/event-stream` body — `event: <name>`,
+  optional `id:` / `retry:`, then one `data: <line>` per payload line (`data: selector …`,
+  `data: mode …`, `data: elements <html-line>` …), terminated by a blank line. This matches
+  `mailq/datastar-java-sdk`'s `ServletDatastar.build` exactly.
+- `successReturn(...)`: when `isDatastarPatch`, emits the queued SSE event (the existing JSON/text-html
+  branches are skipped).
+
+**Upstream ask for Blake:** please fold both Part A and Part B into the Kiss framework itself so
+forks don't have to carry the patch. Both are self-contained in `ProcessServlet` (the `Datastar`
+builder it calls lives in `org.kissweb.templates`, which is KissOO-local — see item 2 — so you
+only need the `ProcessServlet` hooks, not the SDK). The `returnHtml(html)` (no-selector, HTMX) path
+is intentionally left as `text/html`, so HTMX and normal JSON services are unaffected.
 
 ### 2. `org.kissweb.templates.TemplateProvider` — inject `Datastar` helper into the JTE model
 `render(...)` now puts `Datastar.INSTANCE` into the model so JTE templates can declare
@@ -228,8 +258,8 @@ our namespace (a mistake that was made and reverted; see "Mistakes to Avoid" #9)
 - **JTE showcase templates** → `src/main/precompiled/koo/frontend/jte/`
   (`showcase/auth.jte`, `showcase/datastar.jte`, `showcase/sse.jte`, `showcase/htmx.jte`,
   `fragments/task.jte`). The JTE engine resolves these from the classpath at `/jte`.
-- **Showcase static assets (Datastar / HTMX / Tailwind)** → `src/main/precompiled/koo/frontend/static/vendor/`
-  (`datastar.js`, `htmx.js`, `tailwind.js`, `datastar-start.js`). Served at web-root `/vendor/…`.
+- **Showcase static assets (Datastar / HTMX / PicoCSS)** → `src/main/precompiled/koo/frontend/static/vendor/`
+  (`datastar.js`, `htmx.js`, `pico.min.css`, `koo.css`, `datastar-start.js`). Served at web-root `/vendor/…`.
 - **Svelte 5 (SvelteKit) app** → `src/main/precompiled/koo/frontend/svelte/`.
 
 ### Build behavior (`Tasks.java`)
@@ -237,13 +267,13 @@ our namespace (a mistake that was made and reverted; see "Mistakes to Avoid" #9)
   to the web root, so the Kiss client and our `/vendor/` assets coexist (different subdirs, no conflict).
 - JTE templates are copied to `WEB-INF/classes/jte`.
 - The dev `SimpleWebServer` is pointed at `src/main/frontend` (`-d src/main/frontend`).
-- **Showcase Tailwind is prebuilt, not the CDN.** `src/main/precompiled/koo/frontend/static/vendor/tailwind.css`
-  is a static CSS generated from `tailwind.src.css` by scanning the JTE templates and `ShowcaseService.java`
-  (Tailwind v3 CLI, run from the Svelte `node_modules/.bin/tailwindcss`). The old `vendor/tailwind.js` is the
-  Tailwind **Play CDN** — dev-only, prints a "should not be used in production" warning, and does runtime JIT, so
-  the templates link the static `tailwind.css` instead. **Regenerate after adding/removing Tailwind classes:**
-  `.\src\main\precompiled\koo\frontend\svelte\node_modules\.bin\tailwindcss -i vendor/tailwind.src.css -o vendor/tailwind.css --content "./src/main/precompiled/koo/frontend/jte/**/*.jte" --content "./src/main/backend/services/**/*.java" --minify`
-  (run from `src/main/precompiled/koo/frontend/static`).
+- **Showcase CSS is PicoCSS (vendored), not Tailwind.** PicoCSS `@yohns/picocss` fork **v2.2.10** is vendored at
+  `src/main/precompiled/koo/frontend/static/vendor/pico.min.css` (downloaded from
+  `https://cdn.jsdelivr.net/npm/@yohns/picocss@2.2.10/css/pico.min.css`; the fork adds Bootstrap-style
+  `.row`/`.col-*` grid helpers). A small helper `vendor/koo.css` defines `.link-action` (primary-colored link),
+  `.link-danger` (red link), `.error-text`, and `.success-text`. The showcase JTE templates link both
+  `/vendor/pico.min.css` and `/vendor/koo.css` — **no Tailwind, no build step** for the showcase.
+  **To bump PicoCSS version:** re-download the v2.2.x `pico.min.css` from jsDelivr and overwrite the vendor file.
 
 ### Gotcha: stale `exploded` staging dir
 `copyTree` copies *over* the existing `work/exploded` staging dir but does **not delete** files that no
@@ -323,7 +353,7 @@ Note: `.svelte-kit/` is auto-generated and should not be committed.
 6. **Using `getHouseId()` etc.**: These methods don't exist. Use `getHouseOid()`, `getCleanerOid()`, `getBookingOid()`, `getScheduleOid()`.
 7. **Not killing server before DB clear**: Open file handles prevent DB deletion. Always `pkill -9 java` first.
 8. **Tomcat SSE client-disconnect NPE**: With an active SSE stream, if the client disconnects (closes the tab) the response's output buffer is recycled; the standard return paths still try to write/flush/`asyncContext.complete()` it, throwing `NullPointerException: Cannot invoke "...OutputBuffer.isBlocking()" because "this.ob" is null`. It is an NPE (not IOException) so it escapes every `catch (SQLException | IOException)` and surfaces as `ERROR [restServer.ProcessServlet]` at the top-level `run()` handler. Fix lives in core `ProcessServlet` (see "Core Framework Modifications" below): track `sseHandled` so `successReturn`/`errorReturn` skip the standard emit once SSE completed the response, wrap `streamSSE*` writes in try/catch to stop the loop, and add an `AsyncListener` to flip `sseStreamingMode` on disconnect.
-9. **Moving the Kiss frontend into `koo/`**: When reorganizing frontends, only move KissOO-owned code under `src/main/precompiled/koo/frontend/`. `src/main/frontend/` is the **upstream Kiss web client** (`kiss/`, `mobile/`, `screens/`, `index.html`, `login.html`, `lib/`, …) and must stay put — do not `git mv` it under `koo/`. Our additions there are limited to `vendor/` (Datastar/HTMX/Tailwind). After any frontend restructure, do a clean rebuild (`bld clean` / delete `work/exploded`) because `copyTree` copies over the staging dir without deleting files that no longer exist in the source, otherwise the WAR carries stale paths.
+9. **Moving the Kiss frontend into `koo/`**: When reorganizing frontends, only move KissOO-owned code under `src/main/precompiled/koo/frontend/`. `src/main/frontend/` is the **upstream Kiss web client** (`kiss/`, `mobile/`, `screens/`, `index.html`, `login.html`, `lib/`, …) and must stay put — do not `git mv` it under `koo/`. Our additions there are limited to `vendor/` (Datastar/HTMX/PicoCSS). After any frontend restructure, do a clean rebuild (`bld clean` / delete `work/exploded`) because `copyTree` copies over the staging dir without deleting files that no longer exist in the source, otherwise the WAR carries stale paths.
 10. **Datastar actions must use `@get`, never `@post` (JDK 25)**: With Tomcat 11 + JDK 25, `POST` bodies have their double-quotes **stripped**, so `application/json` bodies fail to parse (`{"username":...}` becomes invalid). Even if they parsed, `ProcessServlet`'s JSON-body branch reads `_class`/`_method` only from the **body**, while Datastar puts `_class`/`_method` in the **URL query** — so a `@post` reaches the server with no `_method` and fails `missing _method`. Use `@get` for every Datastar action (login, save, delete, form load). On `@get` the server merges the query string (`_class`/`_method`/`oid`) AND the `datastar` query param (URL-encoded signals JSON) into `injson` — exactly the verified `fragmentDs`/`crudList`/`crudSave`/`loginPost` pattern. Datastar's `@get` also prevents default form submission, so `data-on:submit="@get(...)"` works like a normal form post. Prefer running Tomcat on **JDK 21 LTS** to avoid the quote-stripping bug entirely.
 11. **Don't ship the Svelte `node_modules` in the WAR**: `Tasks.java` `buildSystem()` does
  `copyTree("src/main/precompiled", explodedDir + "/WEB-INF/precompiled")`, which blindly copies the

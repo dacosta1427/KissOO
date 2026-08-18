@@ -111,13 +111,14 @@ class KissInit {
         // Wave 1 showcase screens (login + CRUD + controls)
         MainServlet.allowWithoutAuthentication("services/ShowcaseService", "login")
         MainServlet.allowWithoutAuthentication("services/ShowcaseService", "loginPost")
+        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "logout")
+        // CRUD PAGE is public but self-gates to login (see ShowcaseService.crud).
+        // The CRUD DATA methods below are intentionally NOT whitelisted, so they are
+        // framework-protected: a request without a valid session gets _ErrorCode 2.
         MainServlet.allowWithoutAuthentication("services/ShowcaseService", "crud")
-        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "crudList")
-        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "crudForm")
-        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "crudSave")
-        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "crudDelete")
-        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "crudClear")
         MainServlet.allowWithoutAuthentication("services/ShowcaseService", "controls")
+        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "liveSearch")
+        MainServlet.allowWithoutAuthentication("services/ShowcaseService", "echo")
         MainServlet.allowWithoutAuthentication("services/HypermediaTestService", "taskFragment")
         MainServlet.allowWithoutAuthentication("services/HypermediaTestService", "patchSignals")
         MainServlet.allowWithoutAuthentication("services/HypermediaTestService", "liveClock")

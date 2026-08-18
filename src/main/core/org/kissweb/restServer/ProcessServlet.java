@@ -6,6 +6,7 @@ import org.kissweb.*;
 import org.kissweb.json.JSONException;
 import org.kissweb.json.JSONObject;
 import org.kissweb.database.Connection;
+import org.kissweb.templates.Datastar;
 
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.ServletContext;
@@ -55,6 +56,9 @@ public class ProcessServlet implements Runnable {
     // ========================================================================
     private String htmlData = null;
     private boolean isHtmlReturn = false;
+    /** A Datastar SSE event queued for a one-shot (non-streaming) response. */
+    private java.util.List<Datastar.Event> datastarEvents = new java.util.ArrayList<>();
+    private boolean isDatastarPatch = false;
     /** True when streaming mode is active for this request. */
     private volatile boolean sseStreamingMode = false;
     /** True once SSE has taken over the response (endSSEStream completed it). */
@@ -497,6 +501,14 @@ public class ProcessServlet implements Runnable {
             // lookup works for Datastar clients too.
             if (_uuid == null || _uuid.isEmpty())
                 _uuid = injson.optString("uuid");
+            // Fall back to the session cookie so full-page navigations (which carry no
+            // header or Datastar signal) still resolve the logged-in user server-side.
+            if (_uuid == null || _uuid.isEmpty()) {
+                jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+                if (cookies != null)
+                    for (jakarta.servlet.http.Cookie ck : cookies)
+                        if ("kissUuid".equals(ck.getName())) { _uuid = ck.getValue(); break; }
+            }
             injson.put("_uuid", _uuid != null ? _uuid : "");
         }
 
@@ -647,10 +659,25 @@ public class ProcessServlet implements Runnable {
      * @param mode     one of: outer, inner, remove, replace, prepend, append, before, after
      */
     public void returnHtml(String html, String selector, String mode) {
-        isHtmlReturn = true;
-        htmlData = html;
-        if (selector != null) response.setHeader("datastar-selector", selector);
-        if (mode != null)     response.setHeader("datastar-mode", mode);
+        emitDatastar(Datastar.patchElements().select(selector).mode(mode).replace(html));
+    }
+
+    /**
+     * Queue a Datastar {@link Datastar.Event} for emission. If an SSE stream is already open it is
+     * written immediately; otherwise it is buffered and written as a one-shot SSE body by
+     * {@link #successReturn(HttpServletResponse, JSONObject)}.
+     */
+    public void emitDatastar(Datastar.Event event) {
+        if (sseStreamingMode) {
+            try {
+                streamSSEEvent(event.name(), event.data());
+            } catch (IOException ignored) {
+                // client disconnected; streamSSEEvent already cleared the flag
+            }
+            return;
+        }
+        this.datastarEvents.add(event);
+        this.isDatastarPatch = true;
     }
 
     /**
@@ -904,6 +931,33 @@ public class ProcessServlet implements Runnable {
     }
 
     /**
+     * Write a queued Datastar {@link Datastar.Event} as a one-shot SSE response, matching the
+     * wire format produced by mailq/datastar-java-sdk's ServletDatastar (event: / data: lines,
+     * terminated by a blank line). datastar.js parses this from the response body.
+     */
+    private void writeDatastarEvent(HttpServletResponse response) throws IOException {
+        response.setContentType("text/event-stream");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("Connection", "keep-alive");
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+
+        PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true);
+        for (Datastar.Event ev : datastarEvents) {
+            pw.print("event: " + ev.name() + "\n");
+            if (ev.id() != null)
+                pw.print("id: " + ev.id() + "\n");
+            if (ev.reconnectDelay() != null)
+                pw.print("retry: " + ev.reconnectDelay() + "\n");
+            for (String line : ev.data().split("\n", -1))
+                pw.print("data: " + line + "\n");
+            pw.print("\n");
+        }
+        pw.flush();
+        datastarEvents.clear();
+        isDatastarPatch = false;
+    }
+
+    /**
      * Returns a successful response to the front-end.
      *
      * If the response has already been generated elsewhere, this does nothing.
@@ -924,9 +978,11 @@ public class ProcessServlet implements Runnable {
             outjson.put("_Success", true);
             outjson.put("_ErrorCode", 0);  // success
             outjson.put("_BootId", MainServlet.getBootId());
-            if (!sseHandled) {
-                response.setStatus(200);
-                if (isHtmlReturn) {
+                if (!sseHandled) {
+                    response.setStatus(200);
+                    if (isDatastarPatch && !datastarEvents.isEmpty()) {
+                        writeDatastarEvent(response);
+                    } else if (isHtmlReturn) {
                     response.setContentType("text/html");
                     response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                     if (htmlData != null) {
@@ -1117,6 +1173,22 @@ public class ProcessServlet implements Runnable {
      */
     public boolean isLoggedIn() {
         return ud != null;
+    }
+
+    /**
+     * Set a browser cookie (path "/").  Used to carry the session uuid across full-page
+     * navigations (which do not send the {@code X-Kiss-Uuid} header or the Datastar
+     * {@code uuid} signal), so {@link #isLoggedIn()} and nav rendering see the session.
+     *
+     * @param name the cookie name
+     * @param value the cookie value (use "" with maxAge 0 to clear)
+     * @param maxAgeSeconds max age in seconds; -1 for a browser-session cookie
+     */
+    public void setCookie(String name, String value, int maxAgeSeconds) {
+        jakarta.servlet.http.Cookie c = new jakarta.servlet.http.Cookie(name, value);
+        c.setPath("/");
+        c.setMaxAge(maxAgeSeconds);
+        response.addCookie(c);
     }
 
     /**

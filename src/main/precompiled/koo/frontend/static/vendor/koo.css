@@ -1,0 +1,213 @@
+/* KissOO showcase helpers layered on top of the Yohn PicoCSS fork (v2.2.10). */
+
+/* Colored inline "link" actions (used where we keep a text affordance) */
+.link-action { color: var(--pico-primary); cursor: pointer; }
+.link-action:hover { text-decoration: underline; }
+.link-danger { color: #d32f2f; cursor: pointer; }
+.link-danger:hover { text-decoration: underline; }
+
+/* Validation / status text */
+.error-text { color: #d32f2f; }
+.success-text { color: var(--pico-primary); }
+
+/* Visible status line on the CRUD page (errors are surfaced here, never swallowed) */
+.crud-status:empty { display: none; }
+#crud-status { margin: .5rem 0; padding: .5rem .75rem; border-radius: var(--pico-border-radius); }
+#crud-status:not(:empty) { background: color-mix(in srgb, #d32f2f 12%, transparent); color: #d32f2f; border: 1px solid color-mix(in srgb, #d32f2f 40%, transparent); }
+
+/* Center the showcase content and give breathing room from the browser edges */
+body > main {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+/* The Yohn fork ships .striped but not .hover — add row hover */
+table.hover tbody tr:hover td {
+  background-color: var(--pico-table-row-stripped-background-color);
+}
+
+/* Sortable column headers */
+th[data-on\:click] { cursor: pointer; }
+th[data-on\:click]:hover { text-decoration: underline; }
+
+/* Compact action buttons inside the CRUD table */
+.btn-sm {
+  width: auto;
+  display: inline-block;
+  padding: .25rem .7rem;
+  font-size: .85rem;
+  margin: 0 .15rem;
+}
+/* Danger (red) outline button — Pico has no red by default */
+.btn-danger { --pico-color: #d32f2f; }
+.btn-danger:hover { background-color: rgba(211, 47, 47, .08); }
+
+/* ===== KissOO app-wide navigation ===== */
+.app-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .55rem 1.25rem;
+  background: color-mix(in srgb, var(--pico-background-color) 82%, transparent);
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--pico-muted-border-color) 60%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--pico-primary) 25%, transparent);
+}
+.brand { display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; font-weight: 700; }
+.brand-mark {
+  display: inline-grid; place-items: center;
+  width: 2rem; height: 2rem; border-radius: .55rem;
+  background: linear-gradient(135deg, var(--pico-primary), #a855f7);
+  color: #fff; font-weight: 800; font-size: 1.1rem; line-height: 1;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--pico-primary) 40%, transparent);
+}
+.brand-name { color: var(--pico-color); letter-spacing: .02em; }
+
+.fast-nav { display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+.nav-link {
+  display: inline-block;
+  padding: .35rem .8rem;
+  border-radius: var(--pico-border-radius);
+  text-decoration: none;
+  color: var(--pico-color);
+  border: 1px solid transparent;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.nav-link:hover { background: color-mix(in srgb, var(--pico-primary) 10%, transparent); }
+.nav-link.active {
+  color: var(--pico-primary-inverse);
+  background: var(--pico-primary);
+  border-color: var(--pico-primary);
+}
+
+.nav-actions { margin-left: auto; display: flex; align-items: center; gap: .5rem; }
+.nav-user {
+  font-size: .85rem; color: var(--pico-muted-color);
+  max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.theme-toggle {
+  width: 1.9rem; height: 1.9rem; padding: 0;
+  display: inline-grid; place-items: center;
+  border-radius: 50%; font-size: .95rem; line-height: 1;
+}
+.hamburger { position: relative; }
+.hamburger > summary {
+  list-style: none; cursor: pointer;
+  width: 2.4rem; height: 2.4rem;
+  display: inline-grid; place-items: center;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  font-size: 1.15rem;
+}
+.hamburger > summary::-webkit-details-marker { display: none; }
+.hamburger[open] > summary { border-color: var(--pico-primary); color: var(--pico-primary); }
+.hamburger > ul {
+  position: absolute; right: 0; top: calc(100% + .5rem);
+  min-width: 210px; margin: 0; padding: .35rem;
+  list-style: none;
+  background: var(--pico-card-background-color);
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  box-shadow: 0 12px 30px rgba(0,0,0,.18);
+  z-index: 60;
+}
+/* Override PicoCSS's .dropdown[open] > ul (higher specificity) so the menu
+   stays anchored to the right edge of the hamburger and never spills off-screen. */
+.hamburger[open] > ul { right: 0; left: auto; top: calc(100% + .5rem); }
+.hamburger > ul li { margin: 0; }
+.hamburger > ul a {
+  display: block; padding: .5rem .75rem;
+  border-radius: calc(var(--pico-border-radius) * .8);
+  text-decoration: none; color: var(--pico-color);
+}
+.hamburger > ul a:hover { background: color-mix(in srgb, var(--pico-primary) 10%, transparent); }
+.dropdown-divider { height: 1px; margin: .35rem .25rem; background: var(--pico-muted-border-color); }
+
+.app-footer {
+  margin-top: 3rem; padding: 1.25rem; text-align: center;
+  color: var(--pico-muted-color); border-top: 1px solid var(--pico-muted-border-color);
+}
+
+/* ===== Component library (controls page) ===== */
+html { scroll-behavior: smooth; scroll-padding-top: 5.5rem; }
+.controls-layout { display: grid; grid-template-columns: 230px 1fr; gap: 2rem; align-items: start; }
+.cat-nav { position: sticky; top: 5rem; align-self: start; max-height: calc(100vh - 6rem); overflow-y: auto; padding-right: .25rem; }
+.cat-nav nav { display: flex; flex-direction: column; gap: .15rem; }
+.cat-nav a {
+  padding: .4rem .7rem; border-radius: var(--pico-border-radius);
+  text-decoration: none; color: var(--pico-color); font-size: .95rem;
+  border-left: 3px solid transparent;
+}
+.cat-nav a:hover { background: color-mix(in srgb, var(--pico-primary) 8%, transparent); }
+.cat-nav a.active {
+  border-left-color: var(--pico-primary);
+  background: color-mix(in srgb, var(--pico-primary) 12%, transparent);
+  color: var(--pico-primary);
+}
+
+.component {
+  margin-bottom: 2.5rem; padding: 1.25rem 1.5rem;
+  background: var(--pico-card-background-color);
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: calc(var(--pico-border-radius) * 1.4);
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.component:hover { box-shadow: 0 10px 30px rgba(0,0,0,.10); transform: translateY(-2px); }
+.component > header h3 { margin-bottom: .2rem; }
+.component > header p { color: var(--pico-muted-color); margin-bottom: 1rem; }
+.example {
+  padding: 1rem; margin-bottom: 1rem;
+  border: 1px dashed var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  background: color-mix(in srgb, var(--pico-background-color) 88%, transparent);
+}
+.example > * + * { margin-top: .5rem; }
+.source > summary { cursor: pointer; color: var(--pico-primary); }
+.source > pre {
+  margin-top: .5rem; padding: 1rem; overflow: auto;
+  background: #0b1020; color: #e7ecff;
+  border-radius: var(--pico-border-radius);
+  font-size: .85rem; line-height: 1.5;
+}
+.source > pre code { color: inherit; background: none; }
+
+/* Small "tag" chip — KissOO extension (Pico has no badge) */
+.tag {
+  display: inline-block; padding: .1rem .55rem; margin: .1rem;
+  font-size: .8rem; border-radius: 999px;
+  color: var(--pico-primary-inverse); background: var(--pico-primary);
+}
+.tag.secondary { color: var(--pico-color); background: var(--pico-secondary-background); }
+.tag.outline { color: var(--pico-primary); background: transparent; border: 1px solid var(--pico-primary); }
+
+@media (max-width: 800px) {
+  .controls-layout { grid-template-columns: 1fr; }
+  .cat-nav { position: static; }
+}
+
+/* Keep showcase pages within a comfortable, screen-fitting width (no endless 1fr stretch) */
+.app-nav, main, body > footer { max-width: 1280px; margin-inline: auto; }
+.app-nav { padding-inline: clamp(1rem, 3vw, 2rem); }
+main { padding-inline: clamp(1rem, 3vw, 2rem); padding-block: 1.5rem; }
+body > footer { padding-inline: clamp(1rem, 3vw, 2rem); }
+
+/* Timeline: single-sided (vertical line + dots on the left, text directly to the right)
+   so every dot sits immediately beside its text block. Hollow dots for past versions,
+   filled (primary) dot for the current version. */
+.timeline::after { left: 11px; margin-left: -3px; }
+.timeline > .point,
+.timeline > .point.left,
+.timeline > .point.right { width: 100%; left: 0; padding: 8px 8px 8px 36px; }
+.timeline > .point.left::before,
+.timeline > .point.right::before { display: none; }
+.timeline > .point::after,
+.timeline > .point.left::after,
+.timeline > .point.right::after { left: 0; right: auto; top: 9px; }
+.timeline > .point::after { background-color: transparent; }
+.timeline > .point.current::after { background-color: var(--pico-primary); border-color: var(--pico-primary); }
+
